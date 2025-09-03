@@ -30,7 +30,7 @@ import {
 
 interface BookingFormProps {
   clientId: string;
-  onBookingSuccess: () => void;
+  onBookingSuccess: (bookingId: string) => void;
 }
 
 export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuccess }) => {
@@ -309,7 +309,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
 
-      onBookingSuccess();
+      onBookingSuccess(booking.id);
       
     } catch (error) {
       console.error('Erreur lors de la réservation:', error);

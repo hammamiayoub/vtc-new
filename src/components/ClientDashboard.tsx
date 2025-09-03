@@ -4,6 +4,7 @@ import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Client, Booking } from '../types';
 import { BookingForm } from './BookingForm';
+import { BookingConfirmation } from './BookingConfirmation';
 
 interface ClientDashboardProps {
   onLogout: () => void;
@@ -12,8 +13,9 @@ interface ClientDashboardProps {
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) => {
   const [client, setClient] = useState<Client | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'new-booking' | 'bookings' | 'confirmation'>('dashboard');
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [confirmationBookingId, setConfirmationBookingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,11 +84,34 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
     onLogout();
   };
 
-  const handleBookingSuccess = () => {
+  const handleBookingSuccess = (bookingId: string) => {
     setShowBookingForm(false);
-    setActiveTab('bookings');
-    // Rafraîchir la page pour voir la nouvelle réservation
-    window.location.reload();
+    setConfirmationBookingId(bookingId);
+    setActiveTab('confirmation');
+  };
+
+  const handleBackFromConfirmation = () => {
+    setConfirmationBookingId(null);
+    setActiveTab('dashboard');
+    // Rafraîchir les réservations
+    if (client) {
+      const fetchBookings = async () => {
+        try {
+          const { data: bookingsData, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('client_id', client.id)
+            .order('created_at', { ascending: false });
+
+          if (!error) {
+            setBookings(bookingsData || []);
+          }
+        } catch (error) {
+          console.error('Erreur:', error);
+        }
+      };
+      fetchBookings();
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -224,8 +249,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page de confirmation */}
+        {activeTab === 'confirmation' && confirmationBookingId && (
+          <BookingConfirmation 
+            bookingId={confirmationBookingId}
+            onBack={handleBackFromConfirmation}
+          />
+        )}
+
         {/* Formulaire de réservation */}
-        {showBookingForm && client && (
+        {showBookingForm && client && activeTab !== 'confirmation' && (
           <BookingForm 
             clientId={client.id} 
             onBookingSuccess={handleBookingSuccess}
@@ -233,7 +266,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         )}
 
         {/* Dashboard principal */}
-        {!showBookingForm && activeTab === 'dashboard' && (
+        {!showBookingForm && activeTab === 'dashboard' && activeTab !== 'confirmation' && (
           <>
             {/* Welcome Section */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
@@ -308,7 +341,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         )}
 
         {/* Liste des réservations */}
-        {!showBookingForm && activeTab === 'bookings' && (
+        {!showBookingForm && activeTab === 'bookings' && activeTab !== 'confirmation' && (
           <div className="bg-white rounded-xl shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-xl font-semibold text-gray-900">Mes réservations</h3>
