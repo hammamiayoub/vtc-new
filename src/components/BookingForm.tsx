@@ -302,6 +302,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         status: 'accepted'
       };
 
+      console.log('📝 Données de réservation à insérer:', bookingData);
+      console.log('👤 Chauffeur sélectionné ID:', selectedDriver);
+      console.log('🧑‍💼 Client ID:', clientId);
       const { data: booking, error } = await supabase
         .from('bookings')
         .insert(bookingData)
@@ -310,12 +313,28 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
       if (error) {
         console.error('Erreur lors de la création de la réservation:', error);
+        console.error('Détails de l\'erreur:', error.message, error.code, error.details);
         alert('Erreur lors de la création de la réservation');
         return;
       }
 
       console.log('✅ Réservation créée avec succès:', booking);
-      console.log('👤 Chauffeur assigné:', selectedDriver);
+      console.log('👤 Chauffeur assigné dans la DB:', booking.driver_id);
+      console.log('📊 Statut de la réservation:', booking.status);
+      
+      // Vérification immédiate de la réservation créée
+      const { data: verifyBooking, error: verifyError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', booking.id)
+        .single();
+      
+      if (verifyError) {
+        console.error('❌ Erreur lors de la vérification:', verifyError);
+      } else {
+        console.log('🔍 Vérification - Réservation dans la DB:', verifyBooking);
+      }
+      
       onBookingSuccess(booking.id);
       
     } catch (error) {

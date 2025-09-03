@@ -59,7 +59,27 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   useEffect(() => {
     const fetchBookings = async () => {
       if (driver) {
+        console.log('🔍 Chauffeur - Récupération des réservations pour:', driver.id);
+        
         try {
+          // Test 1: Récupérer TOUTES les réservations pour ce chauffeur
+          const { data: allBookings, error: allError } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('driver_id', driver.id);
+          
+          console.log('📊 Toutes les réservations du chauffeur:', allBookings?.length || 0);
+          if (allBookings && allBookings.length > 0) {
+            console.log('📋 Détails des réservations:', allBookings.map(b => ({
+              id: b.id.slice(0, 8),
+              status: b.status,
+              client_id: b.client_id.slice(0, 8),
+              pickup: b.pickup_address,
+              created: new Date(b.created_at).toLocaleString()
+            })));
+          }
+          
+          // Test 2: Récupération avec jointure client
           const { data: bookingsData, error } = await supabase
             .from('bookings')
             .select(`
@@ -75,8 +95,22 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
           if (error) {
             console.error('Erreur lors de la récupération des réservations:', error);
+            console.error('Détails de l\'erreur:', error.message, error.code);
+            
+            // Fallback: récupérer sans jointure si problème
+            console.log('🔄 Tentative sans jointure...');
+            const { data: fallbackData, error: fallbackError } = await supabase
+              .from('bookings')
+              .select('*')
+              .eq('driver_id', driver.id)
+              .order('created_at', { ascending: false });
+            
+            if (!fallbackError && fallbackData) {
+              console.log('✅ Récupération sans jointure réussie:', fallbackData.length);
+              setBookings(fallbackData);
+            }
           } else {
-            console.log('📋 Réservations du chauffeur:', bookingsData);
+            console.log('📋 Réservations avec clients:', bookingsData?.length || 0);
             setBookings(bookingsData || []);
           }
         } catch (error) {
@@ -103,6 +137,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const pendingBookings = bookings.filter(b => b.status === 'accepted');
   const completedBookings = bookings.filter(b => b.status === 'completed');
 
+  console.log('📊 Statistiques chauffeur:', {
+    totalBookings: bookings.length,
+    pendingBookings: pendingBookings.length,
+    completedBookings: completedBookings.length,
+    driverId: driver?.id
+  });
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
     try {
       const { error } = await supabase
