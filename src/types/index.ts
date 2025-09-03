@@ -111,6 +111,11 @@ export interface Booking {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  clients?: {
+    first_name: string;
+    last_name: string;
+    phone?: string;
+  };
 }
 
 export interface BookingFormData {

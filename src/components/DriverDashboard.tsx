@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { User, Car, Clock, MapPin, LogOut, Settings, Bell, AlertCircle } from 'lucide-react';
+import { User, Car, Clock, MapPin, LogOut, Settings, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { supabase } from '../lib/supabase';
-import { Driver } from '../types';
+import { Driver, Booking } from '../types';
 
 interface DriverDashboardProps {
   onLogout: () => void;
@@ -12,9 +12,10 @@ interface DriverDashboardProps {
 
 export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) => {
   const [driver, setDriver] = useState<Driver | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [showProfileForm, setShowProfileForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'bookings'>('dashboard');
 
   useEffect(() => {
     const fetchDriverData = async () => {
@@ -55,6 +56,37 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     fetchDriverData();
   }, []);
 
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (driver) {
+        try {
+          const { data: bookingsData, error } = await supabase
+            .from('bookings')
+            .select(`
+              *,
+              clients!inner(
+                first_name,
+                last_name,
+                phone
+              )
+            `)
+            .eq('driver_id', driver.id)
+            .order('created_at', { ascending: false });
+
+          if (error) {
+            console.error('Erreur lors de la récupération des réservations:', error);
+          } else {
+            console.log('📋 Réservations du chauffeur:', bookingsData);
+            setBookings(bookingsData || []);
+          }
+        } catch (error) {
+          console.error('Erreur:', error);
+        }
+      }
+    };
+
+    fetchBookings();
+  }, [driver]);
   const handleLogout = async () => {
     await supabase.auth.signOut();
     onLogout();
@@ -68,6 +100,65 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
   const needsProfileCompletion = !driver?.phone || !driver?.licenseNumber || !driver?.vehicleInfo;
 
+  const pendingBookings = bookings.filter(b => b.status === 'accepted');
+  const completedBookings = bookings.filter(b => b.status === 'completed');
+
+  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          status: newStatus,
+          pickup_time: newStatus === 'in_progress' ? new Date().toISOString() : undefined,
+          completion_time: newStatus === 'completed' ? new Date().toISOString() : undefined
+        })
+        .eq('id', bookingId);
+
+      if (error) {
+        console.error('Erreur lors de la mise à jour:', error);
+        return;
+      }
+
+      // Mettre à jour l'état local
+      setBookings(prev => prev.map(booking => 
+        booking.id === bookingId ? { ...booking, status: newStatus } : booking
+      ));
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'accepted':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <Clock size={12} />
+            Nouvelle demande
+          </span>
+        );
+      case 'in_progress':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <Car size={12} />
+            En cours
+          </span>
+        );
+      case 'completed':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircle size={12} />
+            Terminée
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            {status}
+          </span>
+        );
+    }
+  };
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -128,6 +219,21 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               }`}
             >
               Disponibilités
+            </button>
+            <button
+              onClick={() => setActiveTab('bookings')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'bookings'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Mes courses ({bookings.length})
+              {pendingBookings.length > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                  {pendingBookings.length}
+                </span>
+              )}
             </button>
           </nav>
         </div>
@@ -226,11 +332,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       <Car size={24} className="text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Courses</h3>
-                      <p className="text-sm text-gray-600">Aujourd'hui</p>
+                      <h3 className="font-semibold text-gray-900">Nouvelles demandes</h3>
+                      <p className="text-sm text-gray-600">À traiter</p>
                     </div>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">0</p>
+                  <p className="text-3xl font-bold text-gray-900">{pendingBookings.length}</p>
+                  {pendingBookings.length > 0 && (
+                    <p className="text-sm text-blue-600 font-medium mt-1">
+                      {pendingBookings.length} course{pendingBookings.length > 1 ? 's' : ''} en attente
+                    </p>
+                  )}
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm p-6">
@@ -239,11 +350,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       <MapPin size={24} className="text-green-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Revenus</h3>
-                      <p className="text-sm text-gray-600">Ce mois</p>
+                      <h3 className="font-semibold text-gray-900">Courses terminées</h3>
+                      <p className="text-sm text-gray-600">Total</p>
                     </div>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">0€</p>
+                  <p className="text-3xl font-bold text-gray-900">{completedBookings.length}</p>
+                  {completedBookings.length > 0 && (
+                    <p className="text-sm text-green-600 font-medium mt-1">
+                      {completedBookings.reduce((sum, b) => sum + b.priceTnd, 0)} TND gagnés
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -342,6 +458,178 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {/* Onglet Disponibilités */}
         {!showProfileForm && activeTab === 'availability' && driver && (
           <AvailabilityCalendar driverId={driver.id} />
+        )}
+
+        {/* Onglet Courses */}
+        {!showProfileForm && activeTab === 'bookings' && (
+          <div className="space-y-6">
+            {/* Nouvelles demandes */}
+            {pendingBookings.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Bell className="w-5 h-5 text-blue-600" />
+                    Nouvelles demandes ({pendingBookings.length})
+                  </h3>
+                  <p className="text-gray-600">Courses en attente de votre confirmation</p>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {pendingBookings.map((booking) => (
+                    <div key={booking.id} className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getStatusBadge(booking.status)}
+                            <span className="text-sm text-gray-500">
+                              {new Date(booking.scheduledTime).toLocaleString('fr-FR')}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <MapPin size={16} className="text-green-600" />
+                              <span className="text-sm text-gray-600">Départ:</span>
+                              <span className="font-medium text-gray-900">{booking.pickupAddress}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Navigation size={16} className="text-red-600" />
+                              <span className="text-sm text-gray-600">Arrivée:</span>
+                              <span className="font-medium text-gray-900">{booking.destinationAddress}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <span>{booking.distanceKm} km</span>
+                              <span className="font-bold text-green-600">{booking.priceTnd} TND</span>
+                            </div>
+                            {booking.notes && (
+                              <div className="bg-gray-50 rounded-lg p-3 mt-2">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Notes du client:</strong> {booking.notes}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="ml-6 flex flex-col gap-2">
+                          <Button
+                            onClick={() => updateBookingStatus(booking.id, 'in_progress')}
+                            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                            size="sm"
+                          >
+                            <Car size={16} />
+                            Commencer la course
+                          </Button>
+                          <Button
+                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                            variant="outline"
+                            className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            size="sm"
+                          >
+                            <XCircle size={16} />
+                            Annuler
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Informations client */}
+                      {booking.clients && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h4 className="font-medium text-blue-900 mb-2">Informations client</h4>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-blue-900">
+                                {booking.clients.first_name} {booking.clients.last_name}
+                              </p>
+                              {booking.clients.phone && (
+                                <p className="text-sm text-blue-700">
+                                  Tél: {booking.clients.phone}
+                                </p>
+                              )}
+                            </div>
+                            {booking.clients.phone && (
+                              <div className="flex gap-2">
+                                <a
+                                  href={`tel:${booking.clients.phone}`}
+                                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                  title="Appeler le client"
+                                >
+                                  <Phone size={16} />
+                                </a>
+                                <a
+                                  href={`sms:${booking.clients.phone}`}
+                                  className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                  title="Envoyer un SMS"
+                                >
+                                  <MessageSquare size={16} />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Historique des courses */}
+            <div className="bg-white rounded-xl shadow-sm">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900">Historique des courses</h3>
+                <p className="text-gray-600">Toutes vos courses passées</p>
+              </div>
+              
+              {bookings.length === 0 ? (
+                <div className="text-center py-12">
+                  <Car size={48} className="text-gray-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">Aucune course</h4>
+                  <p className="text-gray-500">
+                    Vous n'avez pas encore reçu de demande de course.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {bookings.filter(b => b.status !== 'accepted').map((booking) => (
+                    <div key={booking.id} className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getStatusBadge(booking.status)}
+                            <span className="text-sm text-gray-500">
+                              {new Date(booking.scheduledTime).toLocaleString('fr-FR')}
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <MapPin size={14} className="text-green-600" />
+                              <span className="text-sm text-gray-900">{booking.pickupAddress}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Navigation size={14} className="text-red-600" />
+                              <span className="text-sm text-gray-900">{booking.destinationAddress}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
+                              <span>{booking.distanceKm} km</span>
+                              <span className="font-bold text-green-600">{booking.priceTnd} TND</span>
+                            </div>
+                          </div>
+                        </div>
+                        {booking.status === 'in_progress' && (
+                          <Button
+                            onClick={() => updateBookingStatus(booking.id, 'completed')}
+                            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                            size="sm"
+                          >
+                            <CheckCircle size={16} />
+                            Terminer la course
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </main>
     </div>

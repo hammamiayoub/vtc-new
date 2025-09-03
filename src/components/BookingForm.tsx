@@ -279,11 +279,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       return;
     }
 
+    if (!selectedDriver) {
+      alert('Veuillez sélectionner un chauffeur');
+      return;
+    }
     setIsSubmitting(true);
     
     try {
       const bookingData = {
         client_id: clientId,
+        driver_id: selectedDriver,
         pickup_address: data.pickupAddress,
         pickup_latitude: pickupCoords.latitude,
         pickup_longitude: pickupCoords.longitude,
@@ -294,7 +299,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         price_tnd: estimatedPrice,
         scheduled_time: data.scheduledTime,
         notes: data.notes || null,
-        status: 'pending'
+        status: 'accepted'
       };
 
       const { data: booking, error } = await supabase
@@ -309,6 +314,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
 
+      console.log('✅ Réservation créée avec succès:', booking);
+      console.log('👤 Chauffeur assigné:', selectedDriver);
       onBookingSuccess(booking.id);
       
     } catch (error) {
