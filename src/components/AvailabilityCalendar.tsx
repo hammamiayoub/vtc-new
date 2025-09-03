@@ -318,7 +318,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
           <div className="bg-blue-50 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-semibold text-gray-900">
-                Disponibilités pour le {new Date(selectedDate + 'T00:00:00').toLocaleDateString('fr-FR', {
+                Disponibilités pour le {new Date(selectedDate.split('-').map(Number)).toLocaleDateString('fr-FR', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
