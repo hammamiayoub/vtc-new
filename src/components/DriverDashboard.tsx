@@ -64,19 +64,37 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         console.log('🔍 Type de l\'ID:', typeof driver.id);
         
         try {
+          // Test préliminaire: vérifier l'utilisateur connecté
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          console.log('👤 Utilisateur connecté:', user?.id);
+          console.log('🔒 Utilisateur = Chauffeur ?', user?.id === driver.id);
+          
+          if (userError) {
+            console.error('❌ Erreur utilisateur:', userError);
+          }
+          
           // Test 0: Récupérer TOUTES les réservations de la table (pour debug)
           const { data: allBookingsInDB, error: allBookingsInDBError } = await supabase
             .from('bookings')
-            .select('id, driver_id, client_id, status, pickup_address');
+            .select('id, driver_id, client_id, status, pickup_address, created_at');
           
           console.log('📊 TOUTES les réservations dans la DB:', allBookingsInDB?.length || 0);
+          
+          if (allBookingsInDBError) {
+            console.error('❌ Erreur récupération toutes réservations:', allBookingsInDBError);
+            console.error('Code erreur:', allBookingsInDBError.code);
+            console.error('Message:', allBookingsInDBError.message);
+            console.error('Détails:', allBookingsInDBError.details);
+          }
+          
           if (allBookingsInDB && allBookingsInDB.length > 0) {
             console.log('📋 Aperçu de toutes les réservations:', allBookingsInDB.map(b => ({
               id: b.id.slice(0, 8),
               driver_id: b.driver_id ? b.driver_id.slice(0, 8) : 'NULL',
               driver_id_full: b.driver_id,
               status: b.status,
-              pickup: b.pickup_address?.slice(0, 30) + '...'
+              pickup: b.pickup_address?.slice(0, 30) + '...',
+              created: new Date(b.created_at).toLocaleString()
             })));
             
             // Vérifier si notre chauffeur a des réservations
@@ -84,7 +102,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             console.log('🎯 Réservations pour ce chauffeur (filtrage manuel):', myBookings.length);
             if (myBookings.length > 0) {
               console.log('📋 Détails des réservations du chauffeur:', myBookings);
+            } else {
+              console.log('❌ Aucune réservation trouvée pour ce chauffeur');
+              console.log('🔍 Vérification des driver_id existants:');
+              const uniqueDriverIds = [...new Set(allBookingsInDB.map(b => b.driver_id).filter(Boolean))];
+              console.log('👥 Driver IDs dans la DB:', uniqueDriverIds);
             }
+          } else {
+            console.log('❌ Aucune réservation dans la DB ou erreur d\'accès');
           }
           
           // Test 1: Récupérer TOUTES les réservations pour ce chauffeur
@@ -94,6 +119,15 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             .eq('driver_id', driver.id);
           
           console.log('📊 Réservations via requête Supabase:', allBookings?.length || 0);
+          
+          if (allBookingsError) {
+            console.error('❌ Erreur requête Supabase:', allBookingsError);
+            console.error('Code:', allBookingsError.code);
+            console.error('Message:', allBookingsError.message);
+            console.error('Détails:', allBookingsError.details);
+            console.error('Hint:', allBookingsError.hint);
+          }
+          
           if (allBookings && allBookings.length > 0) {
             console.log('📋 Détails via Supabase:', allBookings.map(b => ({
               id: b.id.slice(0, 8),
@@ -104,13 +138,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             })));
           } else {
             console.log('❌ Aucune réservation trouvée via Supabase pour ce chauffeur');
-            console.log('🔍 Vérification des politiques RLS...');
+            console.log('🔍 Possible problème de politiques RLS');
           }
-          
-          // Test 2: Vérifier les politiques RLS en tant qu'utilisateur connecté
-          const { data: { user } } = await supabase.auth.getUser();
-          console.log('👤 Utilisateur connecté:', user?.id);
-          console.log('🔒 Utilisateur = Chauffeur ?', user?.id === driver.id);
           
           // Test 3: Récupération avec jointure client
           const { data: bookingsData, error } = await supabase
@@ -129,7 +158,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           console.log('📊 Réservations avec jointure client:', bookingsData?.length || 0);
           if (error) {
             console.error('Erreur lors de la récupération des réservations:', error);
-            console.error('Détails de l\'erreur:', error.message, error.code);
+            console.error('Code erreur:', error.code);
+            console.error('Message:', error.message);
+            console.error('Détails:', error.details);
+            console.error('Hint:', error.hint);
             
             // Fallback: récupérer sans jointure si problème
             console.log('🔄 Tentative sans jointure...');
@@ -146,6 +178,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               console.log('❌ Échec du fallback aussi');
               if (fallbackError) {
                 console.error('Erreur fallback:', fallbackError);
+                console.error('Code fallback:', fallbackError.code);
+                console.error('Message fallback:', fallbackError.message);
               }
             }
           } else {
