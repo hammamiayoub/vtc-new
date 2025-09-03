@@ -166,6 +166,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
   const pendingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'accepted');
   const completedBookings = bookings.filter(b => b.status === 'completed');
+  const totalEarnings = completedBookings.reduce((sum, booking) => sum + booking.price_tnd, 0);
 
   console.log('📊 Statistiques chauffeur:', {
     totalBookings: bookings.length,
@@ -445,11 +446,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     </div>
                   </div>
                   <p className="text-3xl font-bold text-gray-900">{completedBookings.length}</p>
-                  {completedBookings.length > 0 && (
-                    <p className="text-sm text-green-600 font-medium mt-1">
-                      {completedBookings.reduce((sum, b) => sum + b.priceTnd, 0)} TND gagnés
-                    </p>
-                  )}
+                  <p className="text-sm text-green-600 font-medium mt-1">
+                    {totalEarnings.toFixed(2)} TND gagnés
+                  </p>
                 </div>
               </div>
             </div>
