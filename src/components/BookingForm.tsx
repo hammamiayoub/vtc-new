@@ -171,10 +171,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
     try {
-      // Récupérer les chauffeurs actifs avec leurs disponibilités
-      console.log('📡 Récupération des chauffeurs actifs avec disponibilités...');
+      // Étape 1: Récupérer tous les chauffeurs actifs
+      console.log('📡 Étape 1: Récupération des chauffeurs actifs...');
       
-      // D'abord, récupérer tous les chauffeurs actifs
       const { data: activeDrivers, error: driversError } = await supabase
         .from('drivers')
         .select('*')
@@ -182,7 +181,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
       if (driversError) {
         console.error('❌ Erreur lors de la récupération des chauffeurs:', driversError);
-        alert('Erreur lors de la récupération des chauffeurs: ' + driversError.message);
+        console.error('Détails de l\'erreur:', driversError);
         return;
       }
       
@@ -195,43 +194,59 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
       
-      // Ensuite, vérifier quels chauffeurs ont des disponibilités définies
-      console.log('📅 Vérification des disponibilités...');
-      const driverIds = activeDrivers.map(d => d.id);
+      // Étape 2: Récupérer TOUTES les disponibilités
+      console.log('📅 Étape 2: Récupération de toutes les disponibilités...');
       
-      const { data: availabilities, error: availabilityError } = await supabase
+      const { data: allAvailabilities, error: availabilityError } = await supabase
         .from('driver_availability')
-        .select('*')
-        .in('driver_id', driverIds)
-        .eq('is_available', true);
+        .select('driver_id, is_available');
       
       if (availabilityError) {
         console.error('❌ Erreur lors de la récupération des disponibilités:', availabilityError);
-        alert('Erreur lors de la récupération des disponibilités: ' + availabilityError.message);
+        console.error('Détails de l\'erreur:', availabilityError);
+        // Continuer même en cas d'erreur pour voir les chauffeurs
+        console.log('⚠️ Continuons sans filtrer par disponibilités...');
+      }
+      
+      console.log('📊 Toutes les disponibilités récupérées:', allAvailabilities?.length || 0);
+      
+      // Étape 3: Filtrer les disponibilités actives
+      const activeAvailabilities = allAvailabilities?.filter(av => av.is_available === true) || [];
+      console.log('✅ Disponibilités actives:', activeAvailabilities.length);
+      
+      // Étape 4: Identifier les chauffeurs avec disponibilités
+      const driversWithAvailability = new Set(activeAvailabilities.map(av => av.driver_id));
+      console.log('👥 Chauffeurs avec disponibilités:', driversWithAvailability.size);
+      
+      if (driversWithAvailability.size === 0) {
+        console.warn('⚠️ Aucun chauffeur avec disponibilités actives trouvé');
+        console.log('🔍 Affichage de tous les chauffeurs actifs pour debug...');
+        
+        // Pour le debug, afficher tous les chauffeurs actifs
+        const formattedDrivers = activeDrivers.map(driver => ({
+          id: driver.id,
+          firstName: driver.first_name,
+          lastName: driver.last_name,
+          email: driver.email,
+          phone: driver.phone,
+          licenseNumber: driver.license_number,
+          vehicleInfo: driver.vehicle_info,
+          status: driver.status,
+          createdAt: driver.created_at,
+          updatedAt: driver.updated_at
+        }));
+        
+        setAvailableDrivers(formattedDrivers);
+        setShowDrivers(true);
         return;
       }
       
-      console.log('📅 Disponibilités trouvées:', availabilities?.length || 0);
-      
-      // Filtrer les chauffeurs qui ont au moins une disponibilité
-      const driversWithAvailability = new Set(availabilities?.map(a => a.driver_id) || []);
+      // Étape 5: Filtrer les chauffeurs qui ont des disponibilités
       const availableDriversData = activeDrivers.filter(driver => 
         driversWithAvailability.has(driver.id)
       );
       
       console.log('✅ Chauffeurs avec disponibilités:', availableDriversData.length);
-      availableDriversData.forEach((driver, index) => {
-        const driverAvailabilities = availabilities?.filter(a => a.driver_id === driver.id) || [];
-        console.log(`  ${index + 1}. ${driver.first_name} ${driver.last_name} (${driverAvailabilities.length} créneaux)`);
-      });
-      
-      if (availableDriversData.length === 0) {
-        console.warn('⚠️ Aucun chauffeur avec disponibilités trouvé');
-        alert('Aucun chauffeur n\'a défini ses disponibilités pour le moment');
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
 
       const formattedDrivers = availableDriversData.map(driver => ({
         id: driver.id,
@@ -250,11 +265,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
       setAvailableDrivers(formattedDrivers);
       setShowDrivers(true);
-      console.log('✅ Interface mise à jour avec', formattedDrivers.length, 'chauffeurs avec disponibilités');
+      console.log('✅ Interface mise à jour avec', formattedDrivers.length, 'chauffeurs');
       
     } catch (error) {
       console.error('💥 Erreur inattendue:', error);
-      alert('Erreur inattendue: ' + error);
+      console.error('Stack trace:', error);
     }
   };
 
@@ -625,11 +640,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               <div className="text-center py-12 bg-gray-50 rounded-xl">
                 <Car size={48} className="text-gray-400 mx-auto mb-4" />
                 <h4 className="text-lg font-medium text-gray-900 mb-2">
-                  Aucun chauffeur avec disponibilités
+                  Aucun chauffeur disponible
                 </h4>
                 <p className="text-gray-500 mb-4">
-                  Aucun chauffeur n'a encore défini ses créneaux de disponibilité. 
-                  Les chauffeurs doivent d'abord configurer leurs horaires.
+                  Vérifiez la console pour plus de détails sur la recherche.
                 </p>
                 <Button
                   onClick={searchAvailableDrivers}
