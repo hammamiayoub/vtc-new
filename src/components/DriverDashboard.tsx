@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Car, Clock, MapPin, LogOut, Settings, Bell, AlertCircle } from 'lucide-react';
 import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
+import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { supabase } from '../lib/supabase';
 import { Driver } from '../types';
 
