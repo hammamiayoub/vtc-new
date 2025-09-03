@@ -777,7 +777,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       </div>
                       {/* Informations client */}
                       {booking.clients && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
                           <h4 className="font-medium text-blue-900 mb-2">Informations client</h4>
                           <div className="flex items-center justify-between">
                             <div>
