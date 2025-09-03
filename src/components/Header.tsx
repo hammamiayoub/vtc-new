@@ -1,9 +1,9 @@
 import React from 'react';
-import { Car, UserPlus, LogIn, Shield } from 'lucide-react';
+import { Car, UserPlus, LogIn, Shield, MapPin } from 'lucide-react';
 
 interface HeaderProps {
-  currentView: 'home' | 'signup' | 'login' | 'admin';
-  onViewChange: (view: 'home' | 'signup' | 'login' | 'admin') => void;
+  currentView: 'home' | 'signup' | 'login' | 'admin' | 'client-signup';
+  onViewChange: (view: 'home' | 'signup' | 'login' | 'admin' | 'client-signup') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
@@ -32,6 +32,18 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             >
               <UserPlus size={18} />
               <span className="hidden sm:inline">Devenir chauffeur</span>
+            </button>
+            
+            <button
+              onClick={() => onViewChange('client-signup')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                currentView === 'client-signup'
+                  ? 'bg-purple-100 text-purple-700 font-medium'
+                  : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+              }`}
+            >
+              <MapPin size={18} />
+              <span className="hidden sm:inline">Réserver une course</span>
             </button>
             
             <button

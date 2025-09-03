@@ -4,9 +4,10 @@ import { Button } from './ui/Button';
 
 interface HomePageProps {
   onGetStarted: () => void;
+  onClientSignup: () => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ onGetStarted }) => {
+export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientSignup }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Hero Section */}
@@ -25,7 +26,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted }) => {
               <Button size="lg" onClick={onGetStarted} className="text-lg px-8 py-4">
                 Devenir chauffeur
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-4">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={onClientSignup}
+                className="text-lg px-8 py-4 border-purple-300 text-purple-600 hover:bg-purple-50"
+              >
                 Réserver une course
               </Button>
             </div>
