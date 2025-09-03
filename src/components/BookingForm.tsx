@@ -168,16 +168,22 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   };
 
   const searchAvailableDrivers = async () => {
+    console.log('Recherche des chauffeurs disponibles...');
     try {
       const { data, error } = await supabase
         .from('drivers')
         .select('*')
         .eq('status', 'active');
 
+      console.log('Résultat de la requête chauffeurs:', { data, error });
+
       if (error) {
         console.error('Erreur lors de la recherche de chauffeurs:', error);
+        alert('Erreur lors de la recherche de chauffeurs: ' + error.message);
         return;
       }
+
+      console.log('Chauffeurs trouvés:', data?.length || 0);
 
       const formattedDrivers = data.map(driver => ({
         id: driver.id,
@@ -192,10 +198,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         updatedAt: driver.updated_at
       }));
 
+      console.log('Chauffeurs formatés:', formattedDrivers);
       setAvailableDrivers(formattedDrivers);
       setShowDrivers(true);
     } catch (error) {
       console.error('Erreur:', error);
+      alert('Erreur lors de la recherche: ' + error);
     }
   };
 
@@ -528,6 +536,20 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 Rechercher des chauffeurs disponibles
               </Button>
             ) : (
+              <>
+                <Button
+                  type="button"
+                  onClick={() => {
+                  disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver || availableDrivers.length === 0}
+                    setSelectedDriver(null);
+                    setAvailableDrivers([]);
+                  }}
+                  variant="outline"
+                  className="flex items-center justify-center gap-2"
+              </>
+                >
+                  Nouvelle recherche
+                </Button>
               <Button
                 type="submit"
                 loading={isSubmitting}
@@ -548,6 +570,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               Chauffeurs disponibles ({availableDrivers.length})
             </h3>
             
+            <div className="mb-4 p-3 bg-gray-100 rounded-lg text-sm">
+              <p><strong>Debug:</strong> showDrivers = {showDrivers.toString()}</p>
+              <p><strong>Nombre de chauffeurs:</strong> {availableDrivers.length}</p>
+              <p><strong>Chauffeurs:</strong> {JSON.stringify(availableDrivers.map(d => ({ id: d.id, name: `${d.firstName} ${d.lastName}`, status: d.status })))}</p>
+            </div>
+            
             {availableDrivers.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-xl">
                 <Car size={48} className="text-gray-400 mx-auto mb-4" />
@@ -555,7 +583,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   Aucun chauffeur disponible
                 </h4>
                 <p className="text-gray-500">
-                  Essayez de modifier l'heure de votre réservation ou réessayez plus tard.
+                  Aucun chauffeur avec le statut 'active' n'a été trouvé dans la base de données.
+                </p>
+                <p className="text-gray-500 mt-2">
+                  Vérifiez que des chauffeurs sont inscrits et ont le statut 'active'.
                 </p>
               </div>
             ) : (
