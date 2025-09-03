@@ -65,7 +65,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         
         try {
           // Test 0: Récupérer TOUTES les réservations de la table (pour debug)
-          const { data: allBookingsInDB, error: allError } = await supabase
+          const { data: allBookingsInDB, error: allBookingsInDBError } = await supabase
             .from('bookings')
             .select('id, driver_id, client_id, status, pickup_address');
           
@@ -88,7 +88,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           }
           
           // Test 1: Récupérer TOUTES les réservations pour ce chauffeur
-          const { data: allBookings, error: allError } = await supabase
+          const { data: allBookings, error: allBookingsError } = await supabase
             .from('bookings')
             .select('*')
             .eq('driver_id', driver.id);
