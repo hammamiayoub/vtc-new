@@ -367,22 +367,22 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
-                            <p className="font-bold text-purple-600">{booking.price_tnd} TND</p>
+                {bookings.map((booking) => (
                   <div key={booking.id} className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
                           <MapPin size={16} className="text-green-600" />
-                          <span className="text-sm text-gray-600">Départ:</span>
-                            <p className="font-semibold text-gray-900 text-xs">
-                              {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
-                        <div className="flex items-center gap-3 mb-3">
-                          <Navigation size={16} className="text-red-600" />
-                          <span className="text-sm text-gray-600">Arrivée:</span>
-                          <span className="font-medium text-gray-900">{booking.destination_address}</span>
-                        </div>
-                                ID: {booking.driver_id.slice(0, 8)}
-                          <span>{booking.distanceKm} km</span>
+                          <span className="text-sm text-gray-500">
+                            Programmée pour le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
                           <span className="font-bold text-purple-600">{booking.priceTnd} TND</span>
                           <span>{new Date(booking.scheduledTime).toLocaleString('fr-FR')}</span>
                         </div>
