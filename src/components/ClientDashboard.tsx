@@ -361,7 +361,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     setActiveTab('new-booking');
                     setShowBookingForm(true);
                   }}
-                            <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
+                >
                   Réserver ma première course
                 </Button>
               </div>
@@ -373,27 +373,54 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
                           <MapPin size={16} className="text-green-600" />
-                          <span className="text-sm text-gray-500">
-                            Programmée pour le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </span>
-                          <span className="font-bold text-purple-600">{booking.priceTnd} TND</span>
-                          <span>{new Date(booking.scheduledTime).toLocaleString('fr-FR')}</span>
+                          <span className="text-sm text-gray-600">Départ:</span>
+                          <span className="font-medium text-gray-900">{booking.pickup_address}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mb-3">
+                          <Navigation size={16} className="text-red-600" />
+                          <span className="text-sm text-gray-600">Arrivée:</span>
+                          <span className="font-medium text-gray-900">{booking.destination_address}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <Clock size={14} />
+                            <p className="font-semibold text-gray-900 text-xs">
+                              {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MapPin size={14} />
+                            <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <p className="font-bold text-purple-600">{booking.price_tnd} TND</p>
+                          </div>
                         </div>
                         {booking.notes && (
                           <p className="mt-2 text-sm text-gray-600 italic">
                             Note: {booking.notes}
                           </p>
                         )}
+                        <div className="mt-2 text-xs text-gray-500">
                           <p>Réservé le {new Date(booking.created_at).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                      </div>
                       <div className="ml-4">
+                        {getStatusBadge(booking.status)}
                         {booking.driver_id && (
+                          <div className="mt-2 text-xs text-gray-500">
+                            <p>Chauffeur assigné</p>
+                            <p className="font-mono">
+                              ID: {booking.driver_id.slice(0, 8)}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
