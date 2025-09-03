@@ -323,7 +323,6 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
-                  timeZone: 'UTC'
                 })}
               </h4>
               <button
