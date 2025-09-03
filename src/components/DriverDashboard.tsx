@@ -169,175 +169,179 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           </div>
         )}
 
-        {/* Welcome Section */}
-        {!showProfileForm && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <User size={32} className="text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Bienvenue, {driver?.firstName} {driver?.lastName}
-                </h2>
-                <p className="text-gray-600">Tableau de bord chauffeur</p>
+        {/* Contenu conditionnel basé sur l'onglet actif */}
+        {!showProfileForm && activeTab === 'dashboard' && (
+          <>
+            {/* Welcome Section */}
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                  <User size={32} className="text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Bienvenue, {driver?.firstName} {driver?.lastName}
+                  </h2>
+                  <p className="text-gray-600">Tableau de bord chauffeur</p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Status and Stats Cards */}
-        {!showProfileForm && (
-          <div className="flex items-center gap-4">
-            <div className="grid md:grid-cols-3 gap-6 mb-8 w-full">
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                    driver?.status === 'active' ? 'bg-green-100' : 'bg-orange-100'
-                  }`}>
-                    <Clock size={24} className={driver?.status === 'active' ? 'text-green-600' : 'text-orange-600'} />
+            {/* Status and Stats Cards */}
+            <div className="flex items-center gap-4">
+              <div className="grid md:grid-cols-3 gap-6 mb-8 w-full">
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                      driver?.status === 'active' ? 'bg-green-100' : 'bg-orange-100'
+                    }`}>
+                      <Clock size={24} className={driver?.status === 'active' ? 'text-green-600' : 'text-orange-600'} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Statut</h3>
+                      <p className="text-sm text-gray-600">
+                        {driver?.status === 'active' ? 'Actif' : 'En attente'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Statut</h3>
-                    <p className="text-sm text-gray-600">
-                      {driver?.status === 'active' ? 'Actif' : 'En attente'}
+                  <div className={`border rounded-lg p-4 ${
+                    driver?.status === 'active' 
+                      ? 'bg-green-50 border-green-200' 
+                      : 'bg-orange-50 border-orange-200'
+                  }`}>
+                    <p className={`text-sm ${
+                      driver?.status === 'active' ? 'text-green-800' : 'text-orange-800'
+                    }`}>
+                      {driver?.status === 'active' 
+                        ? 'Votre compte est actif et vous pouvez recevoir des courses.'
+                        : 'Votre compte est en cours de validation. Vous recevrez un email une fois approuvé.'
+                      }
                     </p>
                   </div>
                 </div>
-                <div className={`border rounded-lg p-4 ${
-                  driver?.status === 'active' 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-orange-50 border-orange-200'
+
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Car size={24} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Courses</h3>
+                      <p className="text-sm text-gray-600">Aujourd'hui</p>
+                    </div>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">0</p>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                      <MapPin size={24} className="text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Revenus</h3>
+                      <p className="text-sm text-gray-600">Ce mois</p>
+                    </div>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">0€</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Steps */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Prochaines étapes</h3>
+              <div className="space-y-4">
+                <div className={`flex items-center gap-4 p-4 rounded-lg ${
+                  needsProfileCompletion ? 'bg-blue-50 border border-blue-200' : 'bg-green-50 border border-green-200'
                 }`}>
-                  <p className={`text-sm ${
-                    driver?.status === 'active' ? 'text-green-800' : 'text-orange-800'
+                  <div className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold ${
+                    needsProfileCompletion ? 'bg-blue-600' : 'bg-green-600'
                   }`}>
-                    {driver?.status === 'active' 
-                      ? 'Votre compte est actif et vous pouvez recevoir des courses.'
-                      : 'Votre compte est en cours de validation. Vous recevrez un email une fois approuvé.'
-                    }
-                  </p>
+                    1
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900">Compléter le profil</h4>
+                    <p className="text-sm text-gray-600">
+                      {needsProfileCompletion 
+                        ? 'Ajoutez vos informations personnelles et véhicule'
+                        : 'Profil complété ✓'
+                      }
+                    </p>
+                  </div>
+                  {needsProfileCompletion && (
+                    <Button 
+                      onClick={() => setShowProfileForm(true)}
+                      size="sm"
+                    >
+                      Compléter
+                    </Button>
+                  )}
                 </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Car size={24} className="text-blue-600" />
+                
+                <div className={`flex items-center gap-4 p-4 rounded-lg ${
+                  driver?.status === 'active' ? 'bg-green-50 border border-green-200' : 'bg-gray-50 opacity-50'
+                }`}>
+                  <div className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold ${
+                    driver?.status === 'active' ? 'bg-green-600' : 'bg-gray-400'
+                  }`}>
+                    2
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Courses</h3>
-                    <p className="text-sm text-gray-600">Aujourd'hui</p>
+                    <h4 className="font-medium text-gray-900">Validation du compte</h4>
+                    <p className="text-sm text-gray-600">
+                      {driver?.status === 'active' ? 'Compte validé ✓' : 'En cours - Nous vérifions vos informations'}
+                    </p>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-gray-900">0</p>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <MapPin size={24} className="text-green-600" />
+                
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg opacity-50">
+                  <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    3
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Revenus</h3>
-                    <p className="text-sm text-gray-600">Ce mois</p>
+                    <h4 className="font-medium text-gray-900">Première course</h4>
+                    <p className="text-sm text-gray-600">Commencez à recevoir des demandes</p>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-gray-900">0€</p>
               </div>
             </div>
-          </div>
+
+            {/* Vehicle Info Display */}
+            {driver?.vehicleInfo && (
+              <div className="bg-white rounded-xl shadow-sm p-6 mt-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Car className="w-5 h-5 text-blue-600" />
+                  Mon véhicule
+                </h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Véhicule</p>
+                    <p className="font-semibold text-gray-900">
+                      {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Année</p>
+                    <p className="font-semibold text-gray-900">{driver.vehicleInfo.year}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Couleur</p>
+                    <p className="font-semibold text-gray-900">{driver.vehicleInfo.color}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Places</p>
+                    <p className="font-semibold text-gray-900">{driver.vehicleInfo.seats} places</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        {/* Next Steps */}
-        {!showProfileForm && (
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Prochaines étapes</h3>
-            <div className="space-y-4">
-              <div className={`flex items-center gap-4 p-4 rounded-lg ${
-                needsProfileCompletion ? 'bg-blue-50 border border-blue-200' : 'bg-green-50 border border-green-200'
-              }`}>
-                <div className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold ${
-                  needsProfileCompletion ? 'bg-blue-600' : 'bg-green-600'
-                }`}>
-                  1
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">Compléter le profil</h4>
-                  <p className="text-sm text-gray-600">
-                    {needsProfileCompletion 
-                      ? 'Ajoutez vos informations personnelles et véhicule'
-                      : 'Profil complété ✓'
-                    }
-                  </p>
-                </div>
-                {needsProfileCompletion && (
-                  <Button 
-                    onClick={() => setShowProfileForm(true)}
-                    size="sm"
-                  >
-                    Compléter
-                  </Button>
-                )}
-              </div>
-              
-              <div className={`flex items-center gap-4 p-4 rounded-lg ${
-                driver?.status === 'active' ? 'bg-green-50 border border-green-200' : 'bg-gray-50 opacity-50'
-              }`}>
-                <div className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold ${
-                  driver?.status === 'active' ? 'bg-green-600' : 'bg-gray-400'
-                }`}>
-                  2
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Validation du compte</h4>
-                  <p className="text-sm text-gray-600">
-                    {driver?.status === 'active' ? 'Compte validé ✓' : 'En cours - Nous vérifions vos informations'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg opacity-50">
-                <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                  3
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Première course</h4>
-                  <p className="text-sm text-gray-600">Commencez à recevoir des demandes</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Vehicle Info Display */}
-        {!showProfileForm && driver?.vehicleInfo && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mt-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Car className="w-5 h-5 text-blue-600" />
-              Mon véhicule
-            </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-1">Véhicule</p>
-                <p className="font-semibold text-gray-900">
-                  {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                </p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-1">Année</p>
-                <p className="font-semibold text-gray-900">{driver.vehicleInfo.year}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-1">Couleur</p>
-                <p className="font-semibold text-gray-900">{driver.vehicleInfo.color}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-1">Places</p>
-                <p className="font-semibold text-gray-900">{driver.vehicleInfo.seats} places</p>
-              </div>
-            </div>
-          </div>
+        {/* Onglet Disponibilités */}
+        {!showProfileForm && activeTab === 'availability' && driver && (
+          <AvailabilityCalendar driverId={driver.id} />
         )}
       </main>
     </div>
