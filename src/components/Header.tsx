@@ -15,9 +15,6 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => onViewChange('home')}
           >
-            <div className="p-2 bg-white rounded-xl">
-              <Car size={28} className="text-black" />
-            </div>
             <h1 className="text-3xl font-bold text-white tracking-tight">MyRide</h1>
           </div>
           
