@@ -171,42 +171,51 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
     try {
-      // Vérifier d'abord la connexion utilisateur
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      console.log('👤 Utilisateur connecté:', user?.id);
+      // Test 1: Récupérer TOUS les chauffeurs d'abord
+      console.log('📡 Test 1: Récupération de TOUS les chauffeurs...');
+      const { data: allDrivers, error: allError } = await supabase
+        .from('drivers')
+        .select('*');
       
-      if (userError) {
-        console.error('❌ Erreur utilisateur:', userError);
-        alert('Erreur d\'authentification');
+      console.log('📊 Tous les chauffeurs:', allDrivers);
+      console.log('❌ Erreur (tous):', allError);
+      
+      if (allError) {
+        console.error('❌ Erreur lors de la récupération de tous les chauffeurs:', allError);
+        alert('Erreur RLS ou permissions: ' + allError.message);
         return;
       }
-
-      console.log('📡 Exécution de la requête pour récupérer les chauffeurs actifs...');
-      const { data, error } = await supabase
+      
+      // Test 2: Filtrer côté client
+      console.log('🔍 Test 2: Filtrage côté client...');
+      const activeDrivers = allDrivers?.filter(driver => driver.status === 'active') || [];
+      console.log('✅ Chauffeurs actifs trouvés:', activeDrivers.length);
+      activeDrivers.forEach((driver, index) => {
+        console.log(`  ${index + 1}. ${driver.first_name} ${driver.last_name} (${driver.status})`);
+      });
+      
+      // Test 3: Essayer la requête avec filtre
+      console.log('📡 Test 3: Requête avec filtre status=active...');
+      const { data: filteredDrivers, error: filteredError } = await supabase
         .from('drivers')
         .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .eq('status', 'active');
+      
+      console.log('📊 Chauffeurs filtrés:', filteredDrivers);
+      console.log('❌ Erreur (filtrés):', filteredError);
 
-      console.log('📋 Résultat de la requête Supabase:');
-      console.log('  - Erreur:', error);
-      console.log('  - Données reçues:', data);
-      console.log('  - Nombre de chauffeurs:', data?.length || 0);
-
-      if (error) {
-        console.error('❌ Erreur Supabase:', error);
-        alert('Erreur lors de la recherche: ' + error.message);
-        return;
+      // Utiliser les données qui fonctionnent
+      let finalDrivers = [];
+      
+      if (filteredError) {
+        console.warn('⚠️ Utilisation du filtrage côté client à cause de l\'erreur RLS');
+        finalDrivers = activeDrivers;
+      } else {
+        console.log('✅ Utilisation de la requête filtrée');
+        finalDrivers = filteredDrivers || [];
       }
 
-      if (!data) {
-        console.warn('⚠️ Aucune donnée retournée');
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
-
-      if (data.length === 0) {
+      if (finalDrivers.length === 0) {
         console.warn('⚠️ Aucun chauffeur actif trouvé');
         alert('Aucun chauffeur disponible pour le moment');
         setAvailableDrivers([]);
@@ -214,12 +223,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
 
-      console.log('✅ Chauffeurs actifs trouvés:', data.length);
-      data.forEach((driver, index) => {
+      console.log('✅ Chauffeurs finaux trouvés:', finalDrivers.length);
+      finalDrivers.forEach((driver, index) => {
         console.log(`  ${index + 1}. ${driver.first_name} ${driver.last_name} (${driver.status})`);
       });
 
-      const formattedDrivers = data.map(driver => ({
+      const formattedDrivers = finalDrivers.map(driver => ({
         id: driver.id,
         firstName: driver.first_name,
         lastName: driver.last_name,
