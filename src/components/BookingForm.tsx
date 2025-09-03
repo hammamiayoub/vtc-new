@@ -171,64 +171,69 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
     try {
-      // Test 1: Récupérer TOUS les chauffeurs d'abord
-      console.log('📡 Test 1: Récupération de TOUS les chauffeurs...');
-      const { data: allDrivers, error: allError } = await supabase
-        .from('drivers')
-        .select('*');
+      // Récupérer les chauffeurs actifs avec leurs disponibilités
+      console.log('📡 Récupération des chauffeurs actifs avec disponibilités...');
       
-      console.log('📊 Tous les chauffeurs:', allDrivers);
-      console.log('❌ Erreur (tous):', allError);
-      
-      if (allError) {
-        console.error('❌ Erreur lors de la récupération de tous les chauffeurs:', allError);
-        alert('Erreur RLS ou permissions: ' + allError.message);
-        return;
-      }
-      
-      // Test 2: Filtrer côté client
-      console.log('🔍 Test 2: Filtrage côté client...');
-      const activeDrivers = allDrivers?.filter(driver => driver.status === 'active') || [];
-      console.log('✅ Chauffeurs actifs trouvés:', activeDrivers.length);
-      activeDrivers.forEach((driver, index) => {
-        console.log(`  ${index + 1}. ${driver.first_name} ${driver.last_name} (${driver.status})`);
-      });
-      
-      // Test 3: Essayer la requête avec filtre
-      console.log('📡 Test 3: Requête avec filtre status=active...');
-      const { data: filteredDrivers, error: filteredError } = await supabase
+      // D'abord, récupérer tous les chauffeurs actifs
+      const { data: activeDrivers, error: driversError } = await supabase
         .from('drivers')
         .select('*')
         .eq('status', 'active');
       
-      console.log('📊 Chauffeurs filtrés:', filteredDrivers);
-      console.log('❌ Erreur (filtrés):', filteredError);
-
-      // Utiliser les données qui fonctionnent
-      let finalDrivers = [];
-      
-      if (filteredError) {
-        console.warn('⚠️ Utilisation du filtrage côté client à cause de l\'erreur RLS');
-        finalDrivers = activeDrivers;
-      } else {
-        console.log('✅ Utilisation de la requête filtrée');
-        finalDrivers = filteredDrivers || [];
+      if (driversError) {
+        console.error('❌ Erreur lors de la récupération des chauffeurs:', driversError);
+        alert('Erreur lors de la récupération des chauffeurs: ' + driversError.message);
+        return;
       }
-
-      if (finalDrivers.length === 0) {
+      
+      console.log('📊 Chauffeurs actifs trouvés:', activeDrivers?.length || 0);
+      
+      if (!activeDrivers || activeDrivers.length === 0) {
         console.warn('⚠️ Aucun chauffeur actif trouvé');
-        alert('Aucun chauffeur disponible pour le moment');
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+      
+      // Ensuite, vérifier quels chauffeurs ont des disponibilités définies
+      console.log('📅 Vérification des disponibilités...');
+      const driverIds = activeDrivers.map(d => d.id);
+      
+      const { data: availabilities, error: availabilityError } = await supabase
+        .from('driver_availability')
+        .select('*')
+        .in('driver_id', driverIds)
+        .eq('is_available', true);
+      
+      if (availabilityError) {
+        console.error('❌ Erreur lors de la récupération des disponibilités:', availabilityError);
+        alert('Erreur lors de la récupération des disponibilités: ' + availabilityError.message);
+        return;
+      }
+      
+      console.log('📅 Disponibilités trouvées:', availabilities?.length || 0);
+      
+      // Filtrer les chauffeurs qui ont au moins une disponibilité
+      const driversWithAvailability = new Set(availabilities?.map(a => a.driver_id) || []);
+      const availableDriversData = activeDrivers.filter(driver => 
+        driversWithAvailability.has(driver.id)
+      );
+      
+      console.log('✅ Chauffeurs avec disponibilités:', availableDriversData.length);
+      availableDriversData.forEach((driver, index) => {
+        const driverAvailabilities = availabilities?.filter(a => a.driver_id === driver.id) || [];
+        console.log(`  ${index + 1}. ${driver.first_name} ${driver.last_name} (${driverAvailabilities.length} créneaux)`);
+      });
+      
+      if (availableDriversData.length === 0) {
+        console.warn('⚠️ Aucun chauffeur avec disponibilités trouvé');
+        alert('Aucun chauffeur n\'a défini ses disponibilités pour le moment');
         setAvailableDrivers([]);
         setShowDrivers(true);
         return;
       }
 
-      console.log('✅ Chauffeurs finaux trouvés:', finalDrivers.length);
-      finalDrivers.forEach((driver, index) => {
-        console.log(`  ${index + 1}. ${driver.first_name} ${driver.last_name} (${driver.status})`);
-      });
-
-      const formattedDrivers = finalDrivers.map(driver => ({
+      const formattedDrivers = availableDriversData.map(driver => ({
         id: driver.id,
         firstName: driver.first_name,
         lastName: driver.last_name,
@@ -241,11 +246,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         updatedAt: driver.updated_at
       }));
 
-      console.log('🔄 Formatage terminé - Nombre final:', formattedDrivers.length);
+      console.log('🔄 Formatage terminé - Chauffeurs disponibles:', formattedDrivers.length);
       
       setAvailableDrivers(formattedDrivers);
       setShowDrivers(true);
-      console.log('✅ Interface mise à jour avec', formattedDrivers.length, 'chauffeurs');
+      console.log('✅ Interface mise à jour avec', formattedDrivers.length, 'chauffeurs avec disponibilités');
       
     } catch (error) {
       console.error('💥 Erreur inattendue:', error);
@@ -620,10 +625,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               <div className="text-center py-12 bg-gray-50 rounded-xl">
                 <Car size={48} className="text-gray-400 mx-auto mb-4" />
                 <h4 className="text-lg font-medium text-gray-900 mb-2">
-                  Aucun chauffeur disponible
+                  Aucun chauffeur avec disponibilités
                 </h4>
                 <p className="text-gray-500 mb-4">
-                  Tous nos chauffeurs sont actuellement occupés. Veuillez réessayer dans quelques minutes.
+                  Aucun chauffeur n'a encore défini ses créneaux de disponibilité. 
+                  Les chauffeurs doivent d'abord configurer leurs horaires.
                 </p>
                 <Button
                   onClick={searchAvailableDrivers}
@@ -670,7 +676,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                       <div className="text-right">
                         <div className="flex items-center gap-2 text-green-600 mb-1">
                           <CheckCircle size={16} />
-                          <span className="text-sm font-medium">Disponible</span>
+                          <span className="text-sm font-medium">Créneaux définis</span>
                         </div>
                         {driver.vehicleInfo && (
                           <p className="text-xs text-gray-500">
