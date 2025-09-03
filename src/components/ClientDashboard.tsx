@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Clock, User, LogOut, Settings, Bell, Car } from 'lucide-react';
+import { MapPin, Clock, User, LogOut, Settings, Bell, Car, Plus, Navigation, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Client } from '../types';
@@ -54,6 +54,59 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
     onLogout();
   };
 
+  const handleBookingSuccess = () => {
+    setShowBookingForm(false);
+    setActiveTab('bookings');
+    // Rafraîchir la page pour voir la nouvelle réservation
+    window.location.reload();
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+            <Clock size={12} />
+            En attente
+          </span>
+        );
+      case 'accepted':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <Car size={12} />
+            Acceptée
+          </span>
+        );
+      case 'in_progress':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <MapPin size={12} />
+            En cours
+          </span>
+        );
+      case 'completed':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircle size={12} />
+            Terminée
+          </span>
+        );
+      case 'cancelled':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <XCircle size={12} />
+            Annulée
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            Inconnu
+          </span>
+        );
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -94,82 +147,200 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         </div>
       </header>
 
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => {
+                setActiveTab('dashboard');
+                setShowBookingForm(false);
+              }}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'dashboard'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Tableau de bord
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('new-booking');
+                setShowBookingForm(true);
+              }}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'new-booking'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Nouvelle réservation
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('bookings');
+                setShowBookingForm(false);
+              }}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'bookings'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Mes réservations ({bookings.length})
+            </button>
+          </nav>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-              <User size={32} className="text-purple-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                Bienvenue, {client?.firstName} {client?.lastName}
-              </h2>
-              <p className="text-gray-600">Espace client - Réservation de courses</p>
-            </div>
-          </div>
-        </div>
+        {/* Formulaire de réservation */}
+        {showBookingForm && client && (
+          <BookingForm 
+            clientId={client.id} 
+            onBookingSuccess={handleBookingSuccess}
+          />
+        )}
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <MapPin size={24} className="text-purple-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Nouvelle course</h3>
-                <p className="text-sm text-gray-600">Réserver maintenant</p>
-              </div>
-            </div>
-            <Button className="w-full bg-purple-600 hover:bg-purple-700">
-              Réserver une course
-            </Button>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Clock size={24} className="text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Mes courses</h3>
-                <p className="text-sm text-gray-600">Historique</p>
+        {/* Dashboard principal */}
+        {!showBookingForm && activeTab === 'dashboard' && (
+          <>
+            {/* Welcome Section */}
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+                  <User size={32} className="text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Bienvenue, {client?.firstName} {client?.lastName}
+                  </h2>
+                  <p className="text-gray-600">Espace client - Réservation de courses</p>
+                </div>
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mb-2">0</p>
-            <p className="text-sm text-gray-500">Courses effectuées</p>
-          </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Car size={24} className="text-green-600" />
+            {/* Quick Actions */}
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Plus size={24} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Nouvelle course</h3>
+                    <p className="text-sm text-gray-600">Réserver maintenant</p>
+                  </div>
+                </div>
+                <Button 
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  onClick={() => {
+                    setActiveTab('new-booking');
+                    setShowBookingForm(true);
+                  }}
+                >
+                  Réserver une course
+                </Button>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Course en cours</h3>
-                <p className="text-sm text-gray-600">Statut actuel</p>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Clock size={24} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Mes courses</h3>
+                    <p className="text-sm text-gray-600">Historique</p>
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mb-2">{bookings.length}</p>
+                <p className="text-sm text-gray-500">Courses réservées</p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Car size={24} className="text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Course en cours</h3>
+                    <p className="text-sm text-gray-600">Statut actuel</p>
+                  </div>
+                </div>
+                {bookings.find(b => b.status === 'in_progress') ? (
+                  <p className="text-sm text-green-600 font-medium">Course en cours</p>
+                ) : (
+                  <p className="text-sm text-gray-500">Aucune course en cours</p>
+                )}
               </div>
             </div>
-            <p className="text-sm text-gray-500">Aucune course en cours</p>
-          </div>
-        </div>
+          </>
+        )}
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Activité récente</h3>
-          <div className="text-center py-12">
-            <MapPin size={48} className="text-gray-400 mx-auto mb-4" />
-            <h4 className="text-lg font-medium text-gray-900 mb-2">Aucune course pour le moment</h4>
-            <p className="text-gray-500 mb-6">
-              Commencez par réserver votre première course pour voir votre activité ici.
-            </p>
-            <Button className="bg-purple-600 hover:bg-purple-700">
-              Réserver ma première course
-            </Button>
+        {/* Liste des réservations */}
+        {!showBookingForm && activeTab === 'bookings' && (
+          <div className="bg-white rounded-xl shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900">Mes réservations</h3>
+              <p className="text-gray-600">Historique de vos courses</p>
+            </div>
+
+            {bookings.length === 0 ? (
+              <div className="text-center py-12">
+                <MapPin size={48} className="text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-medium text-gray-900 mb-2">Aucune réservation</h4>
+                <p className="text-gray-500 mb-6">
+                  Vous n'avez pas encore effectué de réservation.
+                </p>
+                <Button 
+                  className="bg-purple-600 hover:bg-purple-700"
+                  onClick={() => {
+                    setActiveTab('new-booking');
+                    setShowBookingForm(true);
+                  }}
+                >
+                  Réserver ma première course
+                </Button>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {bookings.map((booking) => (
+                  <div key={booking.id} className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <MapPin size={16} className="text-green-600" />
+                          <span className="text-sm text-gray-600">Départ:</span>
+                          <span className="font-medium text-gray-900">{booking.pickupAddress}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mb-3">
+                          <Navigation size={16} className="text-red-600" />
+                          <span className="text-sm text-gray-600">Arrivée:</span>
+                          <span className="font-medium text-gray-900">{booking.destinationAddress}</span>
+                        </div>
+                        <div className="flex items-center gap-6 text-sm text-gray-600">
+                          <span>{booking.distanceKm} km</span>
+                          <span className="font-bold text-purple-600">{booking.priceTnd} TND</span>
+                          <span>{new Date(booking.scheduledTime).toLocaleString('fr-FR')}</span>
+                        </div>
+                        {booking.notes && (
+                          <p className="mt-2 text-sm text-gray-600 italic">
+                            Note: {booking.notes}
+                          </p>
+                        )}
+                      </div>
+                      <div className="ml-4">
+                        {getStatusBadge(booking.status)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

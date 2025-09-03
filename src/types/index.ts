@@ -91,3 +91,31 @@ export interface DriverAvailability {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Booking {
+  id: string;
+  clientId: string;
+  driverId?: string;
+  pickupAddress: string;
+  pickupLatitude?: number;
+  pickupLongitude?: number;
+  destinationAddress: string;
+  destinationLatitude?: number;
+  destinationLongitude?: number;
+  distanceKm: number;
+  priceTnd: number;
+  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
+  scheduledTime: string;
+  pickupTime?: string;
+  completionTime?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BookingFormData {
+  pickupAddress: string;
+  destinationAddress: string;
+  scheduledTime: string;
+  notes?: string;
+}

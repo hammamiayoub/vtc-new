@@ -37,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             <button
               onClick={() => onViewChange('client-login')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                currentView === 'client-login'
+                currentView === 'client-login' || currentView === 'client-signup'
                   ? 'bg-purple-100 text-purple-700 font-medium'
                   : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
               }`}

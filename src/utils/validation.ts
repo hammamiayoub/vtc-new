@@ -118,3 +118,47 @@ export const driverProfileSchema = z.object({
     })
   })
 });
+
+export const bookingSchema = z.object({
+  pickupAddress: z
+    .string()
+    .min(5, 'L\'adresse de départ doit contenir au moins 5 caractères')
+    .max(200, 'L\'adresse de départ ne peut pas dépasser 200 caractères'),
+  destinationAddress: z
+    .string()
+    .min(5, 'L\'adresse d\'arrivée doit contenir au moins 5 caractères')
+    .max(200, 'L\'adresse d\'arrivée ne peut pas dépasser 200 caractères'),
+  scheduledTime: z
+    .string()
+    .min(1, 'Veuillez sélectionner une heure'),
+  notes: z
+    .string()
+    .max(500, 'Les notes ne peuvent pas dépasser 500 caractères')
+    .optional()
+});
+
+// Fonction pour calculer la distance approximative entre deux points (formule de Haversine)
+export const calculateDistance = (
+  lat1: number, 
+  lon1: number, 
+  lat2: number, 
+  lon2: number
+): number => {
+  const R = 6371; // Rayon de la Terre en kilomètres
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  return Math.round(distance * 100) / 100; // Arrondir à 2 décimales
+};
+
+// Fonction pour calculer le prix (2,5 TND par km)
+export const calculatePrice = (distanceKm: number): number => {
+  const pricePerKm = 2.5;
+  const basePrice = distanceKm * pricePerKm;
+  return Math.round(basePrice * 100) / 100; // Arrondir à 2 décimales
+};
