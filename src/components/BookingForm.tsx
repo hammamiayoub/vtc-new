@@ -540,25 +540,25 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 <Button
                   type="button"
                   onClick={() => {
-                  disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver || availableDrivers.length === 0}
                     setSelectedDriver(null);
                     setAvailableDrivers([]);
+                     setShowDrivers(false);
                   }}
                   variant="outline"
                   className="flex items-center justify-center gap-2"
-              </>
                 >
                   Nouvelle recherche
                 </Button>
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
-                className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700"
-              >
-                <CheckCircle size={20} />
-                {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
-              </Button>
+                <Button
+                  type="submit"
+                  loading={isSubmitting}
+                  disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver || availableDrivers.length === 0}
+                  className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700"
+                >
+                  <CheckCircle size={20} />
+                  {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
+                </Button>
+              </>
             )}
           </div>
         </form>
