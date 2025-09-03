@@ -60,26 +60,59 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     const fetchBookings = async () => {
       if (driver) {
         console.log('🔍 Chauffeur - Récupération des réservations pour:', driver.id);
+        console.log('🔍 ID exact du chauffeur:', `"${driver.id}"`);
+        console.log('🔍 Type de l\'ID:', typeof driver.id);
         
         try {
+          // Test 0: Récupérer TOUTES les réservations de la table (pour debug)
+          const { data: allBookingsInDB, error: allError } = await supabase
+            .from('bookings')
+            .select('id, driver_id, client_id, status, pickup_address');
+          
+          console.log('📊 TOUTES les réservations dans la DB:', allBookingsInDB?.length || 0);
+          if (allBookingsInDB && allBookingsInDB.length > 0) {
+            console.log('📋 Aperçu de toutes les réservations:', allBookingsInDB.map(b => ({
+              id: b.id.slice(0, 8),
+              driver_id: b.driver_id ? b.driver_id.slice(0, 8) : 'NULL',
+              driver_id_full: b.driver_id,
+              status: b.status,
+              pickup: b.pickup_address?.slice(0, 30) + '...'
+            })));
+            
+            // Vérifier si notre chauffeur a des réservations
+            const myBookings = allBookingsInDB.filter(b => b.driver_id === driver.id);
+            console.log('🎯 Réservations pour ce chauffeur (filtrage manuel):', myBookings.length);
+            if (myBookings.length > 0) {
+              console.log('📋 Détails des réservations du chauffeur:', myBookings);
+            }
+          }
+          
           // Test 1: Récupérer TOUTES les réservations pour ce chauffeur
           const { data: allBookings, error: allError } = await supabase
             .from('bookings')
             .select('*')
             .eq('driver_id', driver.id);
           
-          console.log('📊 Toutes les réservations du chauffeur:', allBookings?.length || 0);
+          console.log('📊 Réservations via requête Supabase:', allBookings?.length || 0);
           if (allBookings && allBookings.length > 0) {
-            console.log('📋 Détails des réservations:', allBookings.map(b => ({
+            console.log('📋 Détails via Supabase:', allBookings.map(b => ({
               id: b.id.slice(0, 8),
               status: b.status,
               client_id: b.client_id.slice(0, 8),
               pickup: b.pickup_address,
               created: new Date(b.created_at).toLocaleString()
             })));
+          } else {
+            console.log('❌ Aucune réservation trouvée via Supabase pour ce chauffeur');
+            console.log('🔍 Vérification des politiques RLS...');
           }
           
-          // Test 2: Récupération avec jointure client
+          // Test 2: Vérifier les politiques RLS en tant qu'utilisateur connecté
+          const { data: { user } } = await supabase.auth.getUser();
+          console.log('👤 Utilisateur connecté:', user?.id);
+          console.log('🔒 Utilisateur = Chauffeur ?', user?.id === driver.id);
+          
+          // Test 3: Récupération avec jointure client
           const { data: bookingsData, error } = await supabase
             .from('bookings')
             .select(`
@@ -93,6 +126,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             .eq('driver_id', driver.id)
             .order('created_at', { ascending: false });
 
+          console.log('📊 Réservations avec jointure client:', bookingsData?.length || 0);
           if (error) {
             console.error('Erreur lors de la récupération des réservations:', error);
             console.error('Détails de l\'erreur:', error.message, error.code);
@@ -108,6 +142,11 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             if (!fallbackError && fallbackData) {
               console.log('✅ Récupération sans jointure réussie:', fallbackData.length);
               setBookings(fallbackData);
+            } else {
+              console.log('❌ Échec du fallback aussi');
+              if (fallbackError) {
+                console.error('Erreur fallback:', fallbackError);
+              }
             }
           } else {
             console.log('📋 Réservations avec clients:', bookingsData?.length || 0);
