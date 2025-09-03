@@ -175,6 +175,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   });
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
     try {
+      console.log('🔄 Mise à jour du statut:', { bookingId, newStatus });
+      
       const { error } = await supabase
         .from('bookings')
         .update({ 
@@ -186,15 +188,19 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
       if (error) {
         console.error('Erreur lors de la mise à jour:', error);
+        alert('Erreur lors de la mise à jour du statut');
         return;
       }
 
+      console.log('✅ Statut mis à jour avec succès');
+      
       // Mettre à jour l'état local
       setBookings(prev => prev.map(booking => 
         booking.id === bookingId ? { ...booking, status: newStatus } : booking
       ));
     } catch (error) {
       console.error('Erreur:', error);
+      alert('Une erreur est survenue');
     }
   };
 
