@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Car, Clock, MapPin, LogOut, Settings, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle } from 'lucide-react';
+import { User, Car, Clock, MapPin, LogOut, Settings, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
 import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
