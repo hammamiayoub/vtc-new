@@ -4,9 +4,10 @@ import { Button } from './ui/Button';
 
 interface HomePageProps {
   onGetStarted: () => void;
+  onClientSignup: () => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ onGetStarted }) => {
+export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientSignup }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Hero Section */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, UserPlus, LogIn, Shield } from 'lucide-react';
+import { Car, UserPlus, LogIn, Shield, Users } from 'lucide-react';
 
 interface HeaderProps {
   currentView: 'home' | 'signup' | 'login' | 'admin';
