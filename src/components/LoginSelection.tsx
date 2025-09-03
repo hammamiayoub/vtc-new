@@ -49,7 +49,7 @@ export const LoginSelection: React.FC<LoginSelectionProps> = ({
                   Espace Chauffeur
                 </h3>
                 <p className="text-gray-600 mb-8 leading-relaxed">
-                  Accédez à votre tableau de bord chauffeur pour gérer vos courses et disponibilités
+                  Accédez à votre tableau de bord chauffeur pour gérer votre compte
                 </p>
                 <Button 
                   className="w-full bg-black hover:bg-gray-800 text-lg py-3"
