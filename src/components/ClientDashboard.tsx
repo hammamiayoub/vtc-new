@@ -361,27 +361,27 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     setActiveTab('new-booking');
                     setShowBookingForm(true);
                   }}
-                >
+                            <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
                   Réserver ma première course
                 </Button>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
-                {bookings.map((booking) => (
+                            <p className="font-bold text-purple-600">{booking.price_tnd} TND</p>
                   <div key={booking.id} className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
                           <MapPin size={16} className="text-green-600" />
                           <span className="text-sm text-gray-600">Départ:</span>
-                          <span className="font-medium text-gray-900">{booking.pickupAddress}</span>
-                        </div>
+                            <p className="font-semibold text-gray-900 text-xs">
+                              {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
                         <div className="flex items-center gap-3 mb-3">
                           <Navigation size={16} className="text-red-600" />
                           <span className="text-sm text-gray-600">Arrivée:</span>
-                          <span className="font-medium text-gray-900">{booking.destinationAddress}</span>
+                          <span className="font-medium text-gray-900">{booking.destination_address}</span>
                         </div>
-                        <div className="flex items-center gap-6 text-sm text-gray-600">
+                                ID: {booking.driver_id.slice(0, 8)}
                           <span>{booking.distanceKm} km</span>
                           <span className="font-bold text-purple-600">{booking.priceTnd} TND</span>
                           <span>{new Date(booking.scheduledTime).toLocaleString('fr-FR')}</span>
@@ -391,9 +391,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                             Note: {booking.notes}
                           </p>
                         )}
-                      </div>
+                          <p>Réservé le {new Date(booking.created_at).toLocaleDateString('fr-FR')}</p>
                       <div className="ml-4">
-                        {getStatusBadge(booking.status)}
+                        {booking.driver_id && (
                       </div>
                     </div>
                   </div>
