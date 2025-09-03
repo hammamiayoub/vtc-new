@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Clock, User, LogOut, Settings, Bell, Car, Plus, Navigation, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
-import { Client } from '../types';
+import { Client, Booking } from '../types';
+import { BookingForm } from './BookingForm';
 
 interface ClientDashboardProps {
   onLogout: () => void;
@@ -10,6 +11,9 @@ interface ClientDashboardProps {
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) => {
   const [client, setClient] = useState<Client | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [showBookingForm, setShowBookingForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,6 +52,30 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
     fetchClientData();
   }, []);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (client) {
+        try {
+          const { data: bookingsData, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('client_id', client.id)
+            .order('created_at', { ascending: false });
+
+          if (error) {
+            console.error('Erreur lors de la récupération des réservations:', error);
+          } else {
+            setBookings(bookingsData || []);
+          }
+        } catch (error) {
+          console.error('Erreur:', error);
+        }
+      }
+    };
+
+    fetchBookings();
+  }, [client]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
