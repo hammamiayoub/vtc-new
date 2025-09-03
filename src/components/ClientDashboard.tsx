@@ -175,7 +175,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-600 rounded-lg">
+              <div className="p-2 bg-black rounded-xl">
                 <MapPin size={24} className="text-white" />
               </div>
               <div>
@@ -188,7 +188,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               <button className="p-2 text-gray-600 hover:text-purple-600 rounded-lg hover:bg-purple-50 transition-colors">
                 <Bell size={20} />
               </button>
-              <button className="p-2 text-gray-600 hover:text-purple-600 rounded-lg hover:bg-purple-50 transition-colors">
+              <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors">
                 <Settings size={20} />
               </button>
               <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
@@ -211,7 +211,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               }}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'dashboard'
-                  ? 'border-purple-500 text-purple-600'
+                  ? 'border-black text-black'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -224,7 +224,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               }}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'new-booking'
-                  ? 'border-purple-500 text-purple-600'
+                  ? 'border-black text-black'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -237,7 +237,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               }}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'bookings'
-                  ? 'border-purple-500 text-purple-600'
+                  ? 'border-black text-black'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -271,8 +271,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             {/* Welcome Section */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-                  <User size={32} className="text-purple-600" />
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                  <User size={32} className="text-gray-700" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
@@ -287,8 +287,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Plus size={24} className="text-purple-600" />
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Plus size={24} className="text-gray-700" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Nouvelle course</h3>
@@ -296,7 +296,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   </div>
                 </div>
                 <Button 
-                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  className="w-full bg-black hover:bg-gray-800"
                   onClick={() => {
                     setActiveTab('new-booking');
                     setShowBookingForm(true);
@@ -308,8 +308,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Clock size={24} className="text-blue-600" />
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Clock size={24} className="text-gray-700" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Mes courses</h3>
@@ -322,8 +322,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Car size={24} className="text-green-600" />
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Car size={24} className="text-gray-700" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Course en cours</h3>
@@ -356,7 +356,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   Vous n'avez pas encore effectué de réservation.
                 </p>
                 <Button 
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-black hover:bg-gray-800"
                   onClick={() => {
                     setActiveTab('new-booking');
                     setShowBookingForm(true);
@@ -383,7 +383,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                               minute: '2-digit'
                             })}
                           </span>
-                          <span className="font-bold text-purple-600">{booking.priceTnd} TND</span>
+                          <span className="font-bold text-gray-900">{booking.price_tnd} TND</span>
                           <span>{new Date(booking.scheduledTime).toLocaleString('fr-FR')}</span>
                         </div>
                         <div className="space-y-2">
