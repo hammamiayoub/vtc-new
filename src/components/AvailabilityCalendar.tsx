@@ -220,8 +220,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Calendar size={20} className="text-blue-600" />
+          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+            <Calendar size={20} className="text-gray-700" />
           </div>
           <div>
             <h3 className="text-xl font-semibold text-gray-900">Mes disponibilités</h3>
@@ -234,7 +234,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigateMonth('prev')}
-          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ChevronLeft size={20} />
         </button>
@@ -245,7 +245,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
         
         <button
           onClick={() => navigateMonth('next')}
-          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ChevronRight size={20} />
         </button>
@@ -281,7 +281,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                   : 'text-gray-300 cursor-not-allowed'
                 }
                 ${isCurrentDay && day.isCurrentMonth ? 'bg-blue-100 font-semibold' : ''}
-                ${selectedDate === day.dateString ? 'bg-blue-200 ring-2 ring-blue-500' : ''}
+                ${selectedDate === day.dateString ? 'bg-gray-200 ring-2 ring-gray-500' : ''}
                 ${hasAvailabilities && day.isCurrentMonth ? 'bg-green-50' : ''}
               `}
             >
@@ -315,7 +315,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
       {/* Formulaire d'ajout de disponibilités */}
       {selectedDate && (
         <div className="border-t border-gray-200 pt-6">
-          <div className="bg-blue-50 rounded-xl p-6">
+          <div className="bg-gray-50 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-semibold text-gray-900">
                 Disponibilités pour le {(() => {
@@ -334,7 +334,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                   setSelectedDate(null);
                   setTimeSlots([]);
                 }}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-white transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <XCircle size={20} />
               </button>
@@ -382,19 +382,19 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
 
               {timeSlots.map((slot, index) => (
                 <div key={index} className="flex items-center gap-3 bg-white rounded-lg p-3">
-                  <Clock size={16} className="text-blue-600" />
+                  <Clock size={16} className="text-gray-700" />
                   <input
                     type="time"
                     value={slot.start}
                     onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   />
                   <span className="text-gray-500">à</span>
                   <input
                     type="time"
                     value={slot.end}
                     onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   />
                   <button
                     onClick={() => removeTimeSlot(index)}
@@ -410,7 +410,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                   <Button
                     onClick={saveAvailabilities}
                     loading={saving}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-black hover:bg-gray-800"
                   >
                     <Save size={16} />
                     {saving ? 'Enregistrement...' : 'Enregistrer'}

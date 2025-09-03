@@ -622,7 +622,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 type="button"
                 onClick={searchAvailableDrivers}
                 disabled={!isValid || !estimatedPrice || isCalculating}
-                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
+                className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800"
               >
                 <Car size={20} />
                 Rechercher des chauffeurs disponibles
@@ -645,7 +645,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   type="submit"
                   loading={isSubmitting}
                   disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
-                  className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700"
+                  className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800"
                 >
                   <CheckCircle size={20} />
                   {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
@@ -685,15 +685,15 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     key={driver.id}
                     className={`border rounded-xl p-6 cursor-pointer transition-all duration-200 ${
                       selectedDriver === driver.id
-                        ? 'border-purple-500 bg-purple-50 shadow-md ring-2 ring-purple-200'
-                        : 'border-gray-200 hover:border-purple-300 hover:shadow-sm'
+                        ? 'border-gray-500 bg-gray-50 shadow-md ring-2 ring-gray-200'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                     }`}
                     onClick={() => setSelectedDriver(driver.id)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                          <User size={24} className="text-purple-600" />
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                          <User size={24} className="text-gray-700" />
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-900">
@@ -732,7 +732,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     </div>
                     
                     {selectedDriver === driver.id && (
-                      <div className="mt-4 pt-4 border-t border-purple-200">
+                      <div className="mt-4 pt-4 border-t border-gray-200">
                         <div className="bg-white rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-gray-600">Distance du trajet:</span>
@@ -740,7 +740,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-600">Prix total:</span>
-                            <span className="font-bold text-purple-600 text-xl">
+                            <span className="font-bold text-gray-900 text-xl">
                               {estimatedPrice} TND
                             </span>
                           </div>
