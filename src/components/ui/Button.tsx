@@ -12,22 +12,22 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(
-          'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200',
+          'inline-flex items-center justify-center rounded-xl font-medium transition-all duration-200',
           'focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed',
           {
-            'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-gray-300': 
+            'bg-black text-white hover:bg-gray-800 focus:ring-gray-500 disabled:bg-gray-300': 
               variant === 'primary',
-            'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 disabled:bg-gray-300': 
+            'bg-gray-700 text-white hover:bg-gray-800 focus:ring-gray-500 disabled:bg-gray-300': 
               variant === 'secondary',
-            'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500': 
+            'border-2 border-gray-300 bg-white text-gray-900 hover:bg-gray-50 focus:ring-gray-500': 
               variant === 'outline',
-            'text-gray-700 hover:bg-gray-100 focus:ring-gray-500': 
+            'text-gray-900 hover:bg-gray-100 focus:ring-gray-500': 
               variant === 'ghost',
           },
           {
-            'h-8 px-3 text-xs': size === 'sm',
-            'h-12 px-6 text-sm': size === 'md',
-            'h-14 px-8 text-base': size === 'lg',
+            'h-10 px-4 text-sm': size === 'sm',
+            'h-12 px-6 text-base': size === 'md',
+            'h-14 px-8 text-lg': size === 'lg',
           },
           loading && 'opacity-50 cursor-not-allowed',
           className
@@ -38,7 +38,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && (
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+            className="animate-spin -ml-1 mr-3 h-5 w-5 text-current"
             fill="none"
             viewBox="0 0 24 24"
           >
