@@ -132,16 +132,3 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
     </div>
   );
 };
-          </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Développez votre activité avec notre plateforme. 
-            Inscriptions rapides, commissions attractives, support dédié.
-          </p>
-          <Button size="lg" onClick={onGetStarted} className="text-lg px-8 py-4">
-            Commencer maintenant
-          </Button>
-        </div>
-      </section>
-    </div>
-  );
-};
