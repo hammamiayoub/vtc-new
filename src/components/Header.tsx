@@ -18,7 +18,6 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             <div className="p-2 bg-blue-600 rounded-lg group-hover:bg-blue-700 transition-colors">
               <Car size={24} className="text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">DriveConnect</h1>
             <h1 className="text-2xl font-bold text-gray-900">MyRide</h1>
           </div>
           
