@@ -14,19 +14,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight tracking-tight">
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight tracking-tight max-w-5xl mx-auto">
               Votre transport
               <span className="text-black block">sur mesure</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
               Des trajets fiables avec des chauffeurs professionnels. 
               Simple, rapide et sécurisé.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
               <Button 
                 size="lg" 
                 onClick={onClientLogin}
-                className="text-lg px-8 py-4 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
+                className="text-lg px-8 py-4 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 Réserver une course
                 <ArrowRight size={20} />
@@ -34,7 +34,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
               <Button 
                 size="lg" 
                 onClick={onGetStarted} 
-                className="text-lg px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
+                className="text-lg px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 whitespace-nowrap"
               >
                 Devenir chauffeur
               </Button>
