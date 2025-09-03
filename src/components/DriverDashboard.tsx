@@ -206,7 +206,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'accepted':
+      case 'pending':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
             <Clock size={12} />
@@ -584,7 +584,6 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <MapPin size={16} className="text-green-600" />
-      case 'pending':
                               <span className="font-medium text-gray-900">{booking.pickup_address}</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -776,66 +775,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           Terminer la course
                         </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Historique des courses */}
-            <div className="bg-white rounded-xl shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">Historique des courses</h3>
-                <p className="text-gray-600">Toutes vos courses passées</p>
-              </div>
-              
-              {bookings.length === 0 ? (
-                <div className="text-center py-12">
-                  <Car size={48} className="text-gray-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">Aucune course</h4>
-                  <p className="text-gray-500">
-                    Vous n'avez pas encore reçu de demande de course.
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-200">
-                  {bookings.filter(b => !['pending', 'accepted', 'in_progress'].includes(b.status)).map((booking) => (
-                    <div key={booking.id} className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            {getStatusBadge(booking.status)}
-                            <span className="text-sm text-gray-500">
-                              {new Date(booking.scheduled_time).toLocaleString('fr-FR')}
-                            </span>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <MapPin size={14} className="text-green-600" />
-                              <span className="text-sm text-gray-900">{booking.pickup_address}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Navigation size={14} className="text-red-600" />
-                              <span className="text-sm text-gray-900">{booking.destination_address}</span>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                              <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
-  );
-};
+                      {/* Informations client */}
+                      {booking.clients && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <h4 className="font-medium text-blue-900 mb-2">Informations client</h4>
                           <div className="flex items-center justify-between">
@@ -893,41 +834,31 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200">
-                  {bookings.filter(b => b.status !== 'accepted').map((booking) => (
+                  {bookings.filter(b => !['pending', 'accepted', 'in_progress'].includes(b.status)).map((booking) => (
                     <div key={booking.id} className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
-                              {new Date(booking.scheduledTime).toLocaleString('fr-FR')}
+                              {new Date(booking.scheduled_time).toLocaleString('fr-FR')}
                             </span>
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <MapPin size={14} className="text-green-600" />
-                              <span className="text-sm text-gray-900">{booking.pickupAddress}</span>
+                              <span className="text-sm text-gray-900">{booking.pickup_address}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Navigation size={14} className="text-red-600" />
-                              <span className="text-sm text-gray-900">{booking.destinationAddress}</span>
+                              <span className="text-sm text-gray-900">{booking.destination_address}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                              <span>{booking.distanceKm} km</span>
-                              <span className="font-bold text-green-600">{booking.priceTnd} TND</span>
+                              <span>{booking.distance_km} km</span>
+                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
                             </div>
                           </div>
                         </div>
-                        {booking.status === 'in_progress' && (
-                          <Button
-                            onClick={() => updateBookingStatus(booking.id, 'completed')}
-                            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
-                            size="sm"
-                          >
-                            <CheckCircle size={16} />
-                            Terminer la course
-                          </Button>
-                        )}
                       </div>
                     </div>
                   ))}
