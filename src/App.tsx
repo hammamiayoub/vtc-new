@@ -6,17 +6,14 @@ import { LoginPage } from './components/LoginPage';
 import { DriverDashboard } from './components/DriverDashboard';
 import { AdminLogin } from './components/AdminLogin';
 import { AdminDashboard } from './components/AdminDashboard';
-import { ClientSignup } from './components/ClientSignup';
 
-type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup';
+type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('home');
 
   const renderContent = () => {
     switch (currentView) {
-      case 'client-signup':
-        return <ClientSignup onBack={() => setCurrentView('home')} />;
       case 'signup':
         return <DriverSignup onBack={() => setCurrentView('home')} />;
       case 'login':
@@ -45,7 +42,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {(currentView === 'home' || currentView === 'admin' || currentView === 'client-signup') && (
+      {(currentView === 'home' || currentView === 'admin') && (
         <Header currentView={currentView} onViewChange={setCurrentView} />
       )}
       {renderContent()}
