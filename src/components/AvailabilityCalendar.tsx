@@ -318,12 +318,16 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
           <div className="bg-blue-50 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-semibold text-gray-900">
-                Disponibilités pour le {new Date(selectedDate.split('-').map(Number)).toLocaleDateString('fr-FR', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+                Disponibilités pour le {(() => {
+                  const [year, month, day] = selectedDate.split('-').map(Number);
+                  const date = new Date(year, month - 1, day);
+                  return date.toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  });
+                })()}
               </h4>
               <button
                 onClick={() => {
