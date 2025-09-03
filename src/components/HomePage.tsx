@@ -15,8 +15,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight tracking-tight max-w-5xl mx-auto">
-              Votre transport
-              <span className="text-black block">sur mesure</span>
+              Votre transport sur mesure
             </h1>
             <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
               Des trajets fiables avec des chauffeurs professionnels. 
