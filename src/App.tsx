@@ -42,7 +42,7 @@ function App() {
       case 'client-login':
         return (
           <ClientLogin 
-            onBack={() => setCurrentView('login-selection')} 
+            onBack={() => setCurrentView('home')} 
             onSignup={() => setCurrentView('client-signup')}
             onLoginSuccess={() => setCurrentView('client-dashboard')}
           />
@@ -72,7 +72,7 @@ function App() {
         return (
           <HomePage 
             onGetStarted={() => setCurrentView('signup')}
-            onClientSignup={() => setCurrentView('login')}
+            onClientLogin={() => setCurrentView('client-login')}
           />
         );
     }
