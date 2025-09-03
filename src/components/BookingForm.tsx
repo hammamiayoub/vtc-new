@@ -542,7 +542,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   onClick={() => {
                     setSelectedDriver(null);
                     setAvailableDrivers([]);
-                     setShowDrivers(false);
+                    setShowDrivers(false);
                   }}
                   variant="outline"
                   className="flex items-center justify-center gap-2"
@@ -552,7 +552,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 <Button
                   type="submit"
                   loading={isSubmitting}
-                  disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver || availableDrivers.length === 0}
+                  disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
                   className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700"
                 >
                   <CheckCircle size={20} />
