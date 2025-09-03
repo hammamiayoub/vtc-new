@@ -25,7 +25,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted }) => {
               <Button size="lg" onClick={onGetStarted} className="text-lg px-8 py-4">
                 Devenir chauffeur
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-4">
+              <Button variant="outline" size="lg" onClick={onClientSignup} className="text-lg px-8 py-4">
                 Réserver une course
               </Button>
             </div>

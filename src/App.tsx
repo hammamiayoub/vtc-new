@@ -36,7 +36,12 @@ function App() {
       case 'admin-dashboard':
         return <AdminDashboard onLogout={() => setCurrentView('home')} />;
       default:
-        return <HomePage onGetStarted={() => setCurrentView('signup')} />;
+        return (
+          <HomePage 
+            onGetStarted={() => setCurrentView('signup')} 
+            onClientSignup={() => setCurrentView('client-signup')}
+          />
+        );
     }
   };
 

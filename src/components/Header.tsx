@@ -23,6 +23,18 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           
           <nav className="flex items-center gap-4">
             <button
+              onClick={() => onViewChange('client-signup')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                currentView === 'client-signup'
+                  ? 'bg-purple-100 text-purple-700 font-medium'
+                  : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+              }`}
+            >
+              <Users size={18} />
+              <span className="hidden sm:inline">Compte client</span>
+            </button>
+            
+            <button
               onClick={() => onViewChange('signup')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                 currentView === 'signup'
