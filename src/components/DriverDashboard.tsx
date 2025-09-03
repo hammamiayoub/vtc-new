@@ -265,20 +265,23 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-black rounded-xl">
+              <div className="p-2 bg-black rounded-2xl">
                 <Car size={24} className="text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">MyRide</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">MyRide</h1>
+                <p className="text-sm text-gray-600">Espace Chauffeur</p>
+              </div>
             </div>
             
             <div className="flex items-center gap-4">
-              <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors">
+              <button className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
                 <Bell size={20} />
               </button>
-              <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors">
+              <button className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
                 <Settings size={20} />
               </button>
-              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50">
                 <LogOut size={16} />
                 Déconnexion
               </Button>
@@ -334,20 +337,20 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Completion Alert */}
         {needsProfileCompletion && !showProfileForm && (
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 mb-8">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
             <div className="flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-6 h-6 text-gray-700 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h3 className="font-semibold text-orange-900 mb-2">
+                <h3 className="font-semibold text-gray-900 mb-2">
                   Complétez votre profil
                 </h3>
-                <p className="text-orange-800 mb-4">
+                <p className="text-gray-700 mb-4">
                   Pour commencer à recevoir des courses, vous devez compléter vos informations 
                   personnelles et ajouter les détails de votre véhicule.
                 </p>
                 <Button 
                   onClick={() => setShowProfileForm(true)}
-                  className="bg-orange-600 hover:bg-orange-700"
+                  className="bg-black hover:bg-gray-800 text-white"
                 >
                   Compléter mon profil
                 </Button>
@@ -372,7 +375,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {/* Welcome Section */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center">
                   <User size={32} className="text-gray-700" />
                 </div>
                 <div>
@@ -437,8 +440,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
                 <div className="bg-white rounded-xl shadow-sm p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                      <MapPin size={24} className="text-green-600" />
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <MapPin size={24} className="text-gray-700" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">Courses terminées</h3>
@@ -446,7 +449,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     </div>
                   </div>
                   <p className="text-3xl font-bold text-gray-900">{completedBookings.length}</p>
-                  <p className="text-sm text-green-600 font-medium mt-1">
+                  <p className="text-sm text-gray-700 font-medium mt-1">
                     {totalEarnings.toFixed(2)} TND gagnés
                   </p>
                 </div>
@@ -478,6 +481,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     <Button 
                       onClick={() => setShowProfileForm(true)}
                       size="sm"
+                      className="bg-black hover:bg-gray-800 text-white"
                     >
                       Compléter
                     </Button>
@@ -608,7 +612,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             <>
                               <Button
                                 onClick={() => updateBookingStatus(booking.id, 'accepted')}
-                                className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                                className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
                                 size="sm"
                               >
                                 <CheckCircle size={16} />
@@ -629,7 +633,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             <>
                               <Button
                                 onClick={() => updateBookingStatus(booking.id, 'in_progress')}
-                                className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                                className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
                                 size="sm"
                               >
                                 <Car size={16} />
@@ -767,7 +771,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                         </div>
                         <Button
                           onClick={() => updateBookingStatus(booking.id, 'completed')}
-                          className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                          className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
                           size="sm"
                         >
                           <CheckCircle size={16} />

@@ -150,25 +150,25 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-md w-full">
         <div className="p-8">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-8 transition-colors group"
+            className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             Retour
           </button>
 
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield size={32} className="text-red-600" />
+            <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <Shield size={36} className="text-gray-700" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
               Administration
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-lg">
               Accès réservé aux administrateurs
             </p>
           </div>
@@ -183,7 +183,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email administrateur"
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+                className="block w-full pl-10 pr-3 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
                 required
               />
             </div>
@@ -197,7 +197,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mot de passe"
-                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+                className="block w-full pl-10 pr-12 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
                 required
               />
               <button
@@ -206,9 +206,9 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
                 {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  <EyeOff className="h-5 w-5 text-gray-500 hover:text-gray-700" />
                 ) : (
-                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  <Eye className="h-5 w-5 text-gray-500 hover:text-gray-700" />
                 )}
               </button>
             </div>
@@ -222,7 +222,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
             <Button
               type="submit"
               loading={isSubmitting}
-              className="w-full py-3 bg-red-600 hover:bg-red-700 focus:ring-red-500"
+              className="w-full py-4 bg-black hover:bg-gray-800 text-lg font-medium"
             >
               Connexion administrateur
             </Button>

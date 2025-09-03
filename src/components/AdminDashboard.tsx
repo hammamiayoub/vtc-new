@@ -194,7 +194,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-600 rounded-lg">
+              <div className="p-2 bg-black rounded-2xl">
                 <Shield size={24} className="text-white" />
               </div>
               <div>
@@ -207,7 +207,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <button
                 onClick={fetchDrivers}
                 disabled={refreshing}
-                className="p-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
+                className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
                 title="Actualiser"
               >
                 <div className={refreshing ? 'animate-spin' : ''}>
@@ -216,7 +216,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </svg>
                 </div>
               </button>
-              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50">
                 <LogOut size={16} />
                 Déconnexion
               </Button>
@@ -231,8 +231,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users size={24} className="text-blue-600" />
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Users size={24} className="text-gray-700" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Total chauffeurs</h3>
@@ -243,7 +243,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                 <Clock size={24} className="text-orange-600" />
               </div>
               <div>
@@ -255,7 +255,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                 <CheckCircle size={24} className="text-green-600" />
               </div>
               <div>
@@ -267,7 +267,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                 <XCircle size={24} className="text-red-600" />
               </div>
               <div>
@@ -324,8 +324,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <tr key={driver.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User size={20} className="text-blue-600" />
+                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                          <User size={20} className="text-gray-700" />
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
@@ -367,7 +367,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setSelectedDriver(driver)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Voir les détails"
                         >
                           <Eye size={16} />
@@ -378,7 +378,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             <button
                               onClick={() => updateDriverStatus(driver.id, 'active')}
                               disabled={actionLoading === driver.id}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                              className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50"
                               title="Approuver"
                             >
                               <UserCheck size={16} />
@@ -386,7 +386,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             <button
                               onClick={() => updateDriverStatus(driver.id, 'rejected')}
                               disabled={actionLoading === driver.id}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
                               title="Rejeter"
                             >
                               <XCircle size={16} />
@@ -398,7 +398,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           <button
                             onClick={() => updateDriverStatus(driver.id, 'pending')}
                             disabled={actionLoading === driver.id}
-                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50"
+                            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors disabled:opacity-50"
                             title="Suspendre"
                           >
                             <Clock size={16} />
@@ -531,7 +531,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <Button
                           onClick={() => updateDriverStatus(selectedDriver.id, 'active')}
                           loading={actionLoading === selectedDriver.id}
-                          className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                          className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
                           size="sm"
                         >
                           <CheckCircle size={16} />
@@ -540,7 +540,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <Button
                           onClick={() => updateDriverStatus(selectedDriver.id, 'rejected')}
                           loading={actionLoading === selectedDriver.id}
-                          className="bg-red-600 hover:bg-red-700 flex items-center gap-2"
+                          className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
                           size="sm"
                         >
                           <XCircle size={16} />
@@ -553,8 +553,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <Button
                         onClick={() => updateDriverStatus(selectedDriver.id, 'pending')}
                         loading={actionLoading === selectedDriver.id}
-                        variant="outline"
-                        className="border-orange-300 text-orange-600 hover:bg-orange-50 flex items-center gap-2"
+                        className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2"
                         size="sm"
                       >
                         <Clock size={16} />
@@ -566,7 +565,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <Button
                         onClick={() => updateDriverStatus(selectedDriver.id, 'pending')}
                         loading={actionLoading === selectedDriver.id}
-                        className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                        className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
                         size="sm"
                       >
                         <Clock size={16} />
