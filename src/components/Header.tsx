@@ -8,17 +8,17 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="bg-black border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div 
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => onViewChange('home')}
           >
-            <div className="p-2 bg-black rounded-xl">
-              <Car size={28} className="text-white" />
+            <div className="p-2 bg-white rounded-xl">
+              <Car size={28} className="text-black" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">MyRide</h1>
+            <h1 className="text-3xl font-bold text-white tracking-tight">MyRide</h1>
           </div>
           
           <nav className="hidden md:flex items-center gap-2">
@@ -26,8 +26,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               onClick={() => onViewChange('signup')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'signup'
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
               }`}
             >
               <UserPlus size={20} />
@@ -38,8 +38,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               onClick={() => onViewChange('client-login')}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'client-login' || currentView === 'client-signup'
-                  ? 'bg-black text-white'
-                  : 'bg-black text-white hover:bg-gray-800'
+                  ? 'bg-white text-black'
+                  : 'bg-white text-black hover:bg-gray-200'
               }`}
             >
               <MapPin size={20} />
@@ -50,8 +50,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               onClick={() => onViewChange('login')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'login'
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
               }`}
             >
               <LogIn size={20} />
@@ -62,8 +62,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               onClick={() => onViewChange('admin')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'admin'
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
               }`}
             >
               <Shield size={20} />
@@ -72,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           </nav>
           
           {/* Mobile menu button */}
-          <button className="md:hidden p-2 text-gray-600 hover:text-gray-900">
+          <button className="md:hidden p-2 text-gray-300 hover:text-white">
             <Menu size={24} />
           </button>
         </div>
