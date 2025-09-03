@@ -106,11 +106,11 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           
           // Test 3: Avec jointure client
           console.log('--- Test 3: Avec jointure client ---');
-          const { data: bookingsData, error } = await supabase
+          const { data: bookingsWithClients, error: joinError } = await supabase
             .from('bookings')
             .select(`
               *,
-              clients!inner(
+              clients(
                 first_name,
                 last_name,
                 phone
@@ -119,13 +119,27 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             .eq('driver_id', driver.id)
             .order('created_at', { ascending: false });
 
-          if (error) {
-            console.error('Erreur jointure client:', error);
+          if (joinError) {
+            console.error('Erreur jointure client:', joinError);
             // Utiliser les données du test 2 si disponibles
-            setBookings(driverBookings || []);
+            console.log('🔄 Utilisation des données sans jointure client');
+            const bookingsWithoutClients = driverBookings?.map(booking => ({
+              ...booking,
+              clients: null
+            })) || [];
+            setBookings(bookingsWithoutClients);
           } else {
-            console.log('Réservations avec clients:', bookingsData?.length || 0);
-            setBookings(bookingsData || []);
+            console.log('Réservations avec clients:', bookingsWithClients?.length || 0);
+            if (bookingsWithClients && bookingsWithClients.length > 0) {
+              setBookings(bookingsWithClients);
+            } else {
+              console.log('🔄 Jointure réussie mais 0 résultats, utilisation des données sans jointure');
+              const bookingsWithoutClients = driverBookings?.map(booking => ({
+                ...booking,
+                clients: null
+              })) || [];
+              setBookings(bookingsWithoutClients);
+            }
           }
           
           console.log('=== FIN DIAGNOSTIC ===');
