@@ -35,26 +35,6 @@ export interface SignupFormData {
   confirmPassword: string;
 }
 
-export interface ClientSignupFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-}
-
-export interface Client {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface AuthState {
   user: Driver | null;
   loading: boolean;

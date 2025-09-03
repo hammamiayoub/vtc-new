@@ -27,29 +27,6 @@ export const signupSchema = z.object({
   path: ['confirmPassword']
 });
 
-export const clientSignupSchema = z.object({
-  firstName: z
-    .string()
-    .min(2, 'Le prénom doit contenir au moins 2 caractères')
-    .max(50, 'Le prénom ne peut pas dépasser 50 caractères'),
-  lastName: z
-    .string()
-    .min(2, 'Le nom doit contenir au moins 2 caractères')
-    .max(50, 'Le nom ne peut pas dépasser 50 caractères'),
-  email: z
-    .string()
-    .email('Veuillez entrer une adresse email valide'),
-  phone: z
-    .string()
-    .min(10, 'Le numéro de téléphone doit contenir au moins 10 chiffres')
-    .regex(/^[0-9+\-\s()]+$/, 'Format de téléphone invalide'),
-  password: passwordSchema,
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword']
-});
-
 export const validatePassword = (password: string) => {
   const requirements = [
     { 
