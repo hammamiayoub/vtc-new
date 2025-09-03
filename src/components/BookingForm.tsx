@@ -168,22 +168,45 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   };
 
   const searchAvailableDrivers = async () => {
-    console.log('Recherche des chauffeurs disponibles...');
+    console.log('🔍 Début de la recherche des chauffeurs disponibles...');
+    console.log('📊 État actuel:', { showDrivers, availableDrivers: availableDrivers.length });
+    
     try {
+      console.log('📡 Exécution de la requête Supabase...');
       const { data, error } = await supabase
         .from('drivers')
         .select('*')
         .eq('status', 'active');
 
-      console.log('Résultat de la requête chauffeurs:', { data, error });
+      console.log('📋 Résultat brut de la requête:', { 
+        data: data, 
+        error: error,
+        dataLength: data?.length || 0,
+        hasError: !!error 
+      });
 
       if (error) {
         console.error('Erreur lors de la recherche de chauffeurs:', error);
-        alert('Erreur lors de la recherche de chauffeurs: ' + error.message);
+        alert('❌ Erreur lors de la recherche de chauffeurs: ' + error.message);
         return;
       }
 
-      console.log('Chauffeurs trouvés:', data?.length || 0);
+      if (!data) {
+        console.warn('⚠️ Aucune donnée retournée par Supabase');
+        alert('⚠️ Aucune donnée retournée par la base de données');
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+
+      console.log('✅ Chauffeurs trouvés dans la DB:', data.length);
+      console.log('📝 Détail des chauffeurs:', data.map(d => ({
+        id: d.id,
+        name: `${d.first_name} ${d.last_name}`,
+        email: d.email,
+        status: d.status,
+        hasVehicle: !!d.vehicle_info
+      })));
 
       const formattedDrivers = data.map(driver => ({
         id: driver.id,
@@ -198,12 +221,22 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         updatedAt: driver.updated_at
       }));
 
-      console.log('Chauffeurs formatés:', formattedDrivers);
+      console.log('🔄 Chauffeurs formatés:', formattedDrivers.length);
+      console.log('📊 Détail formaté:', formattedDrivers.map(d => ({
+        id: d.id,
+        name: `${d.firstName} ${d.lastName}`,
+        status: d.status,
+        hasVehicle: !!d.vehicleInfo
+      })));
+      
       setAvailableDrivers(formattedDrivers);
+      console.log('💾 État mis à jour - availableDrivers:', formattedDrivers.length);
       setShowDrivers(true);
+      console.log('👁️ showDrivers mis à true');
+      
     } catch (error) {
-      console.error('Erreur:', error);
-      alert('Erreur lors de la recherche: ' + error);
+      console.error('💥 Erreur catch:', error);
+      alert('💥 Erreur lors de la recherche: ' + error);
     }
   };
 
@@ -566,15 +599,23 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         {/* Liste des chauffeurs disponibles */}
         {showDrivers && (
           <div className="mt-8 border-t border-gray-200 pt-8">
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h4 className="font-semibold text-yellow-800 mb-2">🔧 Debug Info</h4>
+              <div className="text-sm text-yellow-700 space-y-1">
+                <p><strong>showDrivers:</strong> {showDrivers.toString()}</p>
+                <p><strong>availableDrivers.length:</strong> {availableDrivers.length}</p>
+                <p><strong>availableDrivers data:</strong> {JSON.stringify(availableDrivers.map(d => ({ 
+                  id: d.id.substring(0, 8) + '...', 
+                  name: `${d.firstName} ${d.lastName}`,
+                  status: d.status,
+                  hasVehicle: !!d.vehicleInfo
+                })), null, 2)}</p>
+              </div>
+            </div>
+            
             <h3 className="text-xl font-semibold text-gray-900 mb-6">
               Chauffeurs disponibles ({availableDrivers.length})
             </h3>
-            
-            <div className="mb-4 p-3 bg-gray-100 rounded-lg text-sm">
-              <p><strong>Debug:</strong> showDrivers = {showDrivers.toString()}</p>
-              <p><strong>Nombre de chauffeurs:</strong> {availableDrivers.length}</p>
-              <p><strong>Chauffeurs:</strong> {JSON.stringify(availableDrivers.map(d => ({ id: d.id, name: `${d.firstName} ${d.lastName}`, status: d.status })))}</p>
-            </div>
             
             {availableDrivers.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-xl">
@@ -582,12 +623,18 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 <h4 className="text-lg font-medium text-gray-900 mb-2">
                   Aucun chauffeur disponible
                 </h4>
-                <p className="text-gray-500">
-                  Aucun chauffeur avec le statut 'active' n'a été trouvé dans la base de données.
+                <p className="text-gray-500 mb-2">
+                  Aucun chauffeur avec le statut 'active' trouvé.
                 </p>
-                <p className="text-gray-500 mt-2">
-                  Vérifiez que des chauffeurs sont inscrits et ont le statut 'active'.
+                <p className="text-gray-500 text-sm">
+                  Vérifiez la console pour plus de détails.
                 </p>
+                <Button
+                  onClick={searchAvailableDrivers}
+                  className="mt-4 bg-blue-600 hover:bg-blue-700"
+                >
+                  🔄 Relancer la recherche
+                </Button>
               </div>
             ) : (
               <div className="grid gap-4">

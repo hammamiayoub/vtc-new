@@ -42,12 +42,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     if (!loading) setRefreshing(true);
     
     try {
-      console.log('Récupération des chauffeurs...');
+      console.log('🔍 Admin - Récupération des chauffeurs...');
       
       // Vérifier l'utilisateur connecté
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      console.log('Utilisateur connecté:', user);
-      console.log('Erreur utilisateur:', userError);
+      console.log('👤 Admin - Utilisateur connecté:', user?.id);
       
       if (!user) {
         console.error('Aucun utilisateur connecté');
@@ -61,8 +60,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         .eq('id', user.id)
         .single();
       
-      console.log('Données admin:', adminData);
-      console.log('Erreur admin:', adminError);
+      console.log('🛡️ Admin - Permissions vérifiées:', !!adminData);
       
       const { data, error } = await supabase
         .from('drivers')
@@ -75,8 +73,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         return;
       }
 
-      console.log('Données brutes récupérées:', data);
-      console.log('Nombre de chauffeurs récupérés:', data?.length || 0);
+      console.log('📊 Admin - Chauffeurs récupérés:', data?.length || 0);
+      console.log('📋 Admin - Statuts des chauffeurs:', data?.map(d => ({ 
+        name: `${d.first_name} ${d.last_name}`, 
+        status: d.status 
+      })));
 
       const formattedDrivers = data.map(driver => ({
         id: driver.id,
@@ -91,7 +92,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         updatedAt: driver.updated_at
       }));
 
-      console.log('Chauffeurs formatés:', formattedDrivers);
       setDrivers(formattedDrivers);
     } catch (error) {
       console.error('Erreur:', error);
