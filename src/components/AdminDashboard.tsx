@@ -199,7 +199,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Administration</h1>
-                <p className="text-sm text-gray-600">DriveConnect</p>
+                <p className="text-sm text-gray-600">MyRide</p>
               </div>
             </div>
             

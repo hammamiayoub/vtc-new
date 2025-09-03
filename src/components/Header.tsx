@@ -19,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               <Car size={24} className="text-white" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">DriveConnect</h1>
+            <h1 className="text-2xl font-bold text-gray-900">MyRide</h1>
           </div>
           
           <nav className="flex items-center gap-4">

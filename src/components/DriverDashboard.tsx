@@ -269,6 +269,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 <Car size={24} className="text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-900">DriveConnect</h1>
+              <h1 className="text-2xl font-bold text-gray-900">MyRide</h1>
             </div>
             
             <div className="flex items-center gap-4">

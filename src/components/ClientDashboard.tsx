@@ -179,7 +179,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 <MapPin size={24} className="text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">DriveConnect</h1>
+                <h1 className="text-2xl font-bold text-gray-900">MyRide</h1>
                 <p className="text-sm text-gray-600">Espace Client</p>
               </div>
             </div>
