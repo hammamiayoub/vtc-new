@@ -72,7 +72,7 @@ function App() {
         return (
           <HomePage 
             onGetStarted={() => setCurrentView('signup')}
-            onClientSignup={() => setCurrentView('client-signup')}
+            onClientSignup={() => setCurrentView('login')}
           />
         );
     }
