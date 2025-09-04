@@ -221,7 +221,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <span className="text-sm text-gray-600">Heure prévue</span>
                   </div>
                   <p className="font-semibold text-gray-900">
-                    {new Date(booking.scheduledTime).toLocaleString('fr-FR', {
+                    {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
