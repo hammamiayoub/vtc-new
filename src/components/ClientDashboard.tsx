@@ -6,6 +6,8 @@ import { Client, Booking } from '../types';
 import { BookingForm } from './BookingForm';
 import { BookingConfirmation } from './BookingConfirmation';
 import { ProfileModal } from './ProfileModal';
+import { NotificationBell } from './NotificationBell';
+import { useClientNotifications } from '../hooks/useNotifications';
 
 interface ClientDashboardProps {
   onLogout: () => void;
@@ -19,6 +21,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   const [confirmationBookingId, setConfirmationBookingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Hook pour les notifications
+  const { unreadCount, hasNewBookings, markAsRead, refreshNotifications } = useClientNotifications(client?.id || '');
 
   useEffect(() => {
     const fetchClientData = async () => {
@@ -198,9 +203,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             </div>
             
             <div className="flex items-center gap-4">
-              <button className="p-2 text-gray-600 hover:text-purple-600 rounded-lg hover:bg-purple-50 transition-colors">
-                <Bell size={20} />
-              </button>
+              <NotificationBell
+                unreadCount={unreadCount}
+                hasNewNotifications={hasNewBookings}
+                onClick={() => {
+                  markAsRead();
+                  setActiveTab('bookings');
+                }}
+                className="hover:text-purple-600 hover:bg-purple-50"
+              />
               <button 
                 onClick={() => setShowProfileModal(true)}
                 className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"

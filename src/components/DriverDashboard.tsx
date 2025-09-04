@@ -4,6 +4,8 @@ import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { ProfileModal } from './ProfileModal';
+import { NotificationBell } from './NotificationBell';
+import { useDriverNotifications } from '../hooks/useNotifications';
 import { supabase } from '../lib/supabase';
 import { Driver, Booking } from '../types';
 
@@ -18,6 +20,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'bookings'>('dashboard');
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Hook pour les notifications
+  const { unreadCount, hasNewBookings, markAsRead, refreshNotifications } = useDriverNotifications(driver?.id || '');
 
   useEffect(() => {
     const fetchDriverData = async () => {
@@ -234,9 +239,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             </div>
             
             <div className="flex items-center gap-4">
-              <button className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
-                <Bell size={20} />
-              </button>
+              <NotificationBell
+                unreadCount={unreadCount}
+                hasNewNotifications={hasNewBookings}
+                onClick={() => {
+                  markAsRead();
+                  setActiveTab('bookings');
+                }}
+              />
               <button 
                 onClick={() => setShowProfileModal(true)}
                 className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors"
