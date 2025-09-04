@@ -200,7 +200,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   <div className="w-3 h-3 bg-green-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Point de départ</p>
-                    <p className="font-medium text-gray-900">{booking.pickupAddress}</p>
+                    <p className="font-medium text-gray-900">{booking.pickup_address}</p>
                   </div>
                 </div>
                 
@@ -208,7 +208,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   <div className="w-3 h-3 bg-red-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Destination</p>
-                    <p className="font-medium text-gray-900">{booking.destinationAddress}</p>
+                    <p className="font-medium text-gray-900">{booking.destination_address}</p>
                   </div>
                 </div>
               </div>
@@ -237,7 +237,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <Navigation size={16} className="text-purple-600" />
                     <span className="text-sm text-gray-600">Distance</span>
                   </div>
-                  <p className="font-semibold text-gray-900">{booking.distanceKm} km</p>
+                  <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
                 </div>
               </div>
 
@@ -246,14 +246,14 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-medium text-purple-900">Prix total</span>
                   <span className="text-2xl font-bold text-purple-600">
-                    {booking.priceTnd} TND
+                    {booking.price_tnd} TND
                   </span>
                 </div>
                 <p className="text-sm text-purple-700 mt-1">
                   Tarif: {(() => {
-                    if (booking.distanceKm <= 20) return '2,5 TND/km';
-                    if (booking.distanceKm <= 30) return '3,0 TND/km';
-                    if (booking.distanceKm <= 50) return '2,5 TND/km';
+                    if (booking.distance_km <= 20) return '2,5 TND/km';
+                    if (booking.distance_km <= 30) return '3,0 TND/km';
+                    if (booking.distance_km <= 50) return '2,5 TND/km';
                     return '2,2 TND/km';
                   })()}
                 </p>
