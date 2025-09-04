@@ -43,18 +43,6 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             </button>
             
             <button
-              onClick={() => handleNavigation('login')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
-                currentView === 'login'
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
-              }`}
-            >
-              <Car size={20} />
-              <span className="hidden sm:inline">Espace chauffeur</span>
-            </button>
-            
-            <button
               onClick={() => handleNavigation('client-login')}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'client-login' || currentView === 'client-signup'
@@ -64,6 +52,18 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             >
               <MapPin size={20} />
               <span className="hidden sm:inline">Réserver une course</span>
+            </button>
+            
+            <button
+              onClick={() => handleNavigation('login')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
+                currentView === 'login'
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              <LogIn size={20} />
+              <span className="hidden sm:inline">Connexion</span>
             </button>
             
             <button
