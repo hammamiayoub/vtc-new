@@ -11,20 +11,12 @@ import { LoginSelection } from './components/LoginSelection';
 import { DriverLogin } from './components/DriverLogin';
 import { ClientLogin } from './components/ClientLogin';
 import { ClientDashboard } from './components/ClientDashboard';
-import { AuthCallback } from './components/AuthCallback';
 
-type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'auth-callback';
+type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('home');
 
-  // Vérifier si nous sommes sur la page de callback OAuth
-  React.useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (window.location.pathname === '/auth/callback' || urlParams.has('code')) {
-      setCurrentView('auth-callback');
-    }
-  }, []);
   const renderContent = () => {
     switch (currentView) {
       case 'signup':
@@ -67,14 +59,6 @@ function App() {
         return <DriverDashboard onLogout={() => setCurrentView('home')} />;
       case 'client-dashboard':
         return <ClientDashboard onLogout={() => setCurrentView('home')} />;
-      case 'auth-callback':
-        return (
-          <AuthCallback 
-            onDriverSuccess={() => setCurrentView('dashboard')}
-            onClientSuccess={() => setCurrentView('client-dashboard')}
-            onError={() => setCurrentView('home')}
-          />
-        );
       case 'admin':
         return (
           <AdminLogin 
@@ -96,7 +80,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {(currentView === 'home' || currentView === 'admin') && currentView !== 'auth-callback' && (
+      {(currentView === 'home' || currentView === 'admin') && (
         <Header currentView={currentView} onViewChange={setCurrentView} />
       )}
       {renderContent()}
