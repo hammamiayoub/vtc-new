@@ -106,7 +106,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         try {
           const { data: bookingsData, error } = await supabase
             .from('bookings')
-            .select('*')
+            .select(`
+              *,
+              drivers(
+                first_name,
+                last_name,
+                phone
+              )
+            `)
             .eq('client_id', client.id)
             .order('created_at', { ascending: false });
 

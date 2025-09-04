@@ -116,6 +116,11 @@ export interface Booking {
     last_name: string;
     phone?: string;
   };
+  drivers?: {
+    first_name: string;
+    last_name: string;
+    phone?: string;
+  };
 }
 
 export interface BookingFormData {
