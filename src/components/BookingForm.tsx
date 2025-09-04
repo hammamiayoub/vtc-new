@@ -745,7 +745,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             </span>
                           </div>
                           <p className="text-xs text-gray-500 mt-2 text-center">
-                            Tarif: 2,5 TND par kilomètre
+                            Tarif: {(() => {
+                              if (!estimatedDistance) return '2,5 TND/km';
+                              if (estimatedDistance <= 20) return '2,5 TND/km';
+                              if (estimatedDistance <= 30) return '3,0 TND/km';
+                              if (estimatedDistance <= 50) return '2,5 TND/km';
+                              return '2,2 TND/km';
+                            })()}
                           </p>
                         </div>
                       </div>

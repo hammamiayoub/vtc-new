@@ -63,7 +63,19 @@ export const calculateDistance = (
 
 // Fonction pour calculer le prix (2,5 TND par km)
 export const calculatePrice = (distanceKm: number): number => {
-  const pricePerKm = 2.5;
+  let pricePerKm: number;
+  
+  // Grille tarifaire par tranches de distance
+  if (distanceKm <= 20) {
+    pricePerKm = 2.5; // Tarif de base
+  } else if (distanceKm <= 30) {
+    pricePerKm = 3.0; // 20-30km : 3 TND/km
+  } else if (distanceKm <= 50) {
+    pricePerKm = 2.5; // 30-50km : 2.5 TND/km
+  } else {
+    pricePerKm = 2.2; // +50km : 2.2 TND/km
+  }
+  
   const basePrice = distanceKm * pricePerKm;
   return Math.round(basePrice * 100) / 100; // Arrondir à 2 décimales
 };
