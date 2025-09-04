@@ -26,9 +26,7 @@ Dans votre dashboard Supabase (`https://supabase.com/dashboard/project/YOUR_PROJ
 
 **Redirect URLs (ajoutez ces URLs):**
 ```
-https://plateforme-de-r-serv-m5qt.bolt.host/#/auth/callback
 https://plateforme-de-r-serv-m5qt.bolt.host/auth/callback
-http://localhost:5173/#/auth/callback
 http://localhost:5173/auth/callback
 ```
 

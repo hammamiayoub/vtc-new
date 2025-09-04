@@ -38,7 +38,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/#/auth/callback?type=client`,
+          redirectTo: `${window.location.origin}/auth/callback?type=client`,
           queryParams: {
             user_type: 'client'
           }
