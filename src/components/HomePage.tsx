@@ -74,7 +74,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
               {
                 icon: Car,
                 title: 'Tarifs transparents',
-                description: 'Prix fixes sans surprise, payez à l\'arrivée'
+                description: 'Grille tarifaire claire selon la distance'
               }
             ].map((feature, index) => (
               <div 

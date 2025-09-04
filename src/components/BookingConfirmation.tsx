@@ -250,7 +250,12 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   </span>
                 </div>
                 <p className="text-sm text-purple-700 mt-1">
-                  Tarif: 2,5 TND par kilomètre
+                  Tarif: {(() => {
+                    if (booking.distanceKm <= 20) return '2,5 TND/km';
+                    if (booking.distanceKm <= 30) return '3,0 TND/km';
+                    if (booking.distanceKm <= 50) return '2,5 TND/km';
+                    return '2,2 TND/km';
+                  })()}
                 </p>
               </div>
 
