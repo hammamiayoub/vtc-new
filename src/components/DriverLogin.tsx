@@ -24,7 +24,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?type=driver`,
+          redirectTo: `${window.location.origin}/#/auth/callback?type=driver`,
           queryParams: {
             user_type: 'driver'
           }
