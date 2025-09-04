@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Client, Booking } from '../types';
 import { BookingForm } from './BookingForm';
 import { BookingConfirmation } from './BookingConfirmation';
+import { ProfileModal } from './ProfileModal';
 
 interface ClientDashboardProps {
   onLogout: () => void;
@@ -17,6 +18,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [confirmationBookingId, setConfirmationBookingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     const fetchClientData = async () => {
@@ -199,7 +201,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               <button className="p-2 text-gray-600 hover:text-purple-600 rounded-lg hover:bg-purple-50 transition-colors">
                 <Bell size={20} />
               </button>
-              <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors">
+              <button 
+                onClick={() => setShowProfileModal(true)}
+                className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
+                title="Mon profil"
+              >
                 <Settings size={20} />
               </button>
               <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
@@ -449,6 +455,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               </div>
             )}
           </div>
+        )}
+
+        {/* Modal de profil */}
+        {client && (
+          <ProfileModal
+            isOpen={showProfileModal}
+            onClose={() => setShowProfileModal(false)}
+            user={client}
+            userType="client"
+            onProfileDeleted={handleLogout}
+          />
         )}
       </main>
     </div>

@@ -3,6 +3,7 @@ import { User, Car, Clock, MapPin, LogOut, Settings, Bell, AlertCircle, Navigati
 import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
+import { ProfileModal } from './ProfileModal';
 import { supabase } from '../lib/supabase';
 import { Driver, Booking } from '../types';
 
@@ -16,6 +17,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [loading, setLoading] = useState(true);
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'bookings'>('dashboard');
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     const fetchDriverData = async () => {
@@ -235,7 +237,11 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               <button className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
                 <Bell size={20} />
               </button>
-              <button className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
+              <button 
+                onClick={() => setShowProfileModal(true)}
+                className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors"
+                title="Mon profil"
+              >
                 <Settings size={20} />
               </button>
               <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50">
@@ -832,6 +838,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               )}
             </div>
           </div>
+        )}
+
+        {/* Modal de profil */}
+        {driver && (
+          <ProfileModal
+            isOpen={showProfileModal}
+            onClose={() => setShowProfileModal(false)}
+            user={driver}
+            userType="driver"
+            onProfileDeleted={handleLogout}
+          />
         )}
       </main>
     </div>
