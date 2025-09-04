@@ -68,44 +68,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           console.log('Utilisateur connecté:', user?.id);
           console.log('Correspondance user/driver:', user?.id === driver.id);
           
-          // Test 1: Récupérer TOUTES les réservations
-          console.log('--- Test 1: Toutes les réservations ---');
-          const { data: allBookings, error: allError } = await supabase
-            .from('bookings')
-            .select('*');
+          // Récupérer les réservations du chauffeur avec les informations client
+          console.log('📡 Récupération des réservations avec informations client...');
           
-          if (allError) {
-            console.error('Erreur récupération toutes réservations:', allError);
-          } else {
-            console.log('Total réservations dans DB:', allBookings?.length || 0);
-            if (allBookings && allBookings.length > 0) {
-              console.log('Aperçu des réservations:', allBookings.map(b => ({
-                id: b.id.slice(0, 8),
-                driver_id: b.driver_id?.slice(0, 8) || 'NULL',
-                status: b.status
-              })));
-              
-              // Filtrage manuel
-              const myBookings = allBookings.filter(b => b.driver_id === driver.id);
-              console.log('Mes réservations (filtrage manuel):', myBookings.length);
-            }
-          }
-          
-          // Test 2: Récupérer les réservations du chauffeur
-          console.log('--- Test 2: Réservations du chauffeur ---');
-          const { data: driverBookings, error: driverError } = await supabase
-            .from('bookings')
-            .select('*')
-            .eq('driver_id', driver.id);
-          
-          if (driverError) {
-            console.error('Erreur réservations chauffeur:', driverError);
-          } else {
-            console.log('Réservations du chauffeur:', driverBookings?.length || 0);
-          }
-          
-          // Test 3: Avec jointure client
-          console.log('--- Test 3: Avec jointure client ---');
           const { data: bookingsWithClients, error: joinError } = await supabase
             .from('bookings')
             .select(`
@@ -121,24 +86,19 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
           if (joinError) {
             console.error('Erreur jointure client:', joinError);
-            // Utiliser les données du test 2 si disponibles
-            console.log('🔄 Utilisation des données sans jointure client');
-            const bookingsWithoutClients = driverBookings?.map(booking => ({
-              ...booking,
-              clients: null
-            })) || [];
-            setBookings(bookingsWithoutClients);
+            setBookings([]);
           } else {
             console.log('Réservations avec clients:', bookingsWithClients?.length || 0);
-            if (bookingsWithClients && bookingsWithClients.length > 0) {
+            
+            if (bookingsWithClients) {
+              console.log('📊 Détails des réservations:', bookingsWithClients.map(b => ({
+                id: b.id.slice(0, 8),
+                status: b.status,
+                client: b.clients ? `${b.clients.first_name} ${b.clients.last_name}` : 'Pas de client',
+                phone: b.clients?.phone || 'Pas de téléphone'
+              })));
+              
               setBookings(bookingsWithClients);
-            } else {
-              console.log('🔄 Jointure réussie mais 0 résultats, utilisation des données sans jointure');
-              const bookingsWithoutClients = driverBookings?.map(booking => ({
-                ...booking,
-                clients: null
-              })) || [];
-              setBookings(bookingsWithoutClients);
             }
           }
           
@@ -688,9 +648,15 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             )}
                           </div>
                         ) : (
-                          <p className="text-blue-700">
-                            Informations client non disponibles
-                          </p>
+                          <div className="text-center py-4">
+                            <User size={32} className="text-blue-400 mx-auto mb-2" />
+                            <p className="text-blue-700 font-medium">
+                              Informations client en cours de chargement...
+                            </p>
+                            <p className="text-sm text-blue-600 mt-1">
+                              Les données client seront disponibles sous peu
+                            </p>
+                          </div>
                         )}
                       </div>
                       
