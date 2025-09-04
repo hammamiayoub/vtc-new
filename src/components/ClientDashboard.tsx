@@ -395,7 +395,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                             })}
                           </span>
                           <span className="font-bold text-gray-900">{booking.price_tnd} TND</span>
-                          <span>{new Date(booking.scheduledTime).toLocaleString('fr-FR')}</span>
                         </div>
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
