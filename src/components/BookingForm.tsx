@@ -13,7 +13,8 @@ import {
   Loader2,
   AlertCircle,
   Target,
-  Route
+  Route,
+  XCircle
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { bookingSchema } from '../utils/validation';
@@ -48,6 +49,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
+  const [currentLocationAddress, setCurrentLocationAddress] = useState<string>('');
+  const [hasUsedCurrentLocation, setHasUsedCurrentLocation] = useState(false);
 
   const {
     register,
@@ -156,8 +159,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
       if (response.ok) {
         const data = await response.json();
-        setValue('pickupAddress', data.display_name);
+        const address = data.display_name;
+        setCurrentLocationAddress(address);
+        setValue('pickupAddress', address);
         setPickupCoords(position);
+        setHasUsedCurrentLocation(true);
       }
     } catch (error) {
       console.error('Erreur lors de la géolocalisation:', error);
@@ -167,6 +173,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     }
   };
 
+  const clearCurrentLocation = () => {
+    setValue('pickupAddress', '');
+    setCurrentLocationAddress('');
+    setPickupCoords(null);
+    setHasUsedCurrentLocation(false);
+  };
   const searchAvailableDrivers = async () => {
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
@@ -381,6 +393,44 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Point de départ
               </label>
+              
+              {/* Boutons de géolocalisation */}
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={useCurrentLocation}
+                  disabled={gettingLocation}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all ${
+                    hasUsedCurrentLocation 
+                      ? 'bg-green-100 text-green-700 border border-green-300' 
+                      : 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200'
+                  }`}
+                >
+                  {gettingLocation ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Target size={16} />
+                  )}
+                  {gettingLocation 
+                    ? 'Localisation...' 
+                    : hasUsedCurrentLocation 
+                      ? 'Position actuelle utilisée' 
+                      : 'Utiliser ma position'
+                  }
+                </button>
+                
+                {hasUsedCurrentLocation && (
+                  <button
+                    type="button"
+                    onClick={clearCurrentLocation}
+                    className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all"
+                  >
+                    <XCircle size={16} />
+                    Saisir manuellement
+                  </button>
+                )}
+              </div>
+              
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MapPin className="h-5 w-5 text-green-600" />
@@ -388,27 +438,41 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 <input
                   {...register('pickupAddress')}
                   type="text"
-                  placeholder="Adresse de départ (ex: Avenue Habib Bourguiba, Tunis)"
+                  placeholder={hasUsedCurrentLocation 
+                    ? "Modifiez l'adresse si nécessaire" 
+                    : "Adresse de départ (ex: Avenue Habib Bourguiba, Tunis)"
+                  }
                   className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
                     errors.pickupAddress ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  } ${hasUsedCurrentLocation ? 'bg-green-50 border-green-300' : ''}`}
                   onFocus={() => setShowPickupSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowPickupSuggestions(false), 200)}
+                  onChange={() => {
+                    if (hasUsedCurrentLocation) {
+                      setHasUsedCurrentLocation(false);
+                      setCurrentLocationAddress('');
+                    }
+                  }}
                 />
-                <button
-                  type="button"
-                  onClick={useCurrentLocation}
-                  disabled={gettingLocation}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-600 hover:text-blue-700"
-                  title="Utiliser ma position actuelle"
-                >
-                  {gettingLocation ? (
-                    <Loader2 size={20} className="animate-spin" />
-                  ) : (
-                    <Target size={20} />
-                  )}
-                </button>
               </div>
+              
+              {/* Indicateur de géolocalisation */}
+              {hasUsedCurrentLocation && currentLocationAddress && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <Target size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-800">Position actuelle détectée</p>
+                      <p className="text-xs text-green-700 mt-1 break-words">
+                        {currentLocationAddress}
+                      </p>
+                      <p className="text-xs text-green-600 mt-1">
+                        Vous pouvez modifier l'adresse dans le champ ci-dessus si nécessaire
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* Suggestions pour le départ */}
               {showPickupSuggestions && pickupSuggestions.length > 0 && (
@@ -417,7 +481,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     <button
                       key={index}
                       type="button"
-                      onClick={() => selectSuggestion(suggestion, 'pickup')}
+                      onClick={() => {
+                        selectSuggestion(suggestion, 'pickup');
+                        setHasUsedCurrentLocation(false);
+                        setCurrentLocationAddress('');
+                      }}
                       className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                     >
                       <div className="flex items-center gap-2">
