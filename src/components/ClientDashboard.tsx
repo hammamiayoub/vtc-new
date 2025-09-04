@@ -61,7 +61,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         try {
           const { data: bookingsData, error } = await supabase
             .from('bookings')
-            .select('*')
+            .select(`
+              *,
+              drivers(
+                first_name,
+                last_name,
+                phone
+              )
+            `)
             .eq('client_id', client.id)
             .order('created_at', { ascending: false });
 
@@ -407,10 +414,26 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                         </p>
                       </div>
                       <div className="ml-4">
-                        {booking.driver_id && (
+                        {booking.drivers ? (
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-gray-900">
+                              {booking.drivers.first_name} {booking.drivers.last_name}
+                            </p>
+                            <p className="text-xs text-gray-500">Chauffeur assigné</p>
+                            {booking.drivers.phone && (
+                              <p className="text-xs text-gray-500">
+                                Tél: {booking.drivers.phone}
+                              </p>
+                            )}
+                          </div>
+                        ) : booking.driver_id ? (
                           <div className="text-right">
                             <p className="text-sm font-medium text-gray-900">Chauffeur assigné</p>
-                            <p className="text-xs text-gray-500">ID: {booking.driver_id}</p>
+                            <p className="text-xs text-gray-500">En cours de chargement...</p>
+                          </div>
+                        ) : (
+                          <div className="text-right">
+                            <p className="text-sm text-gray-500">Aucun chauffeur assigné</p>
                           </div>
                         )}
                       </div>
