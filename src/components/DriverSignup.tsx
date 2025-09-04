@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Chrome } from 'lucide-react';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
@@ -18,6 +18,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 
   const {
     register,
@@ -31,6 +32,31 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
   const watchPassword = watch('password', '');
 
+  const handleOAuthSignup = async (provider: 'google' | 'facebook') => {
+    setOauthLoading(provider);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?type=driver`,
+          queryParams: {
+            user_type: 'driver'
+          }
+        }
+      });
+
+      if (error) {
+        console.error(`Erreur lors de la connexion ${provider}:`, error);
+        alert(`Erreur lors de la connexion avec ${provider}`);
+      }
+    } catch (error) {
+      console.error('Erreur OAuth:', error);
+      alert('Une erreur est survenue lors de la connexion');
+    } finally {
+      setOauthLoading(null);
+    }
+  };
   const onSubmit = async (data: SignupFormData) => {
     setIsSubmitting(true);
     
@@ -124,6 +150,41 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* OAuth Buttons */}
+              <div className="space-y-3">
+                <Button
+                  type="button"
+                  onClick={() => handleOAuthSignup('google')}
+                  loading={oauthLoading === 'google'}
+                  disabled={oauthLoading !== null}
+                  className="w-full py-3 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-3"
+                >
+                  <Chrome size={20} className="text-blue-500" />
+                  {oauthLoading === 'google' ? 'Connexion...' : 'Continuer avec Google'}
+                </Button>
+                
+                <Button
+                  type="button"
+                  onClick={() => handleOAuthSignup('facebook')}
+                  loading={oauthLoading === 'facebook'}
+                  disabled={oauthLoading !== null}
+                  className="w-full py-3 bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center gap-3"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  {oauthLoading === 'facebook' ? 'Connexion...' : 'Continuer avec Facebook'}
+                </Button>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Ou créer un compte avec email</span>
+                </div>
+              </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -243,7 +304,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               <Button
                 type="submit"
                 loading={isSubmitting}
-                disabled={!isValid || isSubmitting}
+                disabled={!isValid || isSubmitting || oauthLoading !== null}
                 className="w-full py-4 text-lg"
               >
                 {isSubmitting ? 'Création du compte...' : 'Créer mon compte chauffeur'}
