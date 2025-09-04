@@ -228,13 +228,13 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-black border-b border-gray-800">
+      <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">MyRide</h1>
-                <p className="text-sm text-gray-300">Espace Chauffeur</p>
+                <h1 className="text-2xl font-bold text-gray-900">MyRide</h1>
+                <p className="text-sm text-gray-600">Espace Chauffeur</p>
               </div>
             </div>
             
@@ -246,16 +246,15 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   markAsRead();
                   setActiveTab('bookings');
                 }}
-                className="text-gray-300 hover:text-white hover:bg-gray-800"
               />
               <button 
                 onClick={() => setShowProfileModal(true)}
-                className="p-2 text-gray-300 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
+                className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors"
                 title="Mon profil"
               >
                 <Settings size={20} />
               </button>
-              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-gray-600 text-gray-300 hover:text-white hover:bg-gray-800">
+              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50">
                 <LogOut size={16} />
                 Déconnexion
               </Button>
@@ -265,15 +264,15 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       </header>
 
       {/* Navigation Tabs */}
-      <div className="bg-black border-b border-gray-800">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'dashboard'
-                  ? 'border-white text-white'
-                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               Tableau de bord
@@ -282,8 +281,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               onClick={() => setActiveTab('availability')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'availability'
-                  ? 'border-white text-white'
-                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               Disponibilités
@@ -292,8 +291,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               onClick={() => setActiveTab('bookings')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'bookings'
-                  ? 'border-white text-white'
-                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               Mes courses ({bookings.length})
