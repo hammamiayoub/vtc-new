@@ -18,6 +18,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -33,6 +34,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
   const onSubmit = async (data: SignupFormData) => {
     setIsSubmitting(true);
+    setError(null);
     
     try {
       // Créer l'utilisateur avec Supabase Auth
@@ -48,6 +50,11 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
       });
 
       if (authError) {
+        if (authError.message.includes('over_email_send_rate_limit')) {
+          setError('Trop de tentatives d\'inscription. Veuillez attendre quelques secondes avant de réessayer.');
+        } else {
+          setError(`Erreur lors de l'inscription: ${authError.message}`);
+        }
         console.error('Erreur lors de l\'inscription:', authError);
         return;
       }
@@ -64,6 +71,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           });
 
         if (profileError) {
+          setError(`Erreur lors de la création du profil: ${profileError.message}`);
           console.error('Erreur lors de la création du profil:', profileError);
           return;
         }
@@ -72,6 +80,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
       setSubmitSuccess(true);
       
     } catch (error) {
+      setError('Une erreur inattendue s\'est produite. Veuillez réessayer.');
       console.error('Erreur lors de l\'inscription:', error);
     } finally {
       setIsSubmitting(false);
@@ -124,6 +133,12 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-red-800 text-sm">{error}</p>
+                </div>
+              )}
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
