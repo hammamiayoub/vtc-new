@@ -44,19 +44,13 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
           .from('clients')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
         if (clientError) {
-          if (clientError.code === 'PGRST116') {
-            setError('Ce compte n\'existe pas en tant que client. Veuillez créer un compte client.');
-            await supabase.auth.signOut();
-            return;
-          } else {
-            console.error('Erreur lors de la vérification du client:', clientError);
-            setError('Erreur lors de la vérification du compte');
-            await supabase.auth.signOut();
-            return;
-          }
+          console.error('Erreur lors de la vérification du client:', clientError);
+          setError('Erreur lors de la vérification du compte');
+          await supabase.auth.signOut();
+          return;
         }
         
         if (!clientData) {
