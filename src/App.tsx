@@ -44,9 +44,9 @@ function App() {
             .from('admin_users')
             .select('*')
             .eq('id', userId)
-            .maybeSingle();
+            .limit(1);
           
-          if (adminData) {
+          if (adminData && adminData.length > 0) {
             setUserType('admin');
             setCurrentView('admin-dashboard');
             setIsLoading(false);
@@ -58,9 +58,9 @@ function App() {
             .from('drivers')
             .select('*')
             .eq('id', userId)
-            .maybeSingle();
+            .limit(1);
           
-          if (driverData) {
+          if (driverData && driverData.length > 0) {
             setUserType('driver');
             setCurrentView('dashboard');
             setIsLoading(false);
@@ -72,9 +72,9 @@ function App() {
             .from('clients')
             .select('*')
             .eq('id', userId)
-            .maybeSingle();
+            .limit(1);
           
-          if (clientData) {
+          if (clientData && clientData.length > 0) {
             setUserType('client');
             setCurrentView('client-dashboard');
             setIsLoading(false);
