@@ -100,7 +100,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-black">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gray-900 rounded-3xl p-12 text-center text-white">
             <h2 className="text-4xl font-bold mb-6 tracking-tight">
