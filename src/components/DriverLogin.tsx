@@ -44,13 +44,19 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
           .from('drivers')
           .select('*')
           .eq('id', data.user.id)
-          .maybeSingle();
+          .single();
 
         if (driverError) {
-          console.error('Erreur lors de la vérification du chauffeur:', driverError);
-          setError('Erreur lors de la vérification du compte');
-          await supabase.auth.signOut();
-          return;
+          if (driverError.code === 'PGRST116') {
+            setError('Ce compte n\'existe pas en tant que chauffeur. Veuillez créer un compte chauffeur.');
+            await supabase.auth.signOut();
+            return;
+          } else {
+            console.error('Erreur lors de la vérification du chauffeur:', driverError);
+            setError('Erreur lors de la vérification du compte');
+            await supabase.auth.signOut();
+            return;
+          }
         }
         
         if (!driverData) {

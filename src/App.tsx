@@ -42,13 +42,13 @@ function App() {
           const userId = session.user.id;
           
           // Vérifier si c'est un admin
-          const { data: adminData } = await supabase
+          const { data: adminData, error: adminError } = await supabase
             .from('admin_users')
             .select('*')
             .eq('id', userId)
-            .limit(1);
+            .maybeSingle();
           
-          if (adminData && adminData.length > 0) {
+          if (!adminError && adminData) {
             setUserType('admin');
             setCurrentView('admin-dashboard');
             setIsLoading(false);
@@ -56,13 +56,13 @@ function App() {
           }
           
           // Vérifier si c'est un chauffeur
-          const { data: driverData } = await supabase
+          const { data: driverData, error: driverError } = await supabase
             .from('drivers')
             .select('*')
             .eq('id', userId)
-            .limit(1);
+            .maybeSingle();
           
-          if (driverData && driverData.length > 0) {
+          if (!driverError && driverData) {
             setUserType('driver');
             setCurrentView('dashboard');
             setIsLoading(false);
@@ -70,13 +70,13 @@ function App() {
           }
           
           // Vérifier si c'est un client
-          const { data: clientData } = await supabase
+          const { data: clientData, error: clientError } = await supabase
             .from('clients')
             .select('*')
             .eq('id', userId)
-            .limit(1);
+            .maybeSingle();
           
-          if (clientData && clientData.length > 0) {
+          if (!clientError && clientData) {
             setUserType('client');
             setCurrentView('client-dashboard');
             setIsLoading(false);
