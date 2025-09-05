@@ -213,30 +213,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       alert('Une erreur est survenue');
     }
   };
-          } else {
-            console.log('Réservations avec clients:', bookingsWithClients?.length || 0);
-            
-            if (bookingsWithClients) {
-              console.log('📊 Détails des réservations:', bookingsWithClients.map(b => ({
-                id: b.id.slice(0, 8),
-                status: b.status,
-                client: b.clients ? `${b.clients.first_name} ${b.clients.last_name}` : 'Pas de client',
-                phone: b.clients?.phone || 'Pas de téléphone'
-              })));
-              
-              setBookings(bookingsWithClients);
-            }
-          }
-          
-          console.log('=== FIN DIAGNOSTIC ===');
-        } catch (error) {
-          console.error('Erreur:', error);
-        }
-      }
-    };
 
-    fetchBookings();
-  }, [driver]);
   const handleLogout = async () => {
     await supabase.auth.signOut();
     onLogout();
@@ -260,36 +237,6 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     completedBookings: completedBookings.length,
     driverId: driver?.id
   });
-  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
-    try {
-      console.log('🔄 Mise à jour du statut:', { bookingId, newStatus });
-      
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          status: newStatus,
-          pickup_time: newStatus === 'in_progress' ? new Date().toISOString() : undefined,
-          completion_time: newStatus === 'completed' ? new Date().toISOString() : undefined
-        })
-        .eq('id', bookingId);
-
-      if (error) {
-        console.error('Erreur lors de la mise à jour:', error);
-        alert('Erreur lors de la mise à jour du statut');
-        return;
-      }
-
-      console.log('✅ Statut mis à jour avec succès');
-      
-      // Mettre à jour l'état local
-      setBookings(prev => prev.map(booking => 
-        booking.id === bookingId ? { ...booking, status: newStatus } : booking
-      ));
-    } catch (error) {
-      console.error('Erreur:', error);
-      alert('Une erreur est survenue');
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
