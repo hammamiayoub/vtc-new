@@ -35,11 +35,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             .from('clients')
             .select('*')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
           if (error) {
             console.error('Erreur lors de la récupération des données client:', error);
-          } else {
+          } else if (clientData) {
             setClient({
               id: clientData.id,
               firstName: clientData.first_name,
