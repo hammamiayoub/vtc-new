@@ -28,7 +28,13 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
       });
 
       if (authError) {
-        setError('Email ou mot de passe incorrect');
+        if (authError.message.includes('Invalid login credentials')) {
+          setError('Email ou mot de passe incorrect');
+        } else if (authError.message.includes('Email not confirmed')) {
+          setError('Veuillez confirmer votre email avant de vous connecter');
+        } else {
+          setError('Erreur de connexion: ' + authError.message);
+        }
         return;
       }
 
@@ -38,10 +44,17 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
           .from('clients')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
-        if (clientError || !clientData) {
-          setError('Ce compte n\'est pas un compte client');
+        if (clientError) {
+          console.error('Erreur lors de la vérification du client:', clientError);
+          setError('Erreur lors de la vérification du compte');
+          await supabase.auth.signOut();
+          return;
+        }
+        
+        if (!clientData) {
+          setError('Ce compte n\'existe pas en tant que client. Veuillez créer un compte client.');
           await supabase.auth.signOut();
           return;
         }

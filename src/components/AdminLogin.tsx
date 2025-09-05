@@ -133,8 +133,15 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
           .eq('id', data.user.id)
           .maybeSingle();
 
-        if (adminError || !adminData) {
-          setError('Accès non autorisé - Compte administrateur requis');
+        if (adminError) {
+          console.error('Erreur lors de la vérification admin:', adminError);
+          setError('Erreur lors de la vérification du compte administrateur');
+          await supabase.auth.signOut();
+          return;
+        }
+        
+        if (!adminData) {
+          setError('Ce compte n\'a pas les droits administrateur. Accès refusé.');
           await supabase.auth.signOut();
           return;
         }

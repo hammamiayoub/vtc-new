@@ -28,7 +28,13 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
       });
 
       if (authError) {
-        setError('Email ou mot de passe incorrect');
+        if (authError.message.includes('Invalid login credentials')) {
+          setError('Email ou mot de passe incorrect');
+        } else if (authError.message.includes('Email not confirmed')) {
+          setError('Veuillez confirmer votre email avant de vous connecter');
+        } else {
+          setError('Erreur de connexion: ' + authError.message);
+        }
         return;
       }
 
@@ -38,10 +44,17 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
           .from('drivers')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
-        if (driverError || !driverData) {
-          setError('Ce compte n\'est pas un compte chauffeur');
+        if (driverError) {
+          console.error('Erreur lors de la vérification du chauffeur:', driverError);
+          setError('Erreur lors de la vérification du compte');
+          await supabase.auth.signOut();
+          return;
+        }
+        
+        if (!driverData) {
+          setError('Ce compte n\'existe pas en tant que chauffeur. Veuillez créer un compte chauffeur.');
           await supabase.auth.signOut();
           return;
         }
