@@ -49,6 +49,19 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
       if (authError) {
         console.error('Erreur lors de l\'inscription:', authError);
+        if (authError.message.includes('User already registered')) {
+          setError('Un compte existe déjà avec cette adresse email');
+        } else if (authError.message.includes('duplicate key value')) {
+          if (authError.message.includes('email')) {
+            setError('Cette adresse email est déjà utilisée');
+          } else if (authError.message.includes('phone')) {
+            setError('Ce numéro de téléphone est déjà utilisé');
+          } else {
+            setError('Ces informations sont déjà utilisées par un autre compte');
+          }
+        } else {
+          setError(authError.message);
+        }
         return;
       }
 
@@ -66,6 +79,19 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
         if (profileError) {
           console.error('Erreur lors de la création du profil client:', profileError);
+          if (profileError.message.includes('déjà utilisé')) {
+            setError(profileError.message);
+          } else if (profileError.message.includes('duplicate key value')) {
+            if (profileError.message.includes('email')) {
+              setError('Cette adresse email est déjà utilisée');
+            } else if (profileError.message.includes('phone')) {
+              setError('Ce numéro de téléphone est déjà utilisé');
+            } else {
+              setError('Ces informations sont déjà utilisées par un autre compte');
+            }
+          } else {
+            setError('Erreur lors de la création du profil client');
+          }
           return;
         }
       }

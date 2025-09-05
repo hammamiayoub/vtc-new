@@ -77,7 +77,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
       if (error) {
         console.error('Erreur lors de la mise à jour:', error);
-        alert('Erreur lors de la mise à jour du profil');
+        if (error.message.includes('déjà utilisé')) {
+          alert(error.message);
+        } else if (error.message.includes('duplicate key value')) {
+          if (error.message.includes('email')) {
+            alert('Cette adresse email est déjà utilisée par un autre compte');
+          } else if (error.message.includes('phone')) {
+            alert('Ce numéro de téléphone est déjà utilisé par un autre compte');
+          } else {
+            alert('Ces informations sont déjà utilisées par un autre compte');
+          }
+        } else {
+          alert('Erreur lors de la mise à jour du profil');
+        }
         return;
       }
 

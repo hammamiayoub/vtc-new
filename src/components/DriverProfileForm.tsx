@@ -69,12 +69,23 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
           phone: data.phone,
           license_number: data.licenseNumber,
           vehicle_info: data.vehicleInfo,
-          status: 'active'
+          status: 'pending'
         })
         .eq('id', driverId);
 
       if (error) {
         console.error('Erreur lors de la mise à jour du profil:', error);
+        if (error.message.includes('déjà utilisé')) {
+          alert(error.message);
+        } else if (error.message.includes('duplicate key value')) {
+          if (error.message.includes('phone')) {
+            alert('Ce numéro de téléphone est déjà utilisé par un autre compte');
+          } else {
+            alert('Ces informations sont déjà utilisées par un autre compte');
+          }
+        } else {
+          alert('Erreur lors de la mise à jour du profil');
+        }
         return;
       }
 
