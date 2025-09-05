@@ -696,11 +696,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           <img
                             src={driver.profilePhotoUrl}
                             alt="Photo de profil"
-                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                            className="w-20 h-20 rounded-full object-cover border-3 border-gray-300 shadow-md"
                           />
                         ) : (
-                          <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center border-2 border-gray-200">
-                            <User size={28} className="text-gray-600" />
+                          <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-3 border-gray-300 shadow-md">
+                            <User size={32} className="text-gray-700" />
                           </div>
                         )}
                         <div>
@@ -721,6 +721,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           <div className="flex items-center gap-2 mt-1">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             <span className="text-xs text-green-600 font-medium">Disponible maintenant</span>
+                            {driver.profilePhotoUrl && (
+                              <span className="text-xs text-blue-600 font-medium">• Photo vérifiée</span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -740,25 +743,27 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             }
                           </p>
                         )}
-                        {driver.profilePhotoUrl && (
-                          <p className="text-xs text-gray-400 mt-1">Photo vérifiée</p>
-                        )}
                       </div>
                     </div>
                     
                     {selectedDriver === driver.id && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
+                                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
                         <div className="bg-white rounded-lg p-4 shadow-sm">
                           <div className="flex items-center gap-3 mb-3">
-                            {driver.profilePhotoUrl ? (
-                              <img
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-gray-200">
+                                  <User size={24} className="text-gray-700" />
                                 src={driver.profilePhotoUrl}
                                 alt="Photo de profil"
                                 className="w-10 h-10 rounded-full object-cover"
                               />
                             ) : (
                               <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                <User size={20} className="text-gray-600" />
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm text-gray-600">Chauffeur sélectionné</p>
+                                  {driver.profilePhotoUrl && (
+                                    <span className="text-xs text-blue-600 font-medium">✓ Vérifié</span>
+                                  )}
+                                </div>
                               </div>
                             )}
                             <div>
