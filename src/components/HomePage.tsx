@@ -6,9 +6,10 @@ import { Footer } from './Footer';
 interface HomePageProps {
   onGetStarted: () => void;
   onClientLogin: () => void;
+  onPrivacyPolicyClick: () => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin }) => {
+export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin, onPrivacyPolicyClick }) => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
