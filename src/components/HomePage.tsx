@@ -1,6 +1,7 @@
 import React from 'react';
 import { Car, Clock, Shield, Star, ArrowRight, CheckCircle } from 'lucide-react';
 import { Button } from './ui/Button';
+import { Footer } from './Footer';
 
 interface HomePageProps {
   onGetStarted: () => void;
@@ -128,6 +129,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
