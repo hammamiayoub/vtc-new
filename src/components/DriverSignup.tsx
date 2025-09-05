@@ -61,6 +61,13 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
       // Insérer les détails du chauffeur dans la table drivers
       if (authData.user) {
+        console.log('🔍 Tentative d\'insertion du profil chauffeur:', {
+          userId: authData.user.id,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName
+        });
+        
         const { error: profileError } = await supabase
           .from('drivers')
           .insert({
@@ -73,6 +80,12 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
         if (profileError) {
           console.error('Erreur lors de la création du profil:', profileError);
+          console.error('Détails de l\'erreur:', {
+            message: profileError.message,
+            code: profileError.code,
+            details: profileError.details,
+            hint: profileError.hint
+          });
           if (profileError.message.includes('adresse email est déjà utilisée')) {
             setError('Cette adresse email est déjà utilisée par un autre compte');
           } else if (profileError.message.includes('duplicate key value')) {
