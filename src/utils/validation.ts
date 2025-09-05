@@ -41,8 +41,9 @@ export const clientSignupSchema = z.object({
     .email('Veuillez entrer une adresse email valide'),
   phone: z
     .string()
-    .min(10, 'Le numéro de téléphone doit contenir au moins 10 chiffres')
-    .regex(/^[0-9+\-\s()]+$/, 'Format de téléphone invalide'),
+    .min(8, 'Le numéro de téléphone doit contenir 8 chiffres')
+    .max(8, 'Le numéro de téléphone doit contenir 8 chiffres')
+    .regex(/^[0-9]{8}$/, 'Le numéro doit contenir exactement 8 chiffres (ex: 12345678)'),
   password: passwordSchema,
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -85,8 +86,9 @@ export const validatePassword = (password: string) => {
 export const driverProfileSchema = z.object({
   phone: z
     .string()
-    .min(10, 'Le numéro de téléphone doit contenir au moins 10 chiffres')
-    .regex(/^[0-9+\-\s()]+$/, 'Format de téléphone invalide'),
+    .min(8, 'Le numéro de téléphone doit contenir 8 chiffres')
+    .max(8, 'Le numéro de téléphone doit contenir 8 chiffres')
+    .regex(/^[0-9]{8}$/, 'Le numéro doit contenir exactement 8 chiffres (ex: 12345678)'),
   licenseNumber: z
     .string()
     .min(5, 'Le numéro de permis doit contenir au moins 5 caractères')

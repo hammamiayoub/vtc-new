@@ -133,7 +133,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
               <input
                 {...register('phone')}
                 type="tel"
-                placeholder="Numéro de téléphone"
+                placeholder="Numéro de téléphone (8 chiffres)"
                 className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                   errors.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
