@@ -37,11 +37,14 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
     setError(null);
     
     try {
+      console.log('🔍 Tentative d\'inscription avec email:', data.email);
+      
       // Créer l'utilisateur avec Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: undefined, // Désactiver la redirection email
           data: {
             first_name: data.firstName,
             last_name: data.lastName
@@ -49,18 +52,31 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         }
       });
 
+      console.log('📧 Réponse Supabase Auth:', { authData, authError });
+
       if (authError) {
+        console.error('❌ Erreur Supabase Auth:', authError);
+        
+        // Gestion spécifique des erreurs d'email
+        if (authError.message.includes('invalid') && authError.message.includes('email')) {
+          setError('Format d\'email invalide. Veuillez vérifier votre adresse email.');
+          return;
+        }
+        
         if (authError.message.includes('over_email_send_rate_limit')) {
           setError('Trop de tentatives d\'inscription. Veuillez attendre quelques secondes avant de réessayer.');
         } else {
           setError(`Erreur lors de l'inscription: ${authError.message}`);
         }
-        console.error('Erreur lors de l\'inscription:', authError);
         return;
       }
 
+      console.log('✅ Utilisateur créé avec succès:', authData.user?.id);
+
       // Insérer les détails du chauffeur dans la table drivers
       if (authData.user) {
+        console.log('📝 Insertion du profil chauffeur...');
+        
         const { error: profileError } = await supabase
           .from('drivers')
           .insert({
@@ -71,12 +87,15 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           });
 
         if (profileError) {
+          console.error('❌ Erreur profil chauffeur:', profileError);
           setError(`Erreur lors de la création du profil: ${profileError.message}`);
-          console.error('Erreur lors de la création du profil:', profileError);
           return;
         }
+        
+        console.log('✅ Profil chauffeur créé avec succès');
       }
 
+      console.log('🎉 Inscription terminée avec succès');
       setSubmitSuccess(true);
       
     } catch (error) {
