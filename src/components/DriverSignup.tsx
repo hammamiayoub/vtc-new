@@ -18,6 +18,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const {
     register,
@@ -50,6 +51,11 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
       if (authError) {
         console.error('Erreur lors de l\'inscription:', authError);
+        if (authError.message.includes('User already registered')) {
+          setError('Un compte existe déjà avec cette adresse email');
+        } else {
+          setError(authError.message);
+        }
         return;
       }
 
@@ -59,6 +65,17 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           .from('drivers')
           .insert({
             id: authData.user.id,
+            user_type: 'driver',
+            email: data.email
+          });
+
+        if (profileError) {
+          console.error('Erreur lors de la création du profil:', profileError);
+          setError('Erreur lors de la création du profil chauffeur');
+          return;
+        }
+      }
+
       // Si l'utilisateur est créé mais pas encore confirmé
       if (authData.user && !authData.session) {
         setSubmitSuccess(true);
@@ -67,20 +84,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
       // Si l'utilisateur est créé et confirmé (cas rare en développement)
       if (authData.user && authData.session) {
-            user_type: 'driver'
-            email: data.email
-          });
-
-        if (profileError) {
-          console.error('Erreur lors de la création du profil:', profileError);
-          return;
-        if (authError.message.includes('User already registered')) {
-          setError('Un compte existe déjà avec cette adresse email');
-        } else {
-          setError(authError.message);
-          setError('Erreur lors de la création du profil chauffeur');
-        }
-        
         setSubmitSuccess(true);
       }
       
@@ -91,8 +94,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
       setIsSubmitting(false);
     }
   };
-
-  const [error, setError] = useState('');
 
   if (submitSuccess) {
     return (
@@ -239,12 +240,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               )}
 
               <div className="relative">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
@@ -271,6 +266,12 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   <p className="mt-2 text-sm text-red-600">{errors.confirmPassword.message}</p>
                 )}
               </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
 
               <Button
                 type="submit"
