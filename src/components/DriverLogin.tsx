@@ -28,11 +28,24 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
       });
 
       if (authError) {
-        setError('Email ou mot de passe incorrect');
+        if (authError.message.includes('Email not confirmed')) {
+          setError('Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception.');
+        } else if (authError.message.includes('Invalid login credentials')) {
+          setError('Email ou mot de passe incorrect');
+        } else {
+          setError(authError.message);
+        }
         return;
       }
 
       if (data.user) {
+        // Vérifier que l'email est confirmé
+        if (!data.user.email_confirmed_at) {
+          setError('Veuillez confirmer votre email avant de vous connecter');
+          await supabase.auth.signOut();
+          return;
+        }
+
         // Vérifier que c'est bien un chauffeur
         const { data: driverData, error: driverError } = await supabase
           .from('drivers')
