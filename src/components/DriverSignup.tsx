@@ -36,22 +36,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
     setIsSubmitting(true);
     setError(null);
     
-    // Validation d'email plus stricte côté client
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(data.email)) {
-      setError('Format d\'email invalide. Veuillez utiliser un email complet (ex: utilisateur@domaine.com)');
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Vérifier que l'email a au moins 3 caractères avant le @
-    const emailParts = data.email.split('@');
-    if (emailParts[0].length < 3) {
-      setError('L\'adresse email doit contenir au moins 3 caractères avant le @');
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
       console.log('🔍 Tentative d\'inscription avec email:', data.email);
       
@@ -73,14 +57,13 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
       if (authError) {
         console.error('❌ Erreur Supabase Auth:', authError);
         
-        // Gestion spécifique des erreurs d'email
-        if (authError.message.includes('invalid') && authError.message.includes('email')) {
-          setError('Email rejeté par le serveur. Essayez avec un email différent ou plus long (ex: utilisateur@gmail.com au lieu de jor@gmail.com)');
+        if (authError.message.includes('email_address_invalid')) {
+          setError('Cet email a été rejeté par le serveur. Veuillez essayer avec une adresse email différente.');
           return;
         }
         
-        if (authError.message.includes('email_address_invalid')) {
-          setError('Format d\'email invalide. Utilisez un email complet avec au moins 3 caractères avant le @ (ex: john.doe@gmail.com)');
+        if (authError.message.includes('invalid') && authError.message.includes('email')) {
+          setError('Email rejeté par le serveur. Essayez avec un email différent.');
           return;
         }
         
