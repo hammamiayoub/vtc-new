@@ -53,16 +53,8 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         console.error('Erreur lors de l\'inscription:', authError);
         if (authError.message.includes('User already registered')) {
           setError('Un compte existe déjà avec cette adresse email');
-        } else if (authError.message.includes('duplicate key value')) {
-          if (authError.message.includes('email')) {
-            setError('Cette adresse email est déjà utilisée');
-          } else if (authError.message.includes('phone')) {
-            setError('Ce numéro de téléphone est déjà utilisé');
-          } else {
-            setError('Ces informations sont déjà utilisées par un autre compte');
-          }
         } else {
-          setError(authError.message);
+          setError('Erreur lors de la création du compte: ' + authError.message);
         }
         return;
       }
@@ -81,16 +73,12 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
         if (profileError) {
           console.error('Erreur lors de la création du profil:', profileError);
-          if (profileError.message.includes('déjà utilisé')) {
-            setError(profileError.message);
+          if (profileError.message.includes('adresse email est déjà utilisée')) {
+            setError('Cette adresse email est déjà utilisée par un autre compte');
           } else if (profileError.message.includes('duplicate key value')) {
-            if (profileError.message.includes('email')) {
-              setError('Cette adresse email est déjà utilisée');
-            } else {
-              setError('Ces informations sont déjà utilisées par un autre compte');
-            }
+            setError('Ces informations sont déjà utilisées par un autre compte');
           } else {
-            setError('Erreur lors de la création du profil chauffeur');
+            setError('Erreur lors de la création du profil: ' + profileError.message);
           }
           return;
         }

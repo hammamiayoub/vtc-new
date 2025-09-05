@@ -17,6 +17,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const {
     register,
@@ -51,16 +52,8 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
         console.error('Erreur lors de l\'inscription:', authError);
         if (authError.message.includes('User already registered')) {
           setError('Un compte existe déjà avec cette adresse email');
-        } else if (authError.message.includes('duplicate key value')) {
-          if (authError.message.includes('email')) {
-            setError('Cette adresse email est déjà utilisée');
-          } else if (authError.message.includes('phone')) {
-            setError('Ce numéro de téléphone est déjà utilisé');
-          } else {
-            setError('Ces informations sont déjà utilisées par un autre compte');
-          }
         } else {
-          setError(authError.message);
+          setError('Erreur lors de la création du compte: ' + authError.message);
         }
         return;
       }
@@ -79,18 +72,14 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
         if (profileError) {
           console.error('Erreur lors de la création du profil client:', profileError);
-          if (profileError.message.includes('déjà utilisé')) {
-            setError(profileError.message);
+          if (profileError.message.includes('adresse email est déjà utilisée')) {
+            setError('Cette adresse email est déjà utilisée par un autre compte');
+          } else if (profileError.message.includes('numéro de téléphone est déjà utilisé')) {
+            setError('Ce numéro de téléphone est déjà utilisé par un autre compte');
           } else if (profileError.message.includes('duplicate key value')) {
-            if (profileError.message.includes('email')) {
-              setError('Cette adresse email est déjà utilisée');
-            } else if (profileError.message.includes('phone')) {
-              setError('Ce numéro de téléphone est déjà utilisé');
-            } else {
-              setError('Ces informations sont déjà utilisées par un autre compte');
-            }
+            setError('Ces informations sont déjà utilisées par un autre compte');
           } else {
-            setError('Erreur lors de la création du profil client');
+            setError('Erreur lors de la création du profil: ' + profileError.message);
           }
           return;
         }
@@ -100,6 +89,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
       
     } catch (error) {
       console.error('Erreur lors de l\'inscription client:', error);
+      setError('Une erreur inattendue est survenue');
     } finally {
       setIsSubmitting(false);
     }
@@ -257,6 +247,12 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               )}
 
               <div className="relative">
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
