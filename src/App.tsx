@@ -42,11 +42,15 @@ function App() {
           const userId = session.user.id;
           
           // Vérifier si c'est un admin
-          const { data: adminData } = await supabase
+          const { data: adminData, error: adminError } = await supabase
             .from('admin_users')
             .select('*')
             .eq('id', userId)
-            .limit(1);
+            .maybeSingle();
+          
+          if (adminError) {
+            console.error('Erreur lors de la vérification admin:', adminError);
+          }
           
           if (adminData && adminData.length > 0) {
             setUserType('admin');
@@ -56,13 +60,17 @@ function App() {
           }
           
           // Vérifier si c'est un chauffeur
-          const { data: driverData } = await supabase
+          const { data: driverData, error: driverError } = await supabase
             .from('drivers')
             .select('*')
             .eq('id', userId)
-            .limit(1);
+            .maybeSingle();
           
-          if (driverData && driverData.length > 0) {
+          if (driverError) {
+            console.error('Erreur lors de la vérification chauffeur:', driverError);
+          }
+          
+          if (driverData) {
             setUserType('driver');
             setCurrentView('dashboard');
             setIsLoading(false);
@@ -70,13 +78,17 @@ function App() {
           }
           
           // Vérifier si c'est un client
-          const { data: clientData } = await supabase
+          const { data: clientData, error: clientError } = await supabase
             .from('clients')
             .select('*')
             .eq('id', userId)
-            .limit(1);
+            .maybeSingle();
           
-          if (clientData && clientData.length > 0) {
+          if (clientError) {
+            console.error('Erreur lors de la vérification client:', clientError);
+          }
+          
+          if (clientData) {
             setUserType('client');
             setCurrentView('client-dashboard');
             setIsLoading(false);
@@ -105,6 +117,52 @@ function App() {
         if (event === 'SIGNED_OUT' || !session) {
           setUserType(null);
           setCurrentView('home');
+        } else if (event === 'SIGNED_IN' && session?.user) {
+          // Quand un utilisateur se connecte, vérifier son type
+          const userId = session.user.id;
+          
+          // Vérifier si c'est un admin
+          const { data: adminData } = await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle();
+          
+          if (adminData) {
+            setUserType('admin');
+            setCurrentView('admin-dashboard');
+            return;
+          }
+          
+          // Vérifier si c'est un chauffeur
+          const { data: driverData } = await supabase
+            .from('drivers')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle();
+          
+          if (driverData) {
+            setUserType('driver');
+            setCurrentView('dashboard');
+            return;
+          }
+          
+          // Vérifier si c'est un client
+          const { data: clientData } = await supabase
+            .from('clients')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle();
+          
+          if (clientData) {
+            setUserType('client');
+            setCurrentView('client-dashboard');
+            return;
+          }
+          
+          // Si aucun type trouvé, déconnecter
+          console.log('Type d\'utilisateur non trouvé après connexion, déconnexion...');
+          await supabase.auth.signOut();
         }
       }
     );
