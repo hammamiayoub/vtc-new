@@ -289,7 +289,14 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
               <p className="text-sm text-gray-500 text-center">
                 En créant votre compte, vous acceptez nos{' '}
-                <a href="#" className="text-blue-600 hover:underline">
+                <a 
+                  href="#" 
+                  className="text-blue-600 hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open('/terms-of-service', '_blank');
+                  }}
+                >
                   conditions d'utilisation
                 </a>{' '}
                 et notre{' '}

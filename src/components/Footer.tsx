@@ -3,9 +3,10 @@ import { Heart, Shield, FileText } from 'lucide-react';
 
 interface FooterProps {
   onPrivacyPolicyClick: () => void;
+  onTermsClick: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onPrivacyPolicyClick }) => {
+export const Footer: React.FC<FooterProps> = ({ onPrivacyPolicyClick, onTermsClick }) => {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -56,8 +57,9 @@ export const Footer: React.FC<FooterProps> = ({ onPrivacyPolicyClick }) => {
                   className="hover:text-white transition-colors flex items-center gap-2"
                   onClick={(e) => {
                     e.preventDefault();
-                    // TODO: Ouvrir modal ou page des conditions
-                    alert('Conditions d\'utilisation - À implémenter');
+                    if (onTermsClick) {
+                      onTermsClick();
+                    }
                   }}
                 >
                   <FileText size={16} />

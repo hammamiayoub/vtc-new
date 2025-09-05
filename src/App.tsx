@@ -13,9 +13,10 @@ import { DriverLogin } from './components/DriverLogin';
 import { ClientLogin } from './components/ClientLogin';
 import { ClientDashboard } from './components/ClientDashboard';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfService } from './components/TermsOfService';
 import { supabase } from './lib/supabase';
 
-type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy';
+type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -192,12 +193,15 @@ function App() {
         return <AdminDashboard onLogout={handleLogout} />;
       case 'privacy-policy':
         return <PrivacyPolicy onBack={() => setCurrentView('home')} />;
+      case 'terms-of-service':
+        return <TermsOfService onBack={() => setCurrentView('home')} />;
       default:
         return (
           <HomePage 
             onGetStarted={() => setCurrentView('signup')}
             onClientLogin={() => setCurrentView('client-login')}
             onPrivacyPolicyClick={() => setCurrentView('privacy-policy')}
+            onTermsClick={() => setCurrentView('terms-of-service')}
           />
         );
     }

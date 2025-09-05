@@ -7,9 +7,10 @@ interface HomePageProps {
   onGetStarted: () => void;
   onClientLogin: () => void;
   onPrivacyPolicyClick: () => void;
+  onTermsClick: () => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin, onPrivacyPolicyClick }) => {
+export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin, onPrivacyPolicyClick, onTermsClick }) => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -132,7 +133,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
       </section>
 
       {/* Footer */}
-      <Footer onPrivacyPolicyClick={onPrivacyPolicyClick} />
+      <Footer 
+        onPrivacyPolicyClick={onPrivacyPolicyClick}
+        onTermsClick={onTermsClick}
+      />
     </div>
   );
 };
