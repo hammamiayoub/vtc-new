@@ -197,6 +197,7 @@ function App() {
           <HomePage 
             onGetStarted={() => setCurrentView('signup')}
             onClientLogin={() => setCurrentView('client-login')}
+            onPrivacyPolicyClick={() => setCurrentView('privacy-policy')}
           />
         );
     }

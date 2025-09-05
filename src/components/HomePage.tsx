@@ -131,7 +131,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
       </section>
 
       {/* Footer */}
-      <Footer />
+      <Footer onPrivacyPolicyClick={onPrivacyPolicyClick} />
     </div>
   );
 };

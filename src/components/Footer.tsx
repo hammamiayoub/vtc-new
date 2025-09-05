@@ -66,8 +66,9 @@ export const Footer: React.FC = () => {
                   className="hover:text-white transition-colors flex items-center gap-2"
                   onClick={(e) => {
                     e.preventDefault();
-                    window.location.hash = 'privacy-policy';
-                    window.location.reload();
+                    if (onPrivacyPolicyClick) {
+                      onPrivacyPolicyClick();
+                    }
                   }}
                 >
                   <Shield size={16} />
