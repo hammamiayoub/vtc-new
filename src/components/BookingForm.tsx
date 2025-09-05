@@ -747,32 +747,31 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     </div>
                     
                     {selectedDriver === driver.id && (
-                                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                        <div className="bg-white rounded-lg p-4 shadow-sm">
-                          <div className="flex items-center gap-3 mb-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-gray-200">
-                                  <User size={24} className="text-gray-700" />
-                                src={driver.profilePhotoUrl}
-                                alt="Photo de profil"
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                <div className="flex items-center gap-2">
-                                  <p className="text-sm text-gray-600">Chauffeur sélectionné</p>
-                                  {driver.profilePhotoUrl && (
-                                    <span className="text-xs text-blue-600 font-medium">✓ Vérifié</span>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {driver.firstName} {driver.lastName}
-                              </p>
+                      <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                          {driver.profilePhotoUrl ? (
+                            <img
+                              src={driver.profilePhotoUrl}
+                              alt="Photo de profil"
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                              <User size={20} className="text-gray-500" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {driver.firstName} {driver.lastName}
+                            </p>
+                            <div className="flex items-center gap-2">
                               <p className="text-sm text-gray-600">Chauffeur sélectionné</p>
+                              {driver.profilePhotoUrl && (
+                                <span className="text-xs text-blue-600 font-medium">✓ Vérifié</span>
+                              )}
                             </div>
                           </div>
+                        </div>
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-gray-600">Distance du trajet:</span>
                             <span className="font-semibold text-gray-900">{estimatedDistance} km</span>
@@ -793,7 +792,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             })()}
                           </p>
                         </div>
-                      </div>
                     )}
                   </div>
                 ))}
