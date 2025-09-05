@@ -79,22 +79,140 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           // Récupérer les réservations du chauffeur avec les informations client
           console.log('📡 Récupération des réservations avec informations client...');
           
-          const { data: bookingsWithClients, error: joinError } = await supabase
+          const { data: bookingsData, error: bookingsError } = await supabase
             .from('bookings')
-            .select(`
-              *,
-              clients(
-                first_name,
-                last_name,
-                phone
-              )
-            `)
+            .select('*')
             .eq('driver_id', driver.id)
             .order('created_at', { ascending: false });
 
-          if (joinError) {
-            console.error('Erreur jointure client:', joinError);
+          if (bookingsError) {
+            console.error('Erreur récupération réservations:', bookingsError);
             setBookings([]);
+            return;
+          }
+
+          console.log('Réservations récupérées:', bookingsData?.length || 0);
+
+          if (!bookingsData || bookingsData.length === 0) {
+            setBookings([]);
+            return;
+          }
+
+          // Récupérer les informations des clients pour chaque réservation
+          const bookingsWithClients = await Promise.all(
+            bookingsData.map(async (booking) => {
+              if (booking.client_id) {
+                const { data: clientData, error: clientError } = await supabase
+                  .from('clients')
+                  .select('first_name, last_name, phone')
+                  .eq('id', booking.client_id)
+                  .single();
+
+                if (clientError) {
+                  console.error('Erreur récupération client:', clientError);
+                  return { ...booking, clients: null };
+                }
+
+                return { ...booking, clients: clientData };
+              }
+              return { ...booking, clients: null };
+            })
+          );
+
+          console.log('Réservations avec clients:', bookingsWithClients.length);
+          console.log('📊 Détails des réservations:', bookingsWithClients.map(b => ({
+            id: b.id.slice(0, 8),
+            status: b.status,
+            client: b.clients ? `${b.clients.first_name} ${b.clients.last_name}` : 'Pas de client',
+            phone: b.clients?.phone || 'Pas de téléphone'
+          })));
+
+          setBookings(bookingsWithClients);
+        } catch (error) {
+          console.error('Erreur:', error);
+        }
+      }
+    };
+
+    fetchBookings();
+  }, [driver]);
+
+  // Fonction pour rafraîchir les réservations après une action
+  const refreshBookings = async () => {
+    if (driver) {
+      try {
+        const { data: bookingsData, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('driver_id', driver.id)
+          .order('created_at', { ascending: false });
+
+        if (bookingsError) {
+          console.error('Erreur refresh réservations:', bookingsError);
+          return;
+        }
+
+        if (!bookingsData || bookingsData.length === 0) {
+          setBookings([]);
+          return;
+        }
+
+        // Récupérer les informations des clients
+        const bookingsWithClients = await Promise.all(
+          bookingsData.map(async (booking) => {
+            if (booking.client_id) {
+              const { data: clientData, error: clientError } = await supabase
+                .from('clients')
+                .select('first_name, last_name, phone')
+                .eq('id', booking.client_id)
+                .single();
+
+              if (clientError) {
+                console.error('Erreur récupération client:', clientError);
+                return { ...booking, clients: null };
+              }
+
+              return { ...booking, clients: clientData };
+            }
+            return { ...booking, clients: null };
+          })
+        );
+
+        setBookings(bookingsWithClients);
+      } catch (error) {
+        console.error('Erreur refresh:', error);
+      }
+    }
+  };
+
+  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+    try {
+      console.log('🔄 Mise à jour du statut:', { bookingId, newStatus });
+      
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          status: newStatus,
+          pickup_time: newStatus === 'in_progress' ? new Date().toISOString() : undefined,
+          completion_time: newStatus === 'completed' ? new Date().toISOString() : undefined
+        })
+        .eq('id', bookingId);
+
+      if (error) {
+        console.error('Erreur lors de la mise à jour:', error);
+        alert('Erreur lors de la mise à jour du statut');
+        return;
+      }
+
+      console.log('✅ Statut mis à jour avec succès');
+      
+      // Rafraîchir les données après la mise à jour
+      await refreshBookings();
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue');
+    }
+  };
           } else {
             console.log('Réservations avec clients:', bookingsWithClients?.length || 0);
             
