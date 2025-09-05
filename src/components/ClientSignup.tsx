@@ -91,7 +91,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
             Votre compte client a été créé avec succès. 
-            Vous pouvez maintenant vous connecter et commencer à réserver des courses.
+            Vous allez recevoir un message pour confirmer votre adresse email.
           </p>
           <Button onClick={onBack} className="w-full bg-purple-600 hover:bg-purple-700">
             Retour à l'accueil
