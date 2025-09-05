@@ -106,7 +106,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   .from('clients')
                   .select('first_name, last_name, phone')
                   .eq('id', booking.client_id)
-                  .single();
+                  .maybeSingle();
 
                 if (clientError) {
                   console.error('Erreur récupération client:', clientError);
@@ -165,7 +165,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 .from('clients')
                 .select('first_name, last_name, phone')
                 .eq('id', booking.client_id)
-                .single();
+                .maybeSingle();
 
               if (clientError) {
                 console.error('Erreur récupération client:', clientError);
