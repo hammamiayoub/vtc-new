@@ -68,6 +68,9 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           lastName: data.lastName
         });
         
+        console.log('🔐 Vérification auth.uid():', authData.user.id);
+        console.log('📊 Session utilisateur:', authData.session?.user?.id);
+        
         const { error: profileError } = await supabase
           .from('drivers')
           .insert({
@@ -86,10 +89,17 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             details: profileError.details,
             hint: profileError.hint
           });
+          
+          // Vérifier la session actuelle
+          const { data: currentUser } = await supabase.auth.getUser();
+          console.log('👤 Utilisateur actuel lors de l\'erreur:', currentUser.user?.id);
+          
           if (profileError.message.includes('adresse email est déjà utilisée')) {
             setError('Cette adresse email est déjà utilisée par un autre compte');
           } else if (profileError.message.includes('duplicate key value')) {
             setError('Ces informations sont déjà utilisées par un autre compte');
+          } else if (profileError.message.includes('row-level security')) {
+            setError('Erreur de sécurité lors de la création du compte. Veuillez réessayer.');
           } else {
             setError('Erreur lors de la création du profil: ' + profileError.message);
           }
