@@ -48,6 +48,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               licenseNumber: driverData.license_number,
               vehicleInfo: driverData.vehicle_info,
               status: driverData.status,
+              profilePhotoUrl: driverData.profile_photo_url,
               createdAt: driverData.created_at,
               updatedAt: driverData.updated_at
             });
@@ -348,9 +349,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {/* Welcome Section */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center">
-                  <User size={32} className="text-gray-700" />
-                </div>
+                {driver?.profilePhotoUrl ? (
+                  <img
+                    src={driver.profilePhotoUrl}
+                    alt="Photo de profil"
+                    className="w-16 h-16 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center">
+                    <User size={32} className="text-gray-700" />
+                  </div>
+                )}
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
                     Bienvenue, {driver?.firstName} {driver?.lastName}

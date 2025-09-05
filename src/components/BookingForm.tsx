@@ -692,9 +692,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                          <User size={24} className="text-gray-700" />
-                        </div>
+                        {driver.profilePhotoUrl ? (
+                          <img
+                            src={driver.profilePhotoUrl}
+                            alt="Photo de profil"
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                            <User size={24} className="text-gray-700" />
+                          </div>
+                        )}
                         <div>
                           <h4 className="font-semibold text-gray-900">
                             {driver.firstName} {driver.lastName}

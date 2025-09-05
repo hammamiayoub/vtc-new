@@ -88,6 +88,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         licenseNumber: driver.license_number,
         vehicleInfo: driver.vehicle_info,
         status: driver.status,
+        profilePhotoUrl: driver.profile_photo_url,
         createdAt: driver.created_at,
         updatedAt: driver.updated_at
       }));
@@ -321,9 +322,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <tr key={driver.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                          <User size={20} className="text-gray-700" />
-                        </div>
+                        {driver.profilePhotoUrl ? (
+                          <img
+                            src={driver.profilePhotoUrl}
+                            alt="Photo de profil"
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                            <User size={20} className="text-gray-700" />
+                          </div>
+                        )}
                         <div>
                           <p className="font-medium text-gray-900">
                             {driver.firstName} {driver.lastName}

@@ -71,6 +71,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             licenseNumber: driverData.license_number,
             vehicleInfo: driverData.vehicle_info,
             status: driverData.status,
+            profilePhotoUrl: driverData.profile_photo_url,
             createdAt: driverData.created_at,
             updatedAt: driverData.updated_at
           });
@@ -285,9 +286,17 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               <div className="space-y-6">
                 {/* Profil du chauffeur */}
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User size={32} className="text-blue-600" />
-                  </div>
+                  {driver.profilePhotoUrl ? (
+                    <img
+                      src={driver.profilePhotoUrl}
+                      alt="Photo de profil"
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                      <User size={32} className="text-blue-600" />
+                    </div>
+                  )}
                   <div>
                     <h4 className="text-xl font-semibold text-gray-900">
                       {driver.firstName} {driver.lastName}

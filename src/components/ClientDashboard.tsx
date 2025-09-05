@@ -47,6 +47,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               email: clientData.email,
               phone: clientData.phone,
               status: clientData.status,
+              profilePhotoUrl: clientData.profile_photo_url,
               createdAt: clientData.created_at,
               updatedAt: clientData.updated_at
             });
@@ -299,9 +300,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             {/* Welcome Section */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                  <User size={32} className="text-gray-700" />
-                </div>
+                {client?.profilePhotoUrl ? (
+                  <img
+                    src={client.profilePhotoUrl}
+                    alt="Photo de profil"
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                    <User size={32} className="text-gray-700" />
+                  </div>
+                )}
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
                     Bienvenue, {client?.firstName} {client?.lastName}
