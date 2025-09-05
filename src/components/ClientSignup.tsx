@@ -39,7 +39,6 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
@@ -50,22 +49,11 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
       if (authError) {
         console.error('Erreur lors de l\'inscription:', authError);
-        if (authError.message.includes('User already registered')) {
-          setError('Un compte existe déjà avec cette adresse email');
-        } else {
-          setError(authError.message);
-        }
         return;
       }
 
-      // Si l'utilisateur est créé mais pas encore confirmé
-      if (authData.user && !authData.session) {
-        setSubmitSuccess(true);
-        return;
-      }
-
-      // Si l'utilisateur est créé et confirmé (cas rare en développement)
-      if (authData.user && authData.session) {
+      // Insérer les détails du client dans la table clients
+      if (authData.user) {
         const { error: profileError } = await supabase
           .from('clients')
           .insert({
@@ -78,46 +66,33 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
         if (profileError) {
           console.error('Erreur lors de la création du profil client:', profileError);
-          setError('Erreur lors de la création du profil client');
+          return;
         }
-        
-        setSubmitSuccess(true);
       }
+
+      setSubmitSuccess(true);
       
     } catch (error) {
       console.error('Erreur lors de l\'inscription client:', error);
-      setError('Une erreur inattendue est survenue');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const [error, setError] = useState('');
 
   if (submitSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
           <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Mail size={40} className="text-purple-600" />
+            <CheckCircle size={40} className="text-purple-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Vérifiez votre email !
+            Inscription réussie !
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Nous avons envoyé un lien de vérification à votre adresse email. 
-            Cliquez sur le lien pour activer votre compte client.
+            Votre compte client a été créé avec succès. 
+            Vous pouvez maintenant vous connecter et commencer à réserver des courses.
           </p>
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-purple-800">
-              <strong>Prochaines étapes :</strong>
-            </p>
-            <ol className="text-sm text-purple-700 mt-2 text-left space-y-1">
-              <li>1. Vérifiez votre boîte email</li>
-              <li>2. Cliquez sur le lien de vérification</li>
-              <li>3. Connectez-vous pour réserver vos courses</li>
-            </ol>
-          </div>
           <Button onClick={onBack} className="w-full bg-purple-600 hover:bg-purple-700">
             Retour à l'accueil
           </Button>
@@ -256,12 +231,6 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               )}
 
               <div className="relative">
-            {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>

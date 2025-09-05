@@ -28,24 +28,11 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
       });
 
       if (authError) {
-        if (authError.message.includes('Email not confirmed')) {
-          setError('Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception.');
-        } else if (authError.message.includes('Invalid login credentials')) {
-          setError('Email ou mot de passe incorrect');
-        } else {
-          setError(authError.message);
-        }
+        setError('Email ou mot de passe incorrect');
         return;
       }
 
       if (data.user) {
-        // Vérifier que l'email est confirmé
-        if (!data.user.email_confirmed_at) {
-          setError('Veuillez confirmer votre email avant de vous connecter');
-          await supabase.auth.signOut();
-          return;
-        }
-
         // Vérifier que c'est bien un client
         const { data: clientData, error: clientError } = await supabase
           .from('clients')

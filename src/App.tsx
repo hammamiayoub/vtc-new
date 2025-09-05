@@ -12,10 +12,9 @@ import { LoginSelection } from './components/LoginSelection';
 import { DriverLogin } from './components/DriverLogin';
 import { ClientLogin } from './components/ClientLogin';
 import { ClientDashboard } from './components/ClientDashboard';
-import { AuthCallback } from './components/AuthCallback';
 import { supabase } from './lib/supabase';
 
-type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'auth-callback';
+type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -23,14 +22,6 @@ function App() {
   const [userType, setUserType] = useState<'driver' | 'client' | 'admin' | null>(null);
 
   useEffect(() => {
-    // Vérifier si c'est un callback d'authentification
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('type') === 'signup' && urlParams.get('access_token')) {
-      setCurrentView('auth-callback');
-      setIsLoading(false);
-      return;
-    }
-
     // Vérifier la session existante au chargement
     const checkSession = async () => {
       try {
@@ -198,8 +189,6 @@ function App() {
         );
       case 'admin-dashboard':
         return <AdminDashboard onLogout={handleLogout} />;
-      case 'auth-callback':
-        return <AuthCallback />;
       default:
         return (
           <HomePage 
@@ -212,7 +201,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {(currentView === 'home' || currentView === 'admin') && currentView !== 'auth-callback' && (
+      {(currentView === 'home' || currentView === 'admin') && (
         <Header currentView={currentView} onViewChange={setCurrentView} />
       )}
       {renderContent()}

@@ -18,7 +18,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [error, setError] = useState('');
 
   const {
     register,
@@ -41,7 +40,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             first_name: data.firstName,
             last_name: data.lastName
@@ -51,11 +49,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
       if (authError) {
         console.error('Erreur lors de l\'inscription:', authError);
-        if (authError.message.includes('User already registered')) {
-          setError('Un compte existe déjà avec cette adresse email');
-        } else {
-          setError(authError.message);
-        }
         return;
       }
 
@@ -65,31 +58,21 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           .from('drivers')
           .insert({
             id: authData.user.id,
-            user_type: 'driver',
+            first_name: data.firstName,
+            last_name: data.lastName,
             email: data.email
           });
 
         if (profileError) {
           console.error('Erreur lors de la création du profil:', profileError);
-          setError('Erreur lors de la création du profil chauffeur');
           return;
         }
       }
 
-      // Si l'utilisateur est créé mais pas encore confirmé
-      if (authData.user && !authData.session) {
-        setSubmitSuccess(true);
-        return;
-      }
-
-      // Si l'utilisateur est créé et confirmé (cas rare en développement)
-      if (authData.user && authData.session) {
-        setSubmitSuccess(true);
-      }
+      setSubmitSuccess(true);
       
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
-      setError('Une erreur inattendue est survenue');
     } finally {
       setIsSubmitting(false);
     }
@@ -100,25 +83,15 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Mail size={40} className="text-green-600" />
+            <CheckCircle size={40} className="text-green-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Vérifiez votre email !
+            Inscription réussie !
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Nous avons envoyé un lien de vérification à votre adresse email. 
-            Cliquez sur le lien pour activer votre compte chauffeur.
+            Votre compte chauffeur a été créé avec succès. 
+            Vous pouvez maintenant commencer à recevoir des demandes de course.
           </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-800">
-              <strong>Prochaines étapes :</strong>
-            </p>
-            <ol className="text-sm text-blue-700 mt-2 text-left space-y-1">
-              <li>1. Vérifiez votre boîte email</li>
-              <li>2. Cliquez sur le lien de vérification</li>
-              <li>3. Connectez-vous pour compléter votre profil</li>
-            </ol>
-          </div>
           <Button onClick={onBack} className="w-full">
             Retour à l'accueil
           </Button>
@@ -266,12 +239,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   <p className="mt-2 text-sm text-red-600">{errors.confirmPassword.message}</p>
                 )}
               </div>
-
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
 
               <Button
                 type="submit"
