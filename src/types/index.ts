@@ -7,6 +7,7 @@ export interface Driver {
   licenseNumber?: string;
   vehicleInfo?: VehicleInfo;
   status: string;
+  profilePhotoUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,6 +63,7 @@ export interface Client {
   email: string;
   phone: string;
   status: string;
+  profilePhotoUrl?: string;
   createdAt: string;
   updatedAt: string;
 }

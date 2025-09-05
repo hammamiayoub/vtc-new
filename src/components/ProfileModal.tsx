@@ -10,11 +10,14 @@ import {
   AlertTriangle,
   Edit3,
   Save,
-  Calendar
+  Calendar,
+  Camera
 } from 'lucide-react';
 import { Button } from './ui/Button';
+import { ImageUpload } from './ui/ImageUpload';
 import { supabase } from '../lib/supabase';
 import { Driver, Client } from '../types';
+import { uploadProfileImage, deleteProfileImage } from '../utils/imageUpload';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -34,6 +37,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [currentPhotoUrl, setCurrentPhotoUrl] = useState(user.profilePhotoUrl);
   const [editData, setEditData] = useState({
     firstName: user.firstName,
     lastName: user.lastName,
@@ -44,6 +49,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handlePhotoUpload = async (file: File) => {
+    setUploadingPhoto(true);
+    try {
+      const newPhotoUrl = await uploadProfileImage(file, user.id, userType);
+      setCurrentPhotoUrl(newPhotoUrl);
+    } catch (error) {
+      console.error('Erreur upload photo:', error);
+      alert('Erreur lors de l\'upload de la photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
@@ -89,6 +106,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const handleDeleteProfile = async () => {
     setIsDeleting(true);
     try {
+      // Supprimer la photo de profil si elle existe
+      if (currentPhotoUrl) {
+        try {
+          await deleteProfileImage(currentPhotoUrl, user.id, userType);
+        } catch (error) {
+          console.error('Erreur suppression photo:', error);
+        }
+      }
+
       // Supprimer d'abord les données liées
       if (userType === 'driver') {
         // Supprimer les disponibilités
@@ -153,8 +179,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                <User size={24} className="text-gray-700" />
+              <div className="relative">
+                {currentPhotoUrl ? (
+                  <img
+                    src={currentPhotoUrl}
+                    alt="Photo de profil"
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    <User size={24} className="text-gray-700" />
+                  </div>
+                )}
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Mon profil</h2>
@@ -185,6 +221,20 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
         {/* Content */}
         <div className="p-6 space-y-6">
+          {/* Photo de profil */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Camera className="w-5 h-5 text-purple-600" />
+              Photo de profil
+            </h3>
+            <ImageUpload
+              currentImageUrl={currentPhotoUrl}
+              onImageUpload={handlePhotoUpload}
+              loading={uploadingPhoto}
+              className="mb-4"
+            />
+          </div>
+
           {/* Informations personnelles */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
