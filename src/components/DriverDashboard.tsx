@@ -34,10 +34,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             .from('drivers')
             .select('*')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
           if (error) {
             console.error('Erreur lors de la récupération des données:', error);
+          } else if (!driverData) {
+            console.error('Aucun profil chauffeur trouvé pour cet utilisateur');
           } else {
             setDriver({
               id: driverData.id,
