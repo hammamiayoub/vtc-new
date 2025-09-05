@@ -307,10 +307,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               {[
                 'Revenus attractifs et transparents',
                 'Flexibilité totale des horaires',
-                'Support 24/7 dédiée aux chauffeurs',
-                'Formation et certification gratuites',
-                'Assurance véhicule incluse',
-                'Application mobile intuitive'
+                'Support 24/7 dédiée aux chauffeurs'
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <CheckCircle size={20} className="text-green-400 flex-shrink-0" />
