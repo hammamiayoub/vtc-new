@@ -273,7 +273,14 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   conditions d'utilisation
                 </a>{' '}
                 et notre{' '}
-                <a href="#" className="text-purple-600 hover:underline">
+                <a 
+                  href="#" 
+                  className="text-purple-600 hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open('#privacy-policy', '_blank');
+                  }}
+                >
                   politique de confidentialité
                 </a>.
               </p>

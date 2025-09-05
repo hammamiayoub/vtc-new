@@ -293,7 +293,14 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   conditions d'utilisation
                 </a>{' '}
                 et notre{' '}
-                <a href="#" className="text-blue-600 hover:underline">
+                <a 
+                  href="#" 
+                  className="text-blue-600 hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open('#privacy-policy', '_blank');
+                  }}
+                >
                   politique de confidentialité
                 </a>.
               </p>

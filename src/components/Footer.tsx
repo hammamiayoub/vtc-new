@@ -66,8 +66,8 @@ export const Footer: React.FC = () => {
                   className="hover:text-white transition-colors flex items-center gap-2"
                   onClick={(e) => {
                     e.preventDefault();
-                    // TODO: Ouvrir modal ou page de la politique
-                    alert('Politique de confidentialité - À implémenter');
+                    window.location.hash = 'privacy-policy';
+                    window.location.reload();
                   }}
                 >
                   <Shield size={16} />

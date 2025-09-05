@@ -12,9 +12,10 @@ import { LoginSelection } from './components/LoginSelection';
 import { DriverLogin } from './components/DriverLogin';
 import { ClientLogin } from './components/ClientLogin';
 import { ClientDashboard } from './components/ClientDashboard';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { supabase } from './lib/supabase';
 
-type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard';
+type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -189,6 +190,8 @@ function App() {
         );
       case 'admin-dashboard':
         return <AdminDashboard onLogout={handleLogout} />;
+      case 'privacy-policy':
+        return <PrivacyPolicy onBack={() => setCurrentView('home')} />;
       default:
         return (
           <HomePage 
