@@ -122,7 +122,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
             Votre compte chauffeur a été créé avec succès. 
-            Vous pouvez maintenant commencer à recevoir des demandes de course.
+            Vous allez recevoir un message pour confirmer votre adresse email.
           </p>
           <Button onClick={onBack} className="w-full">
             Retour à l'accueil
