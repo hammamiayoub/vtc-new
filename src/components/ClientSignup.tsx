@@ -17,7 +17,6 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [error, setError] = useState('');
 
   const {
     register,
@@ -50,27 +49,11 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
       if (authError) {
         console.error('Erreur lors de l\'inscription:', authError);
-        if (authError.message.includes('User already registered')) {
-          setError('Un compte existe déjà avec cette adresse email');
-        } else {
-          setError('Erreur lors de la création du compte: ' + authError.message);
-        }
         return;
       }
 
       // Insérer les détails du client dans la table clients
       if (authData.user) {
-        console.log('🔍 Tentative d\'insertion du profil client:', {
-          userId: authData.user.id,
-          email: data.email,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          phone: data.phone
-        });
-        
-        console.log('🔐 Vérification auth.uid():', authData.user.id);
-        console.log('📊 Session utilisateur:', authData.session?.user?.id);
-        
         const { error: profileError } = await supabase
           .from('clients')
           .insert({
@@ -83,28 +66,6 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
         if (profileError) {
           console.error('Erreur lors de la création du profil client:', profileError);
-          console.error('Détails de l\'erreur:', {
-            message: profileError.message,
-            code: profileError.code,
-            details: profileError.details,
-            hint: profileError.hint
-          });
-          
-          // Vérifier la session actuelle
-          const { data: currentUser } = await supabase.auth.getUser();
-          console.log('👤 Utilisateur actuel lors de l\'erreur:', currentUser.user?.id);
-          
-          if (profileError.message.includes('adresse email est déjà utilisée')) {
-            setError('Cette adresse email est déjà utilisée par un autre compte');
-          } else if (profileError.message.includes('numéro de téléphone est déjà utilisé')) {
-            setError('Ce numéro de téléphone est déjà utilisé par un autre compte');
-          } else if (profileError.message.includes('duplicate key value')) {
-            setError('Ces informations sont déjà utilisées par un autre compte');
-          } else if (profileError.message.includes('row-level security')) {
-            setError('Erreur de sécurité lors de la création du compte. Veuillez réessayer.');
-          } else {
-            setError('Erreur lors de la création du profil: ' + profileError.message);
-          }
           return;
         }
       }
@@ -113,7 +74,6 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
       
     } catch (error) {
       console.error('Erreur lors de l\'inscription client:', error);
-      setError('Une erreur inattendue est survenue');
     } finally {
       setIsSubmitting(false);
     }
@@ -271,12 +231,6 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               )}
 
               <div className="relative">
-            {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
