@@ -44,7 +44,7 @@ function App() {
             .from('admin_users')
             .select('*')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
           
           if (adminData) {
             setUserType('admin');
@@ -58,7 +58,7 @@ function App() {
             .from('drivers')
             .select('*')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
           
           if (driverData) {
             setUserType('driver');
@@ -72,7 +72,7 @@ function App() {
             .from('clients')
             .select('*')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
           
           if (clientData) {
             setUserType('client');

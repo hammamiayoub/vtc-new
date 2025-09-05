@@ -131,7 +131,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
           .from('admin_users')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
         if (adminError || !adminData) {
           setError('Accès non autorisé - Compte administrateur requis');

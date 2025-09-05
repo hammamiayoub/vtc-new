@@ -58,7 +58,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         .from('admin_users')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
       console.log('🛡️ Admin - Permissions vérifiées:', !!adminData);
       
