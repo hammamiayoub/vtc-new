@@ -289,7 +289,6 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 'Chauffeurs professionnels vérifiés',
                 'Tarifs transparents et compétitifs',
                 'Suivi en temps réel de votre course',
-                'Paiement sécurisé intégré',
                 'Support client 24/7'
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center gap-3">
