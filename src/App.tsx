@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { Header } from './components/Header';
 import { HomePage } from './components/HomePage';
 import { DriverSignup } from './components/DriverSignup';
@@ -11,11 +12,122 @@ import { LoginSelection } from './components/LoginSelection';
 import { DriverLogin } from './components/DriverLogin';
 import { ClientLogin } from './components/ClientLogin';
 import { ClientDashboard } from './components/ClientDashboard';
+import { supabase } from './lib/supabase';
 
 type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('home');
+  const [isLoading, setIsLoading] = useState(true);
+  const [userType, setUserType] = useState<'driver' | 'client' | 'admin' | null>(null);
+
+  useEffect(() => {
+    // Vérifier la session existante au chargement
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Erreur lors de la vérification de session:', error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          console.log('Session trouvée:', session.user.id);
+          
+          // Vérifier le type d'utilisateur
+          const userId = session.user.id;
+          
+          // Vérifier si c'est un admin
+          const { data: adminData } = await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('id', userId)
+            .single();
+          
+          if (adminData) {
+            setUserType('admin');
+            setCurrentView('admin-dashboard');
+            setIsLoading(false);
+            return;
+          }
+          
+          // Vérifier si c'est un chauffeur
+          const { data: driverData } = await supabase
+            .from('drivers')
+            .select('*')
+            .eq('id', userId)
+            .single();
+          
+          if (driverData) {
+            setUserType('driver');
+            setCurrentView('dashboard');
+            setIsLoading(false);
+            return;
+          }
+          
+          // Vérifier si c'est un client
+          const { data: clientData } = await supabase
+            .from('clients')
+            .select('*')
+            .eq('id', userId)
+            .single();
+          
+          if (clientData) {
+            setUserType('client');
+            setCurrentView('client-dashboard');
+            setIsLoading(false);
+            return;
+          }
+          
+          // Si aucun type trouvé, déconnecter
+          console.log('Type d\'utilisateur non trouvé, déconnexion...');
+          await supabase.auth.signOut();
+        }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Erreur lors de la vérification de session:', error);
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Écouter les changements d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Changement d\'auth:', event, session?.user?.id);
+        
+        if (event === 'SIGNED_OUT' || !session) {
+          setUserType(null);
+          setCurrentView('home');
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUserType(null);
+    setCurrentView('home');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch (currentView) {
@@ -36,7 +148,10 @@ function App() {
           <DriverLogin 
             onBack={() => setCurrentView('login-selection')} 
             onSignup={() => setCurrentView('signup')}
-            onLoginSuccess={() => setCurrentView('dashboard')}
+            onLoginSuccess={() => {
+              setUserType('driver');
+              setCurrentView('dashboard');
+            }}
           />
         );
       case 'client-login':
@@ -44,7 +159,10 @@ function App() {
           <ClientLogin 
             onBack={() => setCurrentView('home')} 
             onSignup={() => setCurrentView('client-signup')}
-            onLoginSuccess={() => setCurrentView('client-dashboard')}
+            onLoginSuccess={() => {
+              setUserType('client');
+              setCurrentView('client-dashboard');
+            }}
           />
         );
       case 'login':
@@ -56,18 +174,21 @@ function App() {
           />
         );
       case 'dashboard':
-        return <DriverDashboard onLogout={() => setCurrentView('home')} />;
+        return <DriverDashboard onLogout={handleLogout} />;
       case 'client-dashboard':
-        return <ClientDashboard onLogout={() => setCurrentView('home')} />;
+        return <ClientDashboard onLogout={handleLogout} />;
       case 'admin':
         return (
           <AdminLogin 
             onBack={() => setCurrentView('home')} 
-            onLoginSuccess={() => setCurrentView('admin-dashboard')}
+            onLoginSuccess={() => {
+              setUserType('admin');
+              setCurrentView('admin-dashboard');
+            }}
           />
         );
       case 'admin-dashboard':
-        return <AdminDashboard onLogout={() => setCurrentView('home')} />;
+        return <AdminDashboard onLogout={handleLogout} />;
       default:
         return (
           <HomePage 
