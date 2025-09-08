@@ -78,49 +78,230 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           console.log('Utilisateur connecté:', user?.id);
           console.log('Correspondance user/driver:', user?.id === driver.id);
           
-          // Récupérer les réservations du chauffeur avec les informations client
-          console.log('📡 Récupération des réservations avec informations client...');
+          // Récupérer d'abord les réservations du chauffeur
+          console.log('📡 Récupération des réservations du chauffeur...');
           
-          const { data: bookingsWithClients, error: joinError } = await supabase
+          const { data: bookingsData, error: bookingsError } = await supabase
             .from('bookings')
-            .select(`
-              *,
-              clients(
-                first_name,
-                last_name,
-                phone
-              )
-            `)
+            .select('*')
             .eq('driver_id', driver.id)
             .order('created_at', { ascending: false });
 
-          if (joinError) {
-            console.error('Erreur jointure client:', joinError);
+          if (bookingsError) {
+            console.error('Erreur récupération réservations:', bookingsError);
             setBookings([]);
-          } else {
-            console.log('Réservations avec clients:', bookingsWithClients?.length || 0);
-            
-            if (bookingsWithClients) {
-              console.log('📊 Détails des réservations:', bookingsWithClients.map(b => ({
-                id: b.id.slice(0, 8),
-                status: b.status,
-                client: b.clients ? `${b.clients.first_name} ${b.clients.last_name}` : 'Pas de client',
-                phone: b.clients?.phone || 'Pas de téléphone'
-              })));
-              
-              setBookings(bookingsWithClients);
-            }
+            return;
           }
-          
-          console.log('=== FIN DIAGNOSTIC ===');
+
+          console.log('📊 Réservations trouvées:', bookingsData?.length || 0);
+
+          if (!bookingsData || bookingsData.length === 0) {
+            setBookings([]);
+            return;
+          }
+
+          // Récupérer les informations client pour chaque réservation
+          console.log('👥 Récupération des informations client...');
+          const bookingsWithClients = await Promise.all(
+            bookingsData.map(async (booking) => {
+              try {
+                const { data: clientData, error: clientError } = await supabase
+                  .from('clients')
+                  .select('first_name, last_name, phone')
+                  .eq('id', booking.client_id)
+                  .maybeSingle();
+
+                if (clientError) {
+                  console.error(`Erreur client ${booking.client_id}:`, clientError);
+                  return {
+                    ...booking,
+                    clients: null
+                  };
+                }
+
+                return {
+                  ...booking,
+                  clients: clientData
+                };
+              } catch (error) {
+                console.error(`Erreur récupération client ${booking.client_id}:`, error);
+                return {
+                  ...booking,
+                  clients: null
+                };
+              }
+            })
+          );
+
+          console.log('✅ Réservations avec clients:', bookingsWithClients.length);
+          console.log('📋 Détails des clients:', bookingsWithClients.map(b => ({
+            bookingId: b.id.slice(0, 8),
+            clientId: b.client_id?.slice(0, 8),
+            clientName: b.clients ? `${b.clients.first_name} ${b.clients.last_name}` : 'Non trouvé',
+            clientPhone: b.clients?.phone || 'Non renseigné'
+          })));
+
+          setBookings(bookingsWithClients);
         } catch (error) {
-          console.error('Erreur:', error);
+          console.error('Erreur générale:', error);
+          setBookings([]);
         }
+        
+        console.log('=== FIN DIAGNOSTIC ===');
       }
     };
 
     fetchBookings();
   }, [driver]);
+
+  useEffect(() => {
+    // Écouter les changements en temps réel sur les réservations
+    if (driver) {
+      const subscription = supabase
+        .channel('driver_bookings_realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'bookings',
+            filter: `driver_id=eq.${driver.id}`
+          },
+          (payload) => {
+            console.log('🔄 Changement détecté sur les réservations:', payload);
+            // Rafraîchir les réservations
+            const fetchBookings = async () => {
+              try {
+                const { data: bookingsData, error: bookingsError } = await supabase
+                  .from('bookings')
+                  .select('*')
+                  .eq('driver_id', driver.id)
+                  .order('created_at', { ascending: false });
+
+                if (bookingsError) {
+                  console.error('Erreur rafraîchissement:', bookingsError);
+                  return;
+                }
+
+                if (!bookingsData) {
+                  setBookings([]);
+                  return;
+                }
+
+                // Récupérer les informations client
+                const bookingsWithClients = await Promise.all(
+                  bookingsData.map(async (booking) => {
+                    try {
+                      const { data: clientData, error: clientError } = await supabase
+                        .from('clients')
+                        .select('first_name, last_name, phone')
+                        .eq('id', booking.client_id)
+                        .maybeSingle();
+
+                      return {
+                        ...booking,
+                        clients: clientError ? null : clientData
+                      };
+                    } catch (error) {
+                      return {
+                        ...booking,
+                        clients: null
+                      };
+                    }
+                  })
+                );
+
+                setBookings(bookingsWithClients);
+              } catch (error) {
+                console.error('Erreur rafraîchissement:', error);
+              }
+            };
+
+            fetchBookings();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [driver]);
+
+  useEffect(() => {
+    // Écouter les changements en temps réel sur les réservations
+    if (driver) {
+      const subscription = supabase
+        .channel('driver_bookings_realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'bookings',
+            filter: `driver_id=eq.${driver.id}`
+          },
+          (payload) => {
+            console.log('🔄 Changement détecté sur les réservations:', payload);
+            // Rafraîchir les réservations
+            const fetchBookings = async () => {
+              try {
+                const { data: bookingsData, error: bookingsError } = await supabase
+                  .from('bookings')
+                  .select('*')
+                  .eq('driver_id', driver.id)
+                  .order('created_at', { ascending: false });
+
+                if (bookingsError) {
+                  console.error('Erreur rafraîchissement:', bookingsError);
+                  return;
+                }
+
+                if (!bookingsData) {
+                  setBookings([]);
+                  return;
+                }
+
+                // Récupérer les informations client
+                const bookingsWithClients = await Promise.all(
+                  bookingsData.map(async (booking) => {
+                    try {
+                      const { data: clientData, error: clientError } = await supabase
+                        .from('clients')
+                        .select('first_name, last_name, phone')
+                        .eq('id', booking.client_id)
+                        .maybeSingle();
+
+                      return {
+                        ...booking,
+                        clients: clientError ? null : clientData
+                      };
+                    } catch (error) {
+                      return {
+                        ...booking,
+                        clients: null
+                      };
+                    }
+                  })
+                );
+
+                setBookings(bookingsWithClients);
+              } catch (error) {
+                console.error('Erreur rafraîchissement:', error);
+              }
+            };
+
+            fetchBookings();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [driver]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     onLogout();
@@ -144,6 +325,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     completedBookings: completedBookings.length,
     driverId: driver?.id
   });
+
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
     try {
       console.log('🔄 Mise à jour du statut:', { bookingId, newStatus });
@@ -174,6 +356,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       alert('Une erreur est survenue');
     }
   };
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -675,13 +858,13 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             )}
                           </div>
                         ) : (
-                          <div className="text-center py-4">
-                            <User size={32} className="text-blue-400 mx-auto mb-2" />
-                            <p className="text-blue-700 font-medium">
-                              Informations client en cours de chargement...
-                            </p>
-                            <p className="text-sm text-blue-600 mt-1">
-                              Les données client seront disponibles sous peu
+                          <div className="text-center py-3">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                              <span className="text-blue-700 text-sm">Chargement des informations client...</span>
+                            </div>
+                            <p className="text-xs text-blue-600">
+                              ID Client: {booking.client_id?.slice(0, 8)}...
                             </p>
                           </div>
                         )}
