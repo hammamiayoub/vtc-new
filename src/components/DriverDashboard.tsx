@@ -665,7 +665,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                                   <Phone size={16} />
                                 </a>
                                 <a
-                                  href={`sms:${booking.clients.phone}`}
+                                  href={`sms:${clients.phone}`}
                                   className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                   title="Envoyer un SMS"
                                 >
