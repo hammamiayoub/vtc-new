@@ -69,9 +69,9 @@ function App() {
               console.log('✅ Utilisateur admin trouvé');
               setUserType('admin');
               setCurrentView('admin-dashboard');
+              clearTimeout(sessionTimeout);
+              setIsLoading(false);
               return true;
-                clearTimeout(sessionTimeout);
-                setIsLoading(false);
             }
             
             // Vérifier si c'est un chauffeur
@@ -87,8 +87,8 @@ function App() {
             } else if (driverData) {
               console.log('✅ Utilisateur chauffeur trouvé');
               setUserType('driver');
-                clearTimeout(sessionTimeout);
-                setIsLoading(false);
+              clearTimeout(sessionTimeout);
+              setIsLoading(false);
               setCurrentView('dashboard');
               return true;
             }
@@ -106,15 +106,12 @@ function App() {
             } else if (clientData) {
               console.log('✅ Utilisateur client trouvé');
               setUserType('client');
-                clearTimeout(sessionTimeout);
-                setIsLoading(false);
+              clearTimeout(sessionTimeout);
+              setIsLoading(false);
               setCurrentView('client-dashboard');
               return true;
             }
             
-            } catch (typeError) {
-              console.error('Erreur lors de la vérification du type utilisateur:', typeError);
-              return false;
             return false;
           };
           
