@@ -112,9 +112,6 @@ function App() {
               return true;
             }
             
-            } catch (typeError) {
-              console.error('Erreur lors de la vérification du type utilisateur:', typeError);
-              return false;
             return false;
           };
           
