@@ -227,7 +227,6 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       };
     }
   }, [driver]);
-  }, [driver]);
 
   useEffect(() => {
     // Écouter les changements en temps réel sur les réservations
