@@ -26,9 +26,10 @@ function App() {
   useEffect(() => {
     // Vérifier la session existante au chargement
     const checkSession = async () => {
+      console.log('🔍 Début de checkSession');
       try {
-        console.log('🔍 Vérification de la session au chargement...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('📋 Session récupérée:', !!session, error);
         
         if (error) {
           console.error('Erreur lors de la vérification de session:', error);
@@ -38,16 +39,13 @@ function App() {
           return;
         }
 
-        console.log('📋 Session trouvée:', !!session, session?.user?.id);
-
         if (session?.user) {
+          console.log('👤 Utilisateur trouvé, vérification du type...');
           const userId = session.user.id;
-          console.log('👤 ID utilisateur:', userId);
           
           // Fonction helper pour vérifier le type d'utilisateur
           const checkUserType = async () => {
             // Vérifier si c'est un admin
-            console.log('🛡️ Vérification admin...');
             const { data: adminData, error: adminError } = await supabase
               .from('admin_users')
               .select('*')
@@ -57,7 +55,7 @@ function App() {
             if (adminError) {
               console.error('Erreur lors de la vérification admin:', adminError);
             } else if (adminData) {
-              console.log('✅ Utilisateur admin trouvé');
+              console.log('✅ Admin trouvé, redirection...');
               setUserType('admin');
               setCurrentView('admin-dashboard');
               setIsLoading(false);
@@ -65,7 +63,6 @@ function App() {
             }
             
             // Vérifier si c'est un chauffeur
-            console.log('🚗 Vérification chauffeur...');
             const { data: driverData, error: driverError } = await supabase
               .from('drivers')
               .select('*')
@@ -75,7 +72,7 @@ function App() {
             if (driverError) {
               console.error('Erreur lors de la vérification chauffeur:', driverError);
             } else if (driverData) {
-              console.log('✅ Utilisateur chauffeur trouvé');
+              console.log('✅ Chauffeur trouvé, redirection...');
               setUserType('driver');
               setCurrentView('dashboard');
               setIsLoading(false);
@@ -83,7 +80,6 @@ function App() {
             }
             
             // Vérifier si c'est un client
-            console.log('👥 Vérification client...');
             const { data: clientData, error: clientError } = await supabase
               .from('clients')
               .select('*')
@@ -93,37 +89,39 @@ function App() {
             if (clientError) {
               console.error('Erreur lors de la vérification client:', clientError);
             } else if (clientData) {
-              console.log('✅ Utilisateur client trouvé');
+              console.log('✅ Client trouvé, redirection...');
               setUserType('client');
               setCurrentView('client-dashboard');
               setIsLoading(false);
               return true;
             }
             
+            console.log('❌ Aucun type d\'utilisateur trouvé');
             return false;
           };
           
           const userFound = await checkUserType();
           
           if (!userFound) {
-            console.log('❌ Aucun type d\'utilisateur trouvé, déconnexion...');
+            console.log('🚪 Déconnexion - type non trouvé');
             await supabase.auth.signOut();
             setUserType(null);
             setCurrentView('home');
             setIsLoading(false);
           }
         } else {
-          console.log('❌ Aucune session trouvée');
+          console.log('❌ Pas de session');
           setUserType(null);
           setCurrentView('home');
           setIsLoading(false);
         }
       } catch (error) {
-        console.error('Erreur lors de la vérification de session:', error);
+        console.error('💥 Erreur checkSession:', error);
         setUserType(null);
         setCurrentView('home');
         setIsLoading(false);
       }
+      console.log('✅ Fin de checkSession');
     };
 
     checkSession();
@@ -131,14 +129,13 @@ function App() {
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔄 Changement d\'auth:', event, session?.user?.id);
+        console.log('🔄 Auth change:', event);
         
         if (event === 'SIGNED_OUT' || !session) {
-          console.log('👋 Déconnexion détectée');
           setUserType(null);
           setCurrentView('home');
+          setIsLoading(false);
         } else if (event === 'SIGNED_IN' && session?.user) {
-          console.log('🔑 Connexion détectée');
           const userId = session.user.id;
           
           // Vérifier si c'est un admin
@@ -149,9 +146,9 @@ function App() {
             .maybeSingle();
           
           if (adminData) {
-            console.log('✅ Admin connecté');
             setUserType('admin');
             setCurrentView('admin-dashboard');
+            setIsLoading(false);
             return;
           }
           
@@ -163,9 +160,9 @@ function App() {
             .maybeSingle();
           
           if (driverData) {
-            console.log('✅ Chauffeur connecté');
             setUserType('driver');
             setCurrentView('dashboard');
+            setIsLoading(false);
             return;
           }
           
@@ -177,15 +174,16 @@ function App() {
             .maybeSingle();
           
           if (clientData) {
-            console.log('✅ Client connecté');
             setUserType('client');
             setCurrentView('client-dashboard');
+            setIsLoading(false);
             return;
           }
           
           // Si aucun type trouvé, déconnecter
-          console.log('❌ Type d\'utilisateur non trouvé après connexion, déconnexion...');
+          console.log('❌ Type non trouvé, déconnexion');
           await supabase.auth.signOut();
+          setIsLoading(false);
         }
       }
     );
@@ -196,10 +194,11 @@ function App() {
   }, []);
 
   const handleLogout = async () => {
-    console.log('🚪 Déconnexion manuelle...');
+    setIsLoading(true);
     await supabase.auth.signOut();
     setUserType(null);
     setCurrentView('home');
+    setIsLoading(false);
   };
 
   if (isLoading) {
