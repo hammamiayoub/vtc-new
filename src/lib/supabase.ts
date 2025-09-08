@@ -8,9 +8,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: window.localStorage,
-    storageKey: 'myride-auth-token',
-    flowType: 'pkce'
+    storage: window.localStorage
   }
 });
 

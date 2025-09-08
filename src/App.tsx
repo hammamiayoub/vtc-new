@@ -26,116 +26,19 @@ function App() {
   useEffect(() => {
     // Vérifier la session existante au chargement
     const checkSession = async () => {
-      console.log('🔍 Début de checkSession');
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('📋 Session récupérée:', !!session, error);
         
         if (error) {
           console.error('Erreur lors de la vérification de session:', error);
-          setUserType(null);
-          setCurrentView('home');
           setIsLoading(false);
           return;
         }
 
         if (session?.user) {
-          console.log('👤 Utilisateur trouvé, vérification du type...');
-          const userId = session.user.id;
+          console.log('Session trouvée:', session.user.id);
           
-          // Fonction helper pour vérifier le type d'utilisateur
-          const checkUserType = async () => {
-            // Vérifier si c'est un admin
-            const { data: adminData, error: adminError } = await supabase
-              .from('admin_users')
-              .select('*')
-              .eq('id', userId)
-              .maybeSingle();
-            
-            if (adminError) {
-              console.error('Erreur lors de la vérification admin:', adminError);
-            } else if (adminData) {
-              console.log('✅ Admin trouvé, redirection...');
-              setUserType('admin');
-              setCurrentView('admin-dashboard');
-              setIsLoading(false);
-              return true;
-            }
-            
-            // Vérifier si c'est un chauffeur
-            const { data: driverData, error: driverError } = await supabase
-              .from('drivers')
-              .select('*')
-              .eq('id', userId)
-              .maybeSingle();
-            
-            if (driverError) {
-              console.error('Erreur lors de la vérification chauffeur:', driverError);
-            } else if (driverData) {
-              console.log('✅ Chauffeur trouvé, redirection...');
-              setUserType('driver');
-              setCurrentView('dashboard');
-              setIsLoading(false);
-              return true;
-            }
-            
-            // Vérifier si c'est un client
-            const { data: clientData, error: clientError } = await supabase
-              .from('clients')
-              .select('*')
-              .eq('id', userId)
-              .maybeSingle();
-            
-            if (clientError) {
-              console.error('Erreur lors de la vérification client:', clientError);
-            } else if (clientData) {
-              console.log('✅ Client trouvé, redirection...');
-              setUserType('client');
-              setCurrentView('client-dashboard');
-              setIsLoading(false);
-              return true;
-            }
-            
-            console.log('❌ Aucun type d\'utilisateur trouvé');
-            return false;
-          };
-          
-          const userFound = await checkUserType();
-          
-          if (!userFound) {
-            console.log('🚪 Déconnexion - type non trouvé');
-            await supabase.auth.signOut();
-            setUserType(null);
-            setCurrentView('home');
-            setIsLoading(false);
-          }
-        } else {
-          console.log('❌ Pas de session');
-          setUserType(null);
-          setCurrentView('home');
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('💥 Erreur checkSession:', error);
-        setUserType(null);
-        setCurrentView('home');
-        setIsLoading(false);
-      }
-      console.log('✅ Fin de checkSession');
-    };
-
-    checkSession();
-
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔄 Auth change:', event);
-        
-        if (event === 'SIGNED_OUT' || !session) {
-          setUserType(null);
-          setCurrentView('home');
-          setIsLoading(false);
-        } else if (event === 'SIGNED_IN' && session?.user) {
+          // Vérifier le type d'utilisateur
           const userId = session.user.id;
           
           // Vérifier si c'est un admin
@@ -143,9 +46,9 @@ function App() {
             .from('admin_users')
             .select('*')
             .eq('id', userId)
-            .maybeSingle();
+            .limit(1);
           
-          if (adminData) {
+          if (adminData && adminData.length > 0) {
             setUserType('admin');
             setCurrentView('admin-dashboard');
             setIsLoading(false);
@@ -157,9 +60,9 @@ function App() {
             .from('drivers')
             .select('*')
             .eq('id', userId)
-            .maybeSingle();
+            .limit(1);
           
-          if (driverData) {
+          if (driverData && driverData.length > 0) {
             setUserType('driver');
             setCurrentView('dashboard');
             setIsLoading(false);
@@ -171,9 +74,9 @@ function App() {
             .from('clients')
             .select('*')
             .eq('id', userId)
-            .maybeSingle();
+            .limit(1);
           
-          if (clientData) {
+          if (clientData && clientData.length > 0) {
             setUserType('client');
             setCurrentView('client-dashboard');
             setIsLoading(false);
@@ -181,9 +84,27 @@ function App() {
           }
           
           // Si aucun type trouvé, déconnecter
-          console.log('❌ Type non trouvé, déconnexion');
+          console.log('Type d\'utilisateur non trouvé, déconnexion...');
           await supabase.auth.signOut();
-          setIsLoading(false);
+        }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Erreur lors de la vérification de session:', error);
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Écouter les changements d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Changement d\'auth:', event, session?.user?.id);
+        
+        if (event === 'SIGNED_OUT' || !session) {
+          setUserType(null);
+          setCurrentView('home');
         }
       }
     );
@@ -194,11 +115,9 @@ function App() {
   }, []);
 
   const handleLogout = async () => {
-    setIsLoading(true);
     await supabase.auth.signOut();
     setUserType(null);
     setCurrentView('home');
-    setIsLoading(false);
   };
 
   if (isLoading) {
@@ -206,7 +125,7 @@ function App() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Vérification de la session...</p>
+          <p className="text-gray-600">Chargement...</p>
         </div>
       </div>
     );
