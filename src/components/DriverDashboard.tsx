@@ -738,15 +738,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             )}
                           </div>
                         ) : (
-                          <div className="text-center py-4">
-                            <User size={32} className="text-blue-400 mx-auto mb-2" />
-                            <p className="text-blue-700 font-medium">
-                              Informations client en cours de chargement...
-                            </p>
-                            <p className="text-sm text-blue-600 mt-1">
-                              Les données client seront disponibles sous peu
-                            </p>
-                          </div>
+                          
                         )}
                       </div>
                       
