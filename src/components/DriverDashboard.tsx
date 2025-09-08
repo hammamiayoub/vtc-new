@@ -737,10 +737,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                               </div>
                             )}
                           </div>
-                        ) : (
-                          
-                        )}
-                      </div>
+                       
                       
                       {/* Détails de la course */}
                       <div className="bg-gray-50 rounded-lg p-4 mt-4">
