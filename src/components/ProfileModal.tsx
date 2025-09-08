@@ -149,13 +149,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         return;
       }
 
-      // Supprimer l'utilisateur de Supabase Auth
-      const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
-      
-      if (authError) {
-        console.error('Erreur lors de la suppression du compte:', authError);
-      }
-
       // Déconnecter l'utilisateur
       await supabase.auth.signOut();
       
