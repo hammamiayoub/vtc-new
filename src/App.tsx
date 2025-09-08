@@ -32,6 +32,8 @@ function App() {
         
         if (error) {
           console.error('Erreur lors de la vérification de session:', error);
+          setUserType(null);
+          setCurrentView('home');
           setIsLoading(false);
           return;
         }
@@ -58,6 +60,7 @@ function App() {
               console.log('✅ Utilisateur admin trouvé');
               setUserType('admin');
               setCurrentView('admin-dashboard');
+              setIsLoading(false);
               return true;
             }
             
@@ -75,6 +78,7 @@ function App() {
               console.log('✅ Utilisateur chauffeur trouvé');
               setUserType('driver');
               setCurrentView('dashboard');
+              setIsLoading(false);
               return true;
             }
             
@@ -92,6 +96,7 @@ function App() {
               console.log('✅ Utilisateur client trouvé');
               setUserType('client');
               setCurrentView('client-dashboard');
+              setIsLoading(false);
               return true;
             }
             
@@ -105,14 +110,14 @@ function App() {
             await supabase.auth.signOut();
             setUserType(null);
             setCurrentView('home');
+            setIsLoading(false);
           }
         } else {
           console.log('❌ Aucune session trouvée');
           setUserType(null);
           setCurrentView('home');
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       } catch (error) {
         console.error('Erreur lors de la vérification de session:', error);
         setUserType(null);
