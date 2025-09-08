@@ -658,7 +658,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             {booking.clients.phone && (
                               <div className="flex gap-2">
                                 <a
-                                  href={`tel:${booking.clients.phone}`}
+                                  href={`tel:${clients.phone}`}
                                   className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                   title="Appeler le client"
                                 >
