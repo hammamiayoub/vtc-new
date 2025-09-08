@@ -227,85 +227,82 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       };
     }
   }, [driver]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    onLogout();
-  };
-
-  const handleProfileComplete = () => {
-    setShowProfileForm(false);
-    // Refresh driver data
-    window.location.reload();
-  };
-
-  const needsProfileCompletion = !driver?.phone || !driver?.licenseNumber || !driver?.vehicleInfo;
-
-  const pendingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'accepted');
-  const completedBookings = bookings.filter(b => b.status === 'completed');
-  const totalEarnings = completedBookings.reduce((sum, booking) => sum + booking.price_tnd, 0);
-
-  console.log('📊 Statistiques chauffeur:', {
-    totalBookings: bookings.length,
-    pendingBookings: pendingBookings.length,
-    completedBookings: completedBookings.length,
-    driverId: driver?.id
-  });
-
-  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
-    try {
-      console.log('🔄 Mise à jour du statut:', { bookingId, newStatus });
-      
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          status: newStatus,
-          pickup_time: newStatus === 'in_progress' ? new Date().toISOString() : undefined,
-          completion_time: newStatus === 'completed' ? new Date().toISOString() : undefined
-        })
-        .eq('id', bookingId);
-
-      if (error) {
-        console.error('Erreur lors de la mise à jour:', error);
-        alert('Erreur lors de la mise à jour du statut');
-        return;
-      }
-
-      console.log('✅ Statut mis à jour avec succès');
-      
-      // Mettre à jour l'état local
-      setBookings(prev => prev.map(booking => 
-        booking.id === bookingId ? { ...booking, status: newStatus } : booking
-      ));
-    } catch (error) {
-      console.error('Erreur:', error);
-      alert('Une erreur est survenue');
-    }
-  };
-          } else {
-            console.log('Réservations avec clients:', bookingsWithClients?.length || 0);
-            
-            if (bookingsWithClients) {
-              console.log('📊 Détails des réservations:', bookingsWithClients.map(b => ({
-                id: b.id.slice(0, 8),
-                status: b.status,
-                client: b.clients ? `${b.clients.first_name} ${b.clients.last_name}` : 'Pas de client',
-                phone: b.clients?.phone || 'Pas de téléphone'
-              })));
-              
-              setBookings(bookingsWithClients);
-            }
-          }
-          
-          console.log('=== FIN DIAGNOSTIC ===');
-        } catch (error) {
-          console.error('Erreur:', error);
-        }
-      }
-    };
-
-    fetchBookings();
   }, [driver]);
+
+  useEffect(() => {
+    // Écouter les changements en temps réel sur les réservations
+    if (driver) {
+      const subscription = supabase
+        .channel('driver_bookings_realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'bookings',
+            filter: `driver_id=eq.${driver.id}`
+          },
+          (payload) => {
+            console.log('🔄 Changement détecté sur les réservations:', payload);
+            // Rafraîchir les réservations
+            const fetchBookings = async () => {
+              try {
+                const { data: bookingsData, error: bookingsError } = await supabase
+                  .from('bookings')
+                  .select('*')
+                  .eq('driver_id', driver.id)
+                  .order('created_at', { ascending: false });
+
+                if (bookingsError) {
+                  console.error('Erreur rafraîchissement:', bookingsError);
+                  return;
+                }
+
+                if (!bookingsData) {
+                  setBookings([]);
+                  return;
+                }
+
+                // Récupérer les informations client
+                const bookingsWithClients = await Promise.all(
+                  bookingsData.map(async (booking) => {
+                    try {
+                      const { data: clientData, error: clientError } = await supabase
+                        .from('clients')
+                        .select('first_name, last_name, phone')
+                        .eq('id', booking.client_id)
+                        .maybeSingle();
+
+                      return {
+                        ...booking,
+                        clients: clientError ? null : clientData
+                      };
+                    } catch (error) {
+                      return {
+                        ...booking,
+                        clients: null
+                      };
+                    }
+                  })
+                );
+
+                setBookings(bookingsWithClients);
+              } catch (error) {
+                console.error('Erreur rafraîchissement:', error);
+              }
+            };
+
+            fetchBookings();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [driver]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     onLogout();
@@ -329,6 +326,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     completedBookings: completedBookings.length,
     driverId: driver?.id
   });
+
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
     try {
       console.log('🔄 Mise à jour du statut:', { bookingId, newStatus });
@@ -359,6 +357,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       alert('Une erreur est survenue');
     }
   };
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
