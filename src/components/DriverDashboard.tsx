@@ -658,14 +658,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             {booking.clients.phone && (
                               <div className="flex gap-2">
                                 <a
-                                  href={`tel:${clients.phone}`}
+                                  href={`tel:${booking.clients.phone}`}
                                   className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                   title="Appeler le client"
                                 >
                                   <Phone size={16} />
                                 </a>
                                 <a
-                                  href={`sms:${clients.phone}`}
+                                  href={`sms:${booking.clients.phone}`}
                                   className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                   title="Envoyer un SMS"
                                 >
