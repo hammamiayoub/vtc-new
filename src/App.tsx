@@ -24,6 +24,14 @@ function App() {
   const [userType, setUserType] = useState<'driver' | 'client' | 'admin' | null>(null);
 
   useEffect(() => {
+    // Timeout pour éviter le chargement infini
+    const sessionTimeout = setTimeout(() => {
+      console.warn('⏰ Timeout de vérification de session - arrêt du chargement');
+      setIsLoading(false);
+      setUserType(null);
+      setCurrentView('home');
+    }, 10000); // 10 secondes maximum
+
     // Vérifier la session existante au chargement
     const checkSession = async () => {
       try {
@@ -32,7 +40,10 @@ function App() {
         
         if (error) {
           console.error('Erreur lors de la vérification de session:', error);
+          clearTimeout(sessionTimeout);
           setIsLoading(false);
+          setUserType(null);
+          setCurrentView('home');
           return;
         }
 
@@ -59,6 +70,8 @@ function App() {
               setUserType('admin');
               setCurrentView('admin-dashboard');
               return true;
+                clearTimeout(sessionTimeout);
+                setIsLoading(false);
             }
             
             // Vérifier si c'est un chauffeur
@@ -74,6 +87,8 @@ function App() {
             } else if (driverData) {
               console.log('✅ Utilisateur chauffeur trouvé');
               setUserType('driver');
+                clearTimeout(sessionTimeout);
+                setIsLoading(false);
               setCurrentView('dashboard');
               return true;
             }
@@ -91,10 +106,15 @@ function App() {
             } else if (clientData) {
               console.log('✅ Utilisateur client trouvé');
               setUserType('client');
+                clearTimeout(sessionTimeout);
+                setIsLoading(false);
               setCurrentView('client-dashboard');
               return true;
             }
             
+            } catch (typeError) {
+              console.error('Erreur lors de la vérification du type utilisateur:', typeError);
+              return false;
             return false;
           };
           
@@ -105,18 +125,21 @@ function App() {
             await supabase.auth.signOut();
             setUserType(null);
             setCurrentView('home');
+            clearTimeout(sessionTimeout);
+            setIsLoading(false);
           }
         } else {
           console.log('❌ Aucune session trouvée');
           setUserType(null);
           setCurrentView('home');
+          clearTimeout(sessionTimeout);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       } catch (error) {
         console.error('Erreur lors de la vérification de session:', error);
         setUserType(null);
         setCurrentView('home');
+        clearTimeout(sessionTimeout);
         setIsLoading(false);
       }
     };
@@ -132,69 +155,84 @@ function App() {
           console.log('👋 Déconnexion détectée');
           setUserType(null);
           setCurrentView('home');
+          setIsLoading(false);
         } else if (event === 'SIGNED_IN' && session?.user) {
           console.log('🔑 Connexion détectée');
           const userId = session.user.id;
           
-          // Vérifier si c'est un admin
-          const { data: adminData } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('id', userId)
-            .maybeSingle();
-          
-          if (adminData) {
-            console.log('✅ Admin connecté');
-            setUserType('admin');
-            setCurrentView('admin-dashboard');
-            return;
+          try {
+            // Vérifier si c'est un admin
+            const { data: adminData } = await supabase
+              .from('admin_users')
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle();
+            
+            if (adminData) {
+              console.log('✅ Admin connecté');
+              setUserType('admin');
+              setCurrentView('admin-dashboard');
+              setIsLoading(false);
+              return;
+            }
+            
+            // Vérifier si c'est un chauffeur
+            const { data: driverData } = await supabase
+              .from('drivers')
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle();
+            
+            if (driverData) {
+              console.log('✅ Chauffeur connecté');
+              setUserType('driver');
+              setCurrentView('dashboard');
+              setIsLoading(false);
+              return;
+            }
+            
+            // Vérifier si c'est un client
+            const { data: clientData } = await supabase
+              .from('clients')
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle();
+            
+            if (clientData) {
+              console.log('✅ Client connecté');
+              setUserType('client');
+              setCurrentView('client-dashboard');
+              setIsLoading(false);
+              return;
+            }
+            
+            // Si aucun type trouvé, déconnecter
+            console.log('❌ Type d\'utilisateur non trouvé après connexion, déconnexion...');
+            await supabase.auth.signOut();
+            setIsLoading(false);
+          } catch (error) {
+            console.error('Erreur lors de la vérification du type utilisateur:', error);
+            setUserType(null);
+            setCurrentView('home');
+            setIsLoading(false);
           }
-          
-          // Vérifier si c'est un chauffeur
-          const { data: driverData } = await supabase
-            .from('drivers')
-            .select('*')
-            .eq('id', userId)
-            .maybeSingle();
-          
-          if (driverData) {
-            console.log('✅ Chauffeur connecté');
-            setUserType('driver');
-            setCurrentView('dashboard');
-            return;
-          }
-          
-          // Vérifier si c'est un client
-          const { data: clientData } = await supabase
-            .from('clients')
-            .select('*')
-            .eq('id', userId)
-            .maybeSingle();
-          
-          if (clientData) {
-            console.log('✅ Client connecté');
-            setUserType('client');
-            setCurrentView('client-dashboard');
-            return;
-          }
-          
-          // Si aucun type trouvé, déconnecter
-          console.log('❌ Type d\'utilisateur non trouvé après connexion, déconnexion...');
-          await supabase.auth.signOut();
         }
       }
     );
 
     return () => {
+      clearTimeout(sessionTimeout);
       subscription.unsubscribe();
     };
   }, []);
 
   const handleLogout = async () => {
     console.log('🚪 Déconnexion manuelle...');
+    setIsLoading(true);
     await supabase.auth.signOut();
     setUserType(null);
     setCurrentView('home');
+    setIsLoading(false);
   };
 
   if (isLoading) {
@@ -202,7 +240,8 @@ function App() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Vérification de la session...</p>
+          <p className="text-gray-600 mb-2">Vérification de la session...</p>
+          <p className="text-sm text-gray-500">Si le chargement persiste, actualisez la page</p>
         </div>
       </div>
     );
