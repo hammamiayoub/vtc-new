@@ -6,23 +6,34 @@ export const uploadProfileImage = async (
   userType: 'driver' | 'client'
 ): Promise<string> => {
   try {
+    console.log('🔍 Debug upload - userId:', userId);
+    console.log('🔍 Debug upload - userType:', userType);
+    
     // Générer un nom de fichier unique
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    const filePath = `${userType}-profiles/${userId}/${fileName}`;
+    const filePath = `${fileName}`;
+    
+    console.log('🔍 Debug upload - filePath:', filePath);
+    console.log('🔍 Debug upload - file size:', file.size);
+    console.log('🔍 Debug upload - file type:', file.type);
 
     // Upload vers Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('profile-photos')
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: true
+        upsert: false
       });
 
     if (uploadError) {
-      console.error('Erreur upload:', uploadError);
+      console.error('🚨 Erreur upload détaillée:', uploadError);
+      console.error('🚨 Message:', uploadError.message);
+      console.error('🚨 Détails:', uploadError);
       throw new Error('Erreur lors de l\'upload de l\'image');
     }
+
+    console.log('✅ Upload réussi:', uploadData);
 
     // Obtenir l'URL publique
     const { data: urlData } = supabase.storage
@@ -32,6 +43,8 @@ export const uploadProfileImage = async (
     if (!urlData.publicUrl) {
       throw new Error('Impossible d\'obtenir l\'URL de l\'image');
     }
+
+    console.log('✅ URL publique:', urlData.publicUrl);
 
     // Mettre à jour la base de données
     const tableName = userType === 'driver' ? 'drivers' : 'clients';
@@ -45,6 +58,7 @@ export const uploadProfileImage = async (
       throw new Error('Erreur lors de la mise à jour du profil');
     }
 
+    console.log('✅ Profil mis à jour avec succès');
     return urlData.publicUrl;
   } catch (error) {
     console.error('Erreur uploadProfileImage:', error);
