@@ -536,17 +536,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </div>
                 
                 <div className={`flex items-center gap-4 p-4 rounded-lg ${
-                  driver?.status === 'active' ? 'bg-green-50 border border-green-200' : 'bg-gray-50 opacity-50'
+                  driver?.status === 'active' ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'
                 }`}>
                   <div className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold ${
-                    driver?.status === 'active' ? 'bg-green-600' : 'bg-gray-400'
+                    driver?.status === 'active' ? 'bg-green-600' : 'bg-orange-500'
                   }`}>
                     2
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">Validation du compte</h4>
                     <p className="text-sm text-gray-600">
-                      {driver?.status === 'active' ? 'Compte validé ✓' : 'En cours - Nous vérifions vos informations'}
+                      {driver?.status === 'active' ? 'Compte validé ✓' : 'En attente - Un administrateur doit valider votre compte'}
                     </p>
                   </div>
                 </div>
