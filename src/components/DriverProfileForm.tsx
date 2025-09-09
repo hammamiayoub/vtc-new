@@ -69,7 +69,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
           phone: data.phone,
           license_number: data.licenseNumber,
           vehicle_info: data.vehicleInfo,
-          status: 'active'
+          status: 'pending'
         })
         .eq('id', driverId);
 
