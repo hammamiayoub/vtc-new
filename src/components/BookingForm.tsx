@@ -322,6 +322,58 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       console.log('👤 Chauffeur assigné dans la DB:', booking.driver_id);
       console.log('📊 Statut de la réservation:', booking.status);
       
+      // Envoyer les notifications email
+      try {
+        // Récupérer les données du client
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select('first_name, last_name, email, phone')
+          .eq('id', clientId)
+          .single();
+
+        if (clientError) {
+          console.error('Erreur récupération client pour email:', clientError);
+        }
+
+        // Récupérer les données du chauffeur
+        const { data: driverData, error: driverError } = await supabase
+          .from('drivers')
+          .select('first_name, last_name, email, phone, vehicle_info')
+          .eq('id', selectedDriver)
+          .single();
+
+        if (driverError) {
+          console.error('Erreur récupération chauffeur pour email:', driverError);
+        }
+
+        // Envoyer les notifications si on a les données
+        if (clientData && driverData) {
+          const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-notification`;
+          
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bookingData: booking,
+              clientData,
+              driverData
+            })
+          });
+
+          if (response.ok) {
+            console.log('✅ Notifications email envoyées avec succès');
+          } else {
+            console.error('❌ Erreur envoi notifications email:', await response.text());
+          }
+        }
+      } catch (emailError) {
+        console.error('❌ Erreur lors de l\'envoi des notifications:', emailError);
+        // Ne pas faire échouer la réservation si l'email échoue
+      }
+      
       // Vérification immédiate de la réservation créée
       const { data: verifyBooking, error: verifyError } = await supabase
         .from('bookings')
