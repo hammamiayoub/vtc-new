@@ -348,12 +348,23 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         // Envoyer les notifications si on a les données
         if (clientData && driverData) {
-          const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-notification`;
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          
+          if (!supabaseUrl || !supabaseKey) {
+            console.error('❌ Variables d\'environnement Supabase manquantes');
+            console.log('VITE_SUPABASE_URL:', supabaseUrl);
+            console.log('VITE_SUPABASE_ANON_KEY présent:', !!supabaseKey);
+            throw new Error('Configuration Supabase manquante');
+          }
+          
+          const apiUrl = `${supabaseUrl}/functions/v1/send-booking-notification`;
+          console.log('📡 Tentative d\'appel à:', apiUrl);
           
           const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Authorization': `Bearer ${supabaseKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -363,14 +374,25 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             })
           });
 
+          console.log('📡 Réponse du serveur:', response.status, response.statusText);
+          
           if (response.ok) {
+            const result = await response.json();
             console.log('✅ Notifications email envoyées avec succès');
+            console.log('Résultat:', result);
           } else {
-            console.error('❌ Erreur envoi notifications email:', await response.text());
+            const errorText = await response.text();
+            console.error('❌ Erreur envoi notifications email:', response.status, errorText);
+            throw new Error(`Erreur ${response.status}: ${errorText}`);
           }
+        } else {
+          console.warn('⚠️ Données client ou chauffeur manquantes pour l\'email');
+          console.log('Client data:', !!clientData);
+          console.log('Driver data:', !!driverData);
         }
       } catch (emailError) {
         console.error('❌ Erreur lors de l\'envoi des notifications:', emailError);
+        console.error('Détails de l\'erreur:', emailError.message);
         // Ne pas faire échouer la réservation si l'email échoue
       }
       
