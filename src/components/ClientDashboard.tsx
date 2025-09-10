@@ -211,7 +211,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   markAsRead();
                   setActiveTab('bookings');
                 }}
-                className="text--white-300 hover:text-white hover:bg-gray-800"
+                className="text-white-300 hover:text-white hover:bg-gray-800"
               />
               <button 
                 onClick={() => setShowProfileModal(true)}
