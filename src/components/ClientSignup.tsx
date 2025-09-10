@@ -120,7 +120,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 Créer un compte client
               </h1>
               <p className="text-gray-600 text-lg">
-                Rejoignez MyRide pour réserver vos courses
+                Rejoignez TuniRide pour réserver vos courses
               </p>
             </div>
 

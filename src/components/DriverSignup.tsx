@@ -151,7 +151,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 Devenez chauffeur
               </h1>
               <p className="text-gray-600 text-lg">
-                Rejoignez notre réseau de chauffeurs professionnels
+                Rejoignez TuniRide - notre réseau de chauffeurs professionnels
               </p>
             </div>
 
