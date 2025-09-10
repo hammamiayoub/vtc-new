@@ -6,6 +6,8 @@ import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { ProfileModal } from './ProfileModal';
 import { NotificationBell } from './NotificationBell';
 import { useDriverNotifications } from '../hooks/useNotifications';
+import { VehicleImageUpload } from './ui/VehicleImageUpload';
+import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
 import { Driver, Booking } from '../types';
 
@@ -20,6 +22,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'bookings'>('dashboard');
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
 
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead, refreshNotifications } = useDriverNotifications(driver?.id || '');
@@ -211,6 +214,35 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     } catch (error) {
       console.error('Erreur:', error);
       alert('Une erreur est survenue');
+    }
+  };
+
+  const handleVehiclePhotoUpload = async (file: File) => {
+    if (!driver) return;
+    
+    setUploadingVehiclePhoto(true);
+    try {
+      await uploadVehicleImage(file, driver.id);
+      // Recharger les données du chauffeur pour voir la nouvelle photo
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur upload photo véhicule:', error);
+      alert('Erreur lors de l\'upload de la photo du véhicule');
+    } finally {
+      setUploadingVehiclePhoto(false);
+    }
+  };
+
+  const handleVehiclePhotoDelete = async () => {
+    if (!driver?.vehicleInfo?.photoUrl) return;
+    
+    try {
+      await deleteVehicleImage(driver.vehicleInfo.photoUrl, driver.id);
+      // Recharger les données du chauffeur
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur suppression photo véhicule:', error);
+      alert('Erreur lors de la suppression de la photo du véhicule');
     }
   };
 
@@ -571,7 +603,405 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   <Car className="w-5 h-5 text-gray-700" />
                   Mon véhicule
                 </h3>
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <div className="grid lg:grid-cols-3 gap-6">
+                  {/* Photo du véhicule */}
+                  <div className="lg:col-span-1">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Photo du véhicule</h4>
+                    <VehicleImageUpload
+                      currentImageUrl={driver.vehicleInfo.photoUrl}
+                      onImageUpload={handleVehiclePhotoUpload}
+                      onImageDelete={driver.vehicleInfo.photoUrl ? handleVehiclePhotoDelete : undefined}
+                      loading={uploadingVehiclePhoto}
+                    />
+                  </div>
+                  
+                  {/* Informations du véhicule */}
+                  <div className="lg:col-span-2">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Informations</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Véhicule</p>
+                        <p className="font-semibold text-gray-900">
+                          {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Année</p>
+                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.year}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Couleur</p>
+                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.color}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Places</p>
+                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.seats} places</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Plaque</p>
+                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.licensePlate}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Type</p>
+                        <p className="font-semibold text-gray-900">
+                          {driver.vehicleInfo.type === 'sedan' && 'Berline'}
+                          {driver.vehicleInfo.type === 'suv' && 'SUV'}
+                          {driver.vehicleInfo.type === 'luxury' && 'Véhicule de luxe'}
+                          {driver.vehicleInfo.type === 'van' && 'Monospace'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Onglet Disponibilités */}
+        {!showProfileForm && activeTab === 'availability' && driver && (
+          <AvailabilityCalendar driverId={driver.id} />
+        )}
+
+        {/* Onglet Courses */}
+        {!showProfileForm && activeTab === 'bookings' && (
+          <div className="space-y-6">
+            {/* Nouvelles demandes - Statut 'accepted' */}
+            {bookings.filter(b => b.status === 'accepted').length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Bell className="w-5 h-5 text-blue-600" />
+                    Nouvelles demandes ({pendingBookings.length})
+                  </h3>
+                  <p className="text-gray-600">Courses en attente de votre confirmation</p>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {pendingBookings.map((booking) => (
+                    <div key={booking.id} className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getStatusBadge(booking.status)}
+                            <span className="text-sm text-gray-500">
+                              Réservé pour le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <MapPin size={16} className="text-green-600" />
+                              <span className="font-medium text-gray-900">{booking.pickup_address}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Navigation size={16} className="text-red-600" />
+                              <span className="text-sm text-gray-600">Arrivée:</span>
+                              <span className="font-medium text-gray-900">{booking.destination_address}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <span>{booking.distance_km} km</span>
+                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                            </div>
+                            {booking.notes && (
+                              <div className="bg-gray-50 rounded-lg p-3 mt-2">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Notes du client:</strong> {booking.notes}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="ml-6 flex flex-col gap-2">
+                          {booking.status === 'pending' && (
+                            <>
+                              <Button
+                                onClick={() => updateBookingStatus(booking.id, 'accepted')}
+                                className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
+                                size="sm"
+                              >
+                                <CheckCircle size={16} />
+                                Accepter
+                              </Button>
+                              <Button
+                                onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                variant="outline"
+                                className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                size="sm"
+                              >
+                                <XCircle size={16} />
+                                Refuser
+                              </Button>
+                            </>
+                          )}
+                          {booking.status === 'accepted' && (
+                            <>
+                              <Button
+                                onClick={() => updateBookingStatus(booking.id, 'in_progress')}
+                                className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
+                                size="sm"
+                              >
+                                <Car size={16} />
+                                Commencer
+                              </Button>
+                              <Button
+                                onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                variant="outline"
+                                className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                size="sm"
+                              >
+                                <XCircle size={16} />
+                                Annuler
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Informations client */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                        <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                          <User size={16} />
+                          Informations client
+                        </h4>
+                        {booking.clients ? (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-blue-900">
+                                {booking.clients.first_name} {booking.clients.last_name}
+                              </p>
+                              {booking.clients.phone && (
+                                <p className="text-sm text-blue-700">
+                                  Tél: {booking.clients.phone}
+                                </p>
+                              )}
+                            </div>
+                            {booking.clients.phone && (
+                              <div className="flex gap-2">
+                                <a
+                                  href={`tel:${booking.clients.phone}`}
+                                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                  title="Appeler le client"
+                                >
+                                  <Phone size={16} />
+                                </a>
+                                <a
+                                  href={`sms:${booking.clients.phone}`}
+                                  className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                  title="Envoyer un SMS"
+                                >
+                                  <MessageSquare size={16} />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-4">
+                            <User size={32} className="text-blue-400 mx-auto mb-2" />
+                            <p className="text-blue-700 font-medium">
+                              Informations client en cours de chargement...
+                            </p>
+                            <p className="text-sm text-blue-600 mt-1">
+                              Les données client seront disponibles sous peu
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Détails de la course */}
+                      <div className="bg-gray-50 rounded-lg p-4 mt-4">
+                        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                          <MapPin size={16} />
+                          Détails de la course
+                        </h4>
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Distance:</span>
+                            <span className="ml-2 font-medium">{booking.distance_km} km</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Prix:</span>
+                            <span className="ml-2 font-bold text-green-600">{booking.price_tnd} TND</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Réservé le:</span>
+                            <span className="ml-2 font-medium">
+                              {new Date(booking.created_at).toLocaleDateString('fr-FR')}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">ID:</span>
+                            <span className="ml-2 font-mono text-xs">{booking.id.slice(0, 8)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Courses en cours */}
+            {bookings.filter(b => b.status === 'in_progress').length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Car className="w-5 h-5 text-green-600" />
+                    Courses en cours ({bookings.filter(b => b.status === 'in_progress').length})
+                  </h3>
+                  <p className="text-gray-600">Courses que vous avez commencées</p>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {bookings.filter(b => b.status === 'in_progress').map((booking) => (
+                    <div key={booking.id} className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getStatusBadge(booking.status)}
+                            <span className="text-sm text-gray-500">
+                              Commencée le {booking.pickup_time ? 
+                                new Date(booking.pickup_time).toLocaleString('fr-FR') : 
+                                'Maintenant'
+                              }
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <MapPin size={14} className="text-green-600" />
+                              <span className="text-sm text-gray-900">{booking.pickup_address}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Navigation size={14} className="text-red-600" />
+                              <span className="text-sm text-gray-900">{booking.destination_address}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
+                              <span>{booking.distance_km} km</span>
+                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => updateBookingStatus(booking.id, 'completed')}
+                          className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
+                          size="sm"
+                        >
+                          <CheckCircle size={16} />
+                          Terminer la course
+                        </Button>
+                      </div>
+                      {/* Informations client */}
+                      {booking.clients && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                          <h4 className="font-medium text-blue-900 mb-2">Informations client</h4>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-blue-900">
+                                {booking.clients.first_name} {booking.clients.last_name}
+                              </p>
+                              {booking.clients.phone && (
+                                <p className="text-sm text-blue-700">
+                                  Tél: {booking.clients.phone}
+                                </p>
+                              )}
+                            </div>
+                            {booking.clients.phone && (
+                              <div className="flex gap-2">
+                                <a
+                                  href={`tel:${booking.clients.phone}`}
+                                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                  title="Appeler le client"
+                                >
+                                  <Phone size={16} />
+                                </a>
+                                <a
+                                  href={`sms:${booking.clients.phone}`}
+                                  className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                  title="Envoyer un SMS"
+                                >
+                                  <MessageSquare size={16} />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Historique des courses */}
+            <div className="bg-white rounded-xl shadow-sm">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900">Historique des courses</h3>
+                <p className="text-gray-600">Toutes vos courses passées</p>
+              </div>
+              
+              {bookings.length === 0 ? (
+                <div className="text-center py-12">
+                  <Car size={48} className="text-gray-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">Aucune course</h4>
+                  <p className="text-gray-500">
+                    Vous n'avez pas encore reçu de demande de course.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {bookings.filter(b => !['pending', 'accepted', 'in_progress'].includes(b.status)).map((booking) => (
+                    <div key={booking.id} className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getStatusBadge(booking.status)}
+                            <span className="text-sm text-gray-500">
+                              {new Date(booking.scheduled_time).toLocaleString('fr-FR')}
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <MapPin size={14} className="text-green-600" />
+                              <span className="text-sm text-gray-900">{booking.pickup_address}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Navigation size={14} className="text-red-600" />
+                              <span className="text-sm text-gray-900">{booking.destination_address}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
+                              <span>{booking.distance_km} km</span>
+                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal de profil */}
+        {driver && (
+          <ProfileModal
+            isOpen={showProfileModal}
+            onClose={() => setShowProfileModal(false)}
+            user={driver}
+            userType="driver"
+            onProfileDeleted={handleLogout}
+          />
+        )}
+      </main>
+    </div>
+  );
+};
                   <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Véhicule</p>
                     <p className="font-semibold text-gray-900">

@@ -1,5 +1,134 @@
 import { supabase } from '../lib/supabase';
 
+export const uploadVehicleImage = async (
+  file: File, 
+  driverId: string
+): Promise<string> => {
+  try {
+    console.log('🚗 Debug upload véhicule - driverId:', driverId);
+    console.log('🚗 Debug upload véhicule - file size:', file.size);
+    console.log('🚗 Debug upload véhicule - file type:', file.type);
+
+    // Générer un nom de fichier unique pour le véhicule
+    const fileExt = file.name.split('.').pop();
+    const fileName = `vehicle-${driverId}-${Date.now()}.${fileExt}`;
+    const filePath = `vehicles/${fileName}`;
+    
+    console.log('🚗 Debug upload véhicule - filePath:', filePath);
+
+    // Upload vers Supabase Storage dans le bucket vehicle-photos
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('vehicle-photos')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('🚨 Erreur upload véhicule détaillée:', uploadError);
+      console.error('🚨 Message:', uploadError.message);
+      console.error('🚨 Détails:', uploadError);
+      throw new Error('Erreur lors de l\'upload de l\'image du véhicule');
+    }
+
+    console.log('✅ Upload véhicule réussi:', uploadData);
+
+    // Obtenir l'URL publique
+    const { data: urlData } = supabase.storage
+      .from('vehicle-photos')
+      .getPublicUrl(filePath);
+
+    if (!urlData.publicUrl) {
+      throw new Error('Impossible d\'obtenir l\'URL de l\'image du véhicule');
+    }
+
+    console.log('✅ URL publique véhicule:', urlData.publicUrl);
+
+    // Mettre à jour la base de données avec l'URL de la photo du véhicule
+    const { data: driverData, error: fetchError } = await supabase
+      .from('drivers')
+      .select('vehicle_info')
+      .eq('id', driverId)
+      .single();
+
+    if (fetchError) {
+      console.error('Erreur récupération driver:', fetchError);
+      throw new Error('Erreur lors de la récupération des données du chauffeur');
+    }
+
+    const updatedVehicleInfo = {
+      ...driverData.vehicle_info,
+      photoUrl: urlData.publicUrl
+    };
+
+    const { error: updateError } = await supabase
+      .from('drivers')
+      .update({ vehicle_info: updatedVehicleInfo })
+      .eq('id', driverId);
+
+    if (updateError) {
+      console.error('Erreur mise à jour DB véhicule:', updateError);
+      throw new Error('Erreur lors de la mise à jour des informations du véhicule');
+    }
+
+    console.log('✅ Véhicule mis à jour avec succès');
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('Erreur uploadVehicleImage:', error);
+    throw error;
+  }
+};
+
+export const deleteVehicleImage = async (
+  imageUrl: string, 
+  driverId: string
+): Promise<void> => {
+  try {
+    // Extraire le chemin du fichier depuis l'URL
+    const pathSegments = imageUrl.split('/').slice(imageUrl.indexOf('vehicle-photos') + 1);
+    const filePath = pathSegments.join('/');
+
+    // Supprimer de Supabase Storage
+    const { error: deleteError } = await supabase.storage
+      .from('vehicle-photos')
+      .remove([filePath]);
+
+    if (deleteError) {
+      console.error('Erreur suppression storage véhicule:', deleteError);
+    }
+
+    // Mettre à jour la base de données
+    const { data: driverData, error: fetchError } = await supabase
+      .from('drivers')
+      .select('vehicle_info')
+      .eq('id', driverId)
+      .single();
+
+    if (fetchError) {
+      console.error('Erreur récupération driver:', fetchError);
+      throw new Error('Erreur lors de la récupération des données du chauffeur');
+    }
+
+    const updatedVehicleInfo = {
+      ...driverData.vehicle_info,
+      photoUrl: null
+    };
+
+    const { error: updateError } = await supabase
+      .from('drivers')
+      .update({ vehicle_info: updatedVehicleInfo })
+      .eq('id', driverId);
+
+    if (updateError) {
+      console.error('Erreur mise à jour DB véhicule:', updateError);
+      throw new Error('Erreur lors de la mise à jour des informations du véhicule');
+    }
+  } catch (error) {
+    console.error('Erreur deleteVehicleImage:', error);
+    throw error;
+  }
+};
+
 export const uploadProfileImage = async (
   file: File, 
   userId: string, 
