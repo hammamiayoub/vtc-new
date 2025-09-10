@@ -17,21 +17,21 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`relative p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors ${className}`}
+      className={`relative p-2 rounded-lg transition-colors ${className}`}
       title={hasNewNotifications ? `${unreadCount} nouvelle(s) notification(s)` : 'Notifications'}
     >
       <Bell size={20} />
       
       {/* Badge de notification */}
       {hasNewNotifications && (
-        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full min-w-[20px] h-5 animate-pulse">
+        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full min-w-[20px] h-5 shadow-lg animate-pulse">
           {unreadCount > 99 ? '99+' : unreadCount}
         </span>
       )}
       
       {/* Point rouge simple pour les petits nombres */}
-      {hasNewNotifications && unreadCount === 1 && (
-        <span className="absolute -top-1 -right-1 block w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
+      {hasNewNotifications && unreadCount <= 3 && (
+        <span className="absolute -top-1 -right-1 block w-3 h-3 bg-red-500 rounded-full shadow-lg animate-pulse border-2 border-gray-800"></span>
       )}
     </button>
   );

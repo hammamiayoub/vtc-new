@@ -193,13 +193,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
+      <header className="bg-black border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">MyRide</h1>
-                <p className="text-sm text-gray-600">Espace Client</p>
+                <h1 className="text-3xl font-bold text-white tracking-tight">MyRide</h1>
+                <p className="text-1xl text-white">Espace Client</p>
               </div>
             </div>
             
@@ -211,16 +211,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   markAsRead();
                   setActiveTab('bookings');
                 }}
-                className="hover:text-purple-600 hover:bg-purple-50"
+                className="text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
               />
               <button 
                 onClick={() => setShowProfileModal(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 text-gray-300 hover:text-white  hover:bg-gray-800 transition-colors"
                 title="Mon profil"
               >
                 <Settings size={20} />
               </button>
-              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
+              <Button onClick={handleLogout} className="flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200">
                 <LogOut size={16} />
                 Déconnexion
               </Button>

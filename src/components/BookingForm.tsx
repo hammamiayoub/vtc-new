@@ -322,6 +322,44 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       console.log('👤 Chauffeur assigné dans la DB:', booking.driver_id);
       console.log('📊 Statut de la réservation:', booking.status);
       
+      // Simulation d'envoi des notifications email (Edge Functions non disponibles dans WebContainer)
+      console.log('📧 === SIMULATION D\'ENVOI D\'EMAILS ===');
+      
+      try {
+        // Récupérer les données du client
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select('first_name, last_name, email, phone')
+          .eq('id', clientId)
+          .single();
+
+        if (clientError) {
+          console.error('Erreur récupération client pour email:', clientError);
+        } else {
+          console.log('📧 Email de confirmation envoyé au client:', clientData?.email);
+          console.log('📧 Contenu client: Réservation confirmée pour le', new Date(booking.scheduled_time).toLocaleString('fr-FR'));
+        }
+
+        // Récupérer les données du chauffeur
+        const { data: driverData, error: driverError } = await supabase
+          .from('drivers')
+          .select('first_name, last_name, email, phone, vehicle_info')
+          .eq('id', selectedDriver)
+          .single();
+
+        if (driverError) {
+          console.error('Erreur récupération chauffeur pour email:', driverError);
+        } else {
+          console.log('📧 Email de notification envoyé au chauffeur:', driverData?.email);
+          console.log('📧 Contenu chauffeur: Nouvelle réservation reçue');
+        }
+
+        console.log('📧 === FIN SIMULATION ===');
+        console.log('ℹ️ En production, les emails seraient envoyés via l\'Edge Function');
+      } catch (emailError) {
+        console.error('❌ Erreur lors de la simulation des emails:', emailError);
+      }
+      
       // Vérification immédiate de la réservation créée
       const { data: verifyBooking, error: verifyError } = await supabase
         .from('bookings')
