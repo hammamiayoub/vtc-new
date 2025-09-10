@@ -334,18 +334,31 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                       <Car size={16} className="text-gray-600" />
                       <span className="text-sm text-gray-600">Véhicule</span>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="font-semibold text-gray-900 mb-2">
-                        {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                      </p>
-                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                        <div>
-                          <span className="block">Année: {driver.vehicleInfo.year}</span>
-                          <span className="block">Couleur: {driver.vehicleInfo.color}</span>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                      {/* Photo du véhicule */}
+                      {driver.vehicleInfo.photoUrl && (
+                        <div className="flex justify-center">
+                          <img
+                            src={driver.vehicleInfo.photoUrl}
+                            alt="Photo du véhicule"
+                            className="w-32 h-24 rounded-lg object-cover border border-gray-300 shadow-sm"
+                          />
                         </div>
-                        <div>
-                          <span className="block">Places: {driver.vehicleInfo.seats}</span>
-                          <span className="block">Plaque: {driver.vehicleInfo.licensePlate}</span>
+                      )}
+                      
+                      <div>
+                        <p className="font-semibold text-gray-900 mb-2">
+                          {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                        </p>
+                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="block">Année: {driver.vehicleInfo.year}</span>
+                            <span className="block">Couleur: {driver.vehicleInfo.color}</span>
+                          </div>
+                          <div>
+                            <span className="block">Places: {driver.vehicleInfo.seats}</span>
+                            <span className="block">Plaque: {driver.vehicleInfo.licensePlate}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
