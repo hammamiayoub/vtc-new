@@ -294,13 +294,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
+      <header className="bg-black border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">MyRide</h1>
-                <p className="text-sm text-gray-600">Espace Chauffeur</p>
+                <h1 className="text-3xl font-bold text-white tracking-tight">MyRide</h1>
               </div>
             </div>
             
@@ -312,15 +311,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   markAsRead();
                   setActiveTab('bookings');
                 }}
+                className="text-gray-300 hover:text-white hover:bg-gray-800"
               />
               <button 
                 onClick={() => setShowProfileModal(true)}
-                className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 text-gray-300 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
                 title="Mon profil"
               >
                 <Settings size={20} />
               </button>
-              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50">
+              <Button onClick={handleLogout} className="flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200">
                 <LogOut size={16} />
                 Déconnexion
               </Button>
