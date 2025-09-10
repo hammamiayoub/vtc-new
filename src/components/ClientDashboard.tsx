@@ -199,6 +199,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="text-3xl font-bold text-white tracking-tight">MyRide</h1>
+                <p className="text-sm text-gray-600">Espace Chauffeur</p>
               </div>
             </div>
             
