@@ -5,6 +5,40 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Configuration Resend
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+const FROM_EMAIL = 'MyRide <noreply@myride.tn>' // Remplacez par votre domaine vérifié
+
+async function sendEmail(to: string, subject: string, html: string) {
+  if (!RESEND_API_KEY) {
+    console.error('❌ RESEND_API_KEY non configurée')
+    throw new Error('Configuration email manquante')
+  }
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: [to],
+      subject: subject,
+      html: html,
+    }),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('❌ Erreur Resend:', response.status, errorText)
+    throw new Error(`Erreur envoi email: ${response.status}`)
+  }
+
+  const result = await response.json()
+  console.log('✅ Email envoyé via Resend:', result.id)
+  return result
+}
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -125,35 +159,37 @@ serve(async (req) => {
       </div>
     `
 
-    // In a real implementation, you would use a service like Resend, SendGrid, or similar
-    // For now, we'll just log the emails that would be sent
-    console.log('Email to client:', {
-      to: clientData.email,
-      subject: 'MyRide - Confirmation de votre réservation',
-      html: clientEmailContent
-    })
+    // Envoi des emails via Resend
+    try {
+      console.log('📧 Envoi email client à:', clientData.email)
+      await sendEmail(
+        clientData.email,
+        'MyRide - Confirmation de votre réservation',
+        clientEmailContent
+      )
 
-    console.log('Email to driver:', {
-      to: driverData.email,
-      subject: 'MyRide - Nouvelle réservation reçue',
-      html: driverEmailContent
-    })
+      console.log('📧 Envoi email chauffeur à:', driverData.email)
+      await sendEmail(
+        driverData.email,
+        'MyRide - Nouvelle réservation reçue',
+        driverEmailContent
+      )
 
-    // Here you would integrate with your email service
-    // Example with a hypothetical email service:
-    /*
-    await sendEmail({
-      to: clientData.email,
-      subject: 'MyRide - Confirmation de votre réservation',
-      html: clientEmailContent
-    })
-
-    await sendEmail({
-      to: driverData.email,
-      subject: 'MyRide - Nouvelle réservation reçue',
-      html: driverEmailContent
-    })
-    */
+      console.log('✅ Tous les emails ont été envoyés avec succès')
+    } catch (emailError) {
+      console.error('❌ Erreur lors de l\'envoi des emails:', emailError)
+      // Ne pas faire échouer la fonction si les emails échouent
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Erreur envoi emails: ' + emailError.message 
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        },
+      )
+    }
 
     return new Response(
       JSON.stringify({ 
