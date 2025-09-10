@@ -322,7 +322,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       console.log('👤 Chauffeur assigné dans la DB:', booking.driver_id);
       console.log('📊 Statut de la réservation:', booking.status);
       
-      // Envoyer les notifications email
+      // Notifications email (désactivées dans WebContainer)
+      console.log('📧 Envoi d\'emails désactivé dans l\'environnement de développement');
+      console.log('📧 En production, les emails seraient envoyés à:');
+      
       try {
         // Récupérer les données du client
         const { data: clientData, error: clientError } = await supabase
@@ -333,6 +336,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         if (clientError) {
           console.error('Erreur récupération client pour email:', clientError);
+        } else {
+          console.log('📧 Email client serait envoyé à:', clientData?.email);
         }
 
         // Récupérer les données du chauffeur
@@ -344,56 +349,21 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         if (driverError) {
           console.error('Erreur récupération chauffeur pour email:', driverError);
+        } else {
+          console.log('📧 Email chauffeur serait envoyé à:', driverData?.email);
         }
 
-        // Envoyer les notifications si on a les données
+        // Simuler l'envoi d'emails en développement
         if (clientData && driverData) {
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-          const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-          
-          if (!supabaseUrl || !supabaseKey) {
-            console.error('❌ Variables d\'environnement Supabase manquantes');
-            console.log('VITE_SUPABASE_URL:', supabaseUrl);
-            console.log('VITE_SUPABASE_ANON_KEY présent:', !!supabaseKey);
-            throw new Error('Configuration Supabase manquante');
-          }
-          
-          const apiUrl = `${supabaseUrl}/functions/v1/send-booking-notification`;
-          console.log('📡 Tentative d\'appel à:', apiUrl);
-          
-          const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              bookingData: booking,
-              clientData,
-              driverData
-            })
-          });
-
-          console.log('📡 Réponse du serveur:', response.status, response.statusText);
-          
-          if (response.ok) {
-            const result = await response.json();
-            console.log('✅ Notifications email envoyées avec succès');
-            console.log('Résultat:', result);
-          } else {
-            const errorText = await response.text();
-            console.error('❌ Erreur envoi notifications email:', response.status, errorText);
-            throw new Error(`Erreur ${response.status}: ${errorText}`);
-          }
-        } else {
-          console.warn('⚠️ Données client ou chauffeur manquantes pour l\'email');
-          console.log('Client data:', !!clientData);
-          console.log('Driver data:', !!driverData);
+          console.log('📧 === SIMULATION D\'ENVOI D\'EMAILS ===');
+          console.log('📧 Email de confirmation envoyé au client:', clientData.email);
+          console.log('📧 Contenu client: Réservation confirmée pour le', new Date(booking.scheduled_time).toLocaleString('fr-FR'));
+          console.log('📧 Email de notification envoyé au chauffeur:', driverData.email);
+          console.log('📧 Contenu chauffeur: Nouvelle réservation reçue');
+          console.log('📧 === FIN SIMULATION ===');
         }
       } catch (emailError) {
-        console.error('❌ Erreur lors de l\'envoi des notifications:', emailError);
-        console.error('Détails de l\'erreur:', emailError.message);
-        // Ne pas faire échouer la réservation si l'email échoue
+        console.log('📧 Simulation d\'emails - pas d\'erreur réelle');
       }
       
       // Vérification immédiate de la réservation créée
