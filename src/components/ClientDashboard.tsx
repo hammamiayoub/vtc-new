@@ -215,7 +215,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               />
               <button 
                 onClick={() => setShowProfileModal(true)}
-                className="p-2 text-gray-300 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
+                className="p-2 text-gray-300 hover:text-white  hover:bg-gray-800 transition-colors"
                 title="Mon profil"
               >
                 <Settings size={20} />
