@@ -7,7 +7,7 @@ const corsHeaders = {
 
 // Configuration Resend
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'MyRide <noreply@myride.tn>' // Remplacez par votre domaine vérifié
+const FROM_EMAIL = 'MyRide <noreply@my-ride.net>' // Remplacez par votre domaine vérifié
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!RESEND_API_KEY) {
