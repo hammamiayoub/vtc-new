@@ -322,9 +322,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       console.log('👤 Chauffeur assigné dans la DB:', booking.driver_id);
       console.log('📊 Statut de la réservation:', booking.status);
       
-      // Notifications email (désactivées dans WebContainer)
-      console.log('📧 Envoi d\'emails désactivé dans l\'environnement de développement');
-      console.log('📧 En production, les emails seraient envoyés à:');
+      // Envoi des notifications email
+      console.log('📧 Tentative d\'envoi des notifications email...');
       
       try {
         // Récupérer les données du client
@@ -355,15 +354,35 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         // Simuler l'envoi d'emails en développement
         if (clientData && driverData) {
-          console.log('📧 === SIMULATION D\'ENVOI D\'EMAILS ===');
-          console.log('📧 Email de confirmation envoyé au client:', clientData.email);
-          console.log('📧 Contenu client: Réservation confirmée pour le', new Date(booking.scheduled_time).toLocaleString('fr-FR'));
-          console.log('📧 Email de notification envoyé au chauffeur:', driverData.email);
-          console.log('📧 Contenu chauffeur: Nouvelle réservation reçue');
-          console.log('📧 === FIN SIMULATION ===');
+          // Appel à l'Edge Function pour envoyer les emails
+          const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-notification`;
+          
+          console.log('📧 Appel Edge Function:', apiUrl);
+          
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bookingData: booking,
+              clientData,
+              driverData
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Emails envoyés avec succès:', result);
+          } else {
+            const errorText = await response.text();
+            console.error('❌ Erreur Edge Function:', response.status, errorText);
+          }
         }
       } catch (emailError) {
-        console.log('📧 Simulation d\'emails - pas d\'erreur réelle');
+        console.error('❌ Erreur lors de l\'envoi des emails:', emailError);
+        // Ne pas faire échouer la réservation si les emails échouent
       }
       
       // Vérification immédiate de la réservation créée
