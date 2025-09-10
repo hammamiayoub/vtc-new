@@ -203,7 +203,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               </div>
             </div>
             
-            <div className="flex items-center">
+            <div className="flex items-center gap-3">
               <NotificationBell
                 unreadCount={unreadCount}
                 hasNewNotifications={hasNewBookings}
