@@ -20,6 +20,7 @@ export interface VehicleInfo {
   licensePlate: string;
   seats: number;
   type: 'sedan' | 'suv' | 'luxury' | 'van';
+  photoUrl?: string;
 }
 
 export interface DriverProfileData {

@@ -6,6 +6,8 @@ import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { ProfileModal } from './ProfileModal';
 import { NotificationBell } from './NotificationBell';
 import { useDriverNotifications } from '../hooks/useNotifications';
+import { VehicleImageUpload } from './ui/VehicleImageUpload';
+import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
 import { Driver, Booking } from '../types';
 
@@ -20,6 +22,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'bookings'>('dashboard');
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
 
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead, refreshNotifications } = useDriverNotifications(driver?.id || '');
@@ -214,6 +217,35 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     }
   };
 
+  const handleVehiclePhotoUpload = async (file: File) => {
+    if (!driver) return;
+    
+    setUploadingVehiclePhoto(true);
+    try {
+      await uploadVehicleImage(file, driver.id);
+      // Recharger les données du chauffeur pour voir la nouvelle photo
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur upload photo véhicule:', error);
+      alert('Erreur lors de l\'upload de la photo du véhicule');
+    } finally {
+      setUploadingVehiclePhoto(false);
+    }
+  };
+
+  const handleVehiclePhotoDelete = async () => {
+    if (!driver?.vehicleInfo?.photoUrl) return;
+    
+    try {
+      await deleteVehicleImage(driver.vehicleInfo.photoUrl, driver.id);
+      // Recharger les données du chauffeur
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur suppression photo véhicule:', error);
+      alert('Erreur lors de la suppression de la photo du véhicule');
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     onLogout();
@@ -283,6 +315,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         );
     }
   };
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -571,24 +604,55 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   <Car className="w-5 h-5 text-gray-700" />
                   Mon véhicule
                 </h3>
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-1">Véhicule</p>
-                    <p className="font-semibold text-gray-900">
-                      {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                    </p>
+                
+                <div className="grid lg:grid-cols-3 gap-6">
+                  {/* Photo du véhicule */}
+                  <div className="lg:col-span-1">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Photo du véhicule</h4>
+                    <VehicleImageUpload
+                      currentImageUrl={driver.vehicleInfo.photoUrl}
+                      onImageUpload={handleVehiclePhotoUpload}
+                      onImageDelete={driver.vehicleInfo.photoUrl ? handleVehiclePhotoDelete : undefined}
+                      loading={uploadingVehiclePhoto}
+                    />
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-1">Année</p>
-                    <p className="font-semibold text-gray-900">{driver.vehicleInfo.year}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-1">Couleur</p>
-                    <p className="font-semibold text-gray-900">{driver.vehicleInfo.color}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-1">Places</p>
-                    <p className="font-semibold text-gray-900">{driver.vehicleInfo.seats} places</p>
+                  
+                  {/* Informations du véhicule */}
+                  <div className="lg:col-span-2">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Informations</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Véhicule</p>
+                        <p className="font-semibold text-gray-900">
+                          {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Année</p>
+                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.year}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Couleur</p>
+                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.color}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Places</p>
+                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.seats} places</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Plaque</p>
+                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.licensePlate}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-1">Type</p>
+                        <p className="font-semibold text-gray-900">
+                          {driver.vehicleInfo.type === 'sedan' && 'Berline'}
+                          {driver.vehicleInfo.type === 'suv' && 'SUV'}
+                          {driver.vehicleInfo.type === 'luxury' && 'Véhicule de luxe'}
+                          {driver.vehicleInfo.type === 'van' && 'Monospace'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

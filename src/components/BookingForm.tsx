@@ -730,17 +730,33 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        {driver.profilePhotoUrl ? (
-                          <img
-                            src={driver.profilePhotoUrl}
-                            alt="Photo de profil"
-                            className="w-20 h-20 rounded-full object-cover border-3 border-gray-300 shadow-md"
-                          />
-                        ) : (
-                          <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-3 border-gray-300 shadow-md">
-                            <User size={32} className="text-gray-700" />
-                          </div>
-                        )}
+                        <div className="flex flex-col gap-3">
+                          {/* Photo de profil du chauffeur */}
+                          {driver.profilePhotoUrl ? (
+                            <img
+                              src={driver.profilePhotoUrl}
+                              alt="Photo de profil"
+                              className="w-16 h-16 rounded-full object-cover border-2 border-gray-300 shadow-sm"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-gray-300 shadow-sm">
+                              <User size={24} className="text-gray-700" />
+                            </div>
+                          )}
+                          
+                          {/* Photo du véhicule */}
+                          {driver.vehicleInfo?.photoUrl ? (
+                            <img
+                              src={driver.vehicleInfo.photoUrl}
+                              alt="Photo du véhicule"
+                              className="w-16 h-12 rounded-lg object-cover border border-gray-300 shadow-sm"
+                            />
+                          ) : (
+                            <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300">
+                              <Car size={16} className="text-gray-500" />
+                            </div>
+                          )}
+                        </div>
                         <div>
                           <h4 className="font-semibold text-gray-900">
                             {driver.firstName} {driver.lastName}
@@ -761,6 +777,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             <span className="text-xs text-green-600 font-medium">Disponible maintenant</span>
                             {driver.profilePhotoUrl && (
                               <span className="text-xs text-blue-600 font-medium">• Photo vérifiée</span>
+                            )}
+                            {driver.vehicleInfo?.photoUrl && (
+                              <span className="text-xs text-purple-600 font-medium">• Véhicule vérifié</span>
                             )}
                           </div>
                         </div>
@@ -786,30 +805,53 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     
                     {selectedDriver === driver.id && (
                       <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
-                        <div className="flex items-center gap-3 mb-3">
-                          {driver.profilePhotoUrl ? (
-                            <img
-                              src={driver.profilePhotoUrl}
-                              alt="Photo de profil"
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                              <User size={20} className="text-gray-500" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {driver.firstName} {driver.lastName}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm text-gray-600">Chauffeur sélectionné</p>
-                              {driver.profilePhotoUrl && (
-                                <span className="text-xs text-blue-600 font-medium">✓ Vérifié</span>
-                              )}
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                          {/* Informations chauffeur */}
+                          <div className="flex items-center gap-3">
+                            {driver.profilePhotoUrl ? (
+                              <img
+                                src={driver.profilePhotoUrl}
+                                alt="Photo de profil"
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                                <User size={20} className="text-gray-500" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {driver.firstName} {driver.lastName}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm text-gray-600">Chauffeur sélectionné</p>
+                                {driver.profilePhotoUrl && (
+                                  <span className="text-xs text-blue-600 font-medium">✓ Vérifié</span>
+                                )}
+                              </div>
                             </div>
                           </div>
+                          
+                          {/* Photo du véhicule */}
+                          {driver.vehicleInfo?.photoUrl && (
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={driver.vehicleInfo.photoUrl}
+                                alt="Photo du véhicule"
+                                className="w-16 h-12 rounded-lg object-cover border border-gray-300"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  {driver.vehicleInfo.color} • {driver.vehicleInfo.seats} places
+                                </p>
+                              </div>
+                            </div>
+                          )}
                         </div>
+                        
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-gray-600">Distance du trajet:</span>
                             <span className="font-semibold text-gray-900">{estimatedDistance} km</span>
