@@ -13,7 +13,7 @@ export const Footer: React.FC<FooterProps> = ({ onPrivacyPolicyClick, onTermsCli
         <div className="grid md:grid-cols-4 gap-8">
           {/* Logo et description */}
           <div className="md:col-span-2">
-            <h3 className="text-2xl font-bold mb-4">MyRide</h3>
+            <h3 className="text-2xl font-bold mb-4">TuniRide</h3>
             <p className="text-gray-300 mb-4 max-w-md">
               Votre plateforme de transport privé en Tunisie. 
               Des trajets fiables avec des chauffeurs professionnels.
@@ -89,7 +89,7 @@ export const Footer: React.FC<FooterProps> = ({ onPrivacyPolicyClick, onTermsCli
         <div className="border-t border-gray-700 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} MyRide. Tous droits réservés.
+              © {new Date().getFullYear()} TuniRide. Tous droits réservés.
             </p>
             <div className="flex items-center gap-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
