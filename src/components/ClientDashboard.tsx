@@ -219,10 +219,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               >
                 <Settings size={20} />
               </button>
-              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-gray-600 text-gray-300 hover:text-white hover:bg-gray-800">
-                <LogOut size={16} />
-                Déconnexion
-              </Button>
               <Button onClick={handleLogout} className="flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200">
                 <LogOut size={16} />
                 Déconnexion
