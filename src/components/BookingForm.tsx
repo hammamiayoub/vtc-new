@@ -697,193 +697,205 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           )}
         </form>
 
-        {/* Liste des chauffeurs disponibles */}
-        {showDrivers && (
-          <div className="mt-8 border-t border-gray-200 pt-8">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6">
-              Chauffeurs disponibles ({availableDrivers.length})
-            </h3>
-            
-            {availableDrivers.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl">
-                <Car size={48} className="text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">
-                  Aucun chauffeur disponible
-                </h4>
-                <p className="text-gray-500 mb-4">
-                  Vérifiez la console pour plus de détails sur la recherche.
-                </p>
-                <Button
-                  onClick={searchAvailableDrivers}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700"
-                >
-                  Actualiser la recherche
-                </Button>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {availableDrivers.map((driver) => (
-                  <div 
-                    key={driver.id}
-                    className={`border rounded-xl p-6 cursor-pointer transition-all duration-200 ${
-                      selectedDriver === driver.id
-                        ? 'border-gray-500 bg-gray-50 shadow-md ring-2 ring-gray-200'
-                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                    }`}
-                    onClick={() => setSelectedDriver(driver.id)}
+        <>
+          {/* Liste des chauffeurs disponibles */}
+          {showDrivers && (
+            <div className="mt-8 border-t border-gray-200 pt-8">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6">
+                Chauffeurs disponibles ({availableDrivers.length})
+              </h3>
+              
+              {availableDrivers.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl">
+                  <Car size={48} className="text-gray-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">
+                    Aucun chauffeur disponible
+                  </h4>
+                  <p className="text-gray-500 mb-4">
+                    Vérifiez la console pour plus de détails sur la recherche.
+                  </p>
+                  <Button
+                    onClick={searchAvailableDrivers}
+                    className="mt-4 bg-blue-600 hover:bg-blue-700"
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <div className="flex flex-col gap-3">
-                          {/* Photo de profil du chauffeur */}
-                          {driver.profilePhotoUrl ? (
-                            <img
-                              src={driver.profilePhotoUrl}
-                              alt="Photo de profil"
-                              className="w-16 h-16 rounded-full object-cover border-2 border-gray-300 shadow-sm"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-gray-300 shadow-sm">
-                              <User size={24} className="text-gray-700" />
-                            </div>
-                          )}
-                          
-                          {/* Photo du véhicule */}
-                          {driver.vehicleInfo?.photoUrl ? (
-                            <img
-                              src={driver.vehicleInfo.photoUrl}
-                              alt="Photo du véhicule"
-                              className="w-16 h-12 rounded-lg object-cover border border-gray-300 shadow-sm"
-                            />
-                          ) : (
-                            <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300">
-                              <Car size={16} className="text-gray-500" />
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">
-                            {driver.firstName} {driver.lastName}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {driver.vehicleInfo ? 
-                              `${driver.vehicleInfo.make} ${driver.vehicleInfo.model} (${driver.vehicleInfo.color})` :
-                              'Véhicule non renseigné'
-                            }
-                          </p>
-                          {driver.phone && (
-                            <p className="text-xs text-gray-500">
-                              Tél: {driver.phone}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-xs text-green-600 font-medium">Disponible maintenant</span>
-                            {driver.profilePhotoUrl && (
-                              <span className="text-xs text-blue-600 font-medium">• Photo vérifiée</span>
-                            )}
-                            {driver.vehicleInfo?.photoUrl && (
-                              <span className="text-xs text-purple-600 font-medium">• Véhicule vérifié</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="text-left sm:text-right">
-                        <div className="flex items-center gap-2 text-green-600 mb-1">
-                          <CheckCircle size={16} />
-                          <span className="text-sm font-medium">Créneaux définis</span>
-                        </div>
-                        {driver.vehicleInfo && (
-                          <p className="text-xs text-gray-500">
-                            {driver.vehicleInfo.seats} places • {
-                              driver.vehicleInfo.type === 'sedan' ? 'Berline' :
-                              driver.vehicleInfo.type === 'suv' ? 'SUV' :
-                              driver.vehicleInfo.type === 'luxury' ? 'Luxe' :
-                              'Monospace'
-                            }
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {selectedDriver === driver.id && (
-                      <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          {/* Informations chauffeur */}
-                          <div className="flex items-center gap-3">
+                    Actualiser la recherche
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {availableDrivers.map((driver) => (
+                    <div 
+                      key={driver.id}
+                      className={`border rounded-xl p-6 cursor-pointer transition-all duration-200 ${
+                        selectedDriver === driver.id
+                          ? 'border-gray-500 bg-gray-50 shadow-md ring-2 ring-gray-200'
+                          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                      }`}
+                      onClick={() => setSelectedDriver(driver.id)}
+                    >
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                          <div className="flex flex-col gap-3">
+                            {/* Photo de profil du chauffeur */}
                             {driver.profilePhotoUrl ? (
                               <img
                                 src={driver.profilePhotoUrl}
                                 alt="Photo de profil"
-                                className="w-12 h-12 rounded-full object-cover"
+                                className="w-16 h-16 rounded-full object-cover border-2 border-gray-300 shadow-sm"
                               />
                             ) : (
-                              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                                <User size={20} className="text-gray-500" />
+                              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-gray-300 shadow-sm">
+                                <User size={24} className="text-gray-700" />
                               </div>
                             )}
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {driver.firstName} {driver.lastName}
-                              </p>
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm text-gray-600">Chauffeur sélectionné</p>
-                                {driver.profilePhotoUrl && (
-                                  <span className="text-xs text-blue-600 font-medium">✓ Vérifié</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Photo du véhicule */}
-                          {driver.vehicleInfo?.photoUrl && (
-                            <div className="flex items-center gap-3">
+                            
+                            {/* Photo du véhicule */}
+                            {driver.vehicleInfo?.photoUrl ? (
                               <img
                                 src={driver.vehicleInfo.photoUrl}
                                 alt="Photo du véhicule"
-                                className="w-16 h-12 rounded-lg object-cover border border-gray-300"
+                                className="w-16 h-12 rounded-lg object-cover border border-gray-300 shadow-sm"
                               />
-                              <div>
-                                <p className="font-medium text-gray-900">
-                                  {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  {driver.vehicleInfo.color} • {driver.vehicleInfo.seats} places
-                                </p>
+                            ) : (
+                              <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300">
+                                <Car size={16} className="text-gray-500" />
                               </div>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">
+                              {driver.firstName} {driver.lastName}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {driver.vehicleInfo ? 
+                                `${driver.vehicleInfo.make} ${driver.vehicleInfo.model} (${driver.vehicleInfo.color})` :
+                                'Véhicule non renseigné'
+                              }
+                            </p>
+                            {driver.phone && (
+                              <p className="text-xs text-gray-500">
+                                Tél: {driver.phone}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-xs text-green-600 font-medium">Disponible maintenant</span>
+                              {driver.profilePhotoUrl && (
+                                <span className="text-xs text-blue-600 font-medium">• Photo vérifiée</span>
+                              )}
+                              {driver.vehicleInfo?.photoUrl && (
+                                <span className="text-xs text-purple-600 font-medium">• Véhicule vérifié</span>
+                              )}
                             </div>
-                          )}
+                          </div>
                         </div>
                         
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-gray-600">Distance du trajet:</span>
-                            <span className="font-semibold text-gray-900">{estimatedDistance} km</span>
+                        <div className="text-left sm:text-right">
+                          <div className="flex items-center gap-2 text-green-600 mb-1">
+                            <CheckCircle size={16} />
+                            <span className="text-sm font-medium">Créneaux définis</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Prix total:</span>
-                            <span className="font-bold text-gray-900 text-xl">
-                              {estimatedPrice} TND
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2 text-center">
-                            Tarif: {(() => {
-                              if (!estimatedDistance) return '2,5 TND/km';
-                              if (estimatedDistance <= 20) return '2,5 TND/km';
-                              if (estimatedDistance <= 30) return '3,0 TND/km';
-                              if (estimatedDistance <= 50) return '2,5 TND/km';
-                              return '2,2 TND/km';
-                            })()}
-                          </p>
+                          {driver.vehicleInfo && (
+                            <p className="text-xs text-gray-500">
+                              {driver.vehicleInfo.seats} places • {
+                                driver.vehicleInfo.type === 'sedan' ? 'Berline' :
+                                driver.vehicleInfo.type === 'suv' ? 'SUV' :
+                                driver.vehicleInfo.type === 'luxury' ? 'Luxe' :
+                                'Monospace'
+                              }
+                            </p>
+                          )}
                         </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-      </div>
-    </div>
-  );
-};
+                      </div>
+                      
+                      {selectedDriver === driver.id && (
+                        <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            {/* Informations chauffeur */}
+                            <div className="flex items-center gap-3">
+                              {driver.profilePhotoUrl ? (
+                                <img
+                                  src={driver.profilePhotoUrl}
+                                  alt="Photo de profil"
+                                  className="w-12 h-12 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                                  <User size={20} className="text-gray-500" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {driver.firstName} {driver.lastName}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm text-gray-600">Chauffeur sélectionné</p>
+                                  {driver.profilePhotoUrl && (
+                                    <span className="text-xs text-blue-600 font-medium">✓ Vérifié</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Photo du véhicule */}
+                            {driver.vehicleInfo?.photoUrl && (
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={driver.vehicleInfo.photoUrl}
+                                  alt="Photo du véhicule"
+                                  className="w-16 h-12 rounded-lg object-cover border border-gray-300"
+                                />
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {driver.vehicleInfo.color} • {driver.vehicleInfo.seats} places
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-gray-600">Distance du trajet:</span>
+                              <span className="font-semibold text-gray-900">{estimatedDistance} km</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">Prix total:</span>
+                              <span className="font-bold text-gray-900 text-xl">
+                                {estimatedPrice} TND
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2 text-center">
+                              Tarif: {(() => {
+                                if (!estimatedDistance) return '2,5 TND/km';
+                                if (estimatedDistance <= 20) return '2,5 TND/km';
+                                if (estimatedDistance <= 30) return '3,0 TND/km';
+                                if (estimatedDistance <= 50) return '2,5 TND/km';
+                                return '2,2 TND/km';
+                              })()}
+                            </p>
+                          </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {showDrivers && selectedDriver && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
+                className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 py-4 text-lg"
+              >
+                <CheckCircle size={20} />
+                {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
+              </Button>
+            </div>
+          )}
+        </>
