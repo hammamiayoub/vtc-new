@@ -234,8 +234,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
       
-      console.log('🕐 Étape 3: Filtrage par heure...');
       // Étape 3: Filtrer par heure (vérifier que l'heure demandée est dans les créneaux)
+      console.log('🕐 Étape 3: Filtrage par heure...');
       const availableDriverIds = new Set();
       
       dateAvailabilities.forEach(availability => {
