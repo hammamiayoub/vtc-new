@@ -695,7 +695,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               </Button>
             </div>
           )}
-        </form>
+        {/* </form>*/}
 
         {/* Liste des chauffeurs disponibles */}
         {showDrivers && (
@@ -897,6 +897,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             </Button>
           </div>
         )}
+        </form>
       </div>
     </div>
   );
