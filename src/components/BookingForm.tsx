@@ -868,7 +868,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             )}
           </div>
           
-          {/* Bouton de confirmation déplacé sous la liste des chauffeurs */}
           {showDrivers && selectedDriver && (
             <div className="mt-8 pt-6 border-t border-gray-200">
               <Button
