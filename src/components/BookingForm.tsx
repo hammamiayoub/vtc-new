@@ -183,21 +183,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     
     console.log('📅 Date sélectionnée:', selectedDateString);
     console.log('🕐 Heure sélectionnée:', selectedTimeString);
-    
-    // Vérifier qu'une date est sélectionnée
-    const scheduledTime = watch('scheduledTime');
-    if (!scheduledTime) {
-      alert('Veuillez d\'abord sélectionner une date et heure de départ');
-      return;
-    }
-    
-    const selectedDate = new Date(scheduledTime);
-    const selectedDateString = selectedDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
-    const selectedTimeString = selectedDate.toTimeString().slice(0, 5); // Format HH:MM
-    
-    console.log('📅 Date sélectionnée:', selectedDateString);
-    console.log('🕐 Heure sélectionnée:', selectedTimeString);
-    
+
     try {
       // Étape 1: Récupérer tous les chauffeurs actifs
       console.log('📡 Étape 1: Récupération des chauffeurs actifs...');
@@ -229,8 +215,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         .from('driver_availability')
         .select('driver_id, start_time, end_time, is_available')
         .eq('date', selectedDateString)
-        .select('driver_id, start_time, end_time, is_available')
-        .eq('date', selectedDateString)
         .eq('is_available', true);
       
       if (availabilityError) {
@@ -239,26 +223,18 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         setAvailableDrivers([]);
         setShowDrivers(true);
         return;
-        return;
       }
       
       console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
       
-      if (!dateAvailabilities || dateAvailabilities.length === 0) {
-        console.warn('⚠️ Aucune disponibilité trouvée pour cette date');
-        setAvailableDrivers([]);
-      console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
-        return;
       if (!dateAvailabilities || dateAvailabilities.length === 0) {
         console.warn('⚠️ Aucune disponibilité trouvée pour cette date');
         setAvailableDrivers([]);
         setShowDrivers(true);
         return;
       }
+      
       console.log('🕐 Étape 3: Filtrage par heure...');
-      // Étape 3: Filtrer par heure (vérifier que l'heure demandée est dans les créneaux)
-      console.log('🕐 Étape 3: Filtrage par heure...');
-      dateAvailabilities.forEach(availability => {
       const availableDriverIds = new Set();
       
       dateAvailabilities.forEach(availability => {
