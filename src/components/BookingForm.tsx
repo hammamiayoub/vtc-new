@@ -170,6 +170,20 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const searchAvailableDrivers = async () => {
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
+    // Vérifier qu'une date est sélectionnée
+    const scheduledTime = watch('scheduledTime');
+    if (!scheduledTime) {
+      alert('Veuillez d\'abord sélectionner une date et heure de départ');
+      return;
+    }
+    
+    const selectedDate = new Date(scheduledTime);
+    const selectedDateString = selectedDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const selectedTimeString = selectedDate.toTimeString().slice(0, 5); // Format HH:MM
+    
+    console.log('📅 Date sélectionnée:', selectedDateString);
+    console.log('🕐 Heure sélectionnée:', selectedTimeString);
+    
     try {
       // Étape 1: Récupérer tous les chauffeurs actifs
       console.log('📡 Étape 1: Récupération des chauffeurs actifs...');
@@ -194,59 +208,67 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
       
-      // Étape 2: Récupérer TOUTES les disponibilités
-      console.log('📅 Étape 2: Récupération de toutes les disponibilités...');
+      // Étape 2: Récupérer les disponibilités pour la date sélectionnée
+      console.log('📅 Étape 2: Récupération des disponibilités pour le', selectedDateString);
       
-      const { data: allAvailabilities, error: availabilityError } = await supabase
+      const { data: dateAvailabilities, error: availabilityError } = await supabase
         .from('driver_availability')
-        .select('driver_id, is_available');
+        .select('driver_id, start_time, end_time, is_available')
+        .eq('date', selectedDateString)
+        .eq('is_available', true);
       
       if (availabilityError) {
         console.error('❌ Erreur lors de la récupération des disponibilités:', availabilityError);
         console.error('Détails de l\'erreur:', availabilityError);
-        // Continuer même en cas d'erreur pour voir les chauffeurs
-        console.log('⚠️ Continuons sans filtrer par disponibilités...');
-      }
-      
-      console.log('📊 Toutes les disponibilités récupérées:', allAvailabilities?.length || 0);
-      
-      // Étape 3: Filtrer les disponibilités actives
-      const activeAvailabilities = allAvailabilities?.filter(av => av.is_available === true) || [];
-      console.log('✅ Disponibilités actives:', activeAvailabilities.length);
-      
-      // Étape 4: Identifier les chauffeurs avec disponibilités
-      const driversWithAvailability = new Set(activeAvailabilities.map(av => av.driver_id));
-      console.log('👥 Chauffeurs avec disponibilités:', driversWithAvailability.size);
-      
-      if (driversWithAvailability.size === 0) {
-        console.warn('⚠️ Aucun chauffeur avec disponibilités actives trouvé');
-        console.log('🔍 Affichage de tous les chauffeurs actifs pour debug...');
-        
-        // Pour le debug, afficher tous les chauffeurs actifs
-        const formattedDrivers = activeDrivers.map(driver => ({
-          id: driver.id,
-          firstName: driver.first_name,
-          lastName: driver.last_name,
-          email: driver.email,
-          phone: driver.phone,
-          licenseNumber: driver.license_number,
-          vehicleInfo: driver.vehicle_info,
-          status: driver.status,
-          createdAt: driver.created_at,
-          updatedAt: driver.updated_at
-        }));
-        
-        setAvailableDrivers(formattedDrivers);
+        setAvailableDrivers([]);
         setShowDrivers(true);
         return;
       }
       
-      // Étape 5: Filtrer les chauffeurs qui ont des disponibilités
+      console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
+      
+      if (!dateAvailabilities || dateAvailabilities.length === 0) {
+        console.warn('⚠️ Aucune disponibilité trouvée pour cette date');
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+      
+      // Étape 3: Filtrer par heure (vérifier que l'heure demandée est dans les créneaux)
+      console.log('🕐 Étape 3: Filtrage par heure...');
+      
+      const availableDriverIds = new Set();
+      
+      dateAvailabilities.forEach(availability => {
+        const startTime = availability.start_time; // Format HH:MM
+        const endTime = availability.end_time;     // Format HH:MM
+        
+        console.log(`🔍 Chauffeur ${availability.driver_id}: ${startTime} - ${endTime} vs ${selectedTimeString}`);
+        
+        // Vérifier si l'heure demandée est dans le créneau
+        if (selectedTimeString >= startTime && selectedTimeString <= endTime) {
+          availableDriverIds.add(availability.driver_id);
+          console.log(`✅ Chauffeur ${availability.driver_id} disponible à ${selectedTimeString}`);
+        } else {
+          console.log(`❌ Chauffeur ${availability.driver_id} non disponible à ${selectedTimeString}`);
+        }
+      });
+      
+      console.log('👥 Chauffeurs disponibles à cette heure:', availableDriverIds.size);
+      
+      if (availableDriverIds.size === 0) {
+        console.warn('⚠️ Aucun chauffeur disponible à cette heure');
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+      
+      // Étape 4: Filtrer les chauffeurs qui sont disponibles
       const availableDriversData = activeDrivers.filter(driver => 
-        driversWithAvailability.has(driver.id)
+        availableDriverIds.has(driver.id)
       );
       
-      console.log('✅ Chauffeurs avec disponibilités:', availableDriversData.length);
+      console.log('✅ Chauffeurs finalement disponibles:', availableDriversData.length);
 
       const formattedDrivers = availableDriversData.map(driver => ({
         id: driver.id,
@@ -257,11 +279,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         licenseNumber: driver.license_number,
         vehicleInfo: driver.vehicle_info,
         status: driver.status,
+        profilePhotoUrl: driver.profile_photo_url,
         createdAt: driver.created_at,
         updatedAt: driver.updated_at
       }));
 
-      console.log('🔄 Formatage terminé - Chauffeurs disponibles:', formattedDrivers.length);
+      console.log('🔄 Formatage terminé - Chauffeurs disponibles à cette date/heure:', formattedDrivers.length);
       
       setAvailableDrivers(formattedDrivers);
       setShowDrivers(true);
@@ -686,7 +709,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               <Button
                 type="button"
                 onClick={searchAvailableDrivers}
-                disabled={!isValid || !estimatedPrice || isCalculating}
+                disabled={!isValid || !estimatedPrice || isCalculating || !watch('scheduledTime')}
                 className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800"
               >
                 <Car size={20} />
@@ -705,6 +728,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               >
                 Nouvelle recherche
               </Button>
+            )}
+            
+            {!watch('scheduledTime') && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={16} className="text-orange-600" />
+                  <p className="text-sm text-orange-700">
+                    Veuillez sélectionner une date et heure avant de rechercher des chauffeurs
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 
@@ -735,13 +769,32 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               <div className="text-center py-12 bg-gray-50 rounded-xl">
                 <Car size={48} className="text-gray-400 mx-auto mb-4" />
                 <h4 className="text-lg font-medium text-gray-900 mb-2">
-                  Aucun chauffeur disponible
+                  Aucun chauffeur disponible à cette date/heure
                 </h4>
-                <p className="text-gray-500 mb-4">
-                  Vérifiez la console pour plus de détails sur la recherche.
+                <p className="text-gray-500 mb-6">
+                  {watch('scheduledTime') ? (
+                    <>
+                      Aucun chauffeur n'a défini de disponibilité pour le{' '}
+                      <strong>
+                        {new Date(watch('scheduledTime')).toLocaleDateString('fr-FR', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </strong>
+                      <br />
+                      Essayez une autre date ou heure.
+                    </>
+                  ) : (
+                    'Sélectionnez d\'abord une date et heure de départ.'
+                  )}
                 </p>
                 <Button
                   onClick={searchAvailableDrivers}
+                  disabled={!watch('scheduledTime')}
                   className="mt-4 bg-blue-600 hover:bg-blue-700"
                 >
                   Actualiser la recherche
