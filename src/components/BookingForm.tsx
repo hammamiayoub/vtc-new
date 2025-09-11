@@ -170,83 +170,242 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const searchAvailableDrivers = async () => {
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
+    // Debug: Vérifier l'utilisateur connecté
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('👤 Utilisateur connecté:', user?.id);
+    console.log('👤 Email utilisateur:', user?.email);
+    
+    if (!user) {
+      console.error('❌ Aucun utilisateur connecté');
+      alert('Vous devez être connecté pour rechercher des chauffeurs');
+      return;
+    }
+    
+    // Vérifier si c'est un client
+    const { data: clientData, error: clientError } = await supabase
+      .from('clients')
+      .select('id, first_name, last_name')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    console.log('🧑‍💼 Données client:', clientData);
+    console.log('🧑‍💼 Erreur client:', clientError);
+    
+    // Vérifier qu'une date est sélectionnée
+    const scheduledTime = watch('scheduledTime');
+    if (!scheduledTime) {
+      alert('Veuillez d\'abord sélectionner une date et heure de départ');
+      return;
+    }
+    
+    const selectedDate = new Date(scheduledTime);
+    const selectedDateString = selectedDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const selectedTimeString = selectedDate.toTimeString().slice(0, 5); // Format HH:MM
+    
+    console.log('📅 Date sélectionnée:', selectedDateString);
+    console.log('🕐 Heure sélectionnée:', selectedTimeString);
+    console.log('📝 Valeur brute scheduledTime:', scheduledTime);
+    console.log('📅 Date complète:', selectedDate);
+    
     try {
-      // Étape 1: Récupérer tous les chauffeurs actifs
-      console.log('📡 Étape 1: Récupération des chauffeurs actifs...');
+      // Debug: Vérifier toutes les disponibilités existantes
+      console.log('🔍 Debug: Récupération de TOUTES les disponibilités...');
       
-      const { data: activeDrivers, error: driversError } = await supabase
-        .from('drivers')
-        .select('*')
-        .eq('status', 'active');
+      // Test 1: Requête simple sans filtre
+      const { data: allAvailabilities, error: allError } = await supabase
+        .from('driver_availability')
+        .select('*');
       
-      if (driversError) {
-        console.error('❌ Erreur lors de la récupération des chauffeurs:', driversError);
-        console.error('Détails de l\'erreur:', driversError);
-        return;
+      if (allError) {
+        console.error('❌ Erreur récupération toutes disponibilités:', allError);
+        console.error('❌ Code erreur:', allError.code);
+        console.error('❌ Message:', allError.message);
+        console.error('❌ Détails:', allError.details);
+        console.error('❌ Hint:', allError.hint);
+      } else {
+        console.log('📊 Toutes les disponibilités dans la DB:', allAvailabilities?.length || 0);
+      }
+
+      // Test 2: Vérifier les permissions avec une requête spécifique
+      console.log('🔍 Test permissions sur driver_availability...');
+      const { data: permissionTest, error: permissionError } = await supabase
+        .from('driver_availability')
+        .select('id, driver_id, date, start_time, end_time, is_available')
+        .limit(5);
+      
+      if (permissionError) {
+        console.error('❌ Erreur de permissions:', permissionError);
+        console.error('❌ Code:', permissionError.code);
+        console.error('❌ Message:', permissionError.message);
+        console.error('❌ Détails:', permissionError.details);
+        console.error('❌ Hint:', permissionError.hint);
+        
+        // Vérifier si c'est un problème RLS
+        if (permissionError.code === 'PGRST116' || permissionError.message.includes('row-level security')) {
+          console.error('🚨 PROBLÈME RLS DÉTECTÉ: Le client n\'a pas les permissions pour voir les disponibilités');
+          alert('Erreur de permissions: impossible de voir les disponibilités des chauffeurs');
+          return;
+        }
+      } else {
+        console.log('✅ Permissions OK - Disponibilités récupérées:', permissionTest?.length || 0);
+        if (permissionTest && permissionTest.length > 0) {
+          console.log('📋 Exemples de disponibilités:', permissionTest.slice(0, 2));
+        } else {
+          console.log('🔍 Aucune disponibilité trouvée - Vérifions le contenu complet de la table...');
+          
+          // Test avec une requête très large pour voir toutes les données
+          const { data: allData, error: allError } = await supabase
+            .from('driver_availability')
+            .select('*')
+            .limit(10);
+          
+          console.log('📊 Toutes les données de driver_availability (10 premières):', allData);
+          if (allError) {
+            console.error('❌ Erreur récupération toutes données:', allError);
+          }
+          
+          // Test avec différents formats de date
+          const testDates = [
+            selectedDateString, // 2025-09-12
+            selectedDate.toISOString().split('T')[0], // Au cas où
+            selectedDate.toLocaleDateString('en-CA'), // Format YYYY-MM-DD
+            selectedDate.toLocaleDateString('fr-FR').split('/').reverse().join('-') // DD/MM/YYYY -> YYYY-MM-DD
+          ];
+          
+          console.log('🔍 Test avec différents formats de date:', testDates);
+          
+          for (const testDate of testDates) {
+            const { data: testData, error: testError } = await supabase
+              .from('driver_availability')
+              .select('*')
+              .eq('date', testDate)
+              .limit(5);
+            
+            console.log(`📅 Test date "${testDate}":`, testData?.length || 0, 'résultats');
+            if (testData && testData.length > 0) {
+              console.log('📋 Données trouvées:', testData);
+            }
+          }
+        }
       }
       
-      console.log('📊 Chauffeurs actifs trouvés:', activeDrivers?.length || 0);
+      // Test 3: Recherche par date si les permissions sont OK
+      if (!permissionError && permissionTest) {
+        console.log('🔍 Test recherche par date:', selectedDateString);
+        const { data: dateTest, error: dateError } = await supabase
+          .from('driver_availability')
+          .select('*')
+          .eq('date', selectedDateString);
+        
+        console.log('📊 Résultats pour la date:', dateTest?.length || 0);
+        if (dateError) {
+          console.error('❌ Erreur recherche par date:', dateError);
+        }
+      }
+
+      // Si on arrive ici et qu'il n'y a pas de disponibilités, c'est probablement normal
+      if (!permissionError) {
+        console.log('✅ Pas de problème de permissions - Continuons la recherche normale...');
+      }
+
+      // Étape 1: Récupération des disponibilités pour la date sélectionnée
+      console.log('📅 Étape 1: Récupération des disponibilités pour le', selectedDateString);
       
-      if (!activeDrivers || activeDrivers.length === 0) {
-        console.warn('⚠️ Aucun chauffeur actif trouvé');
+      const { data: dateAvailabilities, error: availabilityError } = await supabase
+        .from('driver_availability')
+        .select('driver_id, start_time, end_time, is_available')
+        .eq('date', selectedDateString)
+        .eq('is_available', true);
+      
+      if (availabilityError) {
+        console.error('❌ Erreur lors de la récupération des disponibilités:', availabilityError);
+        console.error('Détails de l\'erreur:', availabilityError);
         setAvailableDrivers([]);
         setShowDrivers(true);
         return;
       }
       
-      // Étape 2: Récupérer TOUTES les disponibilités
-      console.log('📅 Étape 2: Récupération de toutes les disponibilités...');
+      console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
+      console.log('📋 Détail des disponibilités pour cette date:', dateAvailabilities);
       
-      const { data: allAvailabilities, error: availabilityError } = await supabase
-        .from('driver_availability')
-        .select('driver_id, is_available');
-      
-      if (availabilityError) {
-        console.error('❌ Erreur lors de la récupération des disponibilités:', availabilityError);
-        console.error('Détails de l\'erreur:', availabilityError);
-        // Continuer même en cas d'erreur pour voir les chauffeurs
-        console.log('⚠️ Continuons sans filtrer par disponibilités...');
-      }
-      
-      console.log('📊 Toutes les disponibilités récupérées:', allAvailabilities?.length || 0);
-      
-      // Étape 3: Filtrer les disponibilités actives
-      const activeAvailabilities = allAvailabilities?.filter(av => av.is_available === true) || [];
-      console.log('✅ Disponibilités actives:', activeAvailabilities.length);
-      
-      // Étape 4: Identifier les chauffeurs avec disponibilités
-      const driversWithAvailability = new Set(activeAvailabilities.map(av => av.driver_id));
-      console.log('👥 Chauffeurs avec disponibilités:', driversWithAvailability.size);
-      
-      if (driversWithAvailability.size === 0) {
-        console.warn('⚠️ Aucun chauffeur avec disponibilités actives trouvé');
-        console.log('🔍 Affichage de tous les chauffeurs actifs pour debug...');
+      if (!dateAvailabilities || dateAvailabilities.length === 0) {
+        console.warn('⚠️ Aucune disponibilité trouvée pour cette date');
+        console.log('🔍 Vérification: recherche avec date exacte:', selectedDateString);
         
-        // Pour le debug, afficher tous les chauffeurs actifs
-        const formattedDrivers = activeDrivers.map(driver => ({
-          id: driver.id,
-          firstName: driver.first_name,
-          lastName: driver.last_name,
-          email: driver.email,
-          phone: driver.phone,
-          licenseNumber: driver.license_number,
-          vehicleInfo: driver.vehicle_info,
-          status: driver.status,
-          createdAt: driver.created_at,
-          updatedAt: driver.updated_at
-        }));
+        // Test avec une requête plus large pour debug
+        const { data: debugAvailabilities } = await supabase
+          .from('driver_availability')
+          .select('*')
+          .gte('date', selectedDateString)
+          .lte('date', selectedDateString);
         
-        setAvailableDrivers(formattedDrivers);
+        console.log('🔍 Debug - Requête avec gte/lte:', debugAvailabilities?.length || 0);
+        console.log('🔍 Debug - Données:', debugAvailabilities);
+        
+        setAvailableDrivers([]);
         setShowDrivers(true);
         return;
       }
       
-      // Étape 5: Filtrer les chauffeurs qui ont des disponibilités
+      // Étape 2: Filtrer par heure (vérifier que l'heure demandée est dans les créneaux)
+      console.log('🕐 Étape 2: Filtrage par heure...');
+      const availableDriverIds = new Set();
+      
+      dateAvailabilities.forEach(availability => {
+        const startTime = availability.start_time; // Format HH:MM
+        const endTime = availability.end_time;     // Format HH:MM
+        
+        console.log(`🔍 Chauffeur ${availability.driver_id}: ${startTime} - ${endTime} vs ${selectedTimeString}`);
+        
+        // Vérifier si l'heure demandée est dans le créneau
+        if (selectedTimeString >= startTime && selectedTimeString <= endTime) {
+          availableDriverIds.add(availability.driver_id);
+          console.log(`✅ Chauffeur ${availability.driver_id} disponible à ${selectedTimeString}`);
+        } else {
+          console.log(`❌ Chauffeur ${availability.driver_id} non disponible à ${selectedTimeString}`);
+        }
+      });
+      
+      console.log('👥 Chauffeurs disponibles à cette heure:', availableDriverIds.size);
+      
+      if (availableDriverIds.size === 0) {
+        console.warn('⚠️ Aucun chauffeur disponible à cette heure');
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+      
+      // Étape 3: Récupérer les données des chauffeurs disponibles
+      console.log('📡 Étape 3: Récupération des données des chauffeurs disponibles...');
+      
+      const { data: activeDrivers, error: driversError } = await supabase
+        .from('drivers')
+        .select('*')
+        .eq('status', 'active')
+        .in('id', Array.from(availableDriverIds));
+      
+      if (driversError) {
+        console.error('❌ Erreur lors de la récupération des chauffeurs:', driversError);
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+      
+      console.log('📊 Chauffeurs actifs récupérés:', activeDrivers?.length || 0);
+      
+      if (!activeDrivers || activeDrivers.length === 0) {
+        console.warn('⚠️ Aucun chauffeur actif trouvé parmi les disponibles');
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+      
+      // Étape 4: Formater les données des chauffeurs
       const availableDriversData = activeDrivers.filter(driver => 
-        driversWithAvailability.has(driver.id)
+        availableDriverIds.has(driver.id)
       );
       
-      console.log('✅ Chauffeurs avec disponibilités:', availableDriversData.length);
+      console.log('✅ Chauffeurs finalement disponibles:', availableDriversData.length);
 
       const formattedDrivers = availableDriversData.map(driver => ({
         id: driver.id,
@@ -257,11 +416,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         licenseNumber: driver.license_number,
         vehicleInfo: driver.vehicle_info,
         status: driver.status,
+        profilePhotoUrl: driver.profile_photo_url,
         createdAt: driver.created_at,
         updatedAt: driver.updated_at
       }));
 
-      console.log('🔄 Formatage terminé - Chauffeurs disponibles:', formattedDrivers.length);
+      console.log('🔄 Formatage terminé - Chauffeurs disponibles à cette date/heure:', formattedDrivers.length);
       
       setAvailableDrivers(formattedDrivers);
       setShowDrivers(true);
@@ -270,6 +430,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     } catch (error) {
       console.error('💥 Erreur inattendue:', error);
       console.error('Stack trace:', error);
+      setAvailableDrivers([]);
+      setShowDrivers(true);
     }
   };
 
@@ -322,8 +484,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       console.log('👤 Chauffeur assigné dans la DB:', booking.driver_id);
       console.log('📊 Statut de la réservation:', booking.status);
       
-      // Simulation d'envoi des notifications email (Edge Functions non disponibles dans WebContainer)
-      console.log('📧 === SIMULATION D\'ENVOI D\'EMAILS ===');
+      // Envoi des notifications email via Edge Function
+      console.log('📧 === ENVOI D\'EMAILS VIA RESEND ===');
       
       try {
         // Récupérer les données du client
@@ -335,9 +497,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         if (clientError) {
           console.error('Erreur récupération client pour email:', clientError);
-        } else {
-          console.log('📧 Email de confirmation envoyé au client:', clientData?.email);
-          console.log('📧 Contenu client: Réservation confirmée pour le', new Date(booking.scheduled_time).toLocaleString('fr-FR'));
         }
 
         // Récupérer les données du chauffeur
@@ -349,15 +508,45 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         if (driverError) {
           console.error('Erreur récupération chauffeur pour email:', driverError);
-        } else {
-          console.log('📧 Email de notification envoyé au chauffeur:', driverData?.email);
-          console.log('📧 Contenu chauffeur: Nouvelle réservation reçue');
         }
 
-        console.log('📧 === FIN SIMULATION ===');
-        console.log('ℹ️ En production, les emails seraient envoyés via l\'Edge Function');
+        // Appel à l'Edge Function pour envoyer les emails
+        if (clientData && driverData) {
+          console.log('🚀 Appel Edge Function send-booking-notification...');
+          
+          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-notification`;
+          
+          const emailResponse = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bookingData: booking,
+              clientData: clientData,
+              driverData: driverData
+            })
+          });
+
+          const emailResult = await emailResponse.json();
+          
+          if (emailResponse.ok && emailResult.success) {
+            console.log('✅ Emails envoyés avec succès:', emailResult.message);
+            console.log('📊 Détails:', emailResult.results);
+          } else {
+            console.error('❌ Erreur envoi emails:', emailResult.error);
+            console.error('📊 Détails:', emailResult.details || emailResult);
+            // Ne pas faire échouer la réservation si les emails échouent
+          }
+        } else {
+          console.warn('⚠️ Données client ou chauffeur manquantes pour l\'envoi d\'emails');
+        }
+
+        console.log('📧 === FIN ENVOI EMAILS ===');
       } catch (emailError) {
         console.error('❌ Erreur lors de la simulation des emails:', emailError);
+        // Ne pas faire échouer la réservation si les emails échouent
       }
       
       // Vérification immédiate de la réservation créée
@@ -585,318 +774,151 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             </div>
           )}
 
-          {/* Message d'erreur si adresses non trouvées */}
-          {watchPickup && watchDestination && watchPickup.length > 5 && watchDestination.length > 5 && 
-           !isCalculating && !estimatedDistance && (
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <AlertCircle className="w-6 h-6 text-orange-600" />
-                <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-orange-900">
-                    Adresses non trouvées
-                  </h3>
-                  <p className="text-sm sm:text-base text-orange-700">
-                    Veuillez vérifier les adresses saisies. Assurez-vous qu'elles sont en Tunisie.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Heure et notes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Heure de départ souhaitée
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Clock className="h-5 w-5 text-blue-600" />
-                </div>
-                <input
-                  {...register('scheduledTime')}
-                  type="datetime-local"
-                  min={getMinDateTime()}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-                    errors.scheduledTime ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-              </div>
-              {errors.scheduledTime && (
-                <p className="mt-2 text-sm text-red-600">{errors.scheduledTime.message}</p>
-              )}
-              <p className="mt-2 text-xs text-gray-500">
-                Réservation minimum 30 minutes à l'avance
-              </p>
-            </div>
-
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Notes ou instructions (optionnel)
-              </label>
-              <div className="relative">
-                <div className="absolute top-3 left-3 pointer-events-none">
-                  <MessageSquare className="h-5 w-5 text-gray-400" />
-                </div>
-                <textarea
-                  {...register('notes')}
-                  placeholder="Instructions spéciales, numéro d'étage, code d'accès..."
-                  rows={3}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all resize-none ${
-                    errors.notes ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-              </div>
-              {errors.notes && (
-                <p className="mt-2 text-sm text-red-600">{errors.notes.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col gap-4">
-            {!showDrivers ? (
-              <Button
-                type="button"
-                onClick={searchAvailableDrivers}
-                disabled={!isValid || !estimatedPrice || isCalculating}
-                className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800"
-              >
-                <Car size={20} />
-                Rechercher des chauffeurs disponibles
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={() => {
-                  setSelectedDriver(null);
-                  setAvailableDrivers([]);
-                  setShowDrivers(false);
-                }}
-                variant="outline"
-                className="flex items-center justify-center gap-2"
-              >
-                Nouvelle recherche
-              </Button>
+          {/* Date et heure */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Clock className="inline w-4 h-4 mr-2" />
+              Date et heure de départ
+            </label>
+            <input
+              {...register('scheduledTime')}
+              type="datetime-local"
+              min={getMinDateTime()}
+              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+                errors.scheduledTime ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {errors.scheduledTime && (
+              <p className="mt-2 text-sm text-red-600">{errors.scheduledTime.message}</p>
             )}
           </div>
 
-          {/* Bouton de confirmation à l'intérieur du formulaire */}
-           {/* {showDrivers && selectedDriver && (
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
-                className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 py-4 text-lg"
-              >
-                <CheckCircle size={20} />
-                {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
-              </Button>
-            </div>
-          )}
-        </form>*/}
-
-        {/* Liste des chauffeurs disponibles */}
-        {showDrivers && (
-          <div className="mt-8 border-t border-gray-200 pt-8">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6">
-              Chauffeurs disponibles ({availableDrivers.length})
-            </h3>
+          {/* Recherche de chauffeurs */}
+          <div>
+            <Button
+              type="button"
+              onClick={searchAvailableDrivers}
+              disabled={!isValid || !estimatedPrice}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <User className="w-5 h-5 mr-2" />
+              Rechercher des chauffeurs disponibles
+            </Button>
             
-            {availableDrivers.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl">
-                <Car size={48} className="text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">
-                  Aucun chauffeur disponible
-                </h4>
-                <p className="text-gray-500 mb-4">
-                  Vérifiez la console pour plus de détails sur la recherche.
-                </p>
-                <Button
-                  onClick={searchAvailableDrivers}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700"
-                >
-                  Actualiser la recherche
-                </Button>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {availableDrivers.map((driver) => (
-                  <div 
-                    key={driver.id}
-                    className={`border rounded-xl p-6 cursor-pointer transition-all duration-200 ${
-                      selectedDriver === driver.id
-                        ? 'border-gray-500 bg-gray-50 shadow-md ring-2 ring-gray-200'
-                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                    }`}
-                    onClick={() => setSelectedDriver(driver.id)}
-                  >
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <div className="flex flex-col gap-3">
-                          {/* Photo de profil du chauffeur */}
+            {!isValid && (
+              <p className="mt-2 text-sm text-amber-600 flex items-center gap-2">
+                <AlertCircle size={16} />
+                Veuillez remplir tous les champs requis
+              </p>
+            )}
+            
+            {!estimatedPrice && isValid && (
+              <p className="mt-2 text-sm text-amber-600 flex items-center gap-2">
+                <AlertCircle size={16} />
+                Veuillez saisir des adresses valides pour calculer le prix
+              </p>
+            )}
+          </div>
+
+          {/* Liste des chauffeurs disponibles */}
+          {showDrivers && (
+            <div className="bg-gray-50 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Car className="w-5 h-5" />
+                Chauffeurs disponibles ({availableDrivers.length})
+              </h3>
+              
+              {availableDrivers.length === 0 ? (
+                <div className="text-center py-8">
+                  <Car className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-2">Aucun chauffeur disponible</p>
+                  <p className="text-sm text-gray-500">
+                    Essayez de modifier la date/heure ou les adresses
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {availableDrivers.map((driver) => (
+                    <div
+                      key={driver.id}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        selectedDriver === driver.id
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => setSelectedDriver(driver.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
                           {driver.profilePhotoUrl ? (
                             <img
                               src={driver.profilePhotoUrl}
-                              alt="Photo de profil"
-                              className="w-16 h-16 rounded-full object-cover border-2 border-gray-300 shadow-sm"
+                              alt={`${driver.firstName} ${driver.lastName}`}
+                              className="w-12 h-12 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-gray-300 shadow-sm">
-                              <User size={24} className="text-gray-700" />
-                            </div>
-                          )}
-                          
-                          {/* Photo du véhicule */}
-                          {driver.vehicleInfo?.photoUrl ? (
-                            <img
-                              src={driver.vehicleInfo.photoUrl}
-                              alt="Photo du véhicule"
-                              className="w-16 h-12 rounded-lg object-cover border border-gray-300 shadow-sm"
-                            />
-                          ) : (
-                            <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300">
-                              <Car size={16} className="text-gray-500" />
-                            </div>
+                            <User className="w-6 h-6 text-gray-500" />
                           )}
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">
                             {driver.firstName} {driver.lastName}
                           </h4>
-                          <p className="text-sm text-gray-600">
-                            {driver.vehicleInfo ? 
-                              `${driver.vehicleInfo.make} ${driver.vehicleInfo.model} (${driver.vehicleInfo.color})` :
-                              'Véhicule non renseigné'
-                            }
-                          </p>
+                          <p className="text-sm text-gray-600">{driver.email}</p>
                           {driver.phone && (
-                            <p className="text-xs text-gray-500">
-                              Tél: {driver.phone}
-                            </p>
+                            <p className="text-sm text-gray-600">{driver.phone}</p>
                           )}
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-xs text-green-600 font-medium">Disponible maintenant</span>
-                            {driver.profilePhotoUrl && (
-                              <span className="text-xs text-blue-600 font-medium">• Photo vérifiée</span>
-                            )}
-                            {driver.vehicleInfo?.photoUrl && (
-                              <span className="text-xs text-purple-600 font-medium">• Véhicule vérifié</span>
-                            )}
-                          </div>
+                          {driver.vehicleInfo && (
+                            <div className="mt-2">
+                              <p className="text-xs text-gray-500">
+                                {driver.vehicleInfo.make} {driver.vehicleInfo.model} - {driver.vehicleInfo.color}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      
-                      <div className="text-left sm:text-right">
-                        <div className="flex items-center gap-2 text-green-600 mb-1">
-                          <CheckCircle size={16} />
-                          <span className="text-sm font-medium">Créneaux définis</span>
-                        </div>
-                        {driver.vehicleInfo && (
-                          <p className="text-xs text-gray-500">
-                            {driver.vehicleInfo.seats} places • {
-                              driver.vehicleInfo.type === 'sedan' ? 'Berline' :
-                              driver.vehicleInfo.type === 'suv' ? 'SUV' :
-                              driver.vehicleInfo.type === 'luxury' ? 'Luxe' :
-                              'Monospace'
-                            }
-                          </p>
+                        {selectedDriver === driver.id && (
+                          <CheckCircle className="w-6 h-6 text-purple-600" />
                         )}
                       </div>
                     </div>
-                    
-                    {selectedDriver === driver.id && (
-                      <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          {/* Informations chauffeur */}
-                          <div className="flex items-center gap-3">
-                            {driver.profilePhotoUrl ? (
-                              <img
-                                src={driver.profilePhotoUrl}
-                                alt="Photo de profil"
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                                <User size={20} className="text-gray-500" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {driver.firstName} {driver.lastName}
-                              </p>
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm text-gray-600">Chauffeur sélectionné</p>
-                                {driver.profilePhotoUrl && (
-                                  <span className="text-xs text-blue-600 font-medium">✓ Vérifié</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Photo du véhicule */}
-                          {driver.vehicleInfo?.photoUrl && (
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={driver.vehicleInfo.photoUrl}
-                                alt="Photo du véhicule"
-                                className="w-16 h-12 rounded-lg object-cover border border-gray-300"
-                              />
-                              <div>
-                                <p className="font-medium text-gray-900">
-                                  {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  {driver.vehicleInfo.color} • {driver.vehicleInfo.seats} places
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600">Distance du trajet:</span>
-                          <span className="font-semibold text-gray-900">{estimatedDistance} km</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Prix total:</span>
-                          <span className="font-bold text-gray-900 text-xl">
-                            {estimatedPrice} TND
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2 text-center">
-                          Tarif: {(() => {
-                            if (!estimatedDistance) return '2,5 TND/km';
-                            if (estimatedDistance <= 20) return '2,5 TND/km';
-                            if (estimatedDistance <= 30) return '3,0 TND/km';
-                            if (estimatedDistance <= 50) return '2,5 TND/km';
-                            return '2,2 TND/km';
-                          })()}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-        {showDrivers && selectedDriver && (
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <Button
-              type="submit"
-              loading={isSubmitting}
-              disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
-              className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 py-4 text-lg"
-            >
-              <CheckCircle size={20} />
-              {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
-            </Button>
+          {/* Notes optionnelles */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <MessageSquare className="inline w-4 h-4 mr-2" />
+              Notes (optionnel)
+            </label>
+            <textarea
+              {...register('notes')}
+              rows={3}
+              placeholder="Instructions spéciales, numéro de vol, etc."
+              className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+            />
           </div>
-        )}
+
+          {/* Bouton de soumission */}
+          <Button
+            type="submit"
+            disabled={isSubmitting || !selectedDriver || !estimatedPrice}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-4 px-6 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Réservation en cours...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5 mr-2" />
+                Confirmer la réservation ({estimatedPrice} TND)
+              </>
+            )}
+          </Button>
         </form>
       </div>
     </div>
