@@ -217,14 +217,14 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
   const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
+    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
             <Calendar size={20} className="text-gray-700" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">Mes disponibilités</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Mes disponibilités</h3>
             <p className="text-sm text-gray-600">Gérez vos créneaux de disponibilité</p>
           </div>
         </div>
@@ -239,7 +239,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
           <ChevronLeft size={20} />
         </button>
         
-        <h4 className="text-lg font-semibold text-gray-900">
+        <h4 className="text-base sm:text-lg font-semibold text-gray-900">
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </h4>
         
@@ -252,10 +252,10 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
       </div>
 
       {/* Calendrier */}
-      <div className="grid grid-cols-7 gap-1 mb-6">
+      <div className="grid grid-cols-7 gap-1 mb-6 overflow-x-auto min-w-full">
         {/* En-têtes des jours */}
         {dayNames.map(day => (
-          <div key={day} className="p-3 text-center text-sm font-medium text-gray-500">
+          <div key={day} className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium text-gray-500">
             {day}
           </div>
         ))}
@@ -273,7 +273,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
               onClick={() => !isPast && day.isCurrentMonth && setSelectedDate(day.dateString)}
               disabled={isPast || !day.isCurrentMonth}
               className={`
-                relative p-3 text-sm rounded-lg transition-all duration-200 min-h-[3rem]
+                relative p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200 min-h-[2.5rem] sm:min-h-[3rem]
                 ${day.isCurrentMonth 
                   ? isPast 
                     ? 'text-gray-400 cursor-not-allowed' 
@@ -297,7 +297,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
       </div>
 
       {/* Légende */}
-      <div className="flex items-center gap-6 mb-6 text-sm">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-6 mb-6 text-xs sm:text-sm">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-blue-100 rounded"></div>
           <span className="text-gray-600">Aujourd'hui</span>
@@ -315,9 +315,9 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
       {/* Formulaire d'ajout de disponibilités */}
       {selectedDate && (
         <div className="border-t border-gray-200 pt-6">
-          <div className="bg-gray-50 rounded-xl p-6">
+          <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="text-lg font-semibold text-gray-900">
+              <h4 className="text-base sm:text-lg font-semibold text-gray-900">
                 Disponibilités pour le {(() => {
                   const [year, month, day] = selectedDate.split('-').map(Number);
                   const date = new Date(year, month - 1, day);
@@ -367,7 +367,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
 
             {/* Nouveaux créneaux */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <h5 className="text-sm font-medium text-gray-700">Ajouter des créneaux</h5>
                 <Button
                   onClick={addTimeSlot}
@@ -381,24 +381,24 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
               </div>
 
               {timeSlots.map((slot, index) => (
-                <div key={index} className="flex items-center gap-3 bg-white rounded-lg p-3">
+                <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white rounded-lg p-3">
                   <Clock size={16} className="text-gray-700" />
-                  <input
+                  <div className="flex items-center gap-2 flex-1"><input
                     type="time"
                     value={slot.start}
                     onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 w-full sm:w-auto"
                   />
                   <span className="text-gray-500">à</span>
                   <input
                     type="time"
                     value={slot.end}
                     onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 w-full sm:w-auto"
+                  /></div>
                   <button
                     onClick={() => removeTimeSlot(index)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors self-end sm:self-auto"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -406,7 +406,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
               ))}
 
               {timeSlots.length > 0 && (
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button
                     onClick={saveAvailabilities}
                     loading={saving}
@@ -433,8 +433,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
 
       {/* Instructions */}
       {!selectedDate && (
-        <div className="bg-gray-50 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-3">Comment ça marche ?</h4>
+        <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+          <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Comment ça marche ?</h4>
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <CheckCircle size={16} className="text-green-600" />

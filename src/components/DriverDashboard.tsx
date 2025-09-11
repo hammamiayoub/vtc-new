@@ -327,17 +327,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-black border-b border-gray-800">
+      <header className="bg-black border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-between items-center h-16 sm:h-20">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">TuniRide</h1>
-                <p className="text-1xl text-white">Espace Chauffeur</p>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">TuniRide</h1>
+                <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">Espace Chauffeur</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <NotificationBell
                 unreadCount={unreadCount}
                 hasNewNotifications={hasNewBookings}
@@ -347,16 +347,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 }}
                 className="text-gray-300 hover:text-white hover:bg-gray-800"
               />
-              <button 
+              <button
                 onClick={() => setShowProfileModal(true)}
                 className="p-2 text-gray-300 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
                 title="Mon profil"
               >
                 <Settings size={20} />
               </button>
-              <Button onClick={handleLogout} className="flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200">
-                <LogOut size={16} />
-                Déconnexion
+              <Button onClick={handleLogout} className="flex items-center gap-1 sm:gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base px-2 sm:px-4">
+                <LogOut size={14} className="sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Déconnexion</span>
               </Button>
             </div>
           </div>
@@ -366,10 +366,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       {/* Navigation Tabs */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8">
+          <nav className="flex space-x-2 sm:space-x-8 overflow-x-auto">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'dashboard'
                   ? 'border-black text-black'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -379,7 +379,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             </button>
             <button
               onClick={() => setActiveTab('availability')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'availability'
                   ? 'border-black text-black'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -389,7 +389,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             </button>
             <button
               onClick={() => setActiveTab('bookings')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'bookings'
                   ? 'border-black text-black'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -407,7 +407,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Profile Completion Alert */}
         {needsProfileCompletion && !showProfileForm && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
@@ -418,10 +418,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   Complétez votre profil
                 </h3>
                 <p className="text-gray-700 mb-4">
-                  Pour commencer à recevoir des courses, vous devez compléter vos informations 
+                  Pour commencer à recevoir des courses, vous devez compléter vos informations
                   personnelles et ajouter les détails de votre véhicule.
                 </p>
-                <Button 
+                <Button
                   onClick={() => setShowProfileForm(true)}
                   className="bg-black hover:bg-gray-800 text-white"
                 >
@@ -435,7 +435,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {/* Profile Form */}
         {showProfileForm && driver && (
           <div className="mb-8">
-            <DriverProfileForm 
+            <DriverProfileForm
               driverId={driver.id} 
               onProfileComplete={handleProfileComplete}
             />
@@ -447,7 +447,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           <>
             {/* Welcome Section */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 {driver?.profilePhotoUrl ? (
                   <img
                     src={driver.profilePhotoUrl}
@@ -455,22 +455,22 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     className="w-16 h-16 rounded-2xl object-cover"
                   />
                 ) : (
-                  <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center flex-shrink-0">
                     <User size={32} className="text-gray-700" />
                   </div>
                 )}
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                     Bienvenue, {driver?.firstName} {driver?.lastName}
                   </h2>
-                  <p className="text-gray-600">Tableau de bord chauffeur</p>
+                  <p className="text-sm sm:text-base text-gray-600">Tableau de bord chauffeur</p>
                 </div>
               </div>
             </div>
 
             {/* Status and Stats Cards */}
-            <div className="flex items-center gap-4">
-              <div className="grid md:grid-cols-3 gap-6 mb-8 w-full">
+            <div className="mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div className="bg-white rounded-xl shadow-sm p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
@@ -479,7 +479,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       <Clock size={24} className={driver?.status === 'active' ? 'text-green-600' : 'text-gray-700'} />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Statut</h3>
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Statut</h3>
                       <p className="text-sm text-gray-600">
                         {driver?.status === 'active' ? 'Actif' : 'En attente'}
                       </p>
@@ -507,13 +507,13 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       <Car size={24} className="text-gray-700" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Nouvelles demandes</h3>
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Nouvelles demandes</h3>
                       <p className="text-sm text-gray-600">À traiter</p>
                     </div>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">{pendingBookings.length}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">{pendingBookings.length}</p>
                   {pendingBookings.length > 0 && (
-                    <p className="text-sm text-gray-700 font-medium mt-1">
+                    <p className="text-xs sm:text-sm text-gray-700 font-medium mt-1">
                       {pendingBookings.length} course{pendingBookings.length > 1 ? 's' : ''} en attente
                     </p>
                   )}
@@ -525,12 +525,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       <MapPin size={24} className="text-gray-700" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Courses terminées</h3>
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Courses terminées</h3>
                       <p className="text-sm text-gray-600">Total</p>
                     </div>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">{completedBookings.length}</p>
-                  <p className="text-sm text-gray-700 font-medium mt-1">
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">{completedBookings.length}</p>
+                  <p className="text-xs sm:text-sm text-gray-700 font-medium mt-1">
                     {totalEarnings.toFixed(2)} TND gagnés
                   </p>
                 </div>
@@ -539,7 +539,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
             {/* Next Steps */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Prochaines étapes</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Prochaines étapes</h3>
               <div className="space-y-4">
                 <div className={`flex items-center gap-4 p-4 rounded-lg ${
                   needsProfileCompletion ? 'bg-gray-50 border border-gray-200' : 'bg-green-50 border border-green-200'
@@ -549,7 +549,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   }`}>
                     1
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-gray-900">Compléter le profil</h4>
                     <p className="text-sm text-gray-600">
                       {needsProfileCompletion 
@@ -559,7 +559,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     </p>
                   </div>
                   {needsProfileCompletion && (
-                    <Button 
+                    <Button
                       onClick={() => setShowProfileForm(true)}
                       size="sm"
                       className="bg-black hover:bg-gray-800 text-white"
@@ -577,7 +577,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   }`}>
                     2
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h4 className="font-medium text-gray-900">Validation du compte</h4>
                     <p className="text-sm text-gray-600">
                       {driver?.status === 'active' ? 'Compte validé ✓' : 'En attente - Un administrateur doit valider votre compte'}
@@ -589,7 +589,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     3
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h4 className="font-medium text-gray-900">Première course</h4>
                     <p className="text-sm text-gray-600">Commencez à recevoir des demandes</p>
                   </div>
@@ -600,12 +600,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {/* Vehicle Info Display */}
             {driver?.vehicleInfo && (
               <div className="bg-white rounded-xl shadow-sm p-6 mt-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <Car className="w-5 h-5 text-gray-700" />
                   Mon véhicule
                 </h3>
                 
-                <div className="grid lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Photo du véhicule */}
                   <div className="lg:col-span-1">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">Photo du véhicule</h4>
@@ -620,7 +620,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   {/* Informations du véhicule */}
                   <div className="lg:col-span-2">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">Informations</h4>
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="bg-gray-50 rounded-lg p-4">
                         <p className="text-sm text-gray-600 mb-1">Véhicule</p>
                         <p className="font-semibold text-gray-900">
@@ -662,7 +662,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
         {/* Onglet Disponibilités */}
         {!showProfileForm && activeTab === 'availability' && driver && (
-          <AvailabilityCalendar driverId={driver.id} />
+          <div className="overflow-x-auto"><AvailabilityCalendar driverId={driver.id} /></div>
         )}
 
         {/* Onglet Courses */}
@@ -672,17 +672,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {bookings.filter(b => b.status === 'accepted').length > 0 && (
               <div className="bg-white rounded-xl shadow-sm">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <Bell className="w-5 h-5 text-blue-600" />
                     Nouvelles demandes ({pendingBookings.length})
                   </h3>
-                  <p className="text-gray-600">Courses en attente de votre confirmation</p>
+                  <p className="text-sm sm:text-base text-gray-600">Courses en attente de votre confirmation</p>
                 </div>
                 <div className="divide-y divide-gray-200">
                   {pendingBookings.map((booking) => (
                     <div key={booking.id} className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
@@ -719,7 +719,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             )}
                           </div>
                         </div>
-                        <div className="ml-6 flex flex-col gap-2">
+                        <div className="lg:ml-6 flex flex-col sm:flex-row lg:flex-col gap-2">
                           {booking.status === 'pending' && (
                             <>
                               <Button
@@ -767,12 +767,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       
                       {/* Informations client */}
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                        <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                        <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
                           <User size={16} />
                           Informations client
                         </h4>
                         {booking.clients ? (
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
                               <p className="font-medium text-blue-900">
                                 {booking.clients.first_name} {booking.clients.last_name}
@@ -817,11 +817,11 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       
                       {/* Détails de la course */}
                       <div className="bg-gray-50 rounded-lg p-4 mt-4">
-                        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
                           <MapPin size={16} />
                           Détails de la course
                         </h4>
-                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Distance:</span>
                             <span className="ml-2 font-medium">{booking.distance_km} km</span>
@@ -852,17 +852,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {bookings.filter(b => b.status === 'in_progress').length > 0 && (
               <div className="bg-white rounded-xl shadow-sm">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <Car className="w-5 h-5 text-green-600" />
                     Courses en cours ({bookings.filter(b => b.status === 'in_progress').length})
                   </h3>
-                  <p className="text-gray-600">Courses que vous avez commencées</p>
+                  <p className="text-sm sm:text-base text-gray-600">Courses que vous avez commencées</p>
                 </div>
                 <div className="divide-y divide-gray-200">
                   {bookings.filter(b => b.status === 'in_progress').map((booking) => (
                     <div key={booking.id} className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
@@ -887,20 +887,20 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             </div>
                           </div>
                         </div>
-                        <Button
+                        <div className="flex-shrink-0"><Button
                           onClick={() => updateBookingStatus(booking.id, 'completed')}
                           className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
                           size="sm"
                         >
                           <CheckCircle size={16} />
                           Terminer la course
-                        </Button>
+                        </Button></div>
                       </div>
                       {/* Informations client */}
                       {booking.clients && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                          <h4 className="font-medium text-blue-900 mb-2">Informations client</h4>
-                          <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-blue-900 mb-2 text-sm sm:text-base">Informations client</h4>
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
                               <p className="font-medium text-blue-900">
                                 {booking.clients.first_name} {booking.clients.last_name}
@@ -941,8 +941,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {/* Historique des courses */}
             <div className="bg-white rounded-xl shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">Historique des courses</h3>
-                <p className="text-gray-600">Toutes vos courses passées</p>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Historique des courses</h3>
+                <p className="text-sm sm:text-base text-gray-600">Toutes vos courses passées</p>
               </div>
               
               {bookings.length === 0 ? (
@@ -957,8 +957,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 <div className="divide-y divide-gray-200">
                   {bookings.filter(b => !['pending', 'accepted', 'in_progress'].includes(b.status)).map((booking) => (
                     <div key={booking.id} className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
