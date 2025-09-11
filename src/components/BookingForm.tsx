@@ -183,8 +183,31 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     
     console.log('📅 Date sélectionnée:', selectedDateString);
     console.log('🕐 Heure sélectionnée:', selectedTimeString);
+   console.log('📝 Valeur brute scheduledTime:', scheduledTime);
+   console.log('📅 Date complète:', selectedDate);
     
     try {
+     // Debug: Vérifier toutes les disponibilités existantes
+     console.log('🔍 Debug: Récupération de TOUTES les disponibilités...');
+     const { data: allAvailabilities, error: allError } = await supabase
+       .from('driver_availability')
+       .select('*')
+       .order('date', { ascending: true });
+     
+     if (allError) {
+       console.error('❌ Erreur récupération toutes disponibilités:', allError);
+     } else {
+       console.log('📊 Toutes les disponibilités dans la DB:', allAvailabilities?.length || 0);
+       console.log('📋 Détail des disponibilités:', allAvailabilities?.map(av => ({
+         id: av.id.slice(0, 8),
+         driver_id: av.driver_id.slice(0, 8),
+         date: av.date,
+         start_time: av.start_time,
+         end_time: av.end_time,
+         is_available: av.is_available
+       })));
+     }
+
       // Étape 1: Récupérer les disponibilités pour la date sélectionnée
       console.log('📅 Étape 1: Récupération des disponibilités pour le', selectedDateString);
       
@@ -203,9 +226,22 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       }
       
       console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
+     console.log('📋 Détail des disponibilités pour cette date:', dateAvailabilities);
       
       if (!dateAvailabilities || dateAvailabilities.length === 0) {
         console.warn('⚠️ Aucune disponibilité trouvée pour cette date');
+       console.log('🔍 Vérification: recherche avec date exacte:', selectedDateString);
+       
+       // Test avec une requête plus large pour debug
+       const { data: debugAvailabilities } = await supabase
+         .from('driver_availability')
+         .select('*')
+         .gte('date', selectedDateString)
+         .lte('date', selectedDateString);
+       
+       console.log('🔍 Debug - Requête avec gte/lte:', debugAvailabilities?.length || 0);
+       console.log('🔍 Debug - Données:', debugAvailabilities);
+       
         setAvailableDrivers([]);
         setShowDrivers(true);
         return;
