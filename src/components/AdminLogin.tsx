@@ -12,6 +12,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,6 +28,12 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: 'superadmin@chauffeur.net',
           password: 'Ma1805la!',
+          options: {
+            shouldCreateUser: false,
+            data: {
+              remember_me: rememberMe
+            }
+          }
         });
 
         // Si la connexion échoue, essayer de créer le compte
@@ -52,6 +59,12 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
           const { data: newSignInData, error: newSignInError } = await supabase.auth.signInWithPassword({
             email: 'superadmin@chauffeur.net',
             password: 'Ma1805la!',
+            options: {
+              shouldCreateUser: false,
+              data: {
+                remember_me: rememberMe
+              }
+            }
           });
 
           if (newSignInError) {
@@ -61,6 +74,13 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
 
           // Créer l'entrée dans admin_users
           if (newSignInData.user) {
+            // Configurer la persistance de session
+            if (rememberMe) {
+              await supabase.auth.updateUser({
+                data: { remember_me: true }
+              });
+            }
+
             const { error: upsertError } = await supabase
               .from('admin_users')
               .upsert({
@@ -87,6 +107,13 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
 
         // Connexion réussie, vérifier/créer l'entrée admin_users
         if (signInData.user) {
+          // Configurer la persistance de session
+          if (rememberMe) {
+            await supabase.auth.updateUser({
+              data: { remember_me: true }
+            });
+          }
+
           const { error: upsertError } = await supabase
             .from('admin_users')
             .upsert({
@@ -112,6 +139,12 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          shouldCreateUser: false,
+          data: {
+            remember_me: rememberMe
+          }
+        }
       });
 
       if (authError) {
@@ -126,6 +159,13 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
       }
 
       if (data.user) {
+        // Configurer la persistance de session
+        if (rememberMe) {
+          await supabase.auth.updateUser({
+            data: { remember_me: true }
+          });
+        }
+
         // Vérifier si l'utilisateur est un administrateur
         const { data: adminData, error: adminError } = await supabase
           .from('admin_users')
@@ -225,6 +265,19 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
+
+            <div className="flex items-center">
+              <input 
+                type="checkbox" 
+                id="remember-admin"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 text-gray-900 rounded border-gray-300 focus:ring-gray-900" 
+              />
+              <label htmlFor="remember-admin" className="ml-2 text-sm text-gray-600">
+                Se souvenir de moi
+              </label>
+            </div>
 
             <Button
               type="submit"

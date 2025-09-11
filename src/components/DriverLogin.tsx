@@ -13,6 +13,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,6 +26,12 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          shouldCreateUser: false,
+          data: {
+            remember_me: rememberMe
+          }
+        }
       });
 
       if (authError) {
@@ -39,6 +46,14 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
       }
 
       if (data.user) {
+        // Configurer la persistance de session selon le choix de l'utilisateur
+        if (rememberMe) {
+          // Session persistante (30 jours)
+          await supabase.auth.updateUser({
+            data: { remember_me: true }
+          });
+        }
+
         // Vérifier que c'est bien un chauffeur
         const { data: driverData, error: driverError } = await supabase
           .from('drivers')
@@ -135,7 +150,12 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
 
             <div className="flex items-center justify-between pt-2">
               <label className="flex items-center">
-                <input type="checkbox" className="w-4 h-4 text-gray-900 rounded border-gray-300 focus:ring-gray-900" />
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-gray-900 rounded border-gray-300 focus:ring-gray-900" 
+                />
                 <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
               </label>
               <a href="#" className="text-sm text-gray-900 hover:underline font-medium">

@@ -400,20 +400,20 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 sm:px-0">
       <div className="bg-white rounded-xl shadow-sm p-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             Réserver une course
           </h2>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Renseignez les détails de votre trajet en Tunisie
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {/* Adresses avec géolocalisation */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Point de départ */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -521,13 +521,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           {/* Calcul en cours */}
           {isCalculating && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <Loader2 size={24} className="text-blue-600 animate-spin" />
                 <div>
-                  <h3 className="text-lg font-semibold text-blue-900">
+                  <h3 className="text-base sm:text-lg font-semibold text-blue-900">
                     Calcul du trajet en cours...
                   </h3>
-                  <p className="text-blue-700">
+                  <p className="text-sm sm:text-base text-blue-700">
                     Géolocalisation des adresses et calcul de la distance
                   </p>
                 </div>
@@ -540,17 +540,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Route className="w-6 h-6 text-purple-600" />
-                <h3 className="text-lg font-semibold text-purple-900">
+                <h3 className="text-base sm:text-lg font-semibold text-purple-900">
                   Estimation du trajet
                 </h3>
               </div>
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg p-4 text-center">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
                     <Route size={24} className="text-blue-600" />
                   </div>
                   <p className="text-sm text-gray-600 mb-1">Distance</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     {estimatedDistance} km
                   </p>
                 </div>
@@ -559,7 +559,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     <Calculator size={24} className="text-purple-600" />
                   </div>
                   <p className="text-sm text-gray-600 mb-1">Prix total</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600">
                     {estimatedPrice} TND
                   </p>
                 </div>
@@ -568,7 +568,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     <CheckCircle size={24} className="text-green-600" />
                   </div>
                   <p className="text-sm text-gray-600 mb-1">Tarif</p>
-                  <p className="text-lg font-bold text-gray-900">
+                  <p className="text-base sm:text-lg font-bold text-gray-900">
                     2,5 TND/km
                   </p>
                 </div>
@@ -589,13 +589,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           {watchPickup && watchDestination && watchPickup.length > 5 && watchDestination.length > 5 && 
            !isCalculating && !estimatedDistance && (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <AlertCircle className="w-6 h-6 text-orange-600" />
                 <div>
-                  <h3 className="text-lg font-semibold text-orange-900">
+                  <h3 className="text-base sm:text-lg font-semibold text-orange-900">
                     Adresses non trouvées
                   </h3>
-                  <p className="text-orange-700">
+                  <p className="text-sm sm:text-base text-orange-700">
                     Veuillez vérifier les adresses saisies. Assurez-vous qu'elles sont en Tunisie.
                   </p>
                 </div>
@@ -604,7 +604,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           )}
 
           {/* Heure et notes */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Heure de départ souhaitée
@@ -654,7 +654,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-4">
             {!showDrivers ? (
               <Button
                 type="button"
@@ -666,37 +666,41 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 Rechercher des chauffeurs disponibles
               </Button>
             ) : (
-              <>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setSelectedDriver(null);
-                    setAvailableDrivers([]);
-                    setShowDrivers(false);
-                  }}
-                  variant="outline"
-                  className="flex items-center justify-center gap-2"
-                >
-                  Nouvelle recherche
-                </Button>
-                <Button
-                  type="submit"
-                  loading={isSubmitting}
-                  disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
-                  className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800"
-                >
-                  <CheckCircle size={20} />
-                  {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
-                </Button>
-              </>
+              <Button
+                type="button"
+                onClick={() => {
+                  setSelectedDriver(null);
+                  setAvailableDrivers([]);
+                  setShowDrivers(false);
+                }}
+                variant="outline"
+                className="flex items-center justify-center gap-2"
+              >
+                Nouvelle recherche
+              </Button>
             )}
           </div>
-        </form>
+
+          {/* Bouton de confirmation à l'intérieur du formulaire */}
+           {/* {showDrivers && selectedDriver && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
+                className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 py-4 text-lg"
+              >
+                <CheckCircle size={20} />
+                {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
+              </Button>
+            </div>
+          )}
+        </form>*/}
 
         {/* Liste des chauffeurs disponibles */}
         {showDrivers && (
           <div className="mt-8 border-t border-gray-200 pt-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6">
               Chauffeurs disponibles ({availableDrivers.length})
             </h3>
             
@@ -728,8 +732,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     }`}
                     onClick={() => setSelectedDriver(driver.id)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div className="flex flex-col gap-3">
                           {/* Photo de profil du chauffeur */}
                           {driver.profilePhotoUrl ? (
@@ -785,7 +789,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                         </div>
                       </div>
                       
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         <div className="flex items-center gap-2 text-green-600 mb-1">
                           <CheckCircle size={16} />
                           <span className="text-sm font-medium">Créneaux définis</span>
@@ -805,7 +809,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     
                     {selectedDriver === driver.id && (
                       <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           {/* Informations chauffeur */}
                           <div className="flex items-center gap-3">
                             {driver.profilePhotoUrl ? (
@@ -852,26 +856,26 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           )}
                         </div>
                         
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-gray-600">Distance du trajet:</span>
-                            <span className="font-semibold text-gray-900">{estimatedDistance} km</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Prix total:</span>
-                            <span className="font-bold text-gray-900 text-xl">
-                              {estimatedPrice} TND
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2 text-center">
-                            Tarif: {(() => {
-                              if (!estimatedDistance) return '2,5 TND/km';
-                              if (estimatedDistance <= 20) return '2,5 TND/km';
-                              if (estimatedDistance <= 30) return '3,0 TND/km';
-                              if (estimatedDistance <= 50) return '2,5 TND/km';
-                              return '2,2 TND/km';
-                            })()}
-                          </p>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-gray-600">Distance du trajet:</span>
+                          <span className="font-semibold text-gray-900">{estimatedDistance} km</span>
                         </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Prix total:</span>
+                          <span className="font-bold text-gray-900 text-xl">
+                            {estimatedPrice} TND
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                          Tarif: {(() => {
+                            if (!estimatedDistance) return '2,5 TND/km';
+                            if (estimatedDistance <= 20) return '2,5 TND/km';
+                            if (estimatedDistance <= 30) return '3,0 TND/km';
+                            if (estimatedDistance <= 50) return '2,5 TND/km';
+                            return '2,2 TND/km';
+                          })()}
+                        </p>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -879,6 +883,21 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             )}
           </div>
         )}
+
+        {showDrivers && selectedDriver && (
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <Button
+              type="submit"
+              loading={isSubmitting}
+              disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
+              className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 py-4 text-lg"
+            >
+              <CheckCircle size={20} />
+              {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
+            </Button>
+          </div>
+        )}
+        </form>
       </div>
     </div>
   );

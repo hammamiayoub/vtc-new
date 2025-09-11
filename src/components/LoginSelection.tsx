@@ -25,7 +25,7 @@ export const LoginSelection: React.FC<LoginSelectionProps> = ({
             Retour
           </button>
 
-          <div className="text-center mb-8">
+        {/*   <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <Users size={36} className="text-gray-700" />
             </div>
@@ -35,7 +35,7 @@ export const LoginSelection: React.FC<LoginSelectionProps> = ({
             <p className="text-gray-600 text-lg">
               Choisissez votre type de compte
             </p>
-          </div>
+          </div> */}
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Connexion Chauffeur */}
