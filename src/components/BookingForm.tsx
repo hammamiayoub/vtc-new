@@ -322,8 +322,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       console.log('👤 Chauffeur assigné dans la DB:', booking.driver_id);
       console.log('📊 Statut de la réservation:', booking.status);
       
-      // Simulation d'envoi des notifications email (Edge Functions non disponibles dans WebContainer)
-      console.log('📧 === SIMULATION D\'ENVOI D\'EMAILS ===');
+      // Envoi des notifications email via Edge Function
+      console.log('📧 === ENVOI D\'EMAILS VIA RESEND ===');
       
       try {
         // Récupérer les données du client
@@ -335,9 +335,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         if (clientError) {
           console.error('Erreur récupération client pour email:', clientError);
-        } else {
-          console.log('📧 Email de confirmation envoyé au client:', clientData?.email);
-          console.log('📧 Contenu client: Réservation confirmée pour le', new Date(booking.scheduled_time).toLocaleString('fr-FR'));
         }
 
         // Récupérer les données du chauffeur
@@ -349,15 +346,45 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         if (driverError) {
           console.error('Erreur récupération chauffeur pour email:', driverError);
-        } else {
-          console.log('📧 Email de notification envoyé au chauffeur:', driverData?.email);
-          console.log('📧 Contenu chauffeur: Nouvelle réservation reçue');
         }
 
-        console.log('📧 === FIN SIMULATION ===');
-        console.log('ℹ️ En production, les emails seraient envoyés via l\'Edge Function');
+        // Appel à l'Edge Function pour envoyer les emails
+        if (clientData && driverData) {
+          console.log('🚀 Appel Edge Function send-booking-notification...');
+          
+          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-notification`;
+          
+          const emailResponse = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bookingData: booking,
+              clientData: clientData,
+              driverData: driverData
+            })
+          });
+
+          const emailResult = await emailResponse.json();
+          
+          if (emailResponse.ok && emailResult.success) {
+            console.log('✅ Emails envoyés avec succès:', emailResult.message);
+            console.log('📊 Détails:', emailResult.results);
+          } else {
+            console.error('❌ Erreur envoi emails:', emailResult.error);
+            console.error('📊 Détails:', emailResult.details || emailResult);
+            // Ne pas faire échouer la réservation si les emails échouent
+          }
+        } else {
+          console.warn('⚠️ Données client ou chauffeur manquantes pour l\'envoi d\'emails');
+        }
+
+        console.log('📧 === FIN ENVOI EMAILS ===');
       } catch (emailError) {
         console.error('❌ Erreur lors de la simulation des emails:', emailError);
+        // Ne pas faire échouer la réservation si les emails échouent
       }
       
       // Vérification immédiate de la réservation créée
