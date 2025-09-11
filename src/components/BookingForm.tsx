@@ -170,6 +170,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const searchAvailableDrivers = async () => {
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
+    // Debug: Vérifier l'utilisateur connecté
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('👤 Utilisateur connecté:', user?.id);
+    console.log('👤 Email utilisateur:', user?.email);
+    
     // Vérifier qu'une date est sélectionnée
     const scheduledTime = watch('scheduledTime');
     if (!scheduledTime) {
@@ -196,16 +201,56 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
       if (allError) {
         console.error('❌ Erreur récupération toutes disponibilités:', allError);
+        console.error('❌ Code erreur:', allError.code);
+        console.error('❌ Message:', allError.message);
+        console.error('❌ Détails:', allError.details);
       } else {
         console.log('📊 Toutes les disponibilités dans la DB:', allAvailabilities?.length || 0);
-        console.log('📋 Détail des disponibilités:', allAvailabilities?.map(av => ({
-          id: av.id.slice(0, 8),
-          driver_id: av.driver_id.slice(0, 8),
-          date: av.date,
-          start_time: av.start_time,
-          end_time: av.end_time,
-          is_available: av.is_available
-        })));
+        if (allAvailabilities && allAvailabilities.length > 0) {
+          console.log('📋 Détail des disponibilités:', allAvailabilities.map(av => ({
+            id: av.id.slice(0, 8),
+            driver_id: av.driver_id.slice(0, 8),
+            date: av.date,
+            start_time: av.start_time,
+            end_time: av.end_time,
+            is_available: av.is_available
+          })));
+          
+          // Debug: Vérifier les formats de date
+          console.log('🔍 Debug formats de date:');
+          allAvailabilities.slice(0, 3).forEach((av, index) => {
+            console.log(`Disponibilité ${index + 1}:`);
+            console.log('  - Date brute:', av.date);
+            console.log('  - Type de date:', typeof av.date);
+            console.log('  - Date recherchée:', selectedDateString);
+            console.log('  - Égalité stricte:', av.date === selectedDateString);
+          });
+        }
+      }
+
+      // Debug: Test de requête avec différents formats
+      console.log('🔍 Test requête avec date exacte...');
+      const { data: testExact, error: testExactError } = await supabase
+        .from('driver_availability')
+        .select('*')
+        .eq('date', selectedDateString);
+      
+      console.log('📊 Test date exacte - résultats:', testExact?.length || 0);
+      if (testExactError) {
+        console.error('❌ Erreur test date exacte:', testExactError);
+      }
+      
+      // Debug: Test avec gte/lte
+      console.log('🔍 Test requête avec gte/lte...');
+      const { data: testRange, error: testRangeError } = await supabase
+        .from('driver_availability')
+        .select('*')
+        .gte('date', selectedDateString)
+        .lte('date', selectedDateString);
+      
+      console.log('📊 Test gte/lte - résultats:', testRange?.length || 0);
+      if (testRangeError) {
+        console.error('❌ Erreur test gte/lte:', testRangeError);
       }
 
       // Étape 1: Récupérer les disponibilités pour la date sélectionnée
