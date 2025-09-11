@@ -666,29 +666,18 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 Rechercher des chauffeurs disponibles
               </Button>
             ) : (
-              <>
-                <div className="flex flex-col sm:flex-row gap-4"><Button
-                  type="button"
-                  onClick={() => {
-                    setSelectedDriver(null);
-                    setAvailableDrivers([]);
-                    setShowDrivers(false);
-                  }}
-                  variant="outline"
-                  className="flex items-center justify-center gap-2"
-                >
-                  Nouvelle recherche
-                </Button>
-                <Button
-                  type="submit"
-                  loading={isSubmitting}
-                  disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
-                  className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800"
-                >
-                  <CheckCircle size={20} />
-                  {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
-                </Button></div>
-              </>
+              <Button
+                type="button"
+                onClick={() => {
+                  setSelectedDriver(null);
+                  setAvailableDrivers([]);
+                  setShowDrivers(false);
+                }}
+                variant="outline"
+                className="flex items-center justify-center gap-2"
+              >
+                Nouvelle recherche
+              </Button>
             )}
           </div>
         </form>
@@ -878,6 +867,22 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               </div>
             )}
           </div>
+          
+          {/* Bouton de confirmation déplacé sous la liste des chauffeurs */}
+          {showDrivers && selectedDriver && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
+                className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 py-4 text-lg"
+                onClick={handleSubmit(onSubmit)}
+              >
+                <CheckCircle size={20} />
+                {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
+              </Button>
+            </div>
+          )}
         )}
       </div>
     </div>
