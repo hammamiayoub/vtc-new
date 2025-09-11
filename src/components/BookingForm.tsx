@@ -767,4 +767,160 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 <div className="mt-4 p-3 bg-white rounded-lg">
                   <p className="text-xs text-gray-500">
                     <strong>Coordonnées:</strong> Départ ({pickupCoords.latitude.toFixed(4)}, {pickupCoords.longitude.toFixed(4)}) 
-                    → Arrivée ({destinationCoords.latitude.toFixed(4)}, {destinationCoords.
+                    → Arrivée ({destinationCoords.latitude.toFixed(4)}, {destinationCoords.longitude.toFixed(4)})
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Date et heure */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Clock className="inline w-4 h-4 mr-2" />
+              Date et heure de départ
+            </label>
+            <input
+              {...register('scheduledTime')}
+              type="datetime-local"
+              min={getMinDateTime()}
+              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+                errors.scheduledTime ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {errors.scheduledTime && (
+              <p className="mt-2 text-sm text-red-600">{errors.scheduledTime.message}</p>
+            )}
+          </div>
+
+          {/* Recherche de chauffeurs */}
+          <div>
+            <Button
+              type="button"
+              onClick={searchAvailableDrivers}
+              disabled={!isValid || !estimatedPrice}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <User className="w-5 h-5 mr-2" />
+              Rechercher des chauffeurs disponibles
+            </Button>
+            
+            {!isValid && (
+              <p className="mt-2 text-sm text-amber-600 flex items-center gap-2">
+                <AlertCircle size={16} />
+                Veuillez remplir tous les champs requis
+              </p>
+            )}
+            
+            {!estimatedPrice && isValid && (
+              <p className="mt-2 text-sm text-amber-600 flex items-center gap-2">
+                <AlertCircle size={16} />
+                Veuillez saisir des adresses valides pour calculer le prix
+              </p>
+            )}
+          </div>
+
+          {/* Liste des chauffeurs disponibles */}
+          {showDrivers && (
+            <div className="bg-gray-50 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Car className="w-5 h-5" />
+                Chauffeurs disponibles ({availableDrivers.length})
+              </h3>
+              
+              {availableDrivers.length === 0 ? (
+                <div className="text-center py-8">
+                  <Car className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-2">Aucun chauffeur disponible</p>
+                  <p className="text-sm text-gray-500">
+                    Essayez de modifier la date/heure ou les adresses
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {availableDrivers.map((driver) => (
+                    <div
+                      key={driver.id}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        selectedDriver === driver.id
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => setSelectedDriver(driver.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                          {driver.profilePhotoUrl ? (
+                            <img
+                              src={driver.profilePhotoUrl}
+                              alt={`${driver.firstName} ${driver.lastName}`}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-6 h-6 text-gray-500" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">
+                            {driver.firstName} {driver.lastName}
+                          </h4>
+                          <p className="text-sm text-gray-600">{driver.email}</p>
+                          {driver.phone && (
+                            <p className="text-sm text-gray-600">{driver.phone}</p>
+                          )}
+                          {driver.vehicleInfo && (
+                            <div className="mt-2">
+                              <p className="text-xs text-gray-500">
+                                {driver.vehicleInfo.make} {driver.vehicleInfo.model} - {driver.vehicleInfo.color}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        {selectedDriver === driver.id && (
+                          <CheckCircle className="w-6 h-6 text-purple-600" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Notes optionnelles */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <MessageSquare className="inline w-4 h-4 mr-2" />
+              Notes (optionnel)
+            </label>
+            <textarea
+              {...register('notes')}
+              rows={3}
+              placeholder="Instructions spéciales, numéro de vol, etc."
+              className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+            />
+          </div>
+
+          {/* Bouton de soumission */}
+          <Button
+            type="submit"
+            disabled={isSubmitting || !selectedDriver || !estimatedPrice}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-4 px-6 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Réservation en cours...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5 mr-2" />
+                Confirmer la réservation ({estimatedPrice} TND)
+              </>
+            )}
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+};
