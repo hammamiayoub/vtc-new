@@ -824,17 +824,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           
                           {/* Photo du véhicule */}
                           {driver.vehicleInfo?.photoUrl && (
-                            
-                            {/* Photo du véhicule en miniature */}
-                            {driver.vehicleInfo?.photoUrl && (
-                              <div className="mt-2">
-                                <img
-                                  src={driver.vehicleInfo.photoUrl}
-                                  alt={`Véhicule de ${driver.firstName}`}
-                                  className="w-16 h-12 rounded-lg object-cover border border-gray-300 shadow-sm"
-                                />
-                              </div>
-                            )}
                             <div className="flex items-center gap-3">
                               <img
                                 src={driver.vehicleInfo.photoUrl}
