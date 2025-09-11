@@ -184,6 +184,20 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     console.log('📅 Date sélectionnée:', selectedDateString);
     console.log('🕐 Heure sélectionnée:', selectedTimeString);
     
+    // Vérifier qu'une date est sélectionnée
+    const scheduledTime = watch('scheduledTime');
+    if (!scheduledTime) {
+      alert('Veuillez d\'abord sélectionner une date et heure de départ');
+      return;
+    }
+    
+    const selectedDate = new Date(scheduledTime);
+    const selectedDateString = selectedDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const selectedTimeString = selectedDate.toTimeString().slice(0, 5); // Format HH:MM
+    
+    console.log('📅 Date sélectionnée:', selectedDateString);
+    console.log('🕐 Heure sélectionnée:', selectedTimeString);
+    
     try {
       // Étape 1: Récupérer tous les chauffeurs actifs
       console.log('📡 Étape 1: Récupération des chauffeurs actifs...');
@@ -215,6 +229,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         .from('driver_availability')
         .select('driver_id, start_time, end_time, is_available')
         .eq('date', selectedDateString)
+        .select('driver_id, start_time, end_time, is_available')
+        .eq('date', selectedDateString)
         .eq('is_available', true);
       
       if (availabilityError) {
@@ -223,6 +239,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         setAvailableDrivers([]);
         setShowDrivers(true);
         return;
+        return;
       }
       
       console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
@@ -230,13 +247,18 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       if (!dateAvailabilities || dateAvailabilities.length === 0) {
         console.warn('⚠️ Aucune disponibilité trouvée pour cette date');
         setAvailableDrivers([]);
+      console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
+        return;
+      if (!dateAvailabilities || dateAvailabilities.length === 0) {
+        console.warn('⚠️ Aucune disponibilité trouvée pour cette date');
+        setAvailableDrivers([]);
         setShowDrivers(true);
         return;
       }
-      
+      console.log('🕐 Étape 3: Filtrage par heure...');
       // Étape 3: Filtrer par heure (vérifier que l'heure demandée est dans les créneaux)
       console.log('🕐 Étape 3: Filtrage par heure...');
-      
+      dateAvailabilities.forEach(availability => {
       const availableDriverIds = new Set();
       
       dateAvailabilities.forEach(availability => {
@@ -279,6 +301,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         licenseNumber: driver.license_number,
         vehicleInfo: driver.vehicle_info,
         status: driver.status,
+        profilePhotoUrl: driver.profile_photo_url,
         profilePhotoUrl: driver.profile_photo_url,
         createdAt: driver.created_at,
         updatedAt: driver.updated_at
@@ -791,9 +814,28 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   ) : (
                     'Sélectionnez d\'abord une date et heure de départ.'
                   )}
+                    <>
+                      Aucun chauffeur n'a défini de disponibilité pour le{' '}
+                      <strong>
+                        {new Date(watch('scheduledTime')).toLocaleDateString('fr-FR', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </strong>
+                      <br />
+                      Essayez une autre date ou heure.
+                    </>
+                  ) : (
+                    'Sélectionnez d\'abord une date et heure de départ.'
+                  )}
                 </p>
                 <Button
                   onClick={searchAvailableDrivers}
+                  disabled={!watch('scheduledTime')}
                   disabled={!watch('scheduledTime')}
                   className="mt-4 bg-blue-600 hover:bg-blue-700"
                 >
