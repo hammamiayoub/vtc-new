@@ -680,6 +680,21 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               </Button>
             )}
           </div>
+
+          {/* Bouton de confirmation à l'intérieur du formulaire */}
+          {showDrivers && selectedDriver && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
+                className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 py-4 text-lg"
+              >
+                <CheckCircle size={20} />
+                {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
+              </Button>
+            </div>
+          )}
         </form>
 
         {/* Liste des chauffeurs disponibles */}
@@ -868,21 +883,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             )}
           </div>
           
-          {showDrivers && selectedDriver && (
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
-                className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 py-4 text-lg"
-                onClick={handleSubmit(onSubmit)}
-              >
-                <CheckCircle size={20} />
-                {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
-              </Button>
-            </div>
-          )}
-        )}
       </div>
     </div>
   );
