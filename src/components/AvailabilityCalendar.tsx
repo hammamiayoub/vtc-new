@@ -319,9 +319,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-base sm:text-lg font-semibold text-gray-900">
                 Disponibilités pour le {(() => {
-                  // Parser la date correctement pour éviter les problèmes de fuseau horaire
-                  const [year, month, day] = selectedDate.split('-').map(Number);
-                  const date = new Date(year, month - 1, day);
+                  // Utiliser directement la date string pour éviter les problèmes de fuseau horaire
+                  const date = new Date(selectedDate + 'T12:00:00');
                   return date.toLocaleDateString('fr-FR', {
                     weekday: 'long',
                     year: 'numeric',
