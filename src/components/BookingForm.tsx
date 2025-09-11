@@ -682,7 +682,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           </div>
 
           {/* Bouton de confirmation à l'intérieur du formulaire */}
-          {showDrivers && selectedDriver && (
+           {/* {showDrivers && selectedDriver && (
             <div className="mt-8 pt-6 border-t border-gray-200">
               <Button
                 type="submit"
@@ -695,7 +695,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               </Button>
             </div>
           )}
-        {/* </form>*/}
+        </form>*/}
 
         {/* Liste des chauffeurs disponibles */}
         {showDrivers && (
