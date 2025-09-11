@@ -290,25 +290,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       }
       
       console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
-
-      // Étape 1: Récupérer les disponibilités pour la date sélectionnée
-      console.log('📅 Étape 1: Récupération des disponibilités pour le', selectedDateString);
-      
-      const { data: dateAvailabilities, error: availabilityError } = await supabase
-        .from('driver_availability')
-        .select('driver_id, start_time, end_time, is_available')
-        .eq('date', selectedDateString)
-        .eq('is_available', true);
-      
-      if (availabilityError) {
-        console.error('❌ Erreur lors de la récupération des disponibilités:', availabilityError);
-        console.error('Détails de l\'erreur:', availabilityError);
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
-      
-      console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
       console.log('📋 Détail des disponibilités pour cette date:', dateAvailabilities);
       
       if (!dateAvailabilities || dateAvailabilities.length === 0) {
