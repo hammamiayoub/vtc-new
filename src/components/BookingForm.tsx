@@ -170,6 +170,27 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const searchAvailableDrivers = async () => {
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
+    // Debug: Vérifier l'utilisateur connecté et ses permissions
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('👤 Utilisateur connecté:', user?.id);
+    console.log('👤 Email utilisateur:', user?.email);
+    
+    if (!user) {
+      console.error('❌ Aucun utilisateur connecté');
+      alert('Vous devez être connecté pour rechercher des chauffeurs');
+      return;
+    }
+    
+    // Vérifier si c'est un client
+    const { data: clientData, error: clientError } = await supabase
+      .from('clients')
+      .select('id, first_name, last_name')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    console.log('🧑‍💼 Données client:', clientData);
+    console.log('🧑‍💼 Erreur client:', clientError);
+    
     // Debug: Vérifier l'utilisateur connecté
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     console.log('👤 Utilisateur connecté:', user?.id);
@@ -194,64 +215,86 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     try {
       // Debug: Vérifier toutes les disponibilités existantes
       console.log('🔍 Debug: Récupération de TOUTES les disponibilités...');
+      
+      // Test 1: Requête simple sans filtre
       const { data: allAvailabilities, error: allError } = await supabase
         .from('driver_availability')
-        .select('*')
-        .order('date', { ascending: true });
+        .select('*');
       
       if (allError) {
         console.error('❌ Erreur récupération toutes disponibilités:', allError);
         console.error('❌ Code erreur:', allError.code);
         console.error('❌ Message:', allError.message);
         console.error('❌ Détails:', allError.details);
+        console.error('❌ Hint:', allError.hint);
       } else {
         console.log('📊 Toutes les disponibilités dans la DB:', allAvailabilities?.length || 0);
-        if (allAvailabilities && allAvailabilities.length > 0) {
-          console.log('📋 Détail des disponibilités:', allAvailabilities.map(av => ({
-            id: av.id.slice(0, 8),
-            driver_id: av.driver_id.slice(0, 8),
-            date: av.date,
-            start_time: av.start_time,
-            end_time: av.end_time,
-            is_available: av.is_available
-          })));
-          
-          // Debug: Vérifier les formats de date
-          console.log('🔍 Debug formats de date:');
-          allAvailabilities.slice(0, 3).forEach((av, index) => {
-            console.log(`Disponibilité ${index + 1}:`);
-            console.log('  - Date brute:', av.date);
-            console.log('  - Type de date:', typeof av.date);
-            console.log('  - Date recherchée:', selectedDateString);
-            console.log('  - Égalité stricte:', av.date === selectedDateString);
-          });
+      }
+
+      // Test 2: Vérifier les permissions avec une requête spécifique
+      console.log('🔍 Test permissions sur driver_availability...');
+      const { data: permissionTest, error: permissionError } = await supabase
+        .from('driver_availability')
+        .select('id, driver_id, date, start_time, end_time, is_available')
+        .limit(5);
+      
+      if (permissionError) {
+        console.error('❌ Erreur de permissions:', permissionError);
+        console.error('❌ Code:', permissionError.code);
+        console.error('❌ Message:', permissionError.message);
+        console.error('❌ Détails:', permissionError.details);
+        console.error('❌ Hint:', permissionError.hint);
+        
+        // Vérifier si c'est un problème RLS
+        if (permissionError.code === 'PGRST116' || permissionError.message.includes('row-level security')) {
+          console.error('🚨 PROBLÈME RLS DÉTECTÉ: Le client n\'a pas les permissions pour voir les disponibilités');
+          alert('Erreur de permissions: impossible de voir les disponibilités des chauffeurs');
+          return;
+        }
+      } else {
+        console.log('✅ Permissions OK - Disponibilités récupérées:', permissionTest?.length || 0);
+        if (permissionTest && permissionTest.length > 0) {
+          console.log('📋 Exemples de disponibilités:', permissionTest.slice(0, 2));
+        }
+      }
+      
+      // Test 3: Recherche par date si les permissions sont OK
+      if (!permissionError && permissionTest) {
+        console.log('🔍 Test recherche par date:', selectedDateString);
+        const { data: dateTest, error: dateError } = await supabase
+          .from('driver_availability')
+          .select('*')
+          .eq('date', selectedDateString);
+        
+        console.log('📊 Résultats pour la date:', dateTest?.length || 0);
+        if (dateError) {
+          console.error('❌ Erreur recherche par date:', dateError);
         }
       }
 
-      // Debug: Test de requête avec différents formats
-      console.log('🔍 Test requête avec date exacte...');
-      const { data: testExact, error: testExactError } = await supabase
-        .from('driver_availability')
-        .select('*')
-        .eq('date', selectedDateString);
+      // Si on arrive ici et qu'il n'y a pas de disponibilités, c'est probablement normal
+      if (!permissionError) {
+        console.log('✅ Pas de problème de permissions - Continuons la recherche normale...');
+      }
+
+      // Étape 1: Récupération des disponibilités pour la date sélectionnée
+      console.log('📅 Étape 1: Récupération des disponibilités pour le', selectedDateString);
       
-      console.log('📊 Test date exacte - résultats:', testExact?.length || 0);
-      if (testExactError) {
-        console.error('❌ Erreur test date exacte:', testExactError);
+      const { data: dateAvailabilities, error: availabilityError } = await supabase
+        .from('driver_availability')
+        .select('driver_id, start_time, end_time, is_available')
+        .eq('date', selectedDateString)
+        .eq('is_available', true);
+      
+      if (availabilityError) {
+        console.error('❌ Erreur lors de la récupération des disponibilités:', availabilityError);
+        console.error('Détails de l\'erreur:', availabilityError);
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
       }
       
-      // Debug: Test avec gte/lte
-      console.log('🔍 Test requête avec gte/lte...');
-      const { data: testRange, error: testRangeError } = await supabase
-        .from('driver_availability')
-        .select('*')
-        .gte('date', selectedDateString)
-        .lte('date', selectedDateString);
-      
-      console.log('📊 Test gte/lte - résultats:', testRange?.length || 0);
-      if (testRangeError) {
-        console.error('❌ Erreur test gte/lte:', testRangeError);
-      }
+      console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
 
       // Étape 1: Récupérer les disponibilités pour la date sélectionnée
       console.log('📅 Étape 1: Récupération des disponibilités pour le', selectedDateString);
