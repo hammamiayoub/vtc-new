@@ -755,31 +755,18 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300">
                               <Car size={16} className="text-gray-500" />
                             </div>
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">
-                            {driver.firstName} {driver.lastName}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {driver.vehicleInfo ? 
-                              `${driver.vehicleInfo.make} ${driver.vehicleInfo.model} (${driver.vehicleInfo.color})` :
-                              'Véhicule non renseigné'
-                            }
-                          </p>
-                          {driver.phone && (
-                            <p className="text-xs text-gray-500">
-                              Tél: {driver.phone}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-xs text-green-600 font-medium">Disponible maintenant</span>
-                            {driver.profilePhotoUrl && (
-                              <span className="text-xs text-blue-600 font-medium">• Photo vérifiée</span>
-                            )}
-                            {driver.vehicleInfo?.photoUrl && (
-                              <span className="text-xs text-purple-600 font-medium">• Véhicule vérifié</span>
+                          {/* Photo de profil du chauffeur */}
+                          <div className="flex-shrink-0">
+                            {driver.profilePhotoUrl ? (
+                              <img
+                                src={driver.profilePhotoUrl}
+                                alt={`Photo de profil de ${driver.firstName} ${driver.lastName}`}
+                                className="w-20 h-20 rounded-full object-cover border-3 border-white shadow-lg ring-2 ring-gray-200"
+                              />
+                            ) : (
+                              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-3 border-white shadow-lg ring-2 ring-gray-200">
+                                <User size={28} className="text-gray-700" />
+                              </div>
                             )}
                           </div>
                         </div>
@@ -834,6 +821,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           
                           {/* Photo du véhicule */}
                           {driver.vehicleInfo?.photoUrl && (
+                            
+                            {/* Photo du véhicule en miniature */}
+                            {driver.vehicleInfo?.photoUrl && (
+                              <div className="mt-2">
+                                <img
+                                  src={driver.vehicleInfo.photoUrl}
+                                  alt={`Véhicule de ${driver.firstName}`}
+                                  className="w-16 h-12 rounded-lg object-cover border border-gray-300 shadow-sm"
+                                />
+                              </div>
+                            )}
                             <div className="flex items-center gap-3">
                               <img
                                 src={driver.vehicleInfo.photoUrl}
@@ -872,14 +870,56 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             })()}
                           </p>
                         </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+                          {/* Section chauffeur sélectionné avec photo mise en avant */}
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+                            <div className="flex items-center gap-4">
+                              {/* Photo de profil plus grande pour la sélection */}
+                              {driver.profilePhotoUrl ? (
+                                <img
+                                  src={driver.profilePhotoUrl}
+                                  alt={`Photo de profil de ${driver.firstName} ${driver.lastName}`}
+                                  className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+                                />
+                              ) : (
+                                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                                  <User size={24} className="text-gray-700" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-semibold text-gray-900 text-lg">
+                                  {driver.firstName} {driver.lastName}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <CheckCircle size={16} className="text-green-600" />
+                                  <p className="text-sm text-green-700 font-medium">Chauffeur sélectionné</p>
+                                  {driver.profilePhotoUrl && (
+                                    <span className="text-xs text-blue-600 font-medium">• Photo vérifiée</span>
+                                  )}
+                                </div>
+                                {driver.phone && (
+                                  <p className="text-sm text-gray-600 mt-1">
+                                    📞 {driver.phone}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Photo du véhicule si disponible */}
+                            {driver.vehicleInfo?.photoUrl && (
+                              <div className="flex items-center gap-3 ml-auto">
+                                <img
+                                  src={driver.vehicleInfo.photoUrl}
+                                  alt={`Véhicule de ${driver.firstName}`}
+                                  className="w-20 h-15 rounded-lg object-cover border border-gray-300 shadow-sm"
+                                />
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {driver.vehicleInfo.color} • {driver.vehicleInfo.seats} places
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
