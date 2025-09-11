@@ -183,7 +183,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     
     console.log('📅 Date sélectionnée:', selectedDateString);
     console.log('🕐 Heure sélectionnée:', selectedTimeString);
-
+    
     try {
       // Étape 1: Récupérer tous les chauffeurs actifs
       console.log('📡 Étape 1: Récupération des chauffeurs actifs...');
@@ -235,6 +235,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       }
       
       console.log('🕐 Étape 3: Filtrage par heure...');
+      // Étape 3: Filtrer par heure (vérifier que l'heure demandée est dans les créneaux)
       const availableDriverIds = new Set();
       
       dateAvailabilities.forEach(availability => {
@@ -277,7 +278,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         licenseNumber: driver.license_number,
         vehicleInfo: driver.vehicle_info,
         status: driver.status,
-        profilePhotoUrl: driver.profile_photo_url,
         profilePhotoUrl: driver.profile_photo_url,
         createdAt: driver.created_at,
         updatedAt: driver.updated_at
@@ -742,7 +742,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           </div>
 
           {/* Bouton de confirmation à l'intérieur du formulaire */}
-           {/* {showDrivers && selectedDriver && (
+          {showDrivers && selectedDriver && (
             <div className="mt-8 pt-6 border-t border-gray-200">
               <Button
                 type="submit"
@@ -755,7 +755,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               </Button>
             </div>
           )}
-        </form>*/}
+        </form>
 
         {/* Liste des chauffeurs disponibles */}
         {showDrivers && (
@@ -790,28 +790,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   ) : (
                     'Sélectionnez d\'abord une date et heure de départ.'
                   )}
-                    <>
-                      Aucun chauffeur n'a défini de disponibilité pour le{' '}
-                      <strong>
-                        {new Date(watch('scheduledTime')).toLocaleDateString('fr-FR', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </strong>
-                      <br />
-                      Essayez une autre date ou heure.
-                    </>
-                  ) : (
-                    'Sélectionnez d\'abord une date et heure de départ.'
-                  )}
                 </p>
                 <Button
                   onClick={searchAvailableDrivers}
-                  disabled={!watch('scheduledTime')}
                   disabled={!watch('scheduledTime')}
                   className="mt-4 bg-blue-600 hover:bg-blue-700"
                 >
@@ -981,21 +962,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             )}
           </div>
         )}
-
-        {showDrivers && selectedDriver && (
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <Button
-              type="submit"
-              loading={isSubmitting}
-              disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
-              className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 py-4 text-lg"
-            >
-              <CheckCircle size={20} />
-              {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
-            </Button>
-          </div>
-        )}
-        </form>
       </div>
     </div>
   );
