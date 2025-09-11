@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  Clock, 
-  Plus, 
-  Trash2, 
-  Save, 
-  ChevronLeft, 
+import {
+  Calendar,
+  Clock,
+  Plus,
+  Trash2,
+  Save,
+  ChevronLeft,
   ChevronRight,
   CheckCircle,
   XCircle
@@ -18,7 +18,6 @@ interface AvailabilityCalendarProps {
   driverId: string;
 }
 
-
 // Helper: format a Date to 'YYYY-MM-DD' in local time (no UTC conversion)
 const toYMD = (d: Date) => {
   const y = d.getFullYear();
@@ -27,10 +26,50 @@ const toYMD = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
+// Build an inclusive array of YYYY-MM-DD between two YMD strings
+const enumerateDatesInclusive = (startYmd: string, endYmd: string) => {
+  const dates: string[] = [];
+  const start = new Date(startYmd + 'T00:00:00');
+  const end = new Date(endYmd + 'T00:00:00');
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dates.push(toYMD(d));
+  }
+  return dates;
+};
+
+// Get Monday..Sunday of the ISO week for the given date
+const getISOWeekDates = (d: Date) => {
+  const day = d.getDay(); // 0 (Sun) .. 6 (Sat)
+  const offsetToMonday = (day + 6) % 7; // Mon=0, Sun=6
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - offsetToMonday);
+  const week: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const cur = new Date(monday);
+    cur.setDate(monday.getDate() + i);
+    week.push(toYMD(cur));
+  }
+  return week;
+};
+
+// Format FR human date from YMD
+const formatFr = (ymd: string) =>
+  new Date(ymd + 'T00:00:00').toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+type SelectionMode = 'single' | 'range' | 'week';
+
 export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driverId }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [availabilities, setAvailabilities] = useState<DriverAvailability[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>('single');
+  const [rangeStart, setRangeStart] = useState<string | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<string | null>(null);
   const [timeSlots, setTimeSlots] = useState<{ start: string; end: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -86,7 +125,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
     const startingDayOfWeek = firstDay.getDay();
 
     const days = [] as { date: Date; isCurrentMonth: boolean; dateString: string }[];
-    
+
     // Jours du mois précédent pour compléter la première semaine
     for (let i = startingDayOfWeek - 1; i >= 0; i--) {
       const prevDate = new Date(year, month, -i);
@@ -135,37 +174,79 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
     setTimeSlots(updated);
   };
 
+  const clearSelection = () => {
+    setSelectedDates([]);
+    setRangeStart(null);
+    setRangeEnd(null);
+  };
+
+  const handleDayClick = (day: { date: Date; isCurrentMonth: boolean; dateString: string }) => {
+    const today = toYMD(new Date());
+    if (day.dateString < today) return; // ne pas sélectionner les dates passées
+
+    if (selectionMode === 'single') {
+      setSelectedDates([day.dateString]);
+      setRangeStart(null);
+      setRangeEnd(null);
+      return;
+    }
+
+    if (selectionMode === 'week') {
+      const week = getISOWeekDates(day.date).filter(d => d >= today);
+      setSelectedDates(week);
+      setRangeStart(week[0] || null);
+      setRangeEnd(week[6] || null);
+      return;
+    }
+
+    // range
+    if (!rangeStart) {
+      setRangeStart(day.dateString);
+      setSelectedDates([day.dateString]);
+    } else {
+      const start = rangeStart;
+      const end = day.dateString;
+      const [min, max] = start <= end ? [start, end] : [end, start];
+      const dates = enumerateDatesInclusive(min, max).filter(d => d >= today);
+      setRangeStart(min);
+      setRangeEnd(max);
+      setSelectedDates(dates);
+    }
+  };
+
   const saveAvailabilities = async () => {
-    if (!selectedDate || timeSlots.length === 0) return;
+    if (selectedDates.length === 0 || timeSlots.length === 0) return;
 
     setSaving(true);
     try {
-      // Supprimer les disponibilités existantes pour cette date
+      // Supprimer les disponibilités existantes pour ces dates
       await supabase
         .from('driver_availability')
         .delete()
         .eq('driver_id', driverId)
-        .eq('date', selectedDate);
+        .in('date', selectedDates);
 
-      // Ajouter les nouvelles disponibilités
-      const newAvailabilities = timeSlots.map(slot => ({
-        driver_id: driverId,
-        date: selectedDate,
-        start_time: slot.start,
-        end_time: slot.end,
-        is_available: true
-      }));
+      // Ajouter les nouvelles disponibilités pour chaque date sélectionnée
+      const payload = selectedDates.flatMap(date =>
+        timeSlots.map(slot => ({
+          driver_id: driverId,
+          date,
+          start_time: slot.start,
+          end_time: slot.end,
+          is_available: true,
+        }))
+      );
 
       const { error } = await supabase
         .from('driver_availability')
-        .insert(newAvailabilities);
+        .insert(payload);
 
       if (error) {
         console.error('Erreur lors de la sauvegarde des disponibilités:', error);
       } else {
-        // Rafraîchir les disponibilités
         await fetchAvailabilities();
         setTimeSlots([]);
+        // garder la sélection en place pour visualiser le résultat
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -176,11 +257,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
 
   const changeMonth = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
-    if (direction === 'prev') {
-      newDate.setMonth(newDate.getMonth() - 1);
-    } else {
-      newDate.setMonth(newDate.getMonth() + 1);
-    }
+    if (direction === 'prev') newDate.setMonth(newDate.getMonth() - 1);
+    else newDate.setMonth(newDate.getMonth() + 1);
     setCurrentDate(newDate);
   };
 
@@ -200,11 +278,18 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
   ];
 
+  const selectionSummary = () => {
+    if (selectedDates.length === 0) return '';
+    const sorted = [...selectedDates].sort();
+    if (sorted.length === 1) return formatFr(sorted[0]);
+    return `${formatFr(sorted[0])} → ${formatFr(sorted[sorted.length - 1])} (${sorted.length} jours)`;
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto p-4">
       <div className="bg-white shadow rounded-xl p-4 sm:p-6">
         {/* En-tête calendrier */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5" />
             <h2 className="text-lg sm:text-xl font-semibold">
@@ -220,6 +305,38 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
             </Button>
           </div>
         </div>
+
+        {/* Mode de sélection */}
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <span className="text-sm text-gray-600">Mode de sélection :</span>
+          <Button
+            variant={selectionMode === 'single' ? 'default' : 'outline'}
+            onClick={() => { setSelectionMode('single'); clearSelection(); }}
+            size="sm"
+          >Jour</Button>
+          <Button
+            variant={selectionMode === 'range' ? 'default' : 'outline'}
+            onClick={() => { setSelectionMode('range'); clearSelection(); }}
+            size="sm"
+          >Plage</Button>
+          <Button
+            variant={selectionMode === 'week' ? 'default' : 'outline'}
+            onClick={() => { setSelectionMode('week'); clearSelection(); }}
+            size="sm"
+          >Semaine</Button>
+          {selectedDates.length > 0 && (
+            <Button variant="outline" size="sm" onClick={clearSelection}>
+              <XCircle className="w-4 h-4 mr-1" /> Vider la sélection
+            </Button>
+          )}
+        </div>
+
+        {/* Résumé sélection */}
+        {selectedDates.length > 0 && (
+          <div className="text-sm text-gray-700 mb-2">
+            <strong>Dates sélectionnées :</strong> {selectionSummary()}
+          </div>
+        )}
 
         {/* Grille des jours de la semaine */}
         <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs sm:text-sm font-medium text-gray-600 mb-2">
@@ -237,19 +354,20 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
               const hasAvailabilities = availabilities.some(a => a.date === day.dateString);
               const isPast = isPastDate(day.dateString);
               const isCurrentDay = isToday(day.dateString);
-              
+              const isSelected = selectedDates.includes(day.dateString);
+
               return (
                 <button
                   key={index}
-                  onClick={() => !isPast && day.isCurrentMonth && setSelectedDate(day.dateString)}
-                  disabled={isPast || !day.isCurrentMonth}
+                  onClick={() => handleDayClick(day)}
+                  disabled={isPast}
                   className={`
                     relative p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200 min-h-[2.5rem] sm:min-h-[3rem]
                     ${day.isCurrentMonth ? 'bg-gray-50 hover:bg-gray-100' : 'bg-white text-gray-400'}
                     ${isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                     ${isCurrentDay && day.isCurrentMonth ? 'bg-blue-100 font-semibold' : ''}
-                    ${selectedDate === day.dateString ? 'bg-gray-200 ring-2 ring-gray-500' : ''}
                     ${hasAvailabilities && day.isCurrentMonth ? 'bg-green-50' : ''}
+                    ${isSelected ? 'ring-2 ring-gray-700 bg-gray-200' : ''}
                   `}
                 >
                   <span className="block">{day.date.getDate()}</span>
@@ -265,12 +383,14 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
         )}
 
         {/* Section d'ajout de créneaux */}
-        {selectedDate && (
+        {selectedDates.length > 0 && (
           <div className="mt-6 border-t pt-4">
             <div className="flex items-center gap-2 mb-4">
               <Clock className="w-5 h-5" />
               <h3 className="text-base sm:text-lg font-semibold">
-                Disponibilités pour le {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {selectedDates.length === 1
+                  ? `Disponibilités pour le ${formatFr(selectedDates[0])}`
+                  : `Disponibilités pour ${selectedDates.length} jours (${selectionSummary()})`}
               </h3>
             </div>
 
@@ -305,21 +425,21 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
               ))}
 
               {timeSlots.length === 0 && (
-                <div className="text-sm text-gray-500">Aucun créneau ajouté pour cette date.</div>
+                <div className="text-sm text-gray-500">Aucun créneau ajouté. Ajoutez au moins un créneau pour l'appliquer aux dates sélectionnées.</div>
               )}
 
-              <div className="flex gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-2">
                 <Button variant="outline" onClick={handleAddTimeSlot}>
                   <Plus className="w-4 h-4 mr-1" /> Ajouter un créneau
                 </Button>
                 <Button onClick={saveAvailabilities} disabled={saving || timeSlots.length === 0}>
-                  <Save className="w-4 h-4 mr-1" /> {saving ? 'Enregistrement…' : 'Enregistrer'}
+                  <Save className="w-4 h-4 mr-1" /> {saving ? 'Enregistrement…' : `Enregistrer pour ${selectedDates.length} jour(s)`}
                 </Button>
               </div>
 
               <div className="mt-3 text-xs text-gray-500 flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />
-                <span>Les clients pourront réserver pendant ces créneaux</span>
+                <span>Les clients pourront réserver pendant ces créneaux sur chaque date sélectionnée.</span>
               </div>
             </div>
           </div>
