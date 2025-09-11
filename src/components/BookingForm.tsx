@@ -170,7 +170,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const searchAvailableDrivers = async () => {
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
-    // Debug: Vérifier l'utilisateur connecté et ses permissions
+    // Debug: Vérifier l'utilisateur connecté
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     console.log('👤 Utilisateur connecté:', user?.id);
     console.log('👤 Email utilisateur:', user?.email);
@@ -190,11 +190,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     
     console.log('🧑‍💼 Données client:', clientData);
     console.log('🧑‍💼 Erreur client:', clientError);
-    
-    // Debug: Vérifier l'utilisateur connecté
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    console.log('👤 Utilisateur connecté:', user?.id);
-    console.log('👤 Email utilisateur:', user?.email);
     
     // Vérifier qu'une date est sélectionnée
     const scheduledTime = watch('scheduledTime');
