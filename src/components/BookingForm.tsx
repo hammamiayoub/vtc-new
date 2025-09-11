@@ -667,27 +667,29 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               </Button>
             ) : (
               <>
-                <div className="flex flex-col sm:flex-row gap-4"><Button
-                  type="button"
-                  onClick={() => {
-                    setSelectedDriver(null);
-                    setAvailableDrivers([]);
-                    setShowDrivers(false);
-                  }}
-                  variant="outline"
-                  className="flex items-center justify-center gap-2"
-                >
-                  Nouvelle recherche
-                </Button>
-                <Button
-                  type="submit"
-                  loading={isSubmitting}
-                  disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
-                  className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800"
-                >
-                  <CheckCircle size={20} />
-                  {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
-                </Button></div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setSelectedDriver(null);
+                      setAvailableDrivers([]);
+                      setShowDrivers(false);
+                    }}
+                    variant="outline"
+                    className="flex items-center justify-center gap-2"
+                  >
+                    Nouvelle recherche
+                  </Button>
+                  <Button
+                    type="submit"
+                    loading={isSubmitting}
+                    disabled={!isValid || isSubmitting || !estimatedPrice || !selectedDriver}
+                    className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800"
+                  >
+                    <CheckCircle size={20} />
+                    {isSubmitting ? 'Réservation en cours...' : 'Confirmer la réservation'}
+                  </Button>
+                </div>
               </>
             )}
           </div>
@@ -755,6 +757,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300">
                               <Car size={16} className="text-gray-500" />
                             </div>
+                          )}
                           {/* Photo de profil du chauffeur */}
                           <div className="flex-shrink-0">
                             {driver.profilePhotoUrl ? (
@@ -850,76 +853,87 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           )}
                         </div>
                         
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-gray-600">Distance du trajet:</span>
-                            <span className="font-semibold text-gray-900">{estimatedDistance} km</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Prix total:</span>
-                            <span className="font-bold text-gray-900 text-xl">
-                              {estimatedPrice} TND
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2 text-center">
-                            Tarif: {(() => {
-                              if (!estimatedDistance) return '2,5 TND/km';
-                              if (estimatedDistance <= 20) return '2,5 TND/km';
-                              if (estimatedDistance <= 30) return '3,0 TND/km';
-                              if (estimatedDistance <= 50) return '2,5 TND/km';
-                              return '2,2 TND/km';
-                            })()}
-                          </p>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-gray-600">Distance du trajet:</span>
+                          <span className="font-semibold text-gray-900">{estimatedDistance} km</span>
                         </div>
-                          {/* Section chauffeur sélectionné avec photo mise en avant */}
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-                            <div className="flex items-center gap-4">
-                              {/* Photo de profil plus grande pour la sélection */}
-                              {driver.profilePhotoUrl ? (
-                                <img
-                                  src={driver.profilePhotoUrl}
-                                  alt={`Photo de profil de ${driver.firstName} ${driver.lastName}`}
-                                  className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
-                                />
-                              ) : (
-                                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center border-2 border-white shadow-md">
-                                  <User size={24} className="text-gray-700" />
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-semibold text-gray-900 text-lg">
-                                  {driver.firstName} {driver.lastName}
-                                </p>
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle size={16} className="text-green-600" />
-                                  <p className="text-sm text-green-700 font-medium">Chauffeur sélectionné</p>
-                                  {driver.profilePhotoUrl && (
-                                    <span className="text-xs text-blue-600 font-medium">• Photo vérifiée</span>
-                                  )}
-                                </div>
-                                {driver.phone && (
-                                  <p className="text-sm text-gray-600 mt-1">
-                                    📞 {driver.phone}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            
-                            {/* Photo du véhicule si disponible */}
-                            {driver.vehicleInfo?.photoUrl && (
-                              <div className="flex items-center gap-3 ml-auto">
-                                <img
-                                  src={driver.vehicleInfo.photoUrl}
-                                  alt={`Véhicule de ${driver.firstName}`}
-                                  className="w-20 h-15 rounded-lg object-cover border border-gray-300 shadow-sm"
-                                />
-                                <div>
-                                  <p className="font-medium text-gray-900">
-                                    {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                                  </p>
-                                  <p className="text-sm text-gray-600">
-                                    {driver.vehicleInfo.color} • {driver.vehicleInfo.seats} places
-                                  </p>
-                                </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Prix total:</span>
+                          <span className="font-bold text-gray-900 text-xl">
+                            {estimatedPrice} TND
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                          Tarif: {(() => {
+                            if (!estimatedDistance) return '2,5 TND/km';
+                            if (estimatedDistance <= 20) return '2,5 TND/km';
+                            if (estimatedDistance <= 30) return '3,0 TND/km';
+                            if (estimatedDistance <= 50) return '2,5 TND/km';
+                            return '2,2 TND/km';
+                          })()}
+                        </p>
+                      </div>
+                        {/* Section chauffeur sélectionné avec photo mise en avant */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+                          <div className="flex items-center gap-4">
+                            {/* Photo de profil plus grande pour la sélection */}
+                            {driver.profilePhotoUrl ? (
+                              <img
+                                src={driver.profilePhotoUrl}
+                                alt={`Photo de profil de ${driver.firstName} ${driver.lastName}`}
+                                className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                                <User size={24} className="text-gray-700" />
                               </div>
                             )}
+                            <div>
+                              <p className="font-semibold text-gray-900 text-lg">
+                                {driver.firstName} {driver.lastName}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle size={16} className="text-green-600" />
+                                <p className="text-sm text-green-700 font-medium">Chauffeur sélectionné</p>
+                                {driver.profilePhotoUrl && (
+                                  <span className="text-xs text-blue-600 font-medium">• Photo vérifiée</span>
+                                )}
+                              </div>
+                              {driver.phone && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  📞 {driver.phone}
+                                </p>
+                              )}
+                            </div>
                           </div>
+                          
+                          {/* Photo du véhicule si disponible */}
+                          {driver.vehicleInfo?.photoUrl && (
+                            <div className="flex items-center gap-3 ml-auto">
+                              <img
+                                src={driver.vehicleInfo.photoUrl}
+                                alt={`Véhicule de ${driver.firstName}`}
+                                className="w-20 h-15 rounded-lg object-cover border border-gray-300 shadow-sm"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  {driver.vehicleInfo.color} • {driver.vehicleInfo.seats} places
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
