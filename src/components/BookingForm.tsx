@@ -794,7 +794,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     </div>
                     
                     {selectedDriver === driver.id && (
-                      <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
+                      <>
+                        <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           {/* Informations chauffeur */}
                           <div className="flex items-center gap-3">
@@ -862,6 +863,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           })()}
                         </p>
                       </div>
+                        
                         {/* Section chauffeur sélectionné avec photo mise en avant */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
                           <div className="flex items-center gap-4">
@@ -915,6 +917,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             </div>
                           )}
                         </div>
+                      </>
                     )}
                   </div>
                 ))}
