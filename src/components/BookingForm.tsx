@@ -185,31 +185,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     console.log('🕐 Heure sélectionnée:', selectedTimeString);
     
     try {
-      // Étape 1: Récupérer tous les chauffeurs actifs
-      console.log('📡 Étape 1: Récupération des chauffeurs actifs...');
-      
-      const { data: activeDrivers, error: driversError } = await supabase
-        .from('drivers')
-        .select('*')
-        .eq('status', 'active');
-      
-      if (driversError) {
-        console.error('❌ Erreur lors de la récupération des chauffeurs:', driversError);
-        console.error('Détails de l\'erreur:', driversError);
-        return;
-      }
-      
-      console.log('📊 Chauffeurs actifs trouvés:', activeDrivers?.length || 0);
-      
-      if (!activeDrivers || activeDrivers.length === 0) {
-        console.warn('⚠️ Aucun chauffeur actif trouvé');
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
-      
-      // Étape 2: Récupérer les disponibilités pour la date sélectionnée
-      console.log('📅 Étape 2: Récupération des disponibilités pour le', selectedDateString);
+      // Étape 1: Récupérer les disponibilités pour la date sélectionnée
+      console.log('📅 Étape 1: Récupération des disponibilités pour le', selectedDateString);
       
       const { data: dateAvailabilities, error: availabilityError } = await supabase
         .from('driver_availability')
@@ -234,8 +211,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
       
-      // Étape 3: Filtrer par heure (vérifier que l'heure demandée est dans les créneaux)
-      console.log('🕐 Étape 3: Filtrage par heure...');
+      // Étape 2: Filtrer par heure (vérifier que l'heure demandée est dans les créneaux)
+      console.log('🕐 Étape 2: Filtrage par heure...');
       const availableDriverIds = new Set();
       
       dateAvailabilities.forEach(availability => {
@@ -262,7 +239,32 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
       
-      // Étape 4: Filtrer les chauffeurs qui sont disponibles
+      // Étape 3: Récupérer les données des chauffeurs disponibles
+      console.log('📡 Étape 3: Récupération des données des chauffeurs disponibles...');
+      
+      const { data: activeDrivers, error: driversError } = await supabase
+        .from('drivers')
+        .select('*')
+        .eq('status', 'active')
+        .in('id', Array.from(availableDriverIds));
+      
+      if (driversError) {
+        console.error('❌ Erreur lors de la récupération des chauffeurs:', driversError);
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+      
+      console.log('📊 Chauffeurs actifs récupérés:', activeDrivers?.length || 0);
+      
+      if (!activeDrivers || activeDrivers.length === 0) {
+        console.warn('⚠️ Aucun chauffeur actif trouvé parmi les disponibles');
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+      
+      // Étape 4: Formater les données des chauffeurs
       const availableDriversData = activeDrivers.filter(driver => 
         availableDriverIds.has(driver.id)
       );
@@ -292,6 +294,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     } catch (error) {
       console.error('💥 Erreur inattendue:', error);
       console.error('Stack trace:', error);
+      setAvailableDrivers([]);
+      setShowDrivers(true);
     }
   };
 
