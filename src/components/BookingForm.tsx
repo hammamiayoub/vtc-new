@@ -736,7 +736,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div className="flex flex-col gap-3">
                           {/* Photo de profil du chauffeur */}
-                          {driver?.profilePhotoUrl ? (
+                          {driver.profilePhotoUrl ? (
                             <img
                               src={driver.profilePhotoUrl}
                               alt="Photo de profil"
