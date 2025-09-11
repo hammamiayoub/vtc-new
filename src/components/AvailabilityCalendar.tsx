@@ -18,6 +18,15 @@ interface AvailabilityCalendarProps {
   driverId: string;
 }
 
+
+// Helper: format a Date to 'YYYY-MM-DD' in local time (no UTC conversion)
+const toYMD = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driverId }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [availabilities, setAvailabilities] = useState<DriverAvailability[]>([]);
@@ -40,8 +49,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
         .from('driver_availability')
         .select('*')
         .eq('driver_id', driverId)
-        .gte('date', startOfMonth.toISOString().split('T')[0])
-        .lte('date', endOfMonth.toISOString().split('T')[0])
+        .gte('date', toYMD(startOfMonth))
+        .lte('date', toYMD(endOfMonth))
         .order('date', { ascending: true });
 
       if (error) {
@@ -49,16 +58,16 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
         return;
       }
 
-      const formattedAvailabilities = data.map(item => ({
+      const formattedAvailabilities = (data || []).map((item: any) => ({
         id: item.id,
-        driverId: item.driver_id,
+        driver_id: item.driver_id,
         date: item.date,
-        startTime: item.start_time,
-        endTime: item.end_time,
-        isAvailable: item.is_available,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at
-      }));
+        start_time: item.start_time,
+        end_time: item.end_time,
+        is_available: item.is_available,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      })) as DriverAvailability[];
 
       setAvailabilities(formattedAvailabilities);
     } catch (error) {
@@ -76,7 +85,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
 
-    const days = [];
+    const days = [] as { date: Date; isCurrentMonth: boolean; dateString: string }[];
     
     // Jours du mois précédent pour compléter la première semaine
     for (let i = startingDayOfWeek - 1; i >= 0; i--) {
@@ -84,7 +93,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
       days.push({
         date: prevDate,
         isCurrentMonth: false,
-        dateString: prevDate.toISOString().split('T')[0]
+        dateString: toYMD(prevDate)
       });
     }
 
@@ -94,30 +103,26 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
       days.push({
         date,
         isCurrentMonth: true,
-        dateString: date.toISOString().split('T')[0]
+        dateString: toYMD(date)
       });
     }
 
     // Jours du mois suivant pour compléter la dernière semaine
-    const remainingDays = 42 - days.length; // 6 semaines * 7 jours
-    for (let day = 1; day <= remainingDays; day++) {
-      const nextDate = new Date(year, month + 1, day);
+    const lastDayOfWeek = lastDay.getDay();
+    for (let i = 1; i <= 6 - lastDayOfWeek; i++) {
+      const nextDate = new Date(year, month + 1, i);
       days.push({
         date: nextDate,
         isCurrentMonth: false,
-        dateString: nextDate.toISOString().split('T')[0]
+        dateString: toYMD(nextDate)
       });
     }
 
     return days;
   };
 
-  const getAvailabilityForDate = (dateString: string) => {
-    return availabilities.filter(av => av.date === dateString);
-  };
-
-  const addTimeSlot = () => {
-    setTimeSlots([...timeSlots, { start: '09:00', end: '17:00' }]);
+  const handleAddTimeSlot = () => {
+    setTimeSlots([...timeSlots, { start: '09:00', end: '12:00' }]);
   };
 
   const removeTimeSlot = (index: number) => {
@@ -156,14 +161,12 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
         .insert(newAvailabilities);
 
       if (error) {
-        console.error('Erreur lors de la sauvegarde:', error);
-        return;
+        console.error('Erreur lors de la sauvegarde des disponibilités:', error);
+      } else {
+        // Rafraîchir les disponibilités
+        await fetchAvailabilities();
+        setTimeSlots([]);
       }
-
-      // Rafraîchir les données
-      await fetchAvailabilities();
-      setSelectedDate(null);
-      setTimeSlots([]);
     } catch (error) {
       console.error('Erreur:', error);
     } finally {
@@ -171,25 +174,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
     }
   };
 
-  const deleteAvailability = async (availabilityId: string) => {
-    try {
-      const { error } = await supabase
-        .from('driver_availability')
-        .delete()
-        .eq('id', availabilityId);
-
-      if (error) {
-        console.error('Erreur lors de la suppression:', error);
-        return;
-      }
-
-      await fetchAvailabilities();
-    } catch (error) {
-      console.error('Erreur:', error);
-    }
-  };
-
-  const navigateMonth = (direction: 'prev' | 'next') => {
+  const changeMonth = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
     if (direction === 'prev') {
       newDate.setMonth(newDate.getMonth() - 1);
@@ -200,12 +185,12 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
   };
 
   const isToday = (dateString: string) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toYMD(new Date());
     return dateString === today;
   };
 
   const isPastDate = (dateString: string) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toYMD(new Date());
     return dateString < today;
   };
 
@@ -214,243 +199,132 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
   ];
-  const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-            <Calendar size={20} className="text-gray-700" />
+    <div className="w-full max-w-5xl mx-auto p-4">
+      <div className="bg-white shadow rounded-xl p-4 sm:p-6">
+        {/* En-tête calendrier */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-5 h-5" />
+            <h2 className="text-lg sm:text-xl font-semibold">
+              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+            </h2>
           </div>
-          <div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Mes disponibilités</h3>
-            <p className="text-sm text-gray-600">Gérez vos créneaux de disponibilité</p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => changeMonth('prev')}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => changeMonth('next')}>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-      </div>
 
-      {/* Navigation du calendrier */}
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={() => navigateMonth('prev')}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        
-        <h4 className="text-base sm:text-lg font-semibold text-gray-900">
-          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </h4>
-        
-        <button
-          onClick={() => navigateMonth('next')}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ChevronRight size={20} />
-        </button>
-      </div>
+        {/* Grille des jours de la semaine */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs sm:text-sm font-medium text-gray-600 mb-2">
+          {['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'].map(day => (
+            <div key={day} className="p-2">{day}</div>
+          ))}
+        </div>
 
-      {/* Calendrier */}
-      <div className="grid grid-cols-7 gap-1 mb-6 overflow-x-auto min-w-full">
-        {/* En-têtes des jours */}
-        {dayNames.map(day => (
-          <div key={day} className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium text-gray-500">
-            {day}
+        {/* Grille du calendrier */}
+        {loading ? (
+          <div className="p-6 text-center text-gray-500">Chargement des disponibilités…</div>
+        ) : (
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
+            {days.map((day, index) => {
+              const hasAvailabilities = availabilities.some(a => a.date === day.dateString);
+              const isPast = isPastDate(day.dateString);
+              const isCurrentDay = isToday(day.dateString);
+              
+              return (
+                <button
+                  key={index}
+                  onClick={() => !isPast && day.isCurrentMonth && setSelectedDate(day.dateString)}
+                  disabled={isPast || !day.isCurrentMonth}
+                  className={`
+                    relative p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200 min-h-[2.5rem] sm:min-h-[3rem]
+                    ${day.isCurrentMonth ? 'bg-gray-50 hover:bg-gray-100' : 'bg-white text-gray-400'}
+                    ${isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                    ${isCurrentDay && day.isCurrentMonth ? 'bg-blue-100 font-semibold' : ''}
+                    ${selectedDate === day.dateString ? 'bg-gray-200 ring-2 ring-gray-500' : ''}
+                    ${hasAvailabilities && day.isCurrentMonth ? 'bg-green-50' : ''}
+                  `}
+                >
+                  <span className="block">{day.date.getDate()}</span>
+                  {hasAvailabilities && (
+                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
-        ))}
-        
-        {/* Jours du calendrier */}
-        {days.map((day, index) => {
-          const dayAvailabilities = getAvailabilityForDate(day.dateString);
-          const hasAvailabilities = dayAvailabilities.length > 0;
-          const isPast = isPastDate(day.dateString);
-          const isCurrentDay = isToday(day.dateString);
-          
-          return (
-            <button
-              key={index}
-              onClick={() => !isPast && day.isCurrentMonth && setSelectedDate(day.dateString)}
-              disabled={isPast || !day.isCurrentMonth}
-              className={`
-                relative p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200 min-h-[2.5rem] sm:min-h-[3rem]
-                ${day.isCurrentMonth 
-                  ? isPast 
-                    ? 'text-gray-400 cursor-not-allowed' 
-                    : 'text-gray-900 hover:bg-blue-50 cursor-pointer'
-                  : 'text-gray-300 cursor-not-allowed'
-                }
-                ${isCurrentDay && day.isCurrentMonth ? 'bg-blue-100 font-semibold' : ''}
-                ${selectedDate === day.dateString ? 'bg-gray-200 ring-2 ring-gray-500' : ''}
-                ${hasAvailabilities && day.isCurrentMonth ? 'bg-green-50' : ''}
-              `}
-            >
-              <span className="block">{day.date.getDate()}</span>
-              {hasAvailabilities && (
-                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
+        )}
 
-      {/* Légende */}
-      <div className="flex flex-wrap items-center gap-3 sm:gap-6 mb-6 text-xs sm:text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-blue-100 rounded"></div>
-          <span className="text-gray-600">Aujourd'hui</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-50 border border-green-200 rounded"></div>
-          <span className="text-gray-600">Disponibilités définies</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-gray-200 rounded"></div>
-          <span className="text-gray-600">Dates passées</span>
-        </div>
-      </div>
-
-      {/* Formulaire d'ajout de disponibilités */}
-      {selectedDate && (
-        <div className="border-t border-gray-200 pt-6">
-          <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-base sm:text-lg font-semibold text-gray-900">
-                Disponibilités pour le {(() => {
-                  const [year, month, day] = selectedDate.split('-').map(Number);
-                  const date = new Date(year, month - 1, day);
-                  return date.toLocaleDateString('fr-FR', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  });
-                })()}
-              </h4>
-              <button
-                onClick={() => {
-                  setSelectedDate(null);
-                  setTimeSlots([]);
-                }}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <XCircle size={20} />
-              </button>
+        {/* Section d'ajout de créneaux */}
+        {selectedDate && (
+          <div className="mt-6 border-t pt-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className="w-5 h-5" />
+              <h3 className="text-base sm:text-lg font-semibold">
+                Disponibilités pour le {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </h3>
             </div>
 
-            {/* Disponibilités existantes */}
-            {getAvailabilityForDate(selectedDate).length > 0 && (
-              <div className="mb-6">
-                <h5 className="text-sm font-medium text-gray-700 mb-3">Disponibilités actuelles</h5>
-                <div className="space-y-2">
-                  {getAvailabilityForDate(selectedDate).map((availability) => (
-                    <div key={availability.id} className="flex items-center justify-between bg-white rounded-lg p-3">
-                      <div className="flex items-center gap-3">
-                        <Clock size={16} className="text-green-600" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {availability.startTime} - {availability.endTime}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => deleteAvailability(availability.id)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Nouveaux créneaux */}
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <h5 className="text-sm font-medium text-gray-700">Ajouter des créneaux</h5>
-                <Button
-                  onClick={addTimeSlot}
-                  size="sm"
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <Plus size={16} />
-                  Ajouter un créneau
-                </Button>
-              </div>
-
+            {/* Créneaux existants */}
+            <div className="space-y-3">
               {timeSlots.map((slot, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white rounded-lg p-3">
-                  <Clock size={16} className="text-gray-700" />
-                  <div className="flex items-center gap-2 flex-1"><input
-                    type="time"
-                    value={slot.start}
-                    onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 w-full sm:w-auto"
-                  />
-                  <span className="text-gray-500">à</span>
-                  <input
-                    type="time"
-                    value={slot.end}
-                    onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 w-full sm:w-auto"
-                  /></div>
-                  <button
-                    onClick={() => removeTimeSlot(index)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors self-end sm:self-auto"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 w-full sm:w-1/3">
+                    <label className="text-xs text-gray-600 w-12">Début</label>
+                    <input
+                      type="time"
+                      className="w-full border rounded-md px-2 py-1"
+                      value={slot.start}
+                      onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-1/3">
+                    <label className="text-xs text-gray-600 w-12">Fin</label>
+                    <input
+                      type="time"
+                      className="w-full border rounded-md px-2 py-1"
+                      value={slot.end}
+                      onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button variant="destructive" onClick={() => removeTimeSlot(index)}>
+                      <Trash2 className="w-4 h-4 mr-1" /> Supprimer
+                    </Button>
+                  </div>
                 </div>
               ))}
 
-              {timeSlots.length > 0 && (
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <Button
-                    onClick={saveAvailabilities}
-                    loading={saving}
-                    className="flex items-center gap-2 bg-black hover:bg-gray-800"
-                  >
-                    <Save size={16} />
-                    {saving ? 'Enregistrement...' : 'Enregistrer'}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setTimeSlots([]);
-                      setSelectedDate(null);
-                    }}
-                    variant="outline"
-                  >
-                    Annuler
-                  </Button>
-                </div>
+              {timeSlots.length === 0 && (
+                <div className="text-sm text-gray-500">Aucun créneau ajouté pour cette date.</div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Instructions */}
-      {!selectedDate && (
-        <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
-          <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Comment ça marche ?</h4>
-          <div className="space-y-2 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <CheckCircle size={16} className="text-green-600" />
-              <span>Cliquez sur une date future pour ajouter vos disponibilités</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle size={16} className="text-green-600" />
-              <span>Définissez vos créneaux horaires de disponibilité</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle size={16} className="text-green-600" />
-              <span>Les clients pourront réserver pendant ces créneaux</span>
+              <div className="flex gap-2 mt-2">
+                <Button variant="outline" onClick={handleAddTimeSlot}>
+                  <Plus className="w-4 h-4 mr-1" /> Ajouter un créneau
+                </Button>
+                <Button onClick={saveAvailabilities} disabled={saving || timeSlots.length === 0}>
+                  <Save className="w-4 h-4 mr-1" /> {saving ? 'Enregistrement…' : 'Enregistrer'}
+                </Button>
+              </div>
+
+              <div className="mt-3 text-xs text-gray-500 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                <span>Les clients pourront réserver pendant ces créneaux</span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
