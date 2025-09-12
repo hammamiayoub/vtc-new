@@ -461,7 +461,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         price_tnd: estimatedPrice,
         scheduled_time: data.scheduledTime,
         notes: data.notes || null,
-        status: 'pending'
+        status: 'accepted'
       };
 
       console.log('📝 Données de réservation à insérer:', bookingData);
