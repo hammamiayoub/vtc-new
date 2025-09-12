@@ -48,7 +48,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
-            email_confirm: false // Désactiver la confirmation par email
+            email_confirm: true // Désactiver la confirmation par email
           }
         }
       });
