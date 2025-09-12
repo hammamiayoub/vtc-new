@@ -8,7 +8,7 @@ const corsHeaders = {
 // Configuration Resend
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 // IMPORTANT: Remplacez par votre domaine vérifié dans Resend
-const FROM_EMAIL = 'TuniRide <noreply@tuniride.net>' // Ou votre domaine configuré
+const FROM_EMAIL = 'TuniRide <team@tuniride.net>' // Ou votre domaine configuré
 
 async function sendEmail(to: string, subject: string, html: string) {
   console.log('🔧 Configuration email:')
