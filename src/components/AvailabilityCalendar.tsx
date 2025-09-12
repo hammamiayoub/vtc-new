@@ -63,6 +63,8 @@ const formatFr = (ymd: string) =>
 
 type SelectionMode = 'single' | 'range' | 'week';
 
+type ID = string | number;
+
 export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driverId }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [availabilities, setAvailabilities] = useState<DriverAvailability[]>([]);
@@ -73,6 +75,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
   const [timeSlots, setTimeSlots] = useState<{ start: string; end: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<ID[]>([]);
+  const [clearingDates, setClearingDates] = useState<string[]>([]);
 
   useEffect(() => {
     fetchAvailabilities();
@@ -90,7 +94,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
         .eq('driver_id', driverId)
         .gte('date', toYMD(startOfMonth))
         .lte('date', toYMD(endOfMonth))
-        .order('date', { ascending: true });
+        .order('date', { ascending: true })
+        .order('start_time', { ascending: true });
 
       if (error) {
         console.error('Erreur lors de la récupération des disponibilités:', error);
@@ -285,6 +290,51 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
     return `${formatFr(sorted[0])} → ${formatFr(sorted[sorted.length - 1])} (${sorted.length} jours)`;
   };
 
+  // === Suppression de créneaux déjà enregistrés ===
+  const existingByDate = selectedDates.reduce<Record<string, DriverAvailability[]>>((acc, date) => {
+    acc[date] = availabilities.filter(a => a.date === date);
+    return acc;
+  }, {});
+
+  const deleteSlotById = async (id: ID) => {
+    setDeletingIds(prev => [...prev, id]);
+    try {
+      const { error } = await supabase
+        .from('driver_availability')
+        .delete()
+        .eq('id', id);
+      if (error) {
+        console.error('Erreur lors de la suppression du créneau:', error);
+      } else {
+        await fetchAvailabilities();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDeletingIds(prev => prev.filter(x => x !== id));
+    }
+  };
+
+  const clearAllForDate = async (date: string) => {
+    setClearingDates(prev => [...prev, date]);
+    try {
+      const { error } = await supabase
+        .from('driver_availability')
+        .delete()
+        .eq('driver_id', driverId)
+        .eq('date', date);
+      if (error) {
+        console.error('Erreur lors du nettoyage des créneaux du jour:', error);
+      } else {
+        await fetchAvailabilities();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setClearingDates(prev => prev.filter(d => d !== date));
+    }
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto p-4">
       <div className="bg-white shadow rounded-xl p-4 sm:p-6">
@@ -394,7 +444,48 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
               </h3>
             </div>
 
-            {/* Créneaux existants */}
+            {/* === Créneaux déjà enregistrés : suppression ciblée === */}
+            <div className="space-y-4 mb-6">
+              {selectedDates.map(date => {
+                const slots = existingByDate[date] || [];
+                return (
+                  <div key={date} className="border rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium">{formatFr(date)}</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => clearAllForDate(date)}
+                        disabled={clearingDates.includes(date)}
+                      >
+                        {clearingDates.includes(date) ? 'Suppression…' : 'Tout supprimer ce jour'}
+                      </Button>
+                    </div>
+                    {slots.length === 0 ? (
+                      <div className="text-xs text-gray-500">Aucun créneau enregistré.</div>
+                    ) : (
+                      <ul className="space-y-2">
+                        {slots.map(slot => (
+                          <li key={String(slot.id)} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
+                            <span className="text-sm">{slot.start_time} → {slot.end_time}</span>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteSlotById(slot.id as ID)}
+                              disabled={deletingIds.includes(slot.id as ID)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" /> {deletingIds.includes(slot.id as ID) ? 'Suppression…' : 'Supprimer'}
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* === Ajout / remplacement de créneaux === */}
             <div className="space-y-3">
               {timeSlots.map((slot, index) => (
                 <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
@@ -418,14 +509,14 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                   </div>
                   <div className="flex gap-2 w-full sm:w-auto">
                     <Button variant="destructive" onClick={() => removeTimeSlot(index)}>
-                      <Trash2 className="w-4 h-4 mr-1" /> Supprimer
+                      <Trash2 className="w-4 h-4 mr-1" /> Retirer (non enregistré)
                     </Button>
                   </div>
                 </div>
               ))}
 
               {timeSlots.length === 0 && (
-                <div className="text-sm text-gray-500">Aucun créneau ajouté. Ajoutez au moins un créneau pour l'appliquer aux dates sélectionnées.</div>
+                <div className="text-sm text-gray-500">Aucun nouveau créneau à ajouter. Ajoutez au moins un créneau pour l'appliquer aux dates sélectionnées.</div>
               )}
 
               <div className="flex flex-wrap gap-2 mt-2">
@@ -439,7 +530,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
 
               <div className="mt-3 text-xs text-gray-500 flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />
-                <span>Les clients pourront réserver pendant ces créneaux sur chaque date sélectionnée.</span>
+                <span>Les clients pourront réserver pendant ces créneaux sur chaque date sélectionnée. L'enregistrement remplace les créneaux existants pour ces dates.</span>
               </div>
             </div>
           </div>
