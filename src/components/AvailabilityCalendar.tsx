@@ -296,6 +296,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
     return acc;
   }, {});
 
+  const hasAnyExisting = selectedDates.some(date => (existingByDate[date] || []).length > 0);
+
   const deleteSlotById = async (id: ID) => {
     setDeletingIds(prev => [...prev, id]);
     try {
@@ -432,7 +434,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
           </div>
         )}
 
-        {/* Section d'ajout de créneaux */}
+        {/* Section d'ajout / suppression de créneaux */}
         {selectedDates.length > 0 && (
           <div className="mt-6 border-t pt-4">
             <div className="flex items-center gap-2 mb-4">
@@ -444,26 +446,25 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
               </h3>
             </div>
 
-            {/* === Créneaux déjà enregistrés : suppression ciblée === */}
-            <div className="space-y-4 mb-6">
-              {selectedDates.map(date => {
-                const slots = existingByDate[date] || [];
-                return (
-                  <div key={date} className="border rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium">{formatFr(date)}</div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => clearAllForDate(date)}
-                        disabled={clearingDates.includes(date)}
-                      >
-                        {clearingDates.includes(date) ? 'Suppression…' : 'Tout supprimer ce jour'}
-                      </Button>
-                    </div>
-                    {slots.length === 0 ? (
-                      <div className="text-xs text-gray-500">Aucun créneau enregistré.</div>
-                    ) : (
+            {/* === Créneaux déjà enregistrés : n'afficher QUE s'il en existe === */}
+            {hasAnyExisting && (
+              <div className="space-y-4 mb-6">
+                {selectedDates.map(date => {
+                  const slots = existingByDate[date] || [];
+                  if (slots.length === 0) return null; // ne pas afficher de "menu" de suppression si aucun créneau
+                  return (
+                    <div key={date} className="border rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium">{formatFr(date)}</div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => clearAllForDate(date)}
+                          disabled={clearingDates.includes(date)}
+                        >
+                          {clearingDates.includes(date) ? 'Suppression…' : 'Tout supprimer ce jour'}
+                        </Button>
+                      </div>
                       <ul className="space-y-2">
                         {slots.map(slot => (
                           <li key={String(slot.id)} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
@@ -479,11 +480,11 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                           </li>
                         ))}
                       </ul>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* === Ajout / remplacement de créneaux === */}
             <div className="space-y-3">
