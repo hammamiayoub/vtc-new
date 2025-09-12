@@ -44,17 +44,28 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: undefined, // Désactiver la redirection email
+          data: {
+            first_name: data.firstName,
+            last_name: data.lastName,
+            email_confirm: false // Désactiver la confirmation par email
+          }
+        }
+      });
+
+      // Alternative: Créer l'utilisateur sans confirmation email
+      /* const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
           emailRedirectTo: undefined,
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
-            user_type: 'driver'
-          },
-          // Désactiver complètement la confirmation par email
-          shouldCreateUser: true
+            skip_confirmation: true
+          }
         }
-      });
-
+      }); */
 
       console.log('📧 Réponse Supabase Auth:', { authData, authError });
 
