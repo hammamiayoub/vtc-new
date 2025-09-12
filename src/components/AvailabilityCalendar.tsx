@@ -454,24 +454,36 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                   if (slots.length === 0) return null; // ne pas afficher de "menu" de suppression si aucun créneau
                   return (
                     <div key={date} className="border rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="font-medium">{formatFr(date)}</div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                        <div className="font-medium text-sm sm:text-base">{formatFr(date)}</div>
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full sm:w-auto"
                           onClick={() => clearAllForDate(date)}
                           disabled={clearingDates.includes(date)}
                         >
-                          {clearingDates.includes(date) ? 'Suppression…' : 'Tout supprimer ce jour'}
+                          {clearingDates.includes(date) ? (
+                            'Suppression…'
+                          ) : (
+                            <>
+                              <span className="sm:hidden">Tout supprimer</span>
+                              <span className="hidden sm:inline">Tout supprimer ce jour</span>
+                            </>
+                          )}
                         </Button>
                       </div>
                       <ul className="space-y-2">
                         {slots.map(slot => (
-                          <li key={String(slot.id)} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
+                          <li
+                            key={String(slot.id)}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50 rounded-md px-3 py-2"
+                          >
                             <span className="text-sm">{slot.start_time} → {slot.end_time}</span>
                             <Button
                               variant="destructive"
                               size="sm"
+                              className="w-full sm:w-auto"
                               onClick={() => deleteSlotById(slot.id as ID)}
                               disabled={deletingIds.includes(slot.id as ID)}
                             >
@@ -509,8 +521,10 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                     />
                   </div>
                   <div className="flex gap-2 w-full sm:w-auto">
-                    <Button variant="destructive" onClick={() => removeTimeSlot(index)}>
-                      <Trash2 className="w-4 h-4 mr-1" /> Retirer (non enregistré)
+                    <Button variant="destructive" className="w-full sm:w-auto" onClick={() => removeTimeSlot(index)}>
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      <span className="sm:hidden">Retirer</span>
+                      <span className="hidden sm:inline">Retirer (non enregistré)</span>
                     </Button>
                   </div>
                 </div>
@@ -520,11 +534,11 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                 <div className="text-sm text-gray-500">Aucun nouveau créneau à ajouter. Ajoutez au moins un créneau pour l'appliquer aux dates sélectionnées.</div>
               )}
 
-              <div className="flex flex-wrap gap-2 mt-2">
-                <Button variant="outline" onClick={handleAddTimeSlot}>
+              <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={handleAddTimeSlot}>
                   <Plus className="w-4 h-4 mr-1" /> Ajouter un créneau
                 </Button>
-                <Button onClick={saveAvailabilities} disabled={saving || timeSlots.length === 0}>
+                <Button className="w-full sm:w-auto" onClick={saveAvailabilities} disabled={saving || timeSlots.length === 0}>
                   <Save className="w-4 h-4 mr-1" /> {saving ? 'Enregistrement…' : `Enregistrer pour ${selectedDates.length} jour(s)`}
                 </Button>
               </div>
