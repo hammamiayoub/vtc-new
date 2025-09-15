@@ -242,7 +242,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             <CityInput
               value={cityValue}
               onChange={setCityValue}
-              placeholder="Ville de résidence" 
+              placeholder="Ville de résidence"
               error={errors.city?.message}
               required
             />
