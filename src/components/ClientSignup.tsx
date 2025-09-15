@@ -68,7 +68,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             first_name: data.firstName,
             last_name: data.lastName,
             email: data.email,
-            phone: data.phone
+            phone: data.phone,
             city: data.city
           });
 
