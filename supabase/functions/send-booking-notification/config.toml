@@ -1,2 +1,2 @@
-[send-booking-notification]
+[resend-email]
 allow_net = ["<all>"]
