@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Phone, MapPin } from 'lucide-react';
 import { Button } from './ui/Button';
+import { CityInput } from './ui/CityInput';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { clientSignupSchema } from '../utils/validation';
 import { ClientSignupFormData } from '../types';
@@ -17,11 +18,13 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [cityValue, setCityValue] = useState('');
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isValid }
   } = useForm<ClientSignupFormData>({
     resolver: zodResolver(clientSignupSchema),
@@ -30,6 +33,10 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
   const watchPassword = watch('password', '');
 
+  // Synchroniser la ville avec le formulaire
+  React.useEffect(() => {
+    setValue('city', cityValue);
+  }, [cityValue, setValue]);
   const onSubmit = async (data: ClientSignupFormData) => {
     setIsSubmitting(true);
     
@@ -62,6 +69,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             last_name: data.lastName,
             email: data.email,
             phone: data.phone
+            city: data.city
           });
 
         if (profileError) {
@@ -231,6 +239,13 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               )}
 
               <div className="relative">
+            <CityInput
+              value={cityValue}
+              onChange={setCityValue}
+              placeholder="Ville de résidence"
+              error={errors.city?.message}
+              required
+            />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>

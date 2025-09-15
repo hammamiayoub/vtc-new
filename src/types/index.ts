@@ -4,6 +4,7 @@ export interface Driver {
   lastName: string;
   email: string;
   phone?: string;
+  city?: string;
   licenseNumber?: string;
   vehicleInfo?: VehicleInfo;
   status: string;
@@ -25,6 +26,7 @@ export interface VehicleInfo {
 
 export interface DriverProfileData {
   phone: string;
+  city: string;
   licenseNumber: string;
   vehicleInfo: VehicleInfo;
 }
@@ -63,6 +65,7 @@ export interface Client {
   lastName: string;
   email: string;
   phone: string;
+  city?: string;
   status: string;
   profilePhotoUrl?: string;
   createdAt: string;
@@ -74,6 +77,7 @@ export interface ClientSignupFormData {
   lastName: string;
   email: string;
   phone: string;
+  city: string;
   password: string;
   confirmPassword: string;
 }

@@ -130,3 +130,84 @@ export const popularAddresses = [
   'Tozeur',
   'Djerba - Houmt Souk'
 ];
+
+// Villes principales de Tunisie pour l'autocomplétion des résidences
+export const tunisianCities = [
+  'Tunis',
+  'Sfax',
+  'Sousse',
+  'Kairouan',
+  'Bizerte',
+  'Gabès',
+  'Ariana',
+  'Gafsa',
+  'Monastir',
+  'Ben Arous',
+  'Kasserine',
+  'Médenine',
+  'Nabeul',
+  'Tataouine',
+  'Beja',
+  'Jendouba',
+  'Mahdia',
+  'Sidi Bouzid',
+  'Siliana',
+  'Manouba',
+  'Kef',
+  'Tozeur',
+  'Kebili',
+  'Zaghouan',
+  'La Marsa',
+  'Sidi Bou Said',
+  'Carthage',
+  'Hammamet',
+  'Djerba',
+  'Zarzis',
+  'Douz',
+  'Nefta'
+];
+
+// Fonction pour rechercher des villes tunisiennes
+export const searchTunisianCities = async (query: string): Promise<string[]> => {
+  if (!query || query.length < 2) return [];
+  
+  // Recherche locale d'abord
+  const localResults = tunisianCities.filter(city => 
+    city.toLowerCase().includes(query.toLowerCase())
+  );
+  
+  // Si on a des résultats locaux, les retourner
+  if (localResults.length > 0) {
+    return localResults.slice(0, 5);
+  }
+  
+  // Sinon, recherche via l'API Nominatim
+  try {
+    const encodedQuery = encodeURIComponent(`${query}, Tunisia`);
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=5&countrycodes=tn&featureType=city`
+    );
+    
+    if (!response.ok) {
+      return localResults;
+    }
+    
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      return data.map((result: any) => {
+        // Extraire le nom de la ville du display_name
+        const parts = result.display_name.split(',');
+        return parts[0].trim();
+      }).filter((city: string, index: number, arr: string[]) => 
+        // Supprimer les doublons
+        arr.indexOf(city) === index
+      ).slice(0, 5);
+    }
+    
+    return localResults;
+  } catch (error) {
+    console.error('Erreur lors de la recherche de villes:', error);
+    return localResults;
+  }
+};

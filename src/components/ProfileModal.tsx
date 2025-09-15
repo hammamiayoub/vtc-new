@@ -43,6 +43,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     firstName: user.firstName,
     lastName: user.lastName,
     phone: 'phone' in user ? user.phone : '',
+    city: 'city' in user ? user.city || '' : '',
     email: user.email
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -71,6 +72,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           first_name: editData.firstName,
           last_name: editData.lastName,
           phone: editData.phone,
+          city: editData.city,
           email: editData.email
         })
         .eq('id', user.id);
@@ -296,6 +298,22 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   </p>
                 )}
               </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <label className="block text-sm text-gray-600 mb-1">Ville de résidence</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editData.city}
+                    onChange={(e) => setEditData({ ...editData, city: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ville de résidence"
+                  />
+                ) : (
+                  <p className="font-semibold text-gray-900">
+                    {'city' in user ? user.city || 'Non renseigné' : 'Non renseigné'}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -422,6 +440,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     firstName: user.firstName,
                     lastName: user.lastName,
                     phone: 'phone' in user ? user.phone : '',
+                    city: 'city' in user ? user.city || '' : '',
                     email: user.email
                   });
                 }}

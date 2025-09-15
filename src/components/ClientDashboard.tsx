@@ -46,6 +46,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               lastName: clientData.last_name,
               email: clientData.email,
               phone: clientData.phone,
+              city: clientData.city,
               status: clientData.status,
               profilePhotoUrl: clientData.profile_photo_url,
               createdAt: clientData.created_at,

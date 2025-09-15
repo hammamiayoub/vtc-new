@@ -48,6 +48,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               lastName: driverData.last_name,
               email: driverData.email,
               phone: driverData.phone,
+              city: driverData.city,
               licenseNumber: driverData.license_number,
               vehicleInfo: driverData.vehicle_info,
               status: driverData.status,

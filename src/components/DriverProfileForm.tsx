@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Phone, CreditCard, Car, Save, CheckCircle } from 'lucide-react';
+import { Phone, CreditCard, Car, Save, CheckCircle, MapPin } from 'lucide-react';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Button } from './ui/Button';
+import { CityInput } from './ui/CityInput';
 import { driverProfileSchema } from '../utils/validation';
 import { DriverProfileData } from '../types';
 import { supabase } from '../lib/supabase';
@@ -20,6 +21,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [cityValue, setCityValue] = useState('');
 
   const {
     register,
@@ -38,6 +40,10 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
     }
   });
 
+  // Synchroniser la ville avec le formulaire
+  React.useEffect(() => {
+    setValue('city', cityValue);
+  }, [cityValue, setValue]);
   const vehicleTypeOptions = [
     { value: 'sedan', label: 'Berline' },
     { value: 'suv', label: 'SUV' },
@@ -67,6 +73,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
         .from('drivers')
         .update({
           phone: data.phone,
+          city: data.city,
           license_number: data.licenseNumber,
           vehicle_info: data.vehicleInfo,
           status: 'pending'
@@ -143,6 +150,13 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
               )}
             </div>
 
+            <CityInput
+              value={cityValue}
+              onChange={setCityValue}
+              placeholder="Ville de résidence"
+              error={errors.city?.message}
+              required
+            />
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <CreditCard className="h-5 w-5 text-gray-400" />

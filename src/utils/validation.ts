@@ -44,6 +44,10 @@ export const clientSignupSchema = z.object({
     .min(8, 'Le numéro de téléphone doit contenir 8 chiffres')
     .max(8, 'Le numéro de téléphone doit contenir 8 chiffres')
     .regex(/^[0-9]{8}$/, 'Le numéro doit contenir exactement 8 chiffres (ex: 12345678)'),
+  city: z
+    .string()
+    .min(2, 'La ville doit contenir au moins 2 caractères')
+    .max(100, 'La ville ne peut pas dépasser 100 caractères'),
   password: passwordSchema,
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -89,6 +93,10 @@ export const driverProfileSchema = z.object({
     .min(8, 'Le numéro de téléphone doit contenir 8 chiffres')
     .max(8, 'Le numéro de téléphone doit contenir 8 chiffres')
     .regex(/^[0-9]{8}$/, 'Le numéro doit contenir exactement 8 chiffres (ex: 12345678)'),
+  city: z
+    .string()
+    .min(2, 'La ville doit contenir au moins 2 caractères')
+    .max(100, 'La ville ne peut pas dépasser 100 caractères'),
   licenseNumber: z
     .string()
     .min(5, 'Le numéro de permis doit contenir au moins 5 caractères')
