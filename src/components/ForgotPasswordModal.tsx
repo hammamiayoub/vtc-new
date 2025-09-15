@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
+import { Mail, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 
@@ -27,90 +27,29 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     setError('');
 
     try {
-      console.log('🔍 Vérification email:', email);
+      console.log('🔍 Envoi demande de réinitialisation pour:', email);
       console.log('🔍 Type utilisateur:', userType);
       
-      // Utiliser l'Edge Function pour contourner RLS
-      console.log('🔍 Appel Edge Function pour vérification email...');
-      
-      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-user-email`;
-      
-      const checkResponse = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          userType: userType
-        })
-      });
-
-      const checkResult = await checkResponse.json();
-      console.log('📊 Résultat vérification email:', checkResult);
-
-      if (!checkResponse.ok || checkResult.error) {
-        console.error('Erreur lors de la vérification de l\'email:', checkResult.error);
-        setError('Une erreur est survenue lors de la vérification. Veuillez réessayer.');
-        return;
-      }
-
-      if (!checkResult.exists || !checkResult.userData) {
-        setError(`Aucun compte ${userType === 'client' ? 'client' : 'chauffeur'} trouvé avec cet email.`);
-        return;
-      }
-
-      const userData = checkResult.userData;
-      console.log('✅ Utilisateur trouvé:', userData.first_name, userData.last_name);
-
-      // Envoyer l'email de réinitialisation via Supabase Auth
-      console.log('📧 Envoi email de réinitialisation Supabase...');
+      // Envoyer directement l'email de réinitialisation via Supabase Auth
+      // Supabase Auth vérifiera automatiquement si l'email existe
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password?type=${userType}`
+        redirectTo: `${window.location.origin}?type=${userType}#type=recovery`
       });
 
       if (resetError) {
         console.error('Erreur lors de l\'envoi de l\'email:', resetError);
-        setError('Erreur lors de l\'envoi de l\'email. Veuillez réessayer.');
+        
+        if (resetError.message.includes('User not found')) {
+          setError(`Aucun compte ${userType === 'client' ? 'client' : 'chauffeur'} trouvé avec cet email.`);
+        } else if (resetError.message.includes('rate limit')) {
+          setError('Trop de tentatives. Veuillez attendre quelques minutes avant de réessayer.');
+        } else {
+          setError('Erreur lors de l\'envoi de l\'email. Veuillez réessayer.');
+        }
         return;
       }
 
-      console.log('✅ Email Supabase envoyé avec succès');
-
-      // Envoyer également un email personnalisé via notre Edge Function
-      try {
-        console.log('📧 Envoi email personnalisé via Edge Function...');
-        const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-password-reset`;
-        
-        const emailResponse = await fetch(functionUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: email,
-            firstName: userData.first_name,
-            lastName: userData.last_name,
-            userType: userType
-          })
-        });
-
-        const emailResult = await emailResponse.json();
-        
-        if (!emailResponse.ok || !emailResult.success) {
-          console.warn('⚠️ Avertissement envoi email personnalisé:', emailResult.error);
-          // Ne pas faire échouer le processus si l'email personnalisé échoue
-        } else {
-          console.log('✅ Email personnalisé envoyé avec succès');
-        }
-      } catch (emailError) {
-        console.warn('⚠️ Avertissement email personnalisé:', emailError);
-        // Ne pas faire échouer le processus
-      }
-
-      console.log('🎉 Processus de réinitialisation terminé avec succès');
+      console.log('✅ Email de réinitialisation envoyé avec succès');
       setSuccess(true);
     } catch (error) {
       console.error('Erreur:', error);
