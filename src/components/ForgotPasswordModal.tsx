@@ -30,30 +30,38 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       console.log('🔍 Vérification email:', email);
       console.log('🔍 Type utilisateur:', userType);
       
-      // Vérifier que l'email existe dans la table correspondante
-      const tableName = userType === 'client' ? 'clients' : 'drivers';
-      console.log('🔍 Table à vérifier:', tableName);
+      // Utiliser l'Edge Function pour contourner RLS
+      console.log('🔍 Appel Edge Function pour vérification email...');
       
-      const { data: userData, error: userError } = await supabase
-        .from(tableName)
-        .select('id, first_name, last_name, email')
-        .eq('email', email)
-        .maybeSingle();
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-user-email`;
+      
+      const checkResponse = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          userType: userType
+        })
+      });
 
-      console.log('📊 Résultat recherche utilisateur:', userData);
-      console.log('❌ Erreur recherche:', userError);
+      const checkResult = await checkResponse.json();
+      console.log('📊 Résultat vérification email:', checkResult);
 
-      if (userError) {
-        console.error('Erreur lors de la vérification de l\'email:', userError);
-        setError('Une erreur est survenue. Veuillez réessayer.');
+      if (!checkResponse.ok || checkResult.error) {
+        console.error('Erreur lors de la vérification de l\'email:', checkResult.error);
+        setError('Une erreur est survenue lors de la vérification. Veuillez réessayer.');
         return;
       }
 
-      if (!userData) {
+      if (!checkResult.exists || !checkResult.userData) {
         setError(`Aucun compte ${userType === 'client' ? 'client' : 'chauffeur'} trouvé avec cet email.`);
         return;
       }
 
+      const userData = checkResult.userData;
       console.log('✅ Utilisateur trouvé:', userData.first_name, userData.last_name);
 
       // Envoyer l'email de réinitialisation via Supabase Auth
