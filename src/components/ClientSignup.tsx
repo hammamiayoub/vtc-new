@@ -238,7 +238,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 />
               )}
 
-              <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <CityInput
               value={cityValue}
               onChange={setCityValue}
