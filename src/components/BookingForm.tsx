@@ -512,9 +512,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         // Appel à l'Edge Function pour envoyer les emails
         if (clientData && driverData) {
-          console.log('🚀 Appel Edge Function send-booking-notification...');
+          console.log('🚀 Appel Edge Function resend-email...');
           
-          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-notification`;
+          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resend-email`;
           
           const emailResponse = await fetch(functionUrl, {
             method: 'POST',
