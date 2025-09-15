@@ -25,50 +25,117 @@ async function sendPasswordResetEmail(to: string, firstName: string, lastName: s
   const dashboardUrl = userType === 'client' ? 'client-dashboard' : 'dashboard';
 
   const emailContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background-color: #7c3aed; padding: 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">TuniRide</h1>
-        <p style="color: #e9d5ff; margin: 10px 0 0 0;">Réinitialisation de mot de passe</p>
-      </div>
-      
-      <div style="padding: 30px 20px;">
-        <h2 style="color: #333; margin-bottom: 20px;">Bonjour ${firstName} ${lastName},</h2>
-        
-        <p style="font-size: 16px; line-height: 1.6; color: #555; margin-bottom: 20px;">
-          Vous avez demandé la réinitialisation de votre mot de passe pour votre compte ${userTypeLabel} TuniRide.
-        </p>
-        
-        <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #92400e; margin-top: 0; margin-bottom: 10px;">Instructions importantes :</h3>
-          <ul style="color: #92400e; margin: 0; padding-left: 20px;">
-            <li>Vous avez reçu un email de Supabase avec un lien de réinitialisation</li>
-            <li>Cliquez sur ce lien pour accéder au formulaire de nouveau mot de passe</li>
-            <li>Le lien est valide pendant 1 heure seulement</li>
-            <li>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email</li>
-          </ul>
-        </div>
-        
-        <div style="background-color: #e0f2fe; border: 1px solid #0288d1; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #01579b; margin-top: 0; margin-bottom: 10px;">Conseils de sécurité :</h3>
-          <ul style="color: #01579b; margin: 0; padding-left: 20px;">
-            <li>Choisissez un mot de passe fort (8+ caractères)</li>
-            <li>Incluez majuscules, minuscules, chiffres et caractères spéciaux</li>
-            <li>N'utilisez pas le même mot de passe que sur d'autres sites</li>
-          </ul>
-        </div>
-        
-        <p style="color: #666; font-size: 14px; margin-top: 30px;">
-          Si vous rencontrez des difficultés, contactez notre support à contact@tuniride.net
-        </p>
-      </div>
-      
-      <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-        <p style="margin: 0;">TuniRide - Votre transport sur mesure</p>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">
-          Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-        </p>
-      </div>
-    </div>
+    <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Réinitialisez votre mot de passe — MyRide</title>
+  <style>
+    .preheader { display:none !important; visibility:hidden; opacity:0; color:transparent; height:0; width:0; overflow:hidden; mso-hide:all; }
+    @media (max-width: 600px) {
+      .container { width:100% !important; }
+      .px { padding-left:16px !important; padding-right:16px !important; }
+      .btn { width:100% !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background:#f6f9fc;">
+  <span class="preheader">Réinitialisez votre mot de passe MyRide en un clic.</span>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f6f9fc;">
+    <tr>
+      <td align="center" style="padding:24px;">
+        <!-- Carte -->
+        <table role="presentation" cellpadding="0" cellspacing="0" width="600" class="container" style="max-width:600px; width:600px; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(16,24,40,0.08);">
+          <!-- En-tête -->
+          <tr>
+            <td align="center" style="background:#000000; padding:24px;">
+              <div style="font-family:Segoe UI, Roboto, Arial, sans-serif; font-size:20px; font-weight:700; color:#ffffff; letter-spacing:.3px;">
+                MyRide
+              </div>
+            </td>
+          </tr>
+
+          <!-- Contenu -->
+          <tr>
+            <td class="px" style="padding:32px 32px 8px 32px; font-family:Segoe UI, Roboto, Arial, sans-serif; color:#0f172a;">
+              <h2 style="margin:0 0 12px 0; font-size:24px; line-height:1.25; font-weight:700; color:#0f172a;">
+                Réinitialiser votre mot de passe
+              </h2>
+              <p style="margin:0 0 16px 0; font-size:16px; line-height:1.6; color:#334155;">
+                Vous avez demandé à réinitialiser le mot de passe de votre compte <strong>MyRide</strong>.
+                Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.
+              </p>
+              <p style="margin:0 0 16px 0; font-size:14px; line-height:1.6; color:#64748b;">
+                Pour des raisons de sécurité, ce lien n’est valable que pendant une durée limitée.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Bouton -->
+          <tr>
+            <td align="center" style="padding:8px 32px 24px 32px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="{{ .ConfirmationURL }}" style="height:48px;v-text-anchor:middle;width:320px;" arcsize="10%" stroke="f" fillcolor="#000000">
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:Segoe UI, Arial, sans-serif;font-size:16px;font-weight:bold;">
+                  Réinitialiser mon mot de passe
+                </center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-- -->
+              <a href="{{ .ConfirmationURL }}" class="btn"
+                 style="display:inline-block; text-decoration:none; background:#000000; color:#ffffff; font-family:Segoe UI, Roboto, Arial, sans-serif; font-size:16px; font-weight:700; line-height:48px; height:48px; padding:0 24px; border-radius:8px; text-align:center; min-width:240px;">
+                 Réinitialiser mon mot de passe
+              </a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+
+          <!-- Lien de secours -->
+          <tr>
+            <td class="px" style="padding:0 32px 24px 32px; font-family:Segoe UI, Roboto, Arial, sans-serif;">
+              <p style="margin:0; font-size:14px; line-height:1.6; color:#64748b;">
+                Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur&nbsp;:
+              </p>
+              <p style="margin:8px 0 0 0; font-size:13px; line-height:1.5; color:#000000; word-break:break-all;">
+                <a href="{{ .ConfirmationURL }}" style="color:#000000; text-decoration:underline;">{{ .ConfirmationURL }}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Aide / Sécurité -->
+          <tr>
+            <td class="px" style="padding:0 32px 32px 32px; font-family:Segoe UI, Roboto, Arial, sans-serif;">
+              <p style="margin:0 0 8px 0; font-size:13px; line-height:1.6; color:#64748b;">
+                Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet email.
+                Pour toute question, écrivez-nous à
+                <a href="mailto:support@myride.net" style="color:#000000; text-decoration:underline;">support@myride.net</a>.
+              </p>
+              <p style="margin:0; font-size:12px; line-height:1.6; color:#94a3b8;">
+                Après avoir défini un nouveau mot de passe, vos anciennes sessions peuvent être déconnectées.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Pied de page -->
+          <tr>
+            <td align="center" style="background:#f1f5f9; padding:16px 24px; font-family:Segoe UI, Roboto, Arial, sans-serif;">
+              <p style="margin:0; font-size:12px; color:#94a3b8;">
+                © <span style="white-space:nowrap;">2025</span> MyRide. Tous droits réservés.
+              </p>
+            </td>
+          </tr>
+        </table>
+        <!-- /Carte -->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+
   `
 
   try {
