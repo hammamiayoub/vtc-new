@@ -919,6 +919,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           <h4 className="font-medium text-gray-900">
                             {driver.firstName} {driver.lastName}
                           </h4>
+                          {driver.city && (
+                            <p className="text-sm text-gray-600 flex items-center gap-1">
+                              <MapPin size={12} />
+                              {driver.city}
+                              {driver.distanceFromPickup && driver.distanceFromPickup !== Infinity && (
+                                <span className="text-blue-600 font-medium ml-1">
+                                  • {driver.distanceFromPickup} km du départ
+                                </span>
+                              )}
+                            </p>
+                          )}
                           <p className="text-sm text-gray-600">{driver.email}</p>
                           {driver.phone && (
                             <p className="text-sm text-gray-600">{driver.phone}</p>
@@ -935,6 +946,14 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           <CheckCircle className="w-6 h-6 text-purple-600" />
                         )}
                       </div>
+                      
+                      {/* Badge de proximité pour le chauffeur le plus proche */}
+                      {driver.distanceFromPickup && driver.distanceFromPickup !== Infinity && driver.distanceFromPickup <= 10 && (
+                        <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                          <MapPin size={12} />
+                          Chauffeur proche
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
