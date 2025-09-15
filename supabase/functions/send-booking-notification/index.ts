@@ -72,7 +72,7 @@ async function sendEmail(to: string, subject: string, html: string) {
 }
 
 serve(async (req) => {
-  console.log('🚀 Edge Function send-booking-notification démarrée')
+  console.log('🚀 Edge Function resend-email démarrée')
   console.log('📥 Méthode:', req.method)
   
   // Handle CORS preflight requests
