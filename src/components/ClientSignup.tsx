@@ -238,11 +238,11 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 />
               )}
 
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="relative">
             <CityInput
               value={cityValue}
               onChange={setCityValue}
-              placeholder="Ville de résidence"
+              placeholder="Ville de résidence" 
               error={errors.city?.message}
               required
             />
