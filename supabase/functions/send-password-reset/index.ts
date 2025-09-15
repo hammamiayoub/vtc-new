@@ -7,7 +7,7 @@ const corsHeaders = {
 
 // Configuration Resend
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'TuniRide <noreply@tuniride.net>' // Utilisez votre domaine vérifié
+const FROM_EMAIL = 'TuniRide <team@tuniride.net>' // Utilisez votre domaine vérifié
 
 async function sendPasswordResetEmail(to: string, firstName: string, lastName: string, userType: string) {
   console.log('🔧 Configuration email reset:')
