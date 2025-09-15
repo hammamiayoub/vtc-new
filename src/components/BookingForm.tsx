@@ -380,7 +380,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
       const { data: activeDrivers, error: driversError } = await supabase
         .from('drivers')
-        .select('*')
+        .select('id, first_name, last_name, email, phone, city, license_number, vehicle_info, status, profile_photo_url, created_at, updated_at')
         .eq('status', 'active')
         .in('id', Array.from(availableDriverIds));
       
@@ -413,6 +413,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         lastName: driver.last_name,
         email: driver.email,
         phone: driver.phone,
+        city: driver.city,
         licenseNumber: driver.license_number,
         vehicleInfo: driver.vehicle_info,
         status: driver.status,
@@ -421,11 +422,65 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         updatedAt: driver.updated_at
       }));
 
-      console.log('🔄 Formatage terminé - Chauffeurs disponibles à cette date/heure:', formattedDrivers.length);
+      // Étape 5: Trier les chauffeurs par proximité géographique
+      console.log('📍 Étape 5: Tri par proximité géographique...');
       
-      setAvailableDrivers(formattedDrivers);
+      if (pickupCoords) {
+        console.log('📍 Coordonnées du point de départ:', pickupCoords);
+        
+        // Calculer la distance pour chaque chauffeur
+        const driversWithDistance = await Promise.all(
+          formattedDrivers.map(async (driver) => {
+            let distance = Infinity; // Distance par défaut si on ne peut pas calculer
+            
+            if (driver.city) {
+              try {
+                const calculatedDistance = await calculateDistanceFromCity(driver.city, pickupCoords);
+                if (calculatedDistance !== null) {
+                  distance = calculatedDistance;
+                  console.log(`📏 Distance ${driver.firstName} ${driver.lastName} (${driver.city}): ${distance} km`);
+                } else {
+                  console.warn(`⚠️ Impossible de calculer la distance pour ${driver.city}`);
+                }
+              } catch (error) {
+                console.error(`❌ Erreur calcul distance pour ${driver.city}:`, error);
+              }
+            } else {
+              console.warn(`⚠️ Ville non renseignée pour ${driver.firstName} ${driver.lastName}`);
+            }
+            
+            return {
+              ...driver,
+              distanceFromPickup: distance
+            };
+          })
+        );
+        
+        // Trier par distance croissante (le plus proche en premier)
+        const sortedDrivers = driversWithDistance.sort((a, b) => {
+          // Les chauffeurs avec une distance calculée passent en premier
+          if (a.distanceFromPickup === Infinity && b.distanceFromPickup !== Infinity) return 1;
+          if (a.distanceFromPickup !== Infinity && b.distanceFromPickup === Infinity) return -1;
+          return a.distanceFromPickup - b.distanceFromPickup;
+        });
+        
+        console.log('📊 Chauffeurs triés par distance:', sortedDrivers.map(d => ({
+          name: `${d.firstName} ${d.lastName}`,
+          city: d.city,
+          distance: d.distanceFromPickup === Infinity ? 'Non calculée' : `${d.distanceFromPickup} km`
+        })));
+        
+        setAvailableDrivers(sortedDrivers);
+      } else {
+        console.log('⚠️ Pas de coordonnées de départ, tri par ordre alphabétique');
+        const sortedDrivers = formattedDrivers.sort((a, b) => 
+          `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+        );
+        setAvailableDrivers(sortedDrivers);
+      }
+      
       setShowDrivers(true);
-      console.log('✅ Interface mise à jour avec', formattedDrivers.length, 'chauffeurs');
+      console.log('✅ Interface mise à jour avec', formattedDrivers.length, 'chauffeurs triés par proximité');
       
     } catch (error) {
       console.error('💥 Erreur inattendue:', error);

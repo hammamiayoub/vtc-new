@@ -5,12 +5,14 @@ export interface Driver {
   email: string;
   phone?: string;
   city?: string;
+  city?: string;
   licenseNumber?: string;
   vehicleInfo?: VehicleInfo;
   status: string;
   profilePhotoUrl?: string;
   createdAt: string;
   updatedAt: string;
+  distanceFromPickup?: number; // Distance calculée depuis le point de départ
 }
 
 export interface VehicleInfo {
