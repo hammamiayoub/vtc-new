@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Car } from 'lucide-react';
 import { Button } from './ui/Button';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { supabase } from '../lib/supabase';
 
 interface DriverLoginProps {
@@ -16,6 +17,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,7 +161,13 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
                 <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
               </label>
               <a href="#" className="text-sm text-gray-900 hover:underline font-medium">
-                Mot de passe oublié ?
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-gray-900 hover:underline font-medium"
+                >
+                  Mot de passe oublié ?
+                </button>
               </a>
             </div>
 
@@ -190,6 +198,13 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
             </p>
           </div>
         </div>
+
+        {/* Modal mot de passe oublié */}
+        <ForgotPasswordModal
+          isOpen={showForgotPassword}
+          onClose={() => setShowForgotPassword(false)}
+          userType="driver"
+        />
       </div>
     </div>
   );
