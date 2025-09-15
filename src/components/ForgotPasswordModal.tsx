@@ -27,17 +27,30 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     setError('');
 
     try {
+      console.log('🔍 Vérification email:', email);
+      console.log('🔍 Type utilisateur:', userType);
+      
       // Vérifier que l'email existe dans la table correspondante
       const tableName = userType === 'client' ? 'clients' : 'drivers';
+      console.log('🔍 Table à vérifier:', tableName);
+      
       const { data: userData, error: userError } = await supabase
         .from(tableName)
         .select('id, first_name, last_name, email')
         .eq('email', email)
-        .maybeSingle();
+        .single();
+
+      console.log('📊 Résultat recherche utilisateur:', userData);
+      console.log('❌ Erreur recherche:', userError);
 
       if (userError) {
         console.error('Erreur lors de la vérification de l\'email:', userError);
-        setError('Une erreur est survenue. Veuillez réessayer.');
+        
+        if (userError.code === 'PGRST116') {
+          setError(`Aucun compte ${userType === 'client' ? 'client' : 'chauffeur'} trouvé avec cet email.`);
+        } else {
+          setError('Une erreur est survenue. Veuillez réessayer.');
+        }
         return;
       }
 
@@ -46,7 +59,10 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         return;
       }
 
+      console.log('✅ Utilisateur trouvé:', userData.first_name, userData.last_name);
+
       // Envoyer l'email de réinitialisation via Supabase Auth
+      console.log('📧 Envoi email de réinitialisation Supabase...');
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password?type=${userType}`
       });
@@ -57,8 +73,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         return;
       }
 
+      console.log('✅ Email Supabase envoyé avec succès');
+
       // Envoyer également un email personnalisé via notre Edge Function
       try {
+        console.log('📧 Envoi email personnalisé via Edge Function...');
         const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-password-reset`;
         
         const emailResponse = await fetch(functionUrl, {
@@ -78,16 +97,17 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         const emailResult = await emailResponse.json();
         
         if (!emailResponse.ok || !emailResult.success) {
-          console.warn('Avertissement envoi email personnalisé:', emailResult.error);
+          console.warn('⚠️ Avertissement envoi email personnalisé:', emailResult.error);
           // Ne pas faire échouer le processus si l'email personnalisé échoue
         } else {
           console.log('✅ Email personnalisé envoyé avec succès');
         }
       } catch (emailError) {
-        console.warn('Avertissement email personnalisé:', emailError);
+        console.warn('⚠️ Avertissement email personnalisé:', emailError);
         // Ne pas faire échouer le processus
       }
 
+      console.log('🎉 Processus de réinitialisation terminé avec succès');
       setSuccess(true);
     } catch (error) {
       console.error('Erreur:', error);
