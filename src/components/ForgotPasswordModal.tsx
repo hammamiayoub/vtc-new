@@ -38,19 +38,14 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         .from(tableName)
         .select('id, first_name, last_name, email')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       console.log('📊 Résultat recherche utilisateur:', userData);
       console.log('❌ Erreur recherche:', userError);
 
       if (userError) {
         console.error('Erreur lors de la vérification de l\'email:', userError);
-        
-        if (userError.code === 'PGRST116') {
-          setError(`Aucun compte ${userType === 'client' ? 'client' : 'chauffeur'} trouvé avec cet email.`);
-        } else {
-          setError('Une erreur est survenue. Veuillez réessayer.');
-        }
+        setError('Une erreur est survenue. Veuillez réessayer.');
         return;
       }
 
