@@ -39,10 +39,12 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       if (resetError) {
         console.error('Erreur lors de l\'envoi de l\'email:', resetError);
         
-        if (resetError.message.includes('User not found')) {
+        if (resetError.message.includes('User not found') || resetError.message.includes('user_not_found')) {
           setError(`Aucun compte ${userType === 'client' ? 'client' : 'chauffeur'} trouvé avec cet email.`);
         } else if (resetError.message.includes('rate limit')) {
           setError('Trop de tentatives. Veuillez attendre quelques minutes avant de réessayer.');
+        } else if (resetError.message.includes('Error sending recovery email') || resetError.message.includes('unexpected_failure')) {
+          setError('Service d\'email temporairement indisponible. Veuillez contacter l\'administrateur ou réessayer plus tard.');
         } else {
           setError('Erreur lors de l\'envoi de l\'email. Veuillez réessayer.');
         }
