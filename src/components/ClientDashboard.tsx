@@ -95,6 +95,32 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
     fetchBookings();
   }, [client]);
 
+  // Realtime updates: auto-refresh bookings on INSERT/UPDATE for this client
+  useEffect(() => {
+    if (!client?.id) return;
+    const channel = supabase
+      .channel(`bookings-client-${client.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bookings', filter: `client_id=eq.${client.id}` },
+        (payload: any) => {
+          setBookings((prev) => [payload.new, ...prev.filter((b) => b.id !== payload.new.id)]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `client_id=eq.${client.id}` },
+        (payload: any) => {
+          setBookings((prev) => prev.map((b) => (b.id === payload.new.id ? { ...b, ...payload.new } : b)));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [client?.id]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     onLogout();
@@ -151,6 +177,27 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
             <Car size={12} />
             Acceptée
+          </span>
+        );
+      case 'in_progress':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <MapPin size={12} />
+            En cours
+          </span>
+        );
+      case 'cancelled':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <XCircle size={12} />
+            Annulée
+          </span>
+        );
+      case 'completed':
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircle size={12} />
+            Terminée
           </span>
         );
       default:

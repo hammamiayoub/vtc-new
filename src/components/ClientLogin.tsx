@@ -67,12 +67,14 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
           console.error('Erreur lors de la vérification du client:', clientError);
           setError('Erreur lors de la vérification du compte');
           await supabase.auth.signOut();
+          setIsSubmitting(false);
           return;
         }
         
         if (!clientData) {
-          setError('Ce compte n\'existe pas en tant que client. Veuillez créer un compte client.');
+          setError('Identifiants incorrects. Ce compte n\'est pas un compte client. Veuillez utiliser vos identifiants client ou créer un compte client.');
           await supabase.auth.signOut();
+          setIsSubmitting(false);
           return;
         }
 

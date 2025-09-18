@@ -113,6 +113,10 @@ function App() {
         if (event === 'SIGNED_OUT' || !session) {
           setUserType(null);
           setCurrentView('home');
+        } else if (event === 'SIGNED_IN' && session) {
+          // Ne pas rediriger automatiquement lors de la connexion
+          // Laisser les composants de login gérer la redirection
+          console.log('Connexion détectée, laisser le composant de login gérer la redirection');
         }
       }
     );
