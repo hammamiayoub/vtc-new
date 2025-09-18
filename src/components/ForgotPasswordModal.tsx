@@ -32,22 +32,58 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       
       // Vérifier que l'email existe dans la base de données
       const tableName = userType === 'client' ? 'clients' : 'drivers';
+      console.log('🔍 Vérification dans la table:', tableName);
+      console.log('🔍 Email recherché:', email);
+      
       const { data: userData, error: userError } = await supabase
         .from(tableName)
         .select('id, first_name, last_name, email')
         .eq('email', email)
         .maybeSingle();
 
+      console.log('📊 Résultat de la requête:', { userData, userError });
+
       if (userError) {
         console.error('Erreur lors de la vérification de l\'email:', userError);
+        console.error('Détails de l\'erreur:', {
+          message: userError.message,
+          details: userError.details,
+          hint: userError.hint,
+          code: userError.code
+        });
         setError('Erreur lors de la vérification de l\'email. Veuillez réessayer.');
         return;
       }
 
       if (!userData) {
-        setError(`Aucun compte ${userType === 'client' ? 'client' : 'chauffeur'} trouvé avec cet email.`);
+        console.log('❌ Aucun utilisateur trouvé avec cet email');
+        
+        // Essayer une approche alternative : vérifier directement avec Supabase Auth
+        console.log('🔄 Tentative de vérification alternative via Supabase Auth...');
+        
+        // Essayer de réinitialiser directement - si l'email n'existe pas, Supabase retournera une erreur
+        const { error: directResetError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}?type=${userType}#type=recovery`
+        });
+
+        if (directResetError) {
+          console.log('❌ Erreur lors de la réinitialisation directe:', directResetError);
+          if (directResetError.message.includes('User not found') || directResetError.message.includes('Invalid email')) {
+            setError(`Aucun compte ${userType === 'client' ? 'client' : 'chauffeur'} trouvé avec cet email.`);
+            return;
+          } else {
+            setError('Erreur lors de la vérification de l\'email. Veuillez réessayer.');
+            return;
+          }
+        }
+
+        // Si pas d'erreur, l'email existe dans Supabase Auth
+        console.log('✅ Email trouvé via Supabase Auth, envoi de l\'email de réinitialisation');
+        setSuccess(true);
         return;
       }
+
+      console.log('✅ Utilisateur trouvé:', userData);
 
       // Utiliser directement supabase.auth.resetPasswordForEmail
       const { error: authResetError } = await supabase.auth.resetPasswordForEmail(email, {
