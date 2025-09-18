@@ -380,7 +380,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
       const { data: activeDrivers, error: driversError } = await supabase
         .from('drivers')
-        .select('*')
+        .select('id, first_name, last_name, email, phone, city, license_number, vehicle_info, status, profile_photo_url, created_at, updated_at')
         .eq('status', 'active')
         .in('id', Array.from(availableDriverIds));
       
@@ -413,6 +413,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         lastName: driver.last_name,
         email: driver.email,
         phone: driver.phone,
+        city: driver.city,
         licenseNumber: driver.license_number,
         vehicleInfo: driver.vehicle_info,
         status: driver.status,
@@ -421,11 +422,65 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         updatedAt: driver.updated_at
       }));
 
-      console.log('🔄 Formatage terminé - Chauffeurs disponibles à cette date/heure:', formattedDrivers.length);
+      // Étape 5: Trier les chauffeurs par proximité géographique
+      console.log('📍 Étape 5: Tri par proximité géographique...');
       
-      setAvailableDrivers(formattedDrivers);
+      if (pickupCoords) {
+        console.log('📍 Coordonnées du point de départ:', pickupCoords);
+        
+        // Calculer la distance pour chaque chauffeur
+        const driversWithDistance = await Promise.all(
+          formattedDrivers.map(async (driver) => {
+            let distance = Infinity; // Distance par défaut si on ne peut pas calculer
+            
+            if (driver.city) {
+              try {
+                const calculatedDistance = await calculateDistanceFromCity(driver.city, pickupCoords);
+                if (calculatedDistance !== null) {
+                  distance = calculatedDistance;
+                  console.log(`📏 Distance ${driver.firstName} ${driver.lastName} (${driver.city}): ${distance} km`);
+                } else {
+                  console.warn(`⚠️ Impossible de calculer la distance pour ${driver.city}`);
+                }
+              } catch (error) {
+                console.error(`❌ Erreur calcul distance pour ${driver.city}:`, error);
+              }
+            } else {
+              console.warn(`⚠️ Ville non renseignée pour ${driver.firstName} ${driver.lastName}`);
+            }
+            
+            return {
+              ...driver,
+              distanceFromPickup: distance
+            };
+          })
+        );
+        
+        // Trier par distance croissante (le plus proche en premier)
+        const sortedDrivers = driversWithDistance.sort((a, b) => {
+          // Les chauffeurs avec une distance calculée passent en premier
+          if (a.distanceFromPickup === Infinity && b.distanceFromPickup !== Infinity) return 1;
+          if (a.distanceFromPickup !== Infinity && b.distanceFromPickup === Infinity) return -1;
+          return a.distanceFromPickup - b.distanceFromPickup;
+        });
+        
+        console.log('📊 Chauffeurs triés par distance:', sortedDrivers.map(d => ({
+          name: `${d.firstName} ${d.lastName}`,
+          city: d.city,
+          distance: d.distanceFromPickup === Infinity ? 'Non calculée' : `${d.distanceFromPickup} km`
+        })));
+        
+        setAvailableDrivers(sortedDrivers);
+      } else {
+        console.log('⚠️ Pas de coordonnées de départ, tri par ordre alphabétique');
+        const sortedDrivers = formattedDrivers.sort((a, b) => 
+          `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+        );
+        setAvailableDrivers(sortedDrivers);
+      }
+      
       setShowDrivers(true);
-      console.log('✅ Interface mise à jour avec', formattedDrivers.length, 'chauffeurs');
+      console.log('✅ Interface mise à jour avec', formattedDrivers.length, 'chauffeurs triés par proximité');
       
     } catch (error) {
       console.error('💥 Erreur inattendue:', error);
@@ -461,7 +516,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         price_tnd: estimatedPrice,
         scheduled_time: data.scheduledTime,
         notes: data.notes || null,
-        status: 'accepted'
+        status: 'pending'
       };
 
       console.log('📝 Données de réservation à insérer:', bookingData);
@@ -512,9 +567,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         // Appel à l'Edge Function pour envoyer les emails
         if (clientData && driverData) {
-          console.log('🚀 Appel Edge Function send-booking-notification...');
+          console.log('🚀 Appel Edge Function resend-email...');
           
-          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-notification`;
+          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resend-email`;
           
           const emailResponse = await fetch(functionUrl, {
             method: 'POST',
@@ -864,6 +919,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           <h4 className="font-medium text-gray-900">
                             {driver.firstName} {driver.lastName}
                           </h4>
+                          {driver.city && (
+                            <p className="text-sm text-gray-600 flex items-center gap-1">
+                              <MapPin size={12} />
+                              {driver.city}
+                              {driver.distanceFromPickup && driver.distanceFromPickup !== Infinity && (
+                                <span className="text-blue-600 font-medium ml-1">
+                                  • {driver.distanceFromPickup} km du départ
+                                </span>
+                              )}
+                            </p>
+                          )}
                           <p className="text-sm text-gray-600">{driver.email}</p>
                           {driver.phone && (
                             <p className="text-sm text-gray-600">{driver.phone}</p>
@@ -880,6 +946,14 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                           <CheckCircle className="w-6 h-6 text-purple-600" />
                         )}
                       </div>
+                      
+                      {/* Badge de proximité pour le chauffeur le plus proche */}
+                      {driver.distanceFromPickup && driver.distanceFromPickup !== Infinity && driver.distanceFromPickup <= 10 && (
+                        <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                          <MapPin size={12} />
+                          Chauffeur proche
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

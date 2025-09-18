@@ -9,7 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storage: window.localStorage,
-    storageKey: 'tuniride-auth-token',
+    storageKey: 'tunidrive-auth-token',
     flowType: 'pkce'
   }
 });

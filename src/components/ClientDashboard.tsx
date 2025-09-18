@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Clock, User, LogOut, Settings, Bell, Car, Plus, Navigation, CheckCircle, XCircle } from 'lucide-react';
+import { MapPin, Clock, User, LogOut, UserCircle, Car, Plus, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Client, Booking } from '../types';
@@ -46,6 +46,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               lastName: clientData.last_name,
               email: clientData.email,
               phone: clientData.phone,
+              city: clientData.city,
               status: clientData.status,
               profilePhotoUrl: clientData.profile_photo_url,
               createdAt: clientData.created_at,
@@ -142,7 +143,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
             <Clock size={12} />
-            En attente
+            En attente d'acceptation
           </span>
         );
       case 'accepted':
@@ -152,33 +153,42 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             Acceptée
           </span>
         );
-      case 'in_progress':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <MapPin size={12} />
-            En cours
-          </span>
-        );
-      case 'completed':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <CheckCircle size={12} />
-            Terminée
-          </span>
-        );
-      case 'cancelled':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <XCircle size={12} />
-            Annulée
-          </span>
-        );
       default:
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-            Inconnu
-          </span>
-        );
+        return null;
+    }
+  };
+
+  const canCancelBooking = (
+    booking: { scheduled_time?: string; status: Booking['status'] }
+  ) => {
+    try {
+      if (!booking?.scheduled_time) return false;
+      const scheduledMs = new Date(booking.scheduled_time).getTime();
+      const nowMs = Date.now();
+      const hoursUntil = (scheduledMs - nowMs) / 36e5;
+      return hoursUntil >= 24 && (booking.status === 'pending' || booking.status === 'accepted');
+    } catch {
+      return false;
+    }
+  };
+
+  const cancelBooking = async (bookingId: string) => {
+    const confirmed = window.confirm("Confirmer l'annulation de votre réservation ?");
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId);
+      if (error) {
+        alert("Impossible d'annuler la réservation: " + error.message);
+        return;
+      }
+      // Rafraîchir localement
+      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b)));
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      alert("Erreur lors de l'annulation: " + message);
     }
   };
 
@@ -198,7 +208,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
           <div className="flex justify-between items-center h-16 sm:h-20">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">TuniRide</h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">TuniDrive</h1>
                 <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">Espace Client</p>
               </div>
             </div>
@@ -218,7 +228,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 className="p-2 text-gray-300 hover:text-white  hover:bg-gray-800 transition-colors"
                 title="Mon profil"
               >
-                <Settings size={20} />
+                <UserCircle size={22} />
               </button>
               <Button onClick={handleLogout} className="flex items-center gap-1 sm:gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base px-2 sm:px-4">
                 <LogOut size={14} className="sm:w-4 sm:h-4" />
@@ -435,6 +445,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                         <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-4">
                           <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
                           {getStatusBadge(booking.status)}
+                          {canCancelBooking(booking) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              aria-label="Annuler la réservation"
+                              className="border-red-300 text-red-600 hover:bg-red-50 order-3 w-full sm:w-auto mt-2 sm:mt-0"
+                              onClick={() => cancelBooking(booking.id)}
+                            >
+                              Annuler
+                            </Button>
+                          )}
                         </div>
                         {booking.notes && (
                           <p className="mt-2 text-sm text-gray-600 italic">

@@ -8,7 +8,7 @@ const corsHeaders = {
 // Configuration Resend
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 // IMPORTANT: Remplacez par votre domaine vérifié dans Resend
-const FROM_EMAIL = 'TuniRide <noreply@tuniride.net>' // Ou votre domaine configuré
+const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>' // Ou votre domaine configuré
 
 async function sendEmail(to: string, subject: string, html: string) {
   console.log('🔧 Configuration email:')
@@ -72,7 +72,7 @@ async function sendEmail(to: string, subject: string, html: string) {
 }
 
 serve(async (req) => {
-  console.log('🚀 Edge Function send-booking-notification démarrée')
+  console.log('🚀 Edge Function resend-email démarrée')
   console.log('📥 Méthode:', req.method)
   
   // Handle CORS preflight requests
@@ -120,7 +120,7 @@ serve(async (req) => {
     const clientEmailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
-          <h1 style="color: #333; margin: 0;">TuniRide - Confirmation de réservation</h1>
+          <h1 style="color: #333; margin: 0;">TuniDrive - Confirmation de réservation</h1>
         </div>
         
         <div style="padding: 30px 20px;">
@@ -158,12 +158,12 @@ serve(async (req) => {
           </div>
           
           <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Merci de faire confiance à TuniRide pour vos déplacements !
+            Merci de faire confiance à TuniDrive pour vos déplacements !
           </p>
         </div>
         
         <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-          <p style="margin: 0;">TuniRide - Votre transport sur mesure</p>
+          <p style="margin: 0;">TuniDrive - Votre transport sur mesure</p>
         </div>
       </div>
     `
@@ -172,7 +172,7 @@ serve(async (req) => {
     const driverEmailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
-          <h1 style="color: #333; margin: 0;">TuniRide - Nouvelle réservation</h1>
+          <h1 style="color: #333; margin: 0;">TuniDrive - Nouvelle réservation</h1>
         </div>
         
         <div style="padding: 30px 20px;">
@@ -206,12 +206,12 @@ serve(async (req) => {
           </div>
           
           <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Merci de faire partie de l'équipe TuniRide !
+            Merci de faire partie de l'équipe TuniDrive !
           </p>
         </div>
         
         <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-          <p style="margin: 0;">TuniRide - Plateforme chauffeurs</p>
+          <p style="margin: 0;">TuniDrive - Plateforme chauffeurs</p>
         </div>
       </div>
     `
@@ -223,7 +223,7 @@ serve(async (req) => {
       console.log('📧 Envoi email client à:', clientData.email)
       const clientResult = await sendEmail(
         clientData.email,
-        'TuniRide - Confirmation de votre réservation',
+        'TuniDrive - Confirmation de votre réservation',
         clientEmailContent
       )
       emailResults.push({ type: 'client', success: true, id: clientResult.id })
@@ -237,7 +237,7 @@ serve(async (req) => {
       console.log('📧 Envoi email chauffeur à:', driverData.email)
       const driverResult = await sendEmail(
         driverData.email,
-        'TuniRide - Nouvelle réservation reçue',
+        'TuniDrive - Nouvelle réservation reçue',
         driverEmailContent
       )
       emailResults.push({ type: 'driver', success: true, id: driverResult.id })

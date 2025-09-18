@@ -1,0 +1,2 @@
+[send-password-reset]
+allow_net = ["<all>"]

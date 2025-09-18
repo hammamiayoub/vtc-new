@@ -14,9 +14,10 @@ import { ClientLogin } from './components/ClientLogin';
 import { ClientDashboard } from './components/ClientDashboard';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { TermsOfService } from './components/TermsOfService';
+import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 
-type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service';
+type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -24,6 +25,13 @@ function App() {
   const [userType, setUserType] = useState<'driver' | 'client' | 'admin' | null>(null);
 
   useEffect(() => {
+    // Vérifier si on est sur une page de réinitialisation de mot de passe
+    const urlParams = new URLSearchParams(window.location.search);
+    if (window.location.hash.includes('type=recovery') || urlParams.get('type')) {
+      setCurrentView('reset-password');
+      return;
+    }
+
     // Vérifier la session existante au chargement
     const checkSession = async () => {
       try {
@@ -195,6 +203,13 @@ function App() {
         return <PrivacyPolicy onBack={() => setCurrentView('home')} />;
       case 'terms-of-service':
         return <TermsOfService onBack={() => setCurrentView('home')} />;
+      case 'reset-password':
+        return (
+          <ResetPasswordPage 
+            onBack={() => setCurrentView('home')}
+            onSuccess={() => setCurrentView('home')}
+          />
+        );
       default:
         return (
           <HomePage 

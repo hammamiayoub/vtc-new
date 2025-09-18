@@ -85,6 +85,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         lastName: driver.last_name,
         email: driver.email,
         phone: driver.phone,
+        city: driver.city,
         licenseNumber: driver.license_number,
         vehicleInfo: driver.vehicle_info,
         status: driver.status,
@@ -197,7 +198,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Administration</h1>
-                <p className="text-sm text-gray-600">TuniRide</p>
+                <p className="text-sm text-gray-600">TuniDrive</p>
               </div>
             </div>
             
@@ -344,6 +345,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
                         <p className="text-gray-900">{driver.phone || 'Non renseigné'}</p>
+                        <p className="text-gray-500">Ville: {driver.city || 'Non renseigné'}</p>
                         <p className="text-gray-500">Permis: {driver.licenseNumber || 'Non renseigné'}</p>
                       </div>
                     </td>

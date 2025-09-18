@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Car, Clock, MapPin, LogOut, Settings, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
+import { User, Car, Clock, MapPin, LogOut, UserCircle, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
 import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
@@ -48,6 +48,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               lastName: driverData.last_name,
               email: driverData.email,
               phone: driverData.phone,
+              city: driverData.city,
               licenseNumber: driverData.license_number,
               vehicleInfo: driverData.vehicle_info,
               status: driverData.status,
@@ -259,7 +260,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
   const needsProfileCompletion = !driver?.phone || !driver?.licenseNumber || !driver?.vehicleInfo;
 
-  const pendingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'accepted');
+  const pendingBookings = bookings.filter(b => b.status === 'pending');
+  const acceptedBookings = bookings
+    .filter(b => b.status === 'accepted')
+    .sort((a, b) => new Date(a.scheduled_time).getTime() - new Date(b.scheduled_time).getTime());
   const completedBookings = bookings.filter(b => b.status === 'completed');
   const totalEarnings = completedBookings.reduce((sum, booking) => sum + booking.price_tnd, 0);
 
@@ -281,9 +285,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         );
       case 'accepted':
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <CheckCircle size={12} />
-            Acceptée
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <Clock size={12} />
+            Programmée
           </span>
         );
       case 'in_progress':
@@ -332,7 +336,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           <div className="flex justify-between items-center h-16 sm:h-20">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">TuniRide</h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">TuniDrive</h1>
                 <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">Espace Chauffeur</p>
               </div>
             </div>
@@ -352,7 +356,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 className="p-2 text-gray-300 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
                 title="Mon profil"
               >
-                <Settings size={20} />
+                <UserCircle size={22} />
               </button>
               <Button onClick={handleLogout} className="flex items-center gap-1 sm:gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base px-2 sm:px-4">
                 <LogOut size={14} className="sm:w-4 sm:h-4" />
@@ -668,8 +672,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {/* Onglet Courses */}
         {!showProfileForm && activeTab === 'bookings' && (
           <div className="space-y-6">
-            {/* Nouvelles demandes - Statut 'accepted' */}
-            {bookings.filter(b => b.status === 'accepted').length > 0 && (
+            {/* Nouvelles demandes - Statut 'pending' */}
+            {pendingBookings.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
@@ -749,7 +753,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                                 size="sm"
                               >
                                 <Car size={16} />
-                                Commencer
+                                Accepter
                               </Button>
                               <Button
                                 onClick={() => updateBookingStatus(booking.id, 'cancelled')}
@@ -840,6 +844,71 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             <span className="text-gray-600">ID:</span>
                             <span className="ml-2 font-mono text-xs">{booking.id.slice(0, 8)}</span>
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Courses programmées (accepted) en premier */}
+            {acceptedBookings.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    Courses programmées ({acceptedBookings.length})
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-600">Prochaines courses à venir</p>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {acceptedBookings.map((booking) => (
+                    <div key={booking.id} className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getStatusBadge(booking.status)}
+                            <span className="text-sm text-gray-500">
+                              Prévue le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
+                                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <MapPin size={16} className="text-green-600" />
+                              <span className="font-medium text-gray-900">{booking.pickup_address}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Navigation size={16} className="text-red-600" />
+                              <span className="text-sm text-gray-600">Arrivée:</span>
+                              <span className="font-medium text-gray-900">{booking.destination_address}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <span>{booking.distance_km} km</span>
+                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="lg:ml-6 flex flex-col sm:flex-row lg:flex-col gap-2">
+                          <Button
+                            onClick={() => updateBookingStatus(booking.id, 'in_progress')}
+                            className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
+                            size="sm"
+                          >
+                            <Car size={16} />
+                            Démarrer la course
+                          </Button>
+                          <Button
+                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                            variant="outline"
+                            className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            size="sm"
+                          >
+                            <XCircle size={16} />
+                            Annuler
+                          </Button>
                         </div>
                       </div>
                     </div>

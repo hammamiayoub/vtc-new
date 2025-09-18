@@ -47,10 +47,25 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           emailRedirectTo: undefined, // Désactiver la redirection email
           data: {
             first_name: data.firstName,
-            last_name: data.lastName
+            last_name: data.lastName,
+            email_confirm: true // Désactiver la confirmation par email
           }
         }
       });
+
+      // Alternative: Créer l'utilisateur sans confirmation email
+      /* const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: undefined,
+          data: {
+            first_name: data.firstName,
+            last_name: data.lastName,
+            skip_confirmation: true
+          }
+        }
+      }); */
 
       console.log('📧 Réponse Supabase Auth:', { authData, authError });
 
@@ -151,7 +166,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 Devenez chauffeur
               </h1>
               <p className="text-gray-600 text-lg">
-                Rejoignez TuniRide - notre réseau de chauffeurs professionnels
+                Rejoignez TuniDrive - notre réseau de chauffeurs professionnels
               </p>
             </div>
 

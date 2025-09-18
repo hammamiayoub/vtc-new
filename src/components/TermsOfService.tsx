@@ -36,7 +36,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
               Conditions générales d'utilisation
             </h1>
             <p className="text-xl text-gray-600">
-              TuniRide.net
+              TuniDrive.net
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
@@ -46,7 +46,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
           {/* Introduction */}
           <div className="prose max-w-none">
             <p className="text-lg text-gray-700 mb-8 leading-relaxed">
-              Bienvenue sur TuniRide.net, une plateforme en ligne permettant la mise en relation entre des clients 
+              Bienvenue sur TuniDrive.net, une plateforme en ligne permettant la mise en relation entre des clients 
               souhaitant réserver un trajet en véhicule de transport avec chauffeur (VTC) et des chauffeurs partenaires.
               En utilisant notre site et nos services, vous acceptez les présentes Conditions générales d'utilisation (CGU).
             </p>
@@ -61,7 +61,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
               </div>
               
               <p className="text-gray-700 mb-4">
-                Les présentes CGU ont pour objet de définir les règles d'utilisation de la plateforme TuniRide.net par :
+                Les présentes CGU ont pour objet de définir les règles d'utilisation de la plateforme TuniDrive.net par :
               </p>
               
               <div className="space-y-4">
@@ -262,7 +262,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
               </div>
               
               <p className="text-gray-700 mb-4">
-                TuniRide.net se réserve le droit de suspendre ou supprimer le compte de tout utilisateur (client ou chauffeur) en cas de :
+                TuniDrive.net se réserve le droit de suspendre ou supprimer le compte de tout utilisateur (client ou chauffeur) en cas de :
               </p>
               
               <ul className="space-y-3">
@@ -311,7 +311,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-600 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Tous les contenus du site TuniRide.net (textes, logos, design, code, etc.) sont protégés par le droit d'auteur.</span>
+                  <span className="text-gray-700">Tous les contenus du site TuniDrive.net (textes, logos, design, code, etc.) sont protégés par le droit d'auteur.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-600 rounded-full mt-2"></div>
@@ -374,7 +374,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
               <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
                 <Mail size={32} className="text-green-600 mx-auto mb-3" />
                 <p className="text-xl font-semibold text-green-900">
-                  📧 contact@tuniride.net
+                  📧 contact@tunidrive.net
                 </p>
               </div>
             </div>
