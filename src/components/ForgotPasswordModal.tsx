@@ -30,77 +30,37 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       console.log('🔍 Vérification email et envoi reset pour:', email);
       console.log('🔍 Type utilisateur:', userType);
       
-      // Étape 1: Vérifier que l'email existe via Edge Function
-      const checkUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-user-email`;
-      
-      const checkResponse = await fetch(checkUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          userType: userType
-        })
-      });
+      // Vérifier que l'email existe dans la base de données
+      const tableName = userType === 'client' ? 'clients' : 'drivers';
+      const { data: userData, error: userError } = await supabase
+        .from(tableName)
+        .select('id, first_name, last_name, email')
+        .eq('email', email)
+        .maybeSingle();
 
-      if (!checkResponse.ok) {
-        console.error('Erreur lors de la vérification de l\'email');
+      if (userError) {
+        console.error('Erreur lors de la vérification de l\'email:', userError);
         setError('Erreur lors de la vérification de l\'email. Veuillez réessayer.');
         return;
       }
 
-      const checkResult = await checkResponse.json();
-      console.log('📊 Résultat vérification email:', checkResult);
-
-      if (!checkResult.exists) {
+      if (!userData) {
         setError(`Aucun compte ${userType === 'client' ? 'client' : 'chauffeur'} trouvé avec cet email.`);
         return;
       }
 
-      // Étape 2: Envoyer l'email de réinitialisation via Edge Function
-      const resetUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-password-reset`;
-      
-      const resetResponse = await fetch(resetUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          firstName: checkResult.userData.first_name,
-          lastName: checkResult.userData.last_name,
-          userType: userType
-        })
-      });
-
-      if (!resetResponse.ok) {
-        console.error('Erreur lors de l\'envoi de l\'email de reset');
-        setError('Erreur lors de l\'envoi de l\'email. Veuillez réessayer.');
-        return;
-      }
-
-      const resetResult = await resetResponse.json();
-      console.log('📧 Résultat envoi email:', resetResult);
-
-      if (!resetResult.success) {
-        setError('Erreur lors de l\'envoi de l\'email. Veuillez contacter l\'administrateur.');
-        return;
-      }
-
-      // Étape 3: Envoyer aussi via Supabase Auth pour le lien de reset fonctionnel
+      // Utiliser directement supabase.auth.resetPasswordForEmail
       const { error: authResetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}?type=${userType}#type=recovery`
       });
 
       if (authResetError) {
-        console.warn('Supabase Auth reset failed, but custom email sent:', authResetError);
-        // Ne pas faire échouer si l'email personnalisé a été envoyé
+        console.error('Erreur lors de l\'envoi de l\'email de réinitialisation:', authResetError);
+        setError('Erreur lors de l\'envoi de l\'email. Veuillez réessayer.');
+        return;
       }
 
-      console.log('✅ Processus de réinitialisation terminé avec succès');
+      console.log('✅ Email de réinitialisation envoyé avec succès');
       setSuccess(true);
     } catch (error) {
       console.error('Erreur:', error);
