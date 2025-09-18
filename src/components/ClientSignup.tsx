@@ -120,7 +120,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
             <div className="mb-6 sm:mb-8">
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Créer un compte client</h1>
-              <p className="text-gray-600 text-base sm:text-lg">Rejoignez TuniRide pour réserver vos courses</p>
+              <p className="text-gray-600 text-base sm:text-lg">Rejoignez TuniDrive pour réserver vos courses</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">

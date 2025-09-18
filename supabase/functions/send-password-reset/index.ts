@@ -7,7 +7,7 @@ const corsHeaders = {
 
 // Configuration Resend
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'TuniRide <team@tuniride.net>' // Utilisez votre domaine vérifié
+const FROM_EMAIL = 'TuniDrive <team@tunidrive.net>' // Utilisez votre domaine vérifié
 
 async function sendPasswordResetEmail(to: string, firstName: string, lastName: string, userType: string) {
   console.log('🔧 Configuration email reset:')
@@ -27,7 +27,7 @@ async function sendPasswordResetEmail(to: string, firstName: string, lastName: s
   const emailContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #7c3aed; padding: 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">TuniRide</h1>
+        <h1 style="color: white; margin: 0; font-size: 28px;">TuniDrive</h1>
         <p style="color: #e9d5ff; margin: 10px 0 0 0;">Réinitialisation de mot de passe</p>
       </div>
       
@@ -35,7 +35,7 @@ async function sendPasswordResetEmail(to: string, firstName: string, lastName: s
         <h2 style="color: #333; margin-bottom: 20px;">Bonjour ${firstName} ${lastName},</h2>
         
         <p style="font-size: 16px; line-height: 1.6; color: #555; margin-bottom: 20px;">
-          Vous avez demandé la réinitialisation de votre mot de passe pour votre compte ${userTypeLabel} TuniRide.
+          Vous avez demandé la réinitialisation de votre mot de passe pour votre compte ${userTypeLabel} TuniDrive.
         </p>
         
         <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -58,12 +58,12 @@ async function sendPasswordResetEmail(to: string, firstName: string, lastName: s
         </div>
         
         <p style="color: #666; font-size: 14px; margin-top: 30px;">
-          Si vous rencontrez des difficultés, contactez notre support à contact@tuniride.net
+          Si vous rencontrez des difficultés, contactez notre support à contact@tunidrive.net
         </p>
       </div>
       
       <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-        <p style="margin: 0;">TuniRide - Votre transport sur mesure</p>
+        <p style="margin: 0;">TuniDrive - Votre transport sur mesure</p>
         <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">
           Cet email a été envoyé automatiquement, merci de ne pas y répondre.
         </p>
@@ -83,7 +83,7 @@ async function sendPasswordResetEmail(to: string, firstName: string, lastName: s
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [to],
-        subject: `TuniRide - Réinitialisation de votre mot de passe ${userTypeLabel}`,
+        subject: `TuniDrive - Réinitialisation de votre mot de passe ${userTypeLabel}`,
         html: emailContent,
       }),
     })

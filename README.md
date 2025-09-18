@@ -1,4 +1,4 @@
-# TuniRide
+# TuniDrive
 
 ## Fonctionnalités
 Plateforme de réservation de véhicules de transport avec chauffeur (VTC) en Tunisie.
@@ -27,7 +27,7 @@ Copier `.env.example` vers `.env` et configurer:
 1. **Créer un compte Resend** : https://resend.com
 2. **Vérifier votre domaine** :
    - Allez dans "Domains" dans le dashboard Resend
-   - Ajoutez votre domaine (ex: tuniride.net)
+   - Ajoutez votre domaine (ex: tunidrive.net)
    - Configurez les enregistrements DNS requis
 3. **Créer une API Key** :
    - Allez dans "API Keys"
@@ -35,7 +35,7 @@ Copier `.env.example` vers `.env` et configurer:
    - Copiez la clé dans votre fichier `.env`
 4. **Configurer l'adresse expéditeur** :
    - Modifiez `FROM_EMAIL` dans `supabase/functions/send-booking-notification/index.ts`
-   - Utilisez votre domaine vérifié : `"TuniRide <noreply@votredomaine.com>"`
+   - Utilisez votre domaine vérifié : `"TuniDrive <noreply@votredomaine.com>"`
 
 ### Test des emails
 - Les emails sont envoyés automatiquement lors des réservations
@@ -43,4 +43,4 @@ Copier `.env.example` vers `.env` et configurer:
 - Les erreurs d'envoi n'empêchent pas la création des réservations
 
 ## Domaine
-Le site est configuré pour fonctionner sur `tuniride.net`
+Le site est configuré pour fonctionner sur `tunidrive.net`

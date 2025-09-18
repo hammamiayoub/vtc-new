@@ -36,7 +36,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               Politique de confidentialité
             </h1>
             <p className="text-xl text-gray-600">
-              TuniRide.net
+              TuniDrive.net
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
@@ -46,7 +46,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
           {/* Introduction */}
           <div className="prose max-w-none">
             <p className="text-lg text-gray-700 mb-8 leading-relaxed">
-              La présente Politique de confidentialité décrit la manière dont TuniRide.net collecte, 
+              La présente Politique de confidentialité décrit la manière dont TuniDrive.net collecte, 
               utilise, conserve et protège vos données personnelles lorsque vous utilisez notre 
               plateforme de réservation de véhicules de transport avec chauffeur (VTC) en Tunisie.
             </p>
@@ -339,7 +339,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
                 <Mail size={32} className="text-green-600 mx-auto mb-3" />
                 <p className="text-xl font-semibold text-green-900">
-                  📧 contact@tuniride.net
+                  📧 contact@tunidrive.net
                 </p>
               </div>
             </div>
