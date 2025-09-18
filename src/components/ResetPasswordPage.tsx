@@ -29,6 +29,26 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
     if (type) {
       setUserType(type);
     }
+
+    // Vérifier si l'utilisateur a une session de réinitialisation
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Erreur lors de la vérification de session:', error);
+        setError('Session de réinitialisation invalide. Veuillez demander un nouveau lien de réinitialisation.');
+        return;
+      }
+      
+      if (!session) {
+        console.log('Aucune session trouvée, redirection vers la page de connexion');
+        setError('Session de réinitialisation expirée. Veuillez demander un nouveau lien de réinitialisation.');
+        return;
+      }
+      
+      console.log('Session de réinitialisation trouvée:', session.user?.id);
+    };
+
+    checkSession();
   }, []);
 
   const validatePassword = (pwd: string) => {
@@ -59,13 +79,26 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Vérifier d'abord que l'utilisateur a une session valide
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('Session invalide:', sessionError);
+        setError('Session de réinitialisation expirée. Veuillez demander un nouveau lien de réinitialisation.');
+        return;
+      }
+
       const { error: updateError } = await supabase.auth.updateUser({
         password: password
       });
 
       if (updateError) {
         console.error('Erreur lors de la mise à jour du mot de passe:', updateError);
-        setError('Erreur lors de la mise à jour du mot de passe');
+        if (updateError.message.includes('AuthSessionMissingError')) {
+          setError('Session de réinitialisation expirée. Veuillez demander un nouveau lien de réinitialisation.');
+        } else {
+          setError('Erreur lors de la mise à jour du mot de passe: ' + updateError.message);
+        }
         return;
       }
 

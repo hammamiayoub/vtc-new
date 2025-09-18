@@ -27,8 +27,16 @@ function App() {
   useEffect(() => {
     // Vérifier si on est sur une page de réinitialisation de mot de passe
     const urlParams = new URLSearchParams(window.location.search);
-    if (window.location.hash.includes('type=recovery') || urlParams.get('type')) {
+    const hash = window.location.hash;
+    
+    console.log('URL params:', urlParams.get('type'));
+    console.log('Hash:', hash);
+    console.log('Full URL:', window.location.href);
+    
+    if (hash.includes('type=recovery') || urlParams.get('type') === 'recovery' || urlParams.get('type') === 'client' || urlParams.get('type') === 'driver') {
+      console.log('Détection de réinitialisation de mot de passe, redirection vers reset-password');
       setCurrentView('reset-password');
+      setIsLoading(false);
       return;
     }
 
@@ -113,6 +121,10 @@ function App() {
         if (event === 'SIGNED_OUT' || !session) {
           setUserType(null);
           setCurrentView('home');
+        } else if (event === 'SIGNED_IN' && session) {
+          // Ne pas rediriger automatiquement lors de la connexion
+          // Laisser les composants de login gérer la redirection
+          console.log('Connexion détectée, laisser le composant de login gérer la redirection');
         }
       }
     );

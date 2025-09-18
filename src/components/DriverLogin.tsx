@@ -67,12 +67,14 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
           console.error('Erreur lors de la vérification du chauffeur:', driverError);
           setError('Erreur lors de la vérification du compte');
           await supabase.auth.signOut();
+          setIsSubmitting(false);
           return;
         }
         
         if (!driverData) {
-          setError('Ce compte n\'existe pas en tant que chauffeur. Veuillez créer un compte chauffeur.');
+          setError('Identifiants incorrects. Ce compte n\'est pas un compte chauffeur. Veuillez utiliser vos identifiants chauffeur ou créer un compte chauffeur.');
           await supabase.auth.signOut();
+          setIsSubmitting(false);
           return;
         }
 
