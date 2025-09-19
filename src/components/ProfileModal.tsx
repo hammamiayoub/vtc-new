@@ -138,11 +138,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           .eq('client_id', user.id);
       }
 
-      // Supprimer le profil
+      // Marquer le profil comme supprimé au lieu de le supprimer complètement
       const tableName = userType === 'driver' ? 'drivers' : 'clients';
       const { error: profileError } = await supabase
         .from(tableName)
-        .delete()
+        .update({ 
+          status: 'deleted',
+          deleted_at: new Date().toISOString(),
+          email: `deleted_${Date.now()}_${user.email}` // Modifier l'email pour éviter les conflits
+        })
         .eq('id', user.id);
 
       if (profileError) {
@@ -151,10 +155,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         return;
       }
 
-      // Note: La suppression de l'utilisateur Auth nécessite des permissions admin
-      // Pour l'instant, on supprime seulement les données du profil
-      // L'utilisateur Auth restera mais sans données associées
-      console.log('⚠️ Suppression du profil uniquement. L\'utilisateur Auth reste actif.');
+      // Supprimer l'utilisateur Auth pour permettre la réinscription
+      try {
+        const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+        if (authError) {
+          console.warn('⚠️ Impossible de supprimer le compte Auth:', authError);
+          // Continuer même si la suppression Auth échoue
+        } else {
+          console.log('✅ Compte Auth supprimé avec succès');
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur lors de la suppression du compte Auth:', error);
+        // Continuer même si la suppression Auth échoue
+      }
 
       // Déconnecter l'utilisateur
       await supabase.auth.signOut();

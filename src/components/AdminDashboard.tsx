@@ -65,6 +65,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       const { data, error } = await supabase
         .from('drivers')
         .select('*')
+        .neq('status', 'deleted') // Exclure les comptes supprimés
         .order('created_at', { ascending: false });
 
       if (error) {

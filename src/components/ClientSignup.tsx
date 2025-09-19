@@ -79,7 +79,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
         try {
           const notificationUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-signup-notification`;
           
-          await fetch(notificationUrl, {
+          const response = await fetch(notificationUrl, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
@@ -97,6 +97,11 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               userType: 'client'
             })
           });
+
+          if (!response.ok) {
+            console.warn('⚠️ Erreur lors de l\'envoi de la notification:', response.status, response.statusText);
+            return; // Ne pas faire échouer l'inscription
+          }
           
           console.log('✅ Notification d\'inscription envoyée au support');
         } catch (notificationError) {
