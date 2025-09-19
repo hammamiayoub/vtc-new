@@ -152,7 +152,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       // Géocodage inverse pour obtenir l'adresse
       const response = await fetch(
        // `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&countrycodes=tn`
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=tn&limit=5&addressdetails=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=tn&limit=5&addressdetails=1` 
       );
       
       if (response.ok) {
