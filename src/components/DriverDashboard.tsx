@@ -37,6 +37,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             .from('drivers')
             .select('*')
             .eq('id', user.id)
+            .neq('status', 'deleted') // Exclure les comptes supprimés
             .single();
 
           if (error) {

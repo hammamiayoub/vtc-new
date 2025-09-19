@@ -74,6 +74,40 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
           console.error('Erreur lors de la création du profil client:', profileError);
           return;
         }
+
+        // Envoyer une notification au support
+        try {
+          const notificationUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-signup-notification`;
+          
+          const response = await fetch(notificationUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userData: {
+                first_name: data.firstName,
+                last_name: data.lastName,
+                email: data.email,
+                phone: data.phone,
+                city: data.city,
+                created_at: new Date().toISOString()
+              },
+              userType: 'client'
+            })
+          });
+
+          if (!response.ok) {
+            console.warn('⚠️ Erreur lors de l\'envoi de la notification:', response.status, response.statusText);
+            return; // Ne pas faire échouer l'inscription
+          }
+          
+          console.log('✅ Notification d\'inscription envoyée au support');
+        } catch (notificationError) {
+          console.warn('⚠️ Erreur lors de l\'envoi de la notification:', notificationError);
+          // Ne pas faire échouer l'inscription si la notification échoue
+        }
       }
 
       setSubmitSuccess(true);

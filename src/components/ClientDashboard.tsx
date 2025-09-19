@@ -35,6 +35,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             .from('clients')
             .select('*')
             .eq('id', user.id)
+            .neq('status', 'deleted') // Exclure les comptes supprimés
             .maybeSingle();
 
           if (error) {
