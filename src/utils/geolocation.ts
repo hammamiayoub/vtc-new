@@ -15,7 +15,8 @@ export const geocodeAddress = async (address: string): Promise<GeocodeResult | n
     // Utiliser l'API Nominatim d'OpenStreetMap (gratuite)
     const encodedAddress = encodeURIComponent(`${address}, Tunisia`);
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=tn`
+    //  `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=tn`
+       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=tn&limit=5&addressdetails=1`
     );
     
     if (!response.ok) {
