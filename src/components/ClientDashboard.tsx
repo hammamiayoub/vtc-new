@@ -3,11 +3,13 @@ import { MapPin, Clock, User, LogOut, UserCircle, Car, Plus, CheckCircle, XCircl
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Client, Booking } from '../types';
+import { getVehicleMultiplier } from '../utils/geolocation';
 import { BookingForm } from './BookingForm';
 import { BookingConfirmation } from './BookingConfirmation';
 import { ProfileModal } from './ProfileModal';
 import { NotificationBell } from './NotificationBell';
 import { RatingModal } from './RatingModal';
+import { Footer } from './Footer';
 import { NotificationPermission, NotificationStatus } from './NotificationPermission';
 import { useClientNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
@@ -641,6 +643,28 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     Les remises s'appliquent automatiquement selon la distance.
                   </p>
                 </div>
+                
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-orange-900 mb-3">Tarifs par type de véhicule</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-800">Bus</span>
+                      <span className="font-medium text-orange-900">×3,5</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-800">Minibus</span>
+                      <span className="font-medium text-orange-900">×2,5</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-800">Limousine / Camion</span>
+                      <span className="font-medium text-orange-900">×2,0</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-800">Berline / Pickup / Van / Utilitaire</span>
+                      <span className="font-medium text-orange-900">×1,0 (tarif normal)</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </>
@@ -796,6 +820,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
           />
         )}
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

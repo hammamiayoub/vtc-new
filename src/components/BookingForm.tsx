@@ -24,6 +24,7 @@ import {
   calculateDistance, 
   calculatePrice, 
   getPricePerKm,
+  getVehicleMultiplier,
   getCurrentPosition,
   popularAddresses,
   calculateDistanceFromCity,
@@ -78,6 +79,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
   const watchPickup = watch('pickupAddress');
   const watchDestination = watch('destinationAddress');
+  const watchVehicleType = watch('vehicleType');
 
   // Autocomplétion des adresses
   useEffect(() => {
@@ -104,6 +106,14 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     }
   }, [watchDestination]);
 
+  // Recalcul du prix quand le type de véhicule change
+  useEffect(() => {
+    if (estimatedDistance && watchVehicleType !== undefined) {
+      const price = calculatePrice(estimatedDistance, watchVehicleType);
+      setEstimatedPrice(price);
+    }
+  }, [watchVehicleType, estimatedDistance]);
+
   // Calcul automatique de la distance et du prix
   useEffect(() => {
     const calculateRoute = async () => {
@@ -129,8 +139,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               destinationResult.coordinates.longitude
             );
 
-            // Calculer le prix
-            const price = calculatePrice(distance);
+            // Calculer le prix avec le type de véhicule
+            const selectedVehicleType = watch('vehicleType');
+            const price = calculatePrice(distance, selectedVehicleType);
 
             setEstimatedDistance(distance);
             setEstimatedPrice(price);
@@ -888,10 +899,19 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     {(() => {
                       if (!estimatedDistance) return '';
                       const { price, discount } = getPricePerKm(estimatedDistance);
+                      const selectedVehicleType = watch('vehicleType');
+                      const vehicleMultiplier = getVehicleMultiplier(selectedVehicleType);
+                      const vehicleTypeName = vehicleTypeOptions.find(opt => opt.value === selectedVehicleType)?.label || 'Standard';
+                      
                       return (
                         <div>
                           <div>{estimatedDistance} km × {price.toFixed(2)} TND/km</div>
                           {discount && <div className="text-green-600 font-semibold">{discount}</div>}
+                          {vehicleMultiplier > 1 && (
+                            <div className="text-blue-600 font-semibold">
+                              ×{vehicleMultiplier} ({vehicleTypeName})
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
