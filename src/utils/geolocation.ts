@@ -15,8 +15,7 @@ export const geocodeAddress = async (address: string): Promise<GeocodeResult | n
     // Utiliser l'API Nominatim d'OpenStreetMap (gratuite)
     const encodedAddress = encodeURIComponent(`${address}, Tunisia`);
     const response = await fetch(
-    //  `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=tn`
-       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=tn&limit=5&addressdetails=1`
+       `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&countrycodes=tn&limit=5&addressdetails=1`
     );
     
     if (!response.ok) {
@@ -62,23 +61,30 @@ export const calculateDistance = (
   return Math.round(distance * 100) / 100; // Arrondir à 2 décimales
 };
 
-// Fonction pour calculer le prix (2,5 TND par km)
-export const calculatePrice = (distanceKm: number): number => {
-  let pricePerKm: number;
+// Fonction pour obtenir le tarif par kilomètre selon la distance
+export const getPricePerKm = (distanceKm: number): { price: number; discount: string } => {
+  const basePricePerKm = 2.2; // Tarif de base : 2,2 TND/KM
   
-  // Grille tarifaire par tranches de distance
-  if (distanceKm <= 20) {
-    pricePerKm = 2.5; // Tarif de base
-  } else if (distanceKm <= 30) {
-    pricePerKm = 3.0; // 20-30km : 3 TND/km
-  } else if (distanceKm <= 50) {
-    pricePerKm = 2.5; // 30-50km : 2.5 TND/km
+  if (distanceKm >= 30 && distanceKm < 100) {
+    // Distance 30–100 km → plein tarif
+    return { price: basePricePerKm, discount: '' };
+  } else if (distanceKm >= 100 && distanceKm < 250) {
+    // Distance 100–250 km → -10 %/km
+    return { price: basePricePerKm * 0.9, discount: '(-10%)' };
+  } else if (distanceKm >= 250) {
+    // Distance 250 km+ → -20 %/km
+    return { price: basePricePerKm * 0.8, discount: '(-20%)' };
   } else {
-    pricePerKm = 2.2; // +50km : 2.2 TND/km
+    // Distance < 30 km → tarif de base (2,2 TND/KM)
+    return { price: basePricePerKm, discount: '' };
   }
-  
-  const basePrice = distanceKm * pricePerKm;
-  return Math.round(basePrice * 100) / 100; // Arrondir à 2 décimales
+};
+
+// Fonction pour calculer le prix selon le nouveau schéma tarifaire
+export const calculatePrice = (distanceKm: number): number => {
+  const { price: pricePerKm } = getPricePerKm(distanceKm);
+  const totalPrice = distanceKm * pricePerKm;
+  return Math.round(totalPrice * 100) / 100; // Arrondir à 2 décimales
 };
 
 // Obtenir la position actuelle de l'utilisateur

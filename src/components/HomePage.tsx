@@ -6,11 +6,9 @@ import { Footer } from './Footer';
 interface HomePageProps {
   onGetStarted: () => void;
   onClientLogin: () => void;
-  onPrivacyPolicyClick: () => void;
-  onTermsClick: () => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin, onPrivacyPolicyClick, onTermsClick }) => {
+export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin }) => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -133,10 +131,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
       </section>
 
       {/* Footer */}
-      <Footer 
-        onPrivacyPolicyClick={onPrivacyPolicyClick}
-        onTermsClick={onTermsClick}
-      />
+      <Footer />
     </div>
   );
 };

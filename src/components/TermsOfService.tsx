@@ -238,7 +238,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
-                    <span className="text-orange-800">My-Ride.net agit uniquement comme un intermédiaire technique entre clients et chauffeurs.</span>
+                    <span className="text-orange-800">TuniDrive.net agit uniquement comme un intermédiaire technique entre clients et chauffeurs.</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
@@ -374,7 +374,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
               <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
                 <Mail size={32} className="text-green-600 mx-auto mb-3" />
                 <p className="text-xl font-semibold text-green-900">
-                  📧 contact@tunidrive.net
+                  📧 support@tunidrive.net
                 </p>
               </div>
             </div>
