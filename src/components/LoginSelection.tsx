@@ -74,7 +74,7 @@ export const LoginSelection: React.FC<LoginSelectionProps> = ({
                   Accédez à votre espace personnel pour réserver et gérer vos courses
                 </p>
                 <Button 
-                  className="w-full bg-black hover:bg-gray-900 text-lg py-3"
+                  className="w-full bg-black hover:bg-gray-900 text-lg py-3 whitespace-nowrap"
                   onClick={onClientLogin}
                 >
                   Connexion client
