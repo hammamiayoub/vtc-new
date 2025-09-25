@@ -52,7 +52,7 @@ export const LoginSelection: React.FC<LoginSelectionProps> = ({
                   Accédez à votre tableau de bord chauffeur pour gérer votre compte
                 </p>
                 <Button 
-                  className="w-full bg-black hover:bg-gray-900 text-lg py-3"
+                  className="w-full bg-black hover:bg-gray-900 text-lg py-3 whitespace-nowrap"
                   onClick={onDriverLogin}
                 >
                   Connexion chauffeur
