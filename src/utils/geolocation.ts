@@ -80,10 +80,27 @@ export const getPricePerKm = (distanceKm: number): { price: number; discount: st
   }
 };
 
-// Fonction pour calculer le prix selon le nouveau schéma tarifaire
-export const calculatePrice = (distanceKm: number): number => {
+// Fonction pour obtenir le multiplicateur selon le type de véhicule
+export const getVehicleMultiplier = (vehicleType?: string): number => {
+  switch (vehicleType) {
+    case 'bus':
+      return 3.5; // Bus : ×3,5
+    case 'minibus':
+      return 2.5; // Minibus : ×2,5
+    case 'limousine':
+    case 'truck':
+      return 2.0; // Limousine et Camion : ×2
+    default:
+      return 1.0; // Autres véhicules (berline, pickup, van, utilitaire) : tarif normal
+  }
+};
+
+// Fonction pour calculer le prix selon le nouveau schéma tarifaire avec type de véhicule
+export const calculatePrice = (distanceKm: number, vehicleType?: string): number => {
   const { price: pricePerKm } = getPricePerKm(distanceKm);
-  const totalPrice = distanceKm * pricePerKm;
+  const basePrice = distanceKm * pricePerKm;
+  const vehicleMultiplier = getVehicleMultiplier(vehicleType);
+  const totalPrice = basePrice * vehicleMultiplier;
   return Math.round(totalPrice * 100) / 100; // Arrondir à 2 décimales
 };
 

@@ -7,6 +7,7 @@ import { ProfileModal } from './ProfileModal';
 import { NotificationBell } from './NotificationBell';
 import { DriverRatingDisplay } from './DriverRatingDisplay';
 import { NotificationPermission, NotificationStatus } from './NotificationPermission';
+import { Footer } from './Footer';
 import { useDriverNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { VehicleImageUpload } from './ui/VehicleImageUpload';
@@ -1215,6 +1216,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           />
         )}
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

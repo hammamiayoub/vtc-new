@@ -89,17 +89,6 @@ export const Footer: React.FC<FooterProps> = () => {
             <p className="text-gray-400 text-sm">
               © {new Date().getFullYear()} TuniDrive. Tous droits réservés.
             </p>
-            <div className="flex items-center gap-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                Contact
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                À propos
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                FAQ
-              </a>
-            </div>
           </div>
         </div>
       </div>
