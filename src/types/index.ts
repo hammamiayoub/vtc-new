@@ -22,7 +22,7 @@ export interface VehicleInfo {
   color: string;
   licensePlate: string;
   seats: number;
-  type: 'sedan' | 'suv' | 'luxury' | 'van';
+  type: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'limousine';
   photoUrl?: string;
 }
 
@@ -136,5 +136,30 @@ export interface BookingFormData {
   pickupAddress: string;
   destinationAddress: string;
   scheduledTime: string;
+  vehicleType?: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'limousine';
   notes?: string;
+}
+
+export interface Rating {
+  id: string;
+  bookingId: string;
+  clientId: string;
+  driverId: string;
+  rating: number; // 1-5 étoiles
+  comment?: string;
+  createdAt: string;
+  updatedAt: string;
+  client?: {
+    first_name: string;
+    last_name: string;
+  };
+  driver?: {
+    first_name: string;
+    last_name: string;
+  };
+}
+
+export interface RatingFormData {
+  rating: number;
+  comment?: string;
 }
