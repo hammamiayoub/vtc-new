@@ -744,16 +744,6 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     </p>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg opacity-50">
-                  <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    3
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="font-medium text-gray-900">Première course</h4>
-                    <p className="text-sm text-gray-600">Commencez à recevoir des demandes</p>
-                  </div>
-                </div>
               </div>
             </div>
 
