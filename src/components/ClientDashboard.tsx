@@ -7,7 +7,10 @@ import { BookingForm } from './BookingForm';
 import { BookingConfirmation } from './BookingConfirmation';
 import { ProfileModal } from './ProfileModal';
 import { NotificationBell } from './NotificationBell';
+import { RatingModal } from './RatingModal';
+import { NotificationPermission, NotificationStatus } from './NotificationPermission';
 import { useClientNotifications } from '../hooks/useNotifications';
+import { pushNotificationService } from '../utils/pushNotifications';
 
 interface ClientDashboardProps {
   onLogout: () => void;
@@ -21,6 +24,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   const [confirmationBookingId, setConfirmationBookingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedBookingForRating, setSelectedBookingForRating] = useState<Booking | null>(null);
+  const [ratedBookings, setRatedBookings] = useState<Set<string>>(new Set());
 
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead, refreshNotifications } = useClientNotifications(client?.id || '');
@@ -95,6 +101,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
     fetchBookings();
   }, [client]);
+
+  // Charger les réservations déjà notées
+  useEffect(() => {
+    if (client?.id) {
+      loadRatedBookings();
+    }
+  }, [client?.id]);
 
   // Realtime updates: auto-refresh bookings on INSERT/UPDATE for this client
   useEffect(() => {
@@ -223,20 +236,171 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   const cancelBooking = async (bookingId: string) => {
     const confirmed = window.confirm("Confirmer l'annulation de votre réservation ?");
     if (!confirmed) return;
+    
     try {
+      // Récupérer les détails de la réservation avant l'annulation
+      const booking = bookings.find(b => b.id === bookingId);
+      if (!booking) {
+        alert("Réservation non trouvée");
+        return;
+      }
+
       const { error } = await supabase
         .from('bookings')
         .update({ status: 'cancelled' })
         .eq('id', bookingId);
+      
       if (error) {
         alert("Impossible d'annuler la réservation: " + error.message);
         return;
       }
+
       // Rafraîchir localement
       setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b)));
+
+      // Envoyer notification au chauffeur si assigné
+      if (booking.driver_id && booking.drivers) {
+        try {
+          await pushNotificationService.notifyDriverBookingCancelledByClient(
+            booking.drivers.first_name + ' ' + booking.drivers.last_name,
+            client?.firstName + ' ' + client?.lastName || 'Client',
+            booking.pickup_address
+          );
+          console.log('✅ Notification d\'annulation envoyée au chauffeur');
+        } catch (notificationError) {
+          console.error('❌ Erreur lors de l\'envoi de la notification:', notificationError);
+        }
+      }
+
+      // Envoyer emails d'annulation
+      if (booking.driver_id && booking.drivers) {
+        try {
+          // Récupérer l'email du chauffeur depuis la base de données
+          const { data: driverData, error: driverError } = await supabase
+            .from('drivers')
+            .select('email')
+            .eq('id', booking.driver_id)
+            .single();
+
+          if (driverError) {
+            console.error('❌ Erreur récupération email chauffeur:', driverError);
+          }
+
+          const emailData = {
+            bookingId: booking.id,
+            clientName: client?.firstName + ' ' + client?.lastName || 'Client',
+            clientEmail: client?.email || '',
+            driverName: booking.drivers.first_name + ' ' + booking.drivers.last_name,
+            driverEmail: driverData?.email || '',
+            pickupAddress: booking.pickup_address,
+            destinationAddress: booking.destination_address,
+            scheduledTime: booking.scheduled_time,
+            priceTnd: booking.price_tnd,
+            cancelledBy: 'client'
+          };
+
+          console.log('📧 Données email d\'annulation:', emailData);
+
+          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-cancellation-emails`;
+          
+          const emailResponse = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailData)
+          });
+
+          const emailResult = await emailResponse.json();
+          
+          if (emailResponse.ok && emailResult.success) {
+            console.log('✅ Emails d\'annulation envoyés:', emailResult.message);
+            console.log('📊 Résultats:', emailResult.results);
+          } else {
+            console.error('❌ Erreur envoi emails d\'annulation:', emailResult.error);
+          }
+        } catch (emailError) {
+          console.error('❌ Erreur lors de l\'envoi des emails d\'annulation:', emailError);
+        }
+      }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
       alert("Erreur lors de l'annulation: " + message);
+    }
+  };
+
+  // Fonction pour charger les réservations déjà notées
+  const loadRatedBookings = async () => {
+    if (!client?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('ratings')
+        .select('booking_id')
+        .eq('client_id', client.id);
+      
+      if (!error && data) {
+        const ratedIds = new Set(data.map(rating => rating.booking_id));
+        setRatedBookings(ratedIds);
+        console.log('📊 Réservations déjà notées:', Array.from(ratedIds));
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement des notes:', error);
+    }
+  };
+
+  const canRateBooking = (booking: Booking) => {
+    if (booking.status !== 'completed') {
+      return false;
+    }
+    
+    // Vérifier si la réservation a déjà été notée
+    return !ratedBookings.has(booking.id);
+  };
+
+  const handleRateBooking = (booking: Booking) => {
+    const canRate = canRateBooking(booking);
+    if (canRate) {
+      setSelectedBookingForRating(booking);
+      setShowRatingModal(true);
+    }
+  };
+
+  const handleRatingSubmitted = async () => {
+    console.log('🔄 Rafraîchissement des réservations après notation...');
+    
+    // Ajouter la réservation à la liste des réservations notées
+    if (selectedBookingForRating) {
+      setRatedBookings(prev => new Set([...prev, selectedBookingForRating.id]));
+      console.log('✅ Réservation ajoutée à la liste des réservations notées:', selectedBookingForRating.id);
+    }
+    
+    // Rafraîchir la liste des réservations
+    if (client) {
+      try {
+        const { data: bookingsData, error } = await supabase
+          .from('bookings')
+          .select(`
+            *,
+            drivers(
+              first_name,
+              last_name,
+              phone
+            )
+          `)
+          .eq('client_id', client.id)
+          .order('created_at', { ascending: false });
+
+        if (!error) {
+          setBookings(bookingsData || []);
+          console.log('✅ Réservations rafraîchies avec succès');
+        } else {
+          console.error('❌ Erreur lors du rafraîchissement:', error);
+        }
+      } catch (error) {
+        console.error('❌ Erreur lors du rafraîchissement:', error);
+      }
     }
   };
 
@@ -336,6 +500,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Notification Permission */}
+        <NotificationPermission />
+        
         {/* Page de confirmation */}
         {activeTab === 'confirmation' && confirmationBookingId && (
           <BookingConfirmation 
@@ -504,6 +671,21 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                               Annuler
                             </Button>
                           )}
+                          {canRateBooking(booking) ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              aria-label="Noter le chauffeur"
+                              className="border-purple-300 text-purple-600 hover:bg-purple-50 order-4 w-full sm:w-auto mt-2 sm:mt-0"
+                              onClick={() => handleRateBooking(booking)}
+                            >
+                              ⭐ Noter
+                            </Button>
+                          ) : booking.status === 'completed' && ratedBookings.has(booking.id) ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 order-4 w-full sm:w-auto mt-2 sm:mt-0">
+                              ✅ Notée
+                            </span>
+                          ) : null}
                         </div>
                         {booking.notes && (
                           <p className="mt-2 text-sm text-gray-600 italic">
@@ -554,6 +736,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             user={client}
             userType="client"
             onProfileDeleted={handleLogout}
+          />
+        )}
+
+        {/* Modal de notation */}
+        {selectedBookingForRating && (
+          <RatingModal
+            isOpen={showRatingModal}
+            onClose={() => {
+              setShowRatingModal(false);
+              setSelectedBookingForRating(null);
+            }}
+            booking={selectedBookingForRating}
+            onRatingSubmitted={handleRatingSubmitted}
           />
         )}
       </main>

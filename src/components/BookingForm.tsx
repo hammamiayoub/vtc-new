@@ -25,8 +25,10 @@ import {
   calculatePrice, 
   getCurrentPosition,
   popularAddresses,
+  calculateDistanceFromCity,
   Coordinates 
 } from '../utils/geolocation';
+import { pushNotificationService } from '../utils/pushNotifications';
 
 interface BookingFormProps {
   clientId: string;
@@ -48,6 +50,19 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
+
+  // Options pour les types de véhicules
+  const vehicleTypeOptions = [
+    { value: '', label: 'Tous types de véhicules' },
+    { value: 'sedan', label: 'Berline' },
+    { value: 'pickup', label: 'Pickup' },
+    { value: 'van', label: 'Van' },
+    { value: 'minibus', label: 'Minibus' },
+    { value: 'bus', label: 'Bus' },
+    { value: 'truck', label: 'Camion' },
+    { value: 'utility', label: 'Utilitaire' },
+    { value: 'limousine', label: 'Limousine' }
+  ];
 
   const {
     register,
@@ -379,6 +394,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       // Étape 3: Récupérer les données des chauffeurs disponibles
       console.log('📡 Étape 3: Récupération des données des chauffeurs disponibles...');
       
+      // Récupérer le type de véhicule sélectionné
+      const selectedVehicleType = watch('vehicleType');
+      console.log('🚗 Type de véhicule sélectionné:', selectedVehicleType);
+      
       const { data: activeDrivers, error: driversError } = await supabase
         .from('drivers')
         .select('id, first_name, last_name, email, phone, city, license_number, vehicle_info, status, profile_photo_url, created_at, updated_at')
@@ -401,10 +420,19 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
       
-      // Étape 4: Formater les données des chauffeurs
-      const availableDriversData = activeDrivers.filter(driver => 
+      // Étape 4: Formater les données des chauffeurs et filtrer par type de véhicule
+      let availableDriversData = activeDrivers.filter(driver => 
         availableDriverIds.has(driver.id)
       );
+
+      // Filtrer par type de véhicule si spécifié
+      if (selectedVehicleType && selectedVehicleType !== '') {
+        console.log('🔍 Filtrage côté client par type de véhicule:', selectedVehicleType);
+        availableDriversData = availableDriversData.filter(driver => 
+          driver.vehicle_info && driver.vehicle_info.type === selectedVehicleType
+        );
+        console.log('📊 Chauffeurs après filtrage par type:', availableDriversData.length);
+      }
       
       console.log('✅ Chauffeurs finalement disponibles:', availableDriversData.length);
 
@@ -604,6 +632,23 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         console.error('❌ Erreur lors de la simulation des emails:', emailError);
         // Ne pas faire échouer la réservation si les emails échouent
       }
+
+      // Envoyer notification push au chauffeur assigné
+      try {
+        const driverData = availableDrivers.find(d => d.id === selectedDriver);
+        if (driverData) {
+          await pushNotificationService.notifyDriverAssigned(
+            driverData.firstName + ' ' + driverData.lastName,
+            clientData?.first_name + ' ' + clientData?.last_name || 'Client',
+            data.pickupAddress,
+            new Date(data.scheduledTime).toLocaleDateString('fr-FR')
+          );
+          console.log('✅ Notification push envoyée au chauffeur');
+        }
+      } catch (notificationError) {
+        console.error('❌ Erreur lors de l\'envoi de la notification push:', notificationError);
+        // Ne pas faire échouer la réservation si la notification échoue
+      }
       
       // Vérification immédiate de la réservation créée
       const { data: verifyBooking, error: verifyError } = await supabase
@@ -761,6 +806,32 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 <p className="mt-2 text-sm text-red-600">{errors.destinationAddress.message}</p>
               )}
             </div>
+          </div>
+
+          {/* Type de véhicule */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Car className="inline w-4 h-4 mr-2" />
+              Type de véhicule souhaité
+            </label>
+            <select
+              {...register('vehicleType')}
+              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all appearance-none ${
+                errors.vehicleType ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              {vehicleTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {errors.vehicleType && (
+              <p className="mt-2 text-sm text-red-600">{errors.vehicleType.message}</p>
+            )}
+            <p className="mt-1 text-sm text-gray-500">
+              Laissez "Tous types" pour voir tous les chauffeurs disponibles
+            </p>
           </div>
 
           {/* Calcul en cours */}
@@ -939,6 +1010,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             <div className="mt-2">
                               <p className="text-xs text-gray-500">
                                 {driver.vehicleInfo.make} {driver.vehicleInfo.model} - {driver.vehicleInfo.color}
+                              </p>
+                              <p className="text-xs text-blue-600 font-medium">
+                                {driver.vehicleInfo.type === 'sedan' && 'Berline'}
+                                {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
+                                {driver.vehicleInfo.type === 'van' && 'Van'}
+                                {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
+                                {driver.vehicleInfo.type === 'bus' && 'Bus'}
+                                {driver.vehicleInfo.type === 'truck' && 'Camion'}
+                                {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
+                                {driver.vehicleInfo.type === 'limousine' && 'Limousine'}
+                                {driver.vehicleInfo.seats && ` • ${driver.vehicleInfo.seats} places`}
                               </p>
                             </div>
                           )}

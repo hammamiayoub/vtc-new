@@ -122,8 +122,8 @@ export const driverProfileSchema = z.object({
     seats: z
       .number()
       .min(2, 'Le véhicule doit avoir au moins 2 places')
-      .max(8, 'Le véhicule ne peut pas avoir plus de 8 places'),
-    type: z.enum(['sedan', 'suv', 'luxury', 'van'], {
+      .max(50, 'Le véhicule ne peut pas avoir plus de 50 places'),
+    type: z.enum(['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'limousine'], {
       errorMap: () => ({ message: 'Type de véhicule invalide' })
     })
   })
@@ -141,8 +141,24 @@ export const bookingSchema = z.object({
   scheduledTime: z
     .string()
     .min(1, 'Veuillez sélectionner une heure'),
+  vehicleType: z
+    .enum(['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'limousine'], {
+      errorMap: () => ({ message: 'Type de véhicule invalide' })
+    })
+    .optional(),
   notes: z
     .string()
     .max(500, 'Les notes ne peuvent pas dépasser 500 caractères')
+    .optional()
+});
+
+export const ratingSchema = z.object({
+  rating: z
+    .number()
+    .min(1, 'La note doit être au minimum 1 étoile')
+    .max(5, 'La note doit être au maximum 5 étoiles'),
+  comment: z
+    .string()
+    .max(500, 'Le commentaire ne peut pas dépasser 500 caractères')
     .optional()
 });

@@ -46,9 +46,13 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
   }, [cityValue, setValue]);
   const vehicleTypeOptions = [
     { value: 'sedan', label: 'Berline' },
-    { value: 'suv', label: 'SUV' },
-    { value: 'luxury', label: 'Véhicule de luxe' },
-    { value: 'van', label: 'Monospace' }
+    { value: 'pickup', label: 'Pickup' },
+    { value: 'van', label: 'Van' },
+    { value: 'minibus', label: 'Minibus' },
+    { value: 'bus', label: 'Bus' },
+    { value: 'truck', label: 'Camion' },
+    { value: 'utility', label: 'Utilitaire' },
+    { value: 'limousine', label: 'Limousine' }
   ];
 
   const seatsOptions = [
@@ -56,7 +60,12 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
     { value: 4, label: '4 places' },
     { value: 5, label: '5 places' },
     { value: 7, label: '7 places' },
-    { value: 8, label: '8 places' }
+    { value: 8, label: '8 places' },
+    { value: 12, label: '12 places' },
+    { value: 16, label: '16 places' },
+    { value: 20, label: '20 places' },
+    { value: 30, label: '30 places' },
+    { value: 50, label: '50 places' }
   ];
 
   const currentYear = new Date().getFullYear();

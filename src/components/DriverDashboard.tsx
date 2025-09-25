@@ -5,7 +5,10 @@ import { DriverProfileForm } from './DriverProfileForm';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { ProfileModal } from './ProfileModal';
 import { NotificationBell } from './NotificationBell';
+import { DriverRatingDisplay } from './DriverRatingDisplay';
+import { NotificationPermission, NotificationStatus } from './NotificationPermission';
 import { useDriverNotifications } from '../hooks/useNotifications';
+import { pushNotificationService } from '../utils/pushNotifications';
 import { VehicleImageUpload } from './ui/VehicleImageUpload';
 import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
@@ -194,6 +197,13 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     try {
       console.log('🔄 Mise à jour du statut:', { bookingId, newStatus });
       
+      // Récupérer les détails de la réservation avant la mise à jour
+      const booking = bookings.find(b => b.id === bookingId);
+      if (!booking) {
+        alert('Réservation non trouvée');
+        return;
+      }
+
       const { error } = await supabase
         .from('bookings')
         .update({ 
@@ -211,7 +221,130 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
       console.log('✅ Statut mis à jour avec succès');
       
+      // Envoyer notifications selon le statut
+      if (newStatus === 'accepted' && booking.clients) {
+        try {
+          await pushNotificationService.notifyClientBookingAcceptedByDriver(
+            booking.clients.first_name + ' ' + booking.clients.last_name,
+            driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
+            booking.pickup_address,
+            new Date(booking.scheduled_time).toLocaleDateString('fr-FR')
+          );
+          console.log('✅ Notification d\'acceptation envoyée au client');
+        } catch (notificationError) {
+          console.error('❌ Erreur lors de l\'envoi de la notification:', notificationError);
+        }
+      } else if (newStatus === 'completed' && booking.clients) {
+        try {
+          await pushNotificationService.notifyClientBookingCompleted(
+            booking.clients.first_name + ' ' + booking.clients.last_name,
+            driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
+            booking.pickup_address
+          );
+          console.log('✅ Notification de fin de course envoyée au client');
+        } catch (notificationError) {
+          console.error('❌ Erreur lors de l\'envoi de la notification:', notificationError);
+        }
+      }
+      
       // Rafraîchir les données après la mise à jour
+      await refreshBookings();
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue');
+    }
+  };
+
+  const cancelBookingByDriver = async (bookingId: string) => {
+    const confirmed = window.confirm("Confirmer l'annulation de cette course ? Cette action sera notifiée au client.");
+    if (!confirmed) return;
+    
+    try {
+      // Récupérer les détails de la réservation avant l'annulation
+      const booking = bookings.find(b => b.id === bookingId);
+      if (!booking) {
+        alert('Réservation non trouvée');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId);
+      
+      if (error) {
+        alert("Impossible d'annuler la course: " + error.message);
+        return;
+      }
+
+      // Envoyer notification au client
+      if (booking.clients) {
+        try {
+          await pushNotificationService.notifyClientBookingCancelledByDriver(
+            booking.clients.first_name + ' ' + booking.clients.last_name,
+            driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
+            booking.pickup_address
+          );
+          console.log('✅ Notification d\'annulation envoyée au client');
+        } catch (notificationError) {
+          console.error('❌ Erreur lors de l\'envoi de la notification:', notificationError);
+        }
+      }
+
+      // Envoyer emails d'annulation
+      if (booking.clients) {
+        try {
+          // Récupérer l'email du client depuis la base de données
+          const { data: clientData, error: clientError } = await supabase
+            .from('clients')
+            .select('email')
+            .eq('id', booking.client_id)
+            .single();
+
+          if (clientError) {
+            console.error('❌ Erreur récupération email client:', clientError);
+          }
+
+          const emailData = {
+            bookingId: booking.id,
+            clientName: booking.clients.first_name + ' ' + booking.clients.last_name,
+            clientEmail: clientData?.email || '',
+            driverName: driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
+            driverEmail: driver?.email || '',
+            pickupAddress: booking.pickup_address,
+            destinationAddress: booking.destination_address,
+            scheduledTime: booking.scheduled_time,
+            priceTnd: booking.price_tnd,
+            cancelledBy: 'driver'
+          };
+
+          console.log('📧 Données email d\'annulation:', emailData);
+
+          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-cancellation-emails`;
+          
+          const emailResponse = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailData)
+          });
+
+          const emailResult = await emailResponse.json();
+          
+          if (emailResponse.ok && emailResult.success) {
+            console.log('✅ Emails d\'annulation envoyés:', emailResult.message);
+            console.log('📊 Résultats:', emailResult.results);
+          } else {
+            console.error('❌ Erreur envoi emails d\'annulation:', emailResult.error);
+          }
+        } catch (emailError) {
+          console.error('❌ Erreur lors de l\'envoi des emails d\'annulation:', emailError);
+        }
+      }
+
+      // Rafraîchir les données
       await refreshBookings();
     } catch (error) {
       console.error('Erreur:', error);
@@ -413,6 +546,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Notification Permission */}
+        <NotificationPermission />
+        
         {/* Profile Completion Alert */}
         {needsProfileCompletion && !showProfileForm && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
@@ -538,6 +674,25 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   <p className="text-xs sm:text-sm text-gray-700 font-medium mt-1">
                     {totalEarnings.toFixed(2)} TND gagnés
                   </p>
+                </div>
+
+                {/* Carte des notes */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <MessageSquare size={24} className="text-yellow-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Notes clients</h3>
+                      <p className="text-sm text-gray-600">Évaluation</p>
+                    </div>
+                  </div>
+                  {driver && (
+                    <DriverRatingDisplay 
+                      driverId={driver.id} 
+                      showDetails={false}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -754,10 +909,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                                 size="sm"
                               >
                                 <Car size={16} />
-                                Accepter
+                                Commencer
                               </Button>
                               <Button
-                                onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                onClick={() => cancelBookingByDriver(booking.id)}
                                 variant="outline"
                                 className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
                                 size="sm"
