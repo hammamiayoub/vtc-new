@@ -299,7 +299,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-blue-800">
-                  <strong>Pour exercer vos droits, contactez-nous à :</strong> contact@my-ride.net
+                  <strong>Pour exercer vos droits, contactez-nous à :</strong> support@tunidrive.net
                 </p>
               </div>
             </div>
@@ -339,7 +339,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
                 <Mail size={32} className="text-green-600 mx-auto mb-3" />
                 <p className="text-xl font-semibold text-green-900">
-                  📧 contact@tunidrive.net
+                  📧 support@tunidrive.net
                 </p>
               </div>
             </div>

@@ -16,6 +16,7 @@ import {
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Booking, Driver } from '../types';
+import { getPricePerKm } from '../utils/geolocation';
 
 interface BookingConfirmationProps {
   bookingId: string;
@@ -252,10 +253,8 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </div>
                 <p className="text-sm text-purple-700 mt-1">
                   Tarif: {(() => {
-                    if (booking.distance_km <= 20) return '2,5 TND/km';
-                    if (booking.distance_km <= 30) return '3,0 TND/km';
-                    if (booking.distance_km <= 50) return '2,5 TND/km';
-                    return '2,2 TND/km';
+                    const { price, discount } = getPricePerKm(booking.distance_km);
+                    return `${price.toFixed(2)} TND/km ${discount}`;
                   })()}
                 </p>
               </div>

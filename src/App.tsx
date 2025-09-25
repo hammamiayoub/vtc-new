@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Header';
 import { HomePage } from './components/HomePage';
 import { DriverSignup } from './components/DriverSignup';
@@ -14,15 +15,70 @@ import { ClientLogin } from './components/ClientLogin';
 import { ClientDashboard } from './components/ClientDashboard';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { TermsOfService } from './components/TermsOfService';
+import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
+import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 
 type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password';
 
-function App() {
+function AppContent() {
   const [currentView, setCurrentView] = useState<View>('home');
   const [isLoading, setIsLoading] = useState(true);
   const [userType, setUserType] = useState<'driver' | 'client' | 'admin' | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Gérer la navigation basée sur l'URL
+  useEffect(() => {
+    const path = location.pathname;
+    
+    // Mapper les chemins aux vues
+    switch (path) {
+      case '/':
+        setCurrentView('home');
+        break;
+      case '/signup':
+        setCurrentView('signup');
+        break;
+      case '/client-signup':
+        setCurrentView('client-signup');
+        break;
+      case '/login':
+        setCurrentView('login-selection');
+        break;
+      case '/driver-login':
+        setCurrentView('driver-login');
+        break;
+      case '/client-login':
+        setCurrentView('client-login');
+        break;
+      case '/dashboard':
+        setCurrentView('dashboard');
+        break;
+      case '/client-dashboard':
+        setCurrentView('client-dashboard');
+        break;
+      case '/admin':
+        setCurrentView('admin');
+        break;
+      case '/admin-dashboard':
+        setCurrentView('admin-dashboard');
+        break;
+      case '/privacy-policy':
+        setCurrentView('privacy-policy');
+        break;
+      case '/terms-of-service':
+        setCurrentView('terms-of-service');
+        break;
+      case '/reset-password':
+        setCurrentView('reset-password');
+        break;
+      default:
+        setCurrentView('home');
+        break;
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     // Vérifier si on est sur une page de réinitialisation de mot de passe
@@ -137,7 +193,7 @@ function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUserType(null);
-    setCurrentView('home');
+    navigate('/');
   };
 
   if (isLoading) {
@@ -154,45 +210,45 @@ function App() {
   const renderContent = () => {
     switch (currentView) {
       case 'signup':
-        return <DriverSignup onBack={() => setCurrentView('home')} />;
+        return <DriverSignup onBack={() => navigate('/')} />;
       case 'client-signup':
-        return <ClientSignup onBack={() => setCurrentView('home')} />;
+        return <ClientSignup onBack={() => navigate('/')} />;
       case 'login-selection':
         return (
           <LoginSelection 
-            onBack={() => setCurrentView('home')}
-            onDriverLogin={() => setCurrentView('driver-login')}
-            onClientLogin={() => setCurrentView('client-login')}
+            onBack={() => navigate('/')}
+            onDriverLogin={() => navigate('/driver-login')}
+            onClientLogin={() => navigate('/client-login')}
           />
         );
       case 'driver-login':
         return (
           <DriverLogin 
-            onBack={() => setCurrentView('login-selection')} 
-            onSignup={() => setCurrentView('signup')}
+            onBack={() => navigate('/login')} 
+            onSignup={() => navigate('/signup')}
             onLoginSuccess={() => {
               setUserType('driver');
-              setCurrentView('dashboard');
+              navigate('/dashboard');
             }}
           />
         );
       case 'client-login':
         return (
           <ClientLogin 
-            onBack={() => setCurrentView('home')} 
-            onSignup={() => setCurrentView('client-signup')}
+            onBack={() => navigate('/')} 
+            onSignup={() => navigate('/client-signup')}
             onLoginSuccess={() => {
               setUserType('client');
-              setCurrentView('client-dashboard');
+              navigate('/client-dashboard');
             }}
           />
         );
       case 'login':
         return (
           <LoginSelection 
-            onBack={() => setCurrentView('home')}
-            onDriverLogin={() => setCurrentView('driver-login')}
-            onClientLogin={() => setCurrentView('client-login')}
+            onBack={() => navigate('/')}
+            onDriverLogin={() => navigate('/driver-login')}
+            onClientLogin={() => navigate('/client-login')}
           />
         );
       case 'dashboard':
@@ -202,33 +258,31 @@ function App() {
       case 'admin':
         return (
           <AdminLogin 
-            onBack={() => setCurrentView('home')} 
+            onBack={() => navigate('/')} 
             onLoginSuccess={() => {
               setUserType('admin');
-              setCurrentView('admin-dashboard');
+              navigate('/admin-dashboard');
             }}
           />
         );
       case 'admin-dashboard':
         return <AdminDashboard onLogout={handleLogout} />;
       case 'privacy-policy':
-        return <PrivacyPolicy onBack={() => setCurrentView('home')} />;
+        return <PrivacyPolicy onBack={() => navigate('/')} />;
       case 'terms-of-service':
-        return <TermsOfService onBack={() => setCurrentView('home')} />;
+        return <TermsOfService onBack={() => navigate('/')} />;
       case 'reset-password':
         return (
           <ResetPasswordPage 
-            onBack={() => setCurrentView('home')}
-            onSuccess={() => setCurrentView('home')}
+            onBack={() => navigate('/')}
+            onSuccess={() => navigate('/')}
           />
         );
       default:
         return (
           <HomePage 
-            onGetStarted={() => setCurrentView('signup')}
-            onClientLogin={() => setCurrentView('client-login')}
-            onPrivacyPolicyClick={() => setCurrentView('privacy-policy')}
-            onTermsClick={() => setCurrentView('terms-of-service')}
+            onGetStarted={() => navigate('/signup')}
+            onClientLogin={() => navigate('/client-login')}
           />
         );
     }
@@ -241,6 +295,18 @@ function App() {
       )}
       {renderContent()}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+        <Route path="/*" element={<AppContent />} />
+      </Routes>
+    </Router>
   );
 }
 

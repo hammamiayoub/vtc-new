@@ -329,7 +329,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   className="text-purple-600 hover:underline"
                   onClick={(e) => {
                     e.preventDefault();
-                    window.open('#privacy-policy', '_blank');
+                    window.open('/privacy-policy', '_blank');
                   }}
                 >
                   politique de confidentialité

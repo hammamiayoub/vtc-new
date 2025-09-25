@@ -23,6 +23,7 @@ import {
   geocodeAddress, 
   calculateDistance, 
   calculatePrice, 
+  getPricePerKm,
   getCurrentPosition,
   popularAddresses,
   calculateDistanceFromCity,
@@ -166,8 +167,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
       // Géocodage inverse pour obtenir l'adresse
       const response = await fetch(
-       // `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&countrycodes=tn`
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=tn&limit=5&addressdetails=1`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&countrycodes=tn`
       );
       
       if (response.ok) {
@@ -881,12 +881,21 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 </div>
                 <div className="bg-white rounded-lg p-4 text-center">
                   <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <CheckCircle size={24} className="text-green-600" />
+                    <Calculator size={24} className="text-green-600" />
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">Tarif</p>
-                  <p className="text-base sm:text-lg font-bold text-gray-900">
-                    2,5 TND/km
-                  </p>
+                  <p className="text-sm text-gray-600 mb-1">Calcul</p>
+                  <div className="text-xs sm:text-sm font-medium text-gray-900">
+                    {(() => {
+                      if (!estimatedDistance) return '';
+                      const { price, discount } = getPricePerKm(estimatedDistance);
+                      return (
+                        <div>
+                          <div>{estimatedDistance} km × {price.toFixed(2)} TND/km</div>
+                          {discount && <div className="text-green-600 font-semibold">{discount}</div>}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
               

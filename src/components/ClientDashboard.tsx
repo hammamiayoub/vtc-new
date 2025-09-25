@@ -599,6 +599,50 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 )}
               </div>
             </div>
+
+            {/* Section Tarifs */}
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Car size={24} className="text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Tarifs</h3>
+                  <p className="text-sm text-gray-600">Grille tarifaire TuniDrive</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3">Tarif de base : 2,2 TND/KM</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Distance &lt; 30 km</span>
+                      <span className="font-medium text-gray-900">2,2 TND/KM</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Distance 30-100 km</span>
+                      <span className="font-medium text-gray-900">2,2 TND/KM (plein tarif)</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Distance 100-250 km</span>
+                      <span className="font-medium text-green-600">1,98 TND/KM (-10%)</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Distance 250+ km</span>
+                      <span className="font-medium text-green-600">1,76 TND/KM (-20%)</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>💡 Bon à savoir :</strong> Plus votre trajet est long, plus vous économisez ! 
+                    Les remises s'appliquent automatiquement selon la distance.
+                  </p>
+                </div>
+              </div>
+            </div>
           </>
         )}
 

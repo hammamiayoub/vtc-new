@@ -1,12 +1,13 @@
 import React from 'react';
 import { Heart, Shield, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface FooterProps {
-  onPrivacyPolicyClick: () => void;
-  onTermsClick: () => void;
+  onPrivacyPolicyClick?: () => void;
+  onTermsClick?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onPrivacyPolicyClick, onTermsClick }) => {
+export const Footer: React.FC<FooterProps> = () => {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -30,17 +31,26 @@ export const Footer: React.FC<FooterProps> = ({ onPrivacyPolicyClick, onTermsCli
             <h4 className="text-lg font-semibold mb-4">Services</h4>
             <ul className="space-y-2 text-gray-300">
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <Link 
+                  to="/client-login" 
+                  className="hover:text-white transition-colors"
+                >
                   Réservation de courses
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <Link 
+                  to="/driver-login" 
+                  className="hover:text-white transition-colors"
+                >
                   Devenir chauffeur
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a 
+                  href="mailto:support@tunidrive.net" 
+                  className="hover:text-white transition-colors"
+                >
                   Support client
                 </a>
               </li>
@@ -52,34 +62,22 @@ export const Footer: React.FC<FooterProps> = ({ onPrivacyPolicyClick, onTermsCli
             <h4 className="text-lg font-semibold mb-4">Légal</h4>
             <ul className="space-y-2 text-gray-300">
               <li>
-                <a 
-                  href="#" 
+                <Link 
+                  to="/terms-of-service" 
                   className="hover:text-white transition-colors flex items-center gap-2"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onTermsClick) {
-                      onTermsClick();
-                    }
-                  }}
                 >
                   <FileText size={16} />
                   Conditions d'utilisation
-                </a>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="#" 
+                <Link 
+                  to="/privacy-policy" 
                   className="hover:text-white transition-colors flex items-center gap-2"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onPrivacyPolicyClick) {
-                      onPrivacyPolicyClick();
-                    }
-                  }}
                 >
                   <Shield size={16} />
                   Politique de confidentialité
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
