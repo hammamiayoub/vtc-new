@@ -13,6 +13,14 @@ export interface Driver {
   createdAt: string;
   updatedAt: string;
   distanceFromPickup?: number; // Distance calculée depuis le point de départ
+  bookingCount?: number; // Nombre de courses effectuées
+  totalEarnings?: number; // Montant total gagné en TND
+  // Statistiques détaillées des courses
+  completedBookings?: number; // Courses terminées avec succès
+  cancelledByDriver?: number; // Courses annulées par le chauffeur
+  cancelledByClient?: number; // Courses annulées par le client
+  pendingBookings?: number; // Courses en attente
+  inProgressBookings?: number; // Courses en cours
 }
 
 export interface VehicleInfo {

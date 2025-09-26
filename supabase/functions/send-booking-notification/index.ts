@@ -9,6 +9,7 @@ const corsHeaders = {
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 // IMPORTANT: Remplacez par votre domaine vérifié dans Resend
 const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>' // Ou votre domaine configuré
+const SUPPORT_EMAIL = 'support@tunidrive.net'
 
 async function sendEmail(to: string, subject: string, html: string) {
   console.log('🔧 Configuration email:')
@@ -91,6 +92,11 @@ serve(async (req) => {
       clientEmail: requestData.clientData?.email,
       driverEmail: requestData.driverData?.email
     })
+    
+    console.log('📧 === CONFIGURATION EMAIL SUPPORT ===')
+    console.log('📧 SUPPORT_EMAIL configuré:', SUPPORT_EMAIL)
+    console.log('📧 FROM_EMAIL configuré:', FROM_EMAIL)
+    console.log('📧 RESEND_API_KEY présente:', !!RESEND_API_KEY)
 
     const { bookingData, clientData, driverData } = requestData
 
@@ -216,8 +222,87 @@ serve(async (req) => {
       </div>
     `
 
+    // Email content for support team
+    const supportEmailContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
+          <h1 style="color: #333; margin: 0;">TuniDrive - Nouvelle réservation</h1>
+          <p style="color: #666; margin: 5px 0 0 0;">Notification pour l'équipe support</p>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #333;">Nouvelle réservation créée</h2>
+          
+          <p style="font-size: 16px; line-height: 1.6; color: #555;">
+            Une nouvelle réservation a été créée et les emails de confirmation ont été envoyés aux parties concernées.
+          </p>
+          
+          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #2d5a2d; margin-top: 0;">Détails de la réservation</h3>
+            <p><strong>ID Réservation :</strong> ${bookingData.id || 'N/A'}</p>
+            <p><strong>Départ :</strong> ${bookingData.pickup_address}</p>
+            <p><strong>Arrivée :</strong> ${bookingData.destination_address}</p>
+            <p><strong>Date et heure :</strong> ${formattedDate}</p>
+            <p><strong>Distance :</strong> ${bookingData.distance_km} km</p>
+            <p><strong>Prix :</strong> ${bookingData.price_tnd} TND</p>
+            <p><strong>Statut :</strong> ${bookingData.status || 'En attente'}</p>
+            ${bookingData.notes ? `<p><strong>Notes du client :</strong> ${bookingData.notes}</p>` : ''}
+          </div>
+          
+          <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #1565c0; margin-top: 0;">Informations client</h3>
+            <p><strong>Nom :</strong> ${clientData.first_name} ${clientData.last_name}</p>
+            <p><strong>Email :</strong> ${clientData.email}</p>
+            ${clientData.phone ? `<p><strong>Téléphone :</strong> ${clientData.phone}</p>` : ''}
+            <p><strong>Ville :</strong> ${clientData.city || 'Non renseignée'}</p>
+          </div>
+          
+          <div style="background-color: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #e65100; margin-top: 0;">Informations chauffeur</h3>
+            <p><strong>Nom :</strong> ${driverData.first_name} ${driverData.last_name}</p>
+            <p><strong>Email :</strong> ${driverData.email}</p>
+            ${driverData.phone ? `<p><strong>Téléphone :</strong> ${driverData.phone}</p>` : ''}
+            <p><strong>Ville :</strong> ${driverData.city || 'Non renseignée'}</p>
+            ${driverData.vehicle_info ? `
+              <p><strong>Véhicule :</strong> ${driverData.vehicle_info.make} ${driverData.vehicle_info.model}</p>
+              <p><strong>Plaque :</strong> ${driverData.vehicle_info.licensePlate}</p>
+              <p><strong>Année :</strong> ${driverData.vehicle_info.year}</p>
+              <p><strong>Couleur :</strong> ${driverData.vehicle_info.color}</p>
+            ` : ''}
+          </div>
+          
+          <div style="background-color: #f3e5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #7b1fa2; margin-top: 0;">Actions effectuées</h3>
+            <ul style="color: #7b1fa2; margin: 0; padding-left: 20px; line-height: 1.6;">
+              <li>✅ Email de confirmation envoyé au client</li>
+              <li>✅ Email de notification envoyé au chauffeur</li>
+              <li>✅ Réservation enregistrée dans la base de données</li>
+            </ul>
+          </div>
+          
+          <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #64748b; font-size: 14px;">
+              <strong>Note :</strong> Cet email est envoyé automatiquement pour vous tenir informé des nouvelles réservations. 
+              Vous pouvez surveiller l'activité via le tableau de bord administrateur.
+            </p>
+          </div>
+          
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">
+            Équipe TuniDrive - Support technique
+          </p>
+        </div>
+        
+        <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
+          <p style="margin: 0;">TuniDrive - Plateforme de transport</p>
+          <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">
+            Email automatique - Ne pas répondre
+          </p>
+        </div>
+      </div>
+    `
+
     // Envoi des emails via Resend
-    const emailResults = []
+    const emailResults: Array<{type: string, success: boolean, id?: string, error?: string}> = []
     
     try {
       console.log('📧 Envoi email client à:', clientData.email)
@@ -247,16 +332,49 @@ serve(async (req) => {
       emailResults.push({ type: 'driver', success: false, error: driverEmailError.message })
     }
 
+    try {
+      console.log('📧 === ENVOI EMAIL SUPPORT ===')
+      console.log('📧 Destinataire support:', SUPPORT_EMAIL)
+      console.log('📧 Sujet:', 'TuniDrive - Nouvelle réservation créée')
+      console.log('📧 Contenu HTML généré:', supportEmailContent.length, 'caractères')
+      
+      const supportResult = await sendEmail(
+        SUPPORT_EMAIL,
+        'TuniDrive - Nouvelle réservation créée',
+        supportEmailContent
+      )
+      
+      console.log('✅ Email support envoyé avec succès:', supportResult.id)
+      emailResults.push({ type: 'support', success: true, id: supportResult.id })
+
+    } catch (supportEmailError) {
+      console.error('❌ === ERREUR EMAIL SUPPORT ===')
+      console.error('❌ Erreur détaillée:', supportEmailError)
+      console.error('❌ Message d\'erreur:', supportEmailError.message)
+      console.error('❌ Stack trace:', supportEmailError.stack)
+      emailResults.push({ type: 'support', success: false, error: supportEmailError.message })
+    }
+
     // Vérifier si au moins un email a été envoyé
     const successfulEmails = emailResults.filter(result => result.success)
     const failedEmails = emailResults.filter(result => !result.success)
 
-    console.log('📊 Résultats envoi emails:', {
-      total: emailResults.length,
-      success: successfulEmails.length,
-      failed: failedEmails.length,
-      results: emailResults
-    })
+    console.log('📊 === RÉSULTATS FINAUX ENVOI EMAILS ===')
+    console.log('📊 Total emails tentés:', emailResults.length)
+    console.log('📊 Emails réussis:', successfulEmails.length)
+    console.log('📊 Emails échoués:', failedEmails.length)
+    console.log('📊 Détail des résultats:', emailResults)
+    
+    // Vérifier spécifiquement l'email support
+    const supportResult = emailResults.find(result => result.type === 'support')
+    if (supportResult) {
+      console.log('📧 === RÉSULTAT EMAIL SUPPORT ===')
+      console.log('📧 Support email success:', supportResult.success)
+      console.log('📧 Support email ID:', supportResult.id)
+      console.log('📧 Support email error:', supportResult.error)
+    } else {
+      console.error('❌ === EMAIL SUPPORT NON TROUVÉ DANS LES RÉSULTATS ===')
+    }
 
     if (successfulEmails.length === 0) {
       // Aucun email envoyé avec succès
