@@ -64,16 +64,22 @@ class PushNotificationService {
     }
 
     try {
-      const notification = new Notification(data.title, {
+      // Créer les options de notification sans actions pour éviter l'erreur
+      const notificationOptions: NotificationOptions = {
         body: data.body,
         icon: data.icon || '/favicon.ico',
         badge: data.badge || '/favicon.ico',
         tag: data.tag,
         data: data.data,
-        actions: data.actions,
         requireInteraction: true, // La notification reste visible jusqu'à interaction
         silent: false
-      });
+      };
+
+      // Note: Les actions ne sont supportées que pour les notifications persistantes via Service Worker
+      // Pour les notifications simples, on ne peut pas utiliser les actions
+      console.log('📱 Envoi notification:', data.title);
+
+      const notification = new Notification(data.title, notificationOptions);
 
       // Fermer automatiquement après 10 secondes
       setTimeout(() => {
@@ -101,14 +107,8 @@ class PushNotificationService {
         clientName,
         pickupAddress,
         scheduledTime
-      },
-      actions: [
-        {
-          action: 'view',
-          title: 'Voir les détails',
-          icon: '/favicon.ico'
-        }
-      ]
+      }
+      // Note: Les actions ne sont pas supportées pour les notifications simples
     });
 
     return notification;
@@ -125,14 +125,8 @@ class PushNotificationService {
         clientName,
         driverName,
         pickupAddress
-      },
-      actions: [
-        {
-          action: 'view',
-          title: 'Voir les détails',
-          icon: '/favicon.ico'
-        }
-      ]
+      }
+      // Note: Les actions ne sont pas supportées pour les notifications simples
     });
 
     return notification;
@@ -149,14 +143,8 @@ class PushNotificationService {
         driverName,
         clientName,
         pickupAddress
-      },
-      actions: [
-        {
-          action: 'view',
-          title: 'Voir les détails',
-          icon: '/favicon.ico'
-        }
-      ]
+      }
+      // Note: Les actions ne sont pas supportées pour les notifications simples
     });
 
     return notification;
@@ -192,14 +180,8 @@ class PushNotificationService {
         driverName,
         pickupAddress,
         scheduledTime
-      },
-      actions: [
-        {
-          action: 'view',
-          title: 'Voir les détails',
-          icon: '/favicon.ico'
-        }
-      ]
+      }
+      // Note: Les actions ne sont pas supportées pour les notifications simples
     });
 
     return notification;
@@ -234,14 +216,8 @@ class PushNotificationService {
         clientName,
         driverName,
         pickupAddress
-      },
-      actions: [
-        {
-          action: 'rate',
-          title: 'Noter le chauffeur',
-          icon: '/favicon.ico'
-        }
-      ]
+      }
+      // Note: Les actions ne sont pas supportées pour les notifications simples
     });
 
     return notification;

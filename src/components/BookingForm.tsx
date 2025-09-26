@@ -579,32 +579,35 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       console.log('👤 Chauffeur assigné dans la DB:', booking.driver_id);
       console.log('📊 Statut de la réservation:', booking.status);
       
+      // Récupérer les données du client et chauffeur pour les notifications
+      console.log('📋 Récupération des données client et chauffeur...');
+      
+      // Récupérer les données du client
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('first_name, last_name, email, phone')
+        .eq('id', clientId)
+        .single();
+
+      if (clientError) {
+        console.error('Erreur récupération client:', clientError);
+      }
+
+      // Récupérer les données du chauffeur
+      const { data: driverData, error: driverError } = await supabase
+        .from('drivers')
+        .select('first_name, last_name, email, phone, vehicle_info')
+        .eq('id', selectedDriver)
+        .single();
+
+      if (driverError) {
+        console.error('Erreur récupération chauffeur:', driverError);
+      }
+      
       // Envoi des notifications email via Edge Function
       console.log('📧 === ENVOI D\'EMAILS VIA RESEND ===');
       
       try {
-        // Récupérer les données du client
-        const { data: clientData, error: clientError } = await supabase
-          .from('clients')
-          .select('first_name, last_name, email, phone')
-          .eq('id', clientId)
-          .single();
-
-        if (clientError) {
-          console.error('Erreur récupération client pour email:', clientError);
-        }
-
-        // Récupérer les données du chauffeur
-        const { data: driverData, error: driverError } = await supabase
-          .from('drivers')
-          .select('first_name, last_name, email, phone, vehicle_info')
-          .eq('id', selectedDriver)
-          .single();
-
-        if (driverError) {
-          console.error('Erreur récupération chauffeur pour email:', driverError);
-        }
-
         // Appel à l'Edge Function pour envoyer les emails
         if (clientData && driverData) {
           console.log('🚀 Appel Edge Function resend-email...');

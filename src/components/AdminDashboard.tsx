@@ -80,7 +80,83 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         status: d.status 
       })));
 
-      const formattedDrivers = data.map(driver => ({
+      // Récupérer les statistiques détaillées des courses pour chaque chauffeur
+      const driversWithStats = await Promise.all(
+        data.map(async (driver) => {
+          // Récupérer toutes les courses du chauffeur avec leurs statuts
+          const { data: allBookings, error: allBookingsError } = await supabase
+            .from('bookings')
+            .select('status, price_tnd')
+            .eq('driver_id', driver.id);
+
+          if (allBookingsError) {
+            console.error(`Erreur récupération courses pour ${driver.first_name} ${driver.last_name}:`, allBookingsError);
+          }
+
+          // Calculer les statistiques détaillées
+          const stats = {
+            completedBookings: 0,
+            cancelledByDriver: 0,
+            cancelledByClient: 0,
+            pendingBookings: 0,
+            inProgressBookings: 0,
+            totalEarnings: 0
+          };
+
+          if (allBookings) {
+            allBookings.forEach(booking => {
+              switch (booking.status) {
+                case 'completed':
+                  stats.completedBookings++;
+                  stats.totalEarnings += booking.price_tnd || 0;
+                  break;
+                case 'cancelled':
+                  // Pour déterminer qui a annulé, on pourrait ajouter un champ cancelled_by
+                  // Pour l'instant, on considère toutes les annulations comme "par le client"
+                  stats.cancelledByClient++;
+                  break;
+                case 'pending':
+                  stats.pendingBookings++;
+                  break;
+                case 'in_progress':
+                  stats.inProgressBookings++;
+                  break;
+                case 'accepted':
+                  // Les courses acceptées sont comptées dans inProgressBookings
+                  stats.inProgressBookings++;
+                  break;
+              }
+            });
+          }
+
+          // Calculer le nombre total de courses (toutes sauf pending)
+          const totalBookings = stats.completedBookings + stats.cancelledByDriver + stats.cancelledByClient + stats.inProgressBookings;
+
+          return {
+            ...driver,
+            bookingCount: totalBookings,
+            totalEarnings: stats.totalEarnings,
+            completedBookings: stats.completedBookings,
+            cancelledByDriver: stats.cancelledByDriver,
+            cancelledByClient: stats.cancelledByClient,
+            pendingBookings: stats.pendingBookings,
+            inProgressBookings: stats.inProgressBookings
+          };
+        })
+      );
+
+      console.log('📊 Admin - Statistiques détaillées par chauffeur:', driversWithStats.map(d => ({ 
+        name: `${d.first_name} ${d.last_name}`, 
+        bookingCount: d.bookingCount,
+        totalEarnings: d.totalEarnings,
+        completed: d.completedBookings,
+        cancelledByDriver: d.cancelledByDriver,
+        cancelledByClient: d.cancelledByClient,
+        pending: d.pendingBookings,
+        inProgress: d.inProgressBookings
+      })));
+
+      const formattedDrivers = driversWithStats.map(driver => ({
         id: driver.id,
         firstName: driver.first_name,
         lastName: driver.last_name,
@@ -92,7 +168,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         status: driver.status,
         profilePhotoUrl: driver.profile_photo_url,
         createdAt: driver.created_at,
-        updatedAt: driver.updated_at
+        updatedAt: driver.updated_at,
+        bookingCount: driver.bookingCount,
+        totalEarnings: driver.totalEarnings,
+        completedBookings: driver.completedBookings,
+        cancelledByDriver: driver.cancelledByDriver,
+        cancelledByClient: driver.cancelledByClient,
+        pendingBookings: driver.pendingBookings,
+        inProgressBookings: driver.inProgressBookings
       }));
 
       setDrivers(formattedDrivers);
@@ -108,6 +191,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     setActionLoading(driverId);
     
     try {
+      // Récupérer les données du chauffeur avant la mise à jour
+      const driver = drivers.find(d => d.id === driverId);
+      if (!driver) {
+        console.error('Chauffeur non trouvé');
+        return;
+      }
+
       const { error } = await supabase
         .from('drivers')
         .update({ status: newStatus })
@@ -116,6 +206,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       if (error) {
         console.error('Erreur lors de la mise à jour:', error);
         return;
+      }
+
+      // Envoyer l'email de validation si le chauffeur est approuvé
+      if (newStatus === 'active') {
+        try {
+          console.log('📧 Envoi email de validation au chauffeur:', driver.email);
+          
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-driver-validation-email`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              driverData: {
+                email: driver.email,
+                first_name: driver.firstName,
+                last_name: driver.lastName,
+                phone: driver.phone,
+                city: driver.city,
+                status: newStatus,
+                vehicle_make: driver.vehicleInfo?.make,
+                vehicle_model: driver.vehicleInfo?.model
+              }
+            })
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error('❌ Erreur lors de l\'envoi de l\'email de validation:', errorData);
+            // Ne pas bloquer le processus si l'email échoue
+          } else {
+            const result = await response.json();
+            console.log('✅ Email de validation envoyé avec succès:', result);
+          }
+        } catch (emailError) {
+          console.error('❌ Erreur lors de l\'envoi de l\'email de validation:', emailError);
+          // Ne pas bloquer le processus si l'email échoue
+        }
       }
 
       // Mettre à jour l'état local
@@ -309,6 +438,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     Véhicule
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Courses
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Gains
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Statut
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -364,6 +499,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         ) : (
                           <p className="text-gray-500">Non renseigné</p>
                         )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                            <CheckCircle size={12} className="text-green-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {driver.completedBookings || 0}
+                            </p>
+                            <p className="text-xs text-gray-500">terminées</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                            <XCircle size={12} className="text-red-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {(driver.cancelledByDriver || 0) + (driver.cancelledByClient || 0)}
+                            </p>
+                            <p className="text-xs text-gray-500">annulées</p>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-gray-900">
+                            {(driver.totalEarnings || 0).toFixed(2)} TND
+                          </p>
+                          <p className="text-xs text-gray-500">gains</p>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -524,6 +700,83 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </div>
                 </div>
               )}
+
+              {/* Statistics */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Statistiques des courses</h4>
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle size={20} className="text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Courses terminées</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {selectedDriver.completedBookings || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Gains totaux</p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {(selectedDriver.totalEarnings || 0).toFixed(2)} TND
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="bg-red-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <XCircle size={20} className="text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Annulées par chauffeur</p>
+                        <p className="text-xl font-bold text-red-600">
+                          {selectedDriver.cancelledByDriver || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-orange-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <XCircle size={20} className="text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Annulées par client</p>
+                        <p className="text-xl font-bold text-orange-600">
+                          {selectedDriver.cancelledByClient || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <Clock size={20} className="text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">En cours</p>
+                        <p className="text-xl font-bold text-purple-600">
+                          {selectedDriver.inProgressBookings || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Status and Actions */}
               <div>
