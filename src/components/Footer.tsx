@@ -32,18 +32,10 @@ export const Footer: React.FC<FooterProps> = () => {
             <ul className="space-y-2 text-gray-300">
               <li>
                 <Link 
-                  to="/client-login" 
+                  to={`tel:+21628528477`}
                   className="hover:text-white transition-colors"
                 >
-                  Réservation de courses
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/driver-login" 
-                  className="hover:text-white transition-colors"
-                >
-                  Devenir chauffeur
+                  Téléphone
                 </Link>
               </li>
               <li>
