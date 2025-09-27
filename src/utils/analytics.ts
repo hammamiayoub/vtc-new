@@ -76,6 +76,15 @@ export const analytics = {
     });
   },
 
+  // Conversion spécifique pour itinéraire (réservation)
+  trackItineraryConversion: () => {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'conversion', {
+        'send_to': 'AW-17599907390/yz0xCPuh36EbEL6MpchB'
+      });
+    }
+  },
+
   trackBookingCompleted: (driverId: string, price: number) => {
     trackEvent({
       action: 'booking_completed',
@@ -133,7 +142,7 @@ export const useAnalytics = () => {
 
 // Fonction pour initialiser les analytics (optionnel)
 export const initAnalytics = () => {
-  if (typeof window !== 'undefined' && window.gtag) {
+  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
     console.log('📊 Google Analytics initialisé pour TuniDrive');
     
     // Événement de démarrage de l'application
