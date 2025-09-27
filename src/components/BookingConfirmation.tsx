@@ -7,7 +7,6 @@ import {
   User, 
   Phone, 
   Car, 
-  Calendar,
   MessageSquare,
   ArrowLeft,
   Copy,
@@ -17,6 +16,8 @@ import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Booking, Driver } from '../types';
 import { getPricePerKm } from '../utils/geolocation';
+import { analytics } from '../utils/analytics';
+import { triggerGoogleAdsConversion } from '../utils/googleAdsTrigger';
 
 interface BookingConfirmationProps {
   bookingId: string;
@@ -34,6 +35,16 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
   useEffect(() => {
     fetchBookingDetails();
+    
+    // Déclencher la conversion Google Ads dès que la page devient visible
+    // Basé sur l'extrait fourni: trigger "visible" avec send_to
+    console.log('🎯 Page de conversion visible - Déclenchement Google Ads...');
+    
+    // Conversion principale via analytics
+    analytics.trackItineraryConversion();
+    
+    // Conversion spécifique via trigger Google Ads
+    triggerGoogleAdsConversion();
   }, [bookingId]);
 
   const fetchBookingDetails = async () => {
@@ -202,7 +213,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   <div className="w-3 h-3 bg-green-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Point de départ</p>
-                    <p className="font-medium text-gray-900">{booking.pickup_address}</p>
+                    <p className="font-medium text-gray-900">{booking.pickupAddress}</p>
                   </div>
                 </div>
                 
@@ -210,7 +221,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   <div className="w-3 h-3 bg-red-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Destination</p>
-                    <p className="font-medium text-gray-900">{booking.destination_address}</p>
+                    <p className="font-medium text-gray-900">{booking.destinationAddress}</p>
                   </div>
                 </div>
               </div>
@@ -223,7 +234,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <span className="text-sm text-gray-600">Heure prévue</span>
                   </div>
                   <p className="font-semibold text-gray-900">
-                    {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
+                    {new Date(booking.scheduledTime).toLocaleString('fr-FR', {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
@@ -239,7 +250,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <Navigation size={16} className="text-purple-600" />
                     <span className="text-sm text-gray-600">Distance</span>
                   </div>
-                  <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
+                  <p className="font-semibold text-gray-900">{booking.distanceKm} km</p>
                 </div>
               </div>
 
@@ -248,12 +259,12 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-medium text-purple-900">Prix total</span>
                   <span className="text-2xl font-bold text-purple-600">
-                    {booking.price_tnd} TND
+                    {booking.priceTnd} TND
                   </span>
                 </div>
                 <p className="text-sm text-purple-700 mt-1">
                   Tarif: {(() => {
-                    const { price, discount } = getPricePerKm(booking.distance_km);
+                    const { price, discount } = getPricePerKm(booking.distanceKm);
                     return `${price.toFixed(2)} TND/km ${discount}`;
                   })()}
                 </p>
