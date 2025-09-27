@@ -13,6 +13,7 @@ import { pushNotificationService } from '../utils/pushNotifications';
 import { VehicleImageUpload } from './ui/VehicleImageUpload';
 import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
+import { analytics } from '../utils/analytics';
 import { Driver, Booking } from '../types';
 
 interface DriverDashboardProps {
@@ -232,6 +233,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             new Date(booking.scheduled_time).toLocaleDateString('fr-FR')
           );
           console.log('✅ Notification d\'acceptation envoyée au client');
+          
+          // Tracker la conversion itinéraire quand le chauffeur accepte
+          console.log('🗺️ Tracking conversion itinéraire (acceptation chauffeur)...');
+          analytics.trackItineraryConversion();
         } catch (notificationError) {
           console.error('❌ Erreur lors de l\'envoi de la notification:', notificationError);
         }

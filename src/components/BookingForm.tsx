@@ -582,7 +582,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
       // Tracker la conversion Google Ads
       console.log('📊 Tracking conversion Google Ads...');
-      analytics.trackBookingCreated(clientId, data.priceTnd);
+      analytics.trackBookingCreated(clientId, data.price);
+      
+      // Tracker la conversion spécifique itinéraire
+      console.log('🗺️ Tracking conversion itinéraire...');
+      analytics.trackItineraryConversion();
       
       // Récupérer les données du client et chauffeur pour les notifications
       console.log('📋 Récupération des données client et chauffeur...');
