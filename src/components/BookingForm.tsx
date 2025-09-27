@@ -31,6 +31,7 @@ import {
   Coordinates 
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
+import { analytics } from '../utils/analytics';
 
 interface BookingFormProps {
   clientId: string;
@@ -578,6 +579,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       console.log('✅ Réservation créée avec succès:', booking);
       console.log('👤 Chauffeur assigné dans la DB:', booking.driver_id);
       console.log('📊 Statut de la réservation:', booking.status);
+      
+      // Tracker la conversion Google Ads
+      console.log('📊 Tracking conversion Google Ads...');
+      analytics.trackBookingCreated(clientId, data.priceTnd);
       
       // Récupérer les données du client et chauffeur pour les notifications
       console.log('📋 Récupération des données client et chauffeur...');

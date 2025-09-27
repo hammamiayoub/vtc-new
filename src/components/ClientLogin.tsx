@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft, MapPin } from 'lucide-react';
 import { Button } from './ui/Button';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { supabase } from '../lib/supabase';
+import { analytics } from '../utils/analytics';
 
 interface ClientLoginProps {
   onBack: () => void;
@@ -78,6 +79,9 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
           return;
         }
 
+        // Tracker la connexion
+        analytics.trackLogin('client');
+        
         onLoginSuccess();
       }
     } catch (error) {

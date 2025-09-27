@@ -19,6 +19,7 @@ import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { supabase } from './lib/supabase';
+import { initAnalytics, analytics } from './utils/analytics';
 
 type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password';
 
@@ -81,6 +82,9 @@ function AppContent() {
   }, [location.pathname]);
 
   useEffect(() => {
+    // Initialiser Google Analytics
+    initAnalytics();
+    
     // Vérifier si on est sur une page de réinitialisation de mot de passe
     const urlParams = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
