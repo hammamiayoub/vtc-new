@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, Clock, Shield, Star, ArrowRight, CheckCircle } from 'lucide-react';
+import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Footer } from './Footer';
 
@@ -93,6 +93,185 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6 tracking-tight">
+              Nos services de transport
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Une gamme complète de véhicules pour tous vos besoins de transport
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Van de transport collectif */}
+            <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+              <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src="/van.png" 
+                    alt="Van de transport collectif"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    // Fallback vers l'icône si l'image n'existe pas
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = 'none';
+                    const nextElement = target.nextElementSibling as HTMLElement;
+                    if (nextElement) {
+                      nextElement.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center" style={{display: 'none'}}>
+                  <Users size={64} className="text-white opacity-90" />
+                </div>
+                <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  Van collectif
+                </h3>
+                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                  Transport de groupe jusqu'à 8 personnes. Idéal pour les familles et les équipes.
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Jusqu'à 8 passagers</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bus */}
+            <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+              <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src="/bus.png" 
+                    alt="Bus de transport"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    // Fallback vers l'icône si l'image n'existe pas
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = 'none';
+                    const nextElement = target.nextElementSibling as HTMLElement;
+                    if (nextElement) {
+                      nextElement.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center" style={{display: 'none'}}>
+                  <Bus size={64} className="text-white opacity-90" />
+                </div>
+                <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  Bus de transport
+                </h3>
+                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                  Transport en commun confortable pour les trajets longue distance et les groupes.
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Jusqu'à 50 passagers</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Utilitaire */}
+            <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+              <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src="/utilitaire.png" 
+                    alt="Véhicule utilitaire"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    // Fallback vers l'icône si l'image n'existe pas
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = 'none';
+                    const nextElement = target.nextElementSibling as HTMLElement;
+                    if (nextElement) {
+                      nextElement.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center" style={{display: 'none'}}>
+                  <Truck size={64} className="text-white opacity-90" />
+                </div>
+                <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  Véhicule utilitaire
+                </h3>
+                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                  Transport de marchandises et déménagement. Spacieux et pratique.
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Transport de marchandises</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Limousine */}
+            <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+              <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src="/limousine.png" 
+                    alt="Limousine premium"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    // Fallback vers l'icône si l'image n'existe pas
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = 'none';
+                    const nextElement = target.nextElementSibling as HTMLElement;
+                    if (nextElement) {
+                      nextElement.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center" style={{display: 'none'}}>
+                  <Crown size={64} className="text-white opacity-90" />
+                </div>
+                <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  Limousine premium
+                </h3>
+                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                  Service de luxe pour les occasions spéciales. Confort et élégance garantis.
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Service premium</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section supplémentaire avec véhicules classiques */}
+          
+
+          {/* CTA pour réserver */}
+          <div className="text-center mt-16">
+            <div className="bg-gray-50 rounded-2xl p-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                Trouvez le véhicule parfait pour votre trajet
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                Choisissez parmi notre large gamme de véhicules et réservez en quelques clics
+              </p>
+              <Button 
+                size="lg" 
+                onClick={onClientLogin}
+                className="text-lg px-8 py-4 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 mx-auto"
+              >
+                Voir tous les véhicules
+                <ArrowRight size={20} />
+              </Button>
+            </div>
           </div>
         </div>
       </section>
