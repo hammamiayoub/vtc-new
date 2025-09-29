@@ -602,67 +602,85 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               </div>
             </div>
 
-            {/* Section Tarifs */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Car size={24} className="text-green-600" />
+            {/* Section Tarifs - Optimisée pour mobile */}
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8">
+              <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Car size={20} className="text-green-600 sm:w-6 sm:h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Tarifs</h3>
-                  <p className="text-sm text-gray-600">Grille tarifaire TuniDrive</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Tarifs</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">Grille tarifaire TuniDrive</p>
                 </div>
               </div>
               
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-3">Tarif de base : 2,2 TND/KM</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Distance &lt; 30 km</span>
-                      <span className="font-medium text-gray-900">2,2 TND/KM</span>
+              <div className="space-y-3 sm:space-y-4">
+                {/* Tarif de base - Optimisé mobile */}
+                <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarif de base : 2,2 TND/KM</h4>
+                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-gray-700 flex-1 pr-2">Distance &lt; 30 km</span>
+                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">2,2 TND/KM</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Distance 30-100 km</span>
-                      <span className="font-medium text-gray-900">2,2 TND/KM (plein tarif)</span>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-gray-700 flex-1 pr-2">Distance 30-100 km</span>
+                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">2,2 TND/KM</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Distance 100-250 km</span>
-                      <span className="font-medium text-green-600">1,98 TND/KM (-10%)</span>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-gray-700 flex-1 pr-2">Distance 100-250 km</span>
+                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1,98 TND/KM (-10%)</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Distance 250+ km</span>
-                      <span className="font-medium text-green-600">1,76 TND/KM (-20%)</span>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-gray-700 flex-1 pr-2">Distance 250+ km</span>
+                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1,76 TND/KM (-20%)</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
+                {/* Info bonus - Optimisé mobile */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
                     <strong>💡 Bon à savoir :</strong> Plus votre trajet est long, plus vous économisez ! 
                     Les remises s'appliquent automatiquement selon la distance.
                   </p>
                 </div>
                 
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-orange-900 mb-3">Tarifs par type de véhicule</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="text-orange-800">Bus</span>
-                      <span className="font-medium text-orange-900">×3,5</span>
+                {/* Tarifs par véhicule - Grille responsive */}
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
+                  <h4 className="font-semibold text-orange-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarifs par type de véhicule</h4>
+                  
+                  {/* Grille responsive pour mobile */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
+                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100">
+                      <span className="text-orange-800 font-medium">Bus</span>
+                      <span className="font-bold text-orange-900">×3,5</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-orange-800">Minibus</span>
-                      <span className="font-medium text-orange-900">×2,5</span>
+                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100">
+                      <span className="text-orange-800 font-medium">Minibus</span>
+                      <span className="font-bold text-orange-900">×2,5</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-orange-800">Limousine / Camion</span>
-                      <span className="font-medium text-orange-900">×2,0</span>
+                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100">
+                      <span className="text-orange-800 font-medium">Limousine</span>
+                      <span className="font-bold text-orange-900">×2,0</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-orange-800">Berline / Pickup / Van / Utilitaire</span>
-                      <span className="font-medium text-orange-900">×1,0 (tarif normal)</span>
+                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100">
+                      <span className="text-orange-800 font-medium">Camion</span>
+                      <span className="font-bold text-orange-900">×2,0</span>
                     </div>
+                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100 sm:col-span-2">
+                      <span className="text-orange-800 font-medium">Berline / Pickup</span>
+                      <span className="font-bold text-orange-900">×1,0</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100 sm:col-span-2">
+                      <span className="text-orange-800 font-medium">Van / Utilitaire</span>
+                      <span className="font-bold text-orange-900">×1,0</span>
+                    </div>
+                  </div>
+                  
+                  {/* Note explicative pour mobile */}
+                  <div className="mt-3 p-2 bg-orange-100 rounded text-xs text-orange-800">
+                    <strong>Note :</strong> Les multiplicateurs s'appliquent au tarif de base selon le type de véhicule choisi.
                   </div>
                 </div>
               </div>
