@@ -803,9 +803,13 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                         <p className="text-sm text-gray-600 mb-1">Type</p>
                         <p className="font-semibold text-gray-900">
                           {driver.vehicleInfo.type === 'sedan' && 'Berline'}
-                          {driver.vehicleInfo.type === 'suv' && 'SUV'}
-                          {driver.vehicleInfo.type === 'luxury' && 'Véhicule de luxe'}
-                          {driver.vehicleInfo.type === 'van' && 'Monospace'}
+                          {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
+                          {driver.vehicleInfo.type === 'van' && 'Van'}
+                          {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
+                          {driver.vehicleInfo.type === 'bus' && 'Bus'}
+                          {driver.vehicleInfo.type === 'truck' && 'Camion'}
+                          {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
+                          {driver.vehicleInfo.type === 'limousine' && 'Limousine'}
                         </p>
                       </div>
                     </div>
