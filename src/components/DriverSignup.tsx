@@ -160,18 +160,53 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   if (submitSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={40} className="text-green-600" />
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <CheckCircle size={48} className="text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Inscription réussie !
-          </h1>
-          <p className="text-gray-600 mb-8 leading-relaxed">
-            Votre compte chauffeur a été créé avec succès. 
-            Vous allez recevoir un message pour confirmer votre adresse email.
-          </p>
-          <Button onClick={onBack} className="w-full">
+          
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">🎉 Inscription réussie !</h1>
+          
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Mail className="h-6 w-6 text-blue-600 mt-1" />
+              </div>
+              <div className="ml-3 text-left">
+                <h3 className="text-lg font-semibold text-blue-800 mb-3">
+                  📧 Vérifiez votre boîte email
+                </h3>
+                <p className="text-blue-700 mb-4 leading-relaxed">
+                  Nous avons envoyé un email de confirmation à votre adresse. 
+                  <strong> Cliquez sur le lien dans l'email pour activer votre compte chauffeur.</strong>
+                </p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-yellow-800 text-sm font-medium">
+                    ⚠️ <strong>Important :</strong> Vérifiez aussi votre dossier <strong>Spam</strong> ou <strong>Courrier indésirable</strong> si vous ne recevez pas l'email dans les prochaines minutes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4 mb-8">
+            <h4 className="font-semibold text-gray-800 mb-2">Prochaines étapes :</h4>
+            <ul className="text-sm text-gray-600 space-y-1 text-left">
+              <li>• Vérifiez votre boîte email (et le dossier spam)</li>
+              <li>• Cliquez sur le lien de confirmation</li>
+              <li>• Connectez-vous à votre compte chauffeur</li>
+              <li>• Complétez votre profil et commencez à recevoir des courses !</li>
+            </ul>
+          </div>
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+            <h4 className="font-semibold text-green-800 mb-2">🚗 Bienvenue dans l'équipe TuniDrive !</h4>
+            <p className="text-green-700 text-sm">
+              Une fois votre compte activé, vous pourrez compléter votre profil chauffeur et commencer à recevoir des demandes de courses.
+            </p>
+          </div>
+
+          <Button onClick={onBack} className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3">
             Retour à l'accueil
           </Button>
         </div>
@@ -362,7 +397,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           </div>
 
           {/* Right side - Benefits */}
-          <div className="lg:w-96 bg-blue-600 p-8 lg:p-12 text-white">
+          <div className="lg:w-96 bg-black p-8 lg:p-12 text-white">
             <h2 className="text-3xl font-bold mb-8">Avantages chauffeur</h2>
             <div className="space-y-6">
               {[
@@ -371,15 +406,15 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 'Support 24/7 dédiée aux chauffeurs'
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center gap-3">
-                  <CheckCircle size={20} className="text-green-400 flex-shrink-0" />
-                  <span className="text-blue-50">{benefit}</span>
+                  <CheckCircle size={20} className="text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-200">{benefit}</span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-12 p-6 bg-blue-700 rounded-xl">
+            <div className="mt-12 p-6 bg-gray-800 rounded-xl">
               <h3 className="font-semibold text-lg mb-2">Prêt à commencer ?</h3>
-              <p className="text-blue-200 text-sm">
+              <p className="text-gray-300 text-sm">
                 L'inscription ne prend que quelques minutes. Commencez à recevoir 
                 vos premières courses dès aujourd'hui.
               </p>
