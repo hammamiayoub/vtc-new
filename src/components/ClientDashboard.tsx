@@ -261,12 +261,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
       setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b)));
 
       // Envoyer notification au chauffeur si assigné
-      if (booking.driver_id && booking.drivers) {
+      if (booking.driverId && booking.drivers) {
         try {
           await pushNotificationService.notifyDriverBookingCancelledByClient(
             booking.drivers.first_name + ' ' + booking.drivers.last_name,
             client?.firstName + ' ' + client?.lastName || 'Client',
-            booking.pickup_address
+            booking.pickupAddress
           );
           console.log('✅ Notification d\'annulation envoyée au chauffeur');
         } catch (notificationError) {
@@ -275,13 +275,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
       }
 
       // Envoyer emails d'annulation
-      if (booking.driver_id && booking.drivers) {
+      if (booking.driverId && booking.drivers) {
         try {
           // Récupérer l'email du chauffeur depuis la base de données
           const { data: driverData, error: driverError } = await supabase
             .from('drivers')
             .select('email')
-            .eq('id', booking.driver_id)
+            .eq('id', booking.driverId)
             .single();
 
           if (driverError) {
@@ -294,10 +294,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             clientEmail: client?.email || '',
             driverName: booking.drivers.first_name + ' ' + booking.drivers.last_name,
             driverEmail: driverData?.email || '',
-            pickupAddress: booking.pickup_address,
-            destinationAddress: booking.destination_address,
-            scheduledTime: booking.scheduled_time,
-            priceTnd: booking.price_tnd,
+            pickupAddress: booking.pickupAddress,
+            destinationAddress: booking.destinationAddress,
+            scheduledTime: booking.scheduledTime,
+            priceTnd: booking.priceTnd,
             cancelledBy: 'client'
           };
 
@@ -731,20 +731,20 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                               minute: '2-digit'
                             })}
                           </span>
-                          <span className="font-bold text-gray-900 text-sm sm:text-base">{booking.price_tnd} TND</span>
+                          <span className="font-bold text-gray-900 text-sm sm:text-base">{booking.priceTnd} TND</span>
                         </div>
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <span className="text-sm text-gray-700">{booking.pickup_address}</span>
+                            <span className="text-sm text-gray-700">{booking.pickupAddress}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <span className="text-sm text-gray-700">{booking.destination_address}</span>
+                            <span className="text-sm text-gray-700">{booking.destinationAddress}</span>
                           </div>
                         </div>
                         <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-4">
-                          <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
+                          <p className="font-semibold text-gray-900">{booking.distanceKm} km</p>
                           {getStatusBadge(booking.status)}
                           {canCancelBooking(booking) && (
                             <Button
@@ -795,7 +795,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                               </p>
                             )}
                           </div>
-                        ) : booking.driver_id ? (
+                        ) : booking.driverId ? (
                           <div className="text-right">
                             <p className="text-sm font-medium text-gray-900">Chauffeur assigné</p>
                             <p className="text-xs text-gray-500">En cours de chargement...</p>

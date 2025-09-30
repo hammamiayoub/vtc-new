@@ -338,7 +338,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4">
+    <div className="w-full max-w-5xl mx-auto">
       <div className="bg-white shadow rounded-xl p-4 sm:p-6">
         {/* En-tête calendrier */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">

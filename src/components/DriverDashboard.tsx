@@ -6,7 +6,7 @@ import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { ProfileModal } from './ProfileModal';
 import { NotificationBell } from './NotificationBell';
 import { DriverRatingDisplay } from './DriverRatingDisplay';
-import { NotificationPermission, NotificationStatus } from './NotificationPermission';
+import { NotificationPermission } from './NotificationPermission';
 import { Footer } from './Footer';
 import { useDriverNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
@@ -30,7 +30,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
 
   // Hook pour les notifications
-  const { unreadCount, hasNewBookings, markAsRead, refreshNotifications } = useDriverNotifications(driver?.id || '');
+  const { unreadCount, hasNewBookings, markAsRead } = useDriverNotifications(driver?.id || '');
 
   useEffect(() => {
     const fetchDriverData = async () => {
@@ -82,7 +82,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         
         try {
           // Vérifier l'utilisateur connecté
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          const { data: { user } } = await supabase.auth.getUser();
           console.log('Utilisateur connecté:', user?.id);
           console.log('Correspondance user/driver:', user?.id === driver.id);
           
@@ -229,8 +229,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           await pushNotificationService.notifyClientBookingAcceptedByDriver(
             booking.clients.first_name + ' ' + booking.clients.last_name,
             driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
-            booking.pickup_address,
-            new Date(booking.scheduled_time).toLocaleDateString('fr-FR')
+            booking.pickupAddress,
+            new Date(booking.scheduledTime).toLocaleDateString('fr-FR')
           );
           console.log('✅ Notification d\'acceptation envoyée au client');
           
@@ -245,7 +245,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           await pushNotificationService.notifyClientBookingCompleted(
             booking.clients.first_name + ' ' + booking.clients.last_name,
             driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
-            booking.pickup_address
+            booking.pickupAddress
           );
           console.log('✅ Notification de fin de course envoyée au client');
         } catch (notificationError) {
@@ -289,7 +289,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           await pushNotificationService.notifyClientBookingCancelledByDriver(
             booking.clients.first_name + ' ' + booking.clients.last_name,
             driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
-            booking.pickup_address
+            booking.pickupAddress
           );
           console.log('✅ Notification d\'annulation envoyée au client');
         } catch (notificationError) {
@@ -304,7 +304,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           const { data: clientData, error: clientError } = await supabase
             .from('clients')
             .select('email')
-            .eq('id', booking.client_id)
+            .eq('id', booking.clientId)
             .single();
 
           if (clientError) {
@@ -317,10 +317,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             clientEmail: clientData?.email || '',
             driverName: driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
             driverEmail: driver?.email || '',
-            pickupAddress: booking.pickup_address,
-            destinationAddress: booking.destination_address,
-            scheduledTime: booking.scheduled_time,
-            priceTnd: booking.price_tnd,
+            pickupAddress: booking.pickupAddress,
+            destinationAddress: booking.destinationAddress,
+            scheduledTime: booking.scheduledTime,
+            priceTnd: booking.priceTnd,
             cancelledBy: 'driver'
           };
 
@@ -403,9 +403,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const acceptedBookings = bookings
     .filter(b => b.status === 'accepted')
-    .sort((a, b) => new Date(a.scheduled_time).getTime() - new Date(b.scheduled_time).getTime());
+    .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
   const completedBookings = bookings.filter(b => b.status === 'completed');
-  const totalEarnings = completedBookings.reduce((sum, booking) => sum + booking.price_tnd, 0);
+  const totalEarnings = completedBookings.reduce((sum, booking) => sum + booking.priceTnd, 0);
 
   console.log('📊 Statistiques chauffeur:', {
     totalBookings: bookings.length,
@@ -469,7 +469,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-black border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -551,7 +551,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 w-full">
         {/* Notification Permission */}
         <NotificationPermission />
         
@@ -822,7 +822,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
         {/* Onglet Disponibilités */}
         {!showProfileForm && activeTab === 'availability' && driver && (
-          <div className="overflow-x-auto"><AvailabilityCalendar driverId={driver.id} /></div>
+          <div className="w-full">
+            <AvailabilityCalendar driverId={driver.id} />
+          </div>
         )}
 
         {/* Onglet Courses */}
@@ -846,7 +848,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
-                              Réservé pour le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
+                              Réservé pour le {new Date(booking.scheduledTime).toLocaleString('fr-FR', {
                                 weekday: 'long',
                                 year: 'numeric',
                                 month: 'long',
@@ -859,16 +861,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <MapPin size={16} className="text-green-600" />
-                              <span className="font-medium text-gray-900">{booking.pickup_address}</span>
+                              <span className="font-medium text-gray-900">{booking.pickupAddress}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Navigation size={16} className="text-red-600" />
                               <span className="text-sm text-gray-600">Arrivée:</span>
-                              <span className="font-medium text-gray-900">{booking.destination_address}</span>
+                              <span className="font-medium text-gray-900">{booking.destinationAddress}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                              <span>{booking.distanceKm} km</span>
+                              <span className="font-bold text-green-600">{booking.priceTnd} TND</span>
                             </div>
                             {booking.notes && (
                               <div className="bg-gray-50 rounded-lg p-3 mt-2">
@@ -984,16 +986,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Distance:</span>
-                            <span className="ml-2 font-medium">{booking.distance_km} km</span>
+                            <span className="ml-2 font-medium">{booking.distanceKm} km</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Prix:</span>
-                            <span className="ml-2 font-bold text-green-600">{booking.price_tnd} TND</span>
+                            <span className="ml-2 font-bold text-green-600">{booking.priceTnd} TND</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Réservé le:</span>
                             <span className="ml-2 font-medium">
-                              {new Date(booking.created_at).toLocaleDateString('fr-FR')}
+                              {new Date(booking.createdAt).toLocaleDateString('fr-FR')}
                             </span>
                           </div>
                           <div>
@@ -1026,7 +1028,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
-                              Prévue le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
+                              Prévue le {new Date(booking.scheduledTime).toLocaleString('fr-FR', {
                                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                               })}
                             </span>
@@ -1034,16 +1036,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <MapPin size={16} className="text-green-600" />
-                              <span className="font-medium text-gray-900">{booking.pickup_address}</span>
+                              <span className="font-medium text-gray-900">{booking.pickupAddress}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Navigation size={16} className="text-red-600" />
                               <span className="text-sm text-gray-600">Arrivée:</span>
-                              <span className="font-medium text-gray-900">{booking.destination_address}</span>
+                              <span className="font-medium text-gray-900">{booking.destinationAddress}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                              <span>{booking.distanceKm} km</span>
+                              <span className="font-bold text-green-600">{booking.priceTnd} TND</span>
                             </div>
                           </div>
                         </div>
@@ -1091,8 +1093,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
-                              Commencée le {booking.pickup_time ? 
-                                new Date(booking.pickup_time).toLocaleString('fr-FR') : 
+                              Commencée le {booking.pickupTime ? 
+                                new Date(booking.pickupTime).toLocaleString('fr-FR') : 
                                 'Maintenant'
                               }
                             </span>
@@ -1100,15 +1102,15 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <MapPin size={14} className="text-green-600" />
-                              <span className="text-sm text-gray-900">{booking.pickup_address}</span>
+                              <span className="text-sm text-gray-900">{booking.pickupAddress}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Navigation size={14} className="text-red-600" />
-                              <span className="text-sm text-gray-900">{booking.destination_address}</span>
+                              <span className="text-sm text-gray-900">{booking.destinationAddress}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                              <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                              <span>{booking.distanceKm} km</span>
+                              <span className="font-bold text-green-600">{booking.priceTnd} TND</span>
                             </div>
                           </div>
                         </div>
