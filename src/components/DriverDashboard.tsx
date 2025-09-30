@@ -703,6 +703,76 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               </div>
             </div>
 
+            {/* Validation Process Guide */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 mb-8">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-blue-600" />
+                Processus de validation du compte chauffeur
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg p-4 border border-blue-200">
+                  <h4 className="font-semibold text-gray-900 mb-2">📋 Étapes de validation</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                        1
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Complétion du profil</p>
+                        <p className="text-sm text-gray-600">Renseignez toutes vos informations personnelles et véhicule</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                        2
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Vérification des documents</p>
+                        <p className="text-sm text-gray-600">Nos équipes vérifient votre permis de conduire et les documents du véhicule</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                        3
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Validation administrative</p>
+                        <p className="text-sm text-gray-600">Un administrateur valide votre compte (24-48h)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                        4
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Configuration des disponibilités</p>
+                        <p className="text-sm text-gray-600">Définissez vos créneaux de disponibilité pour recevoir des courses</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    💡 Conseil important pour recevoir des courses
+                  </h4>
+                  <p className="text-sm text-amber-800 mb-3">
+                    Pour maximiser vos chances de recevoir des courses, nous vous recommandons fortement de :
+                  </p>
+                  <ul className="text-sm text-amber-800 space-y-1 ml-4">
+                    <li>• <strong>Saisir des disponibilités sur des plages étendues</strong> (semaines ou mois)</li>
+                    <li>• Définir des créneaux réguliers et récurrents</li>
+                    <li>• Être disponible aux heures de pointe (7h-9h, 17h-19h)</li>
+                    <li>• Maintenir vos disponibilités à jour</li>
+                  </ul>
+                  <p className="text-xs text-amber-700 mt-2">
+                    Plus vous êtes disponible, plus vous aurez de chances de recevoir des demandes de course !
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Next Steps */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Prochaines étapes</h3>
@@ -749,6 +819,34 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       {driver?.status === 'active' ? 'Compte validé ✓' : 'En attente - Un administrateur doit valider votre compte'}
                     </p>
                   </div>
+                </div>
+
+                <div className={`flex items-center gap-4 p-4 rounded-lg ${
+                  driver?.status === 'active' ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'
+                }`}>
+                  <div className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold ${
+                    driver?.status === 'active' ? 'bg-blue-600' : 'bg-gray-400'
+                  }`}>
+                    3
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900">Définir vos disponibilités</h4>
+                    <p className="text-sm text-gray-600">
+                      {driver?.status === 'active' 
+                        ? 'Configurez vos créneaux pour recevoir des courses'
+                        : 'Disponible après validation du compte'
+                      }
+                    </p>
+                  </div>
+                  {driver?.status === 'active' && (
+                    <Button
+                      onClick={() => setActiveTab('availability')}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Configurer
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
