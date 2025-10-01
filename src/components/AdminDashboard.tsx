@@ -407,7 +407,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           </div>
         </div>
 
-        {/* Drivers List */}
+        {/* Drivers List - Version améliorée */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -424,32 +424,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Version desktop - Tableau complet */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
                     Chauffeur
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
                     Contact
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
                     Véhicule
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Courses
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                    Performance
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Gains
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
                     Statut
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
                     Inscription
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
                     Actions
                   </th>
                 </tr>
@@ -457,99 +455,106 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {drivers.map((driver) => (
                   <tr key={driver.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* Chauffeur */}
+                    <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         {driver.profilePhotoUrl ? (
                           <img
                             src={driver.profilePhotoUrl}
                             alt="Photo de profil"
-                            className="w-10 h-10 rounded-full object-cover"
+                            className="w-12 h-12 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                            <User size={20} className="text-gray-700" />
+                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                            <User size={24} className="text-gray-700" />
                           </div>
                         )}
-                        <div>
-                          <p className="font-medium text-gray-900">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 truncate">
                             {driver.firstName} {driver.lastName}
                           </p>
-                          <p className="text-sm text-gray-500">{driver.email}</p>
+                          <p className="text-sm text-gray-500 truncate">{driver.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm">
-                        <p className="text-gray-900">{driver.phone || 'Non renseigné'}</p>
-                        <p className="text-gray-500">Ville: {driver.city || 'Non renseigné'}</p>
-                        <p className="text-gray-500">Permis: {driver.licenseNumber || 'Non renseigné'}</p>
+                    
+                    {/* Contact */}
+                    <td className="px-4 py-4">
+                      <div className="text-sm space-y-1">
+                        <p className="text-gray-900 truncate">{driver.phone || 'Non renseigné'}</p>
+                        <p className="text-gray-500 truncate">{driver.city || 'Ville non renseignée'}</p>
+                        <p className="text-gray-500 truncate">Permis: {driver.licenseNumber || 'Non renseigné'}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    
+                    {/* Véhicule */}
+                    <td className="px-4 py-4">
                       <div className="text-sm">
                         {driver.vehicleInfo ? (
-                          <>
-                            <p className="text-gray-900">
+                          <div className="space-y-1">
+                            <p className="text-gray-900 font-medium truncate">
                               {driver.vehicleInfo.make} {driver.vehicleInfo.model}
                             </p>
-                            <p className="text-gray-500">
+                            <p className="text-gray-500 truncate">
                               {driver.vehicleInfo.year} - {driver.vehicleInfo.color}
                             </p>
-                          </>
+                            <p className="text-gray-500 truncate">
+                              {driver.vehicleInfo.seats} places
+                            </p>
+                          </div>
                         ) : (
-                          <p className="text-gray-500">Non renseigné</p>
+                          <p className="text-gray-500 italic">Non renseigné</p>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle size={12} className="text-green-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">
-                              {driver.completedBookings || 0}
-                            </p>
-                            <p className="text-xs text-gray-500">terminées</p>
-                          </div>
+                    
+                    {/* Performance */}
+                    <td className="px-4 py-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Courses:</span>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {driver.completedBookings || 0}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
-                            <XCircle size={12} className="text-red-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">
-                              {(driver.cancelledByDriver || 0) + (driver.cancelledByClient || 0)}
-                            </p>
-                            <p className="text-xs text-gray-500">annulées</p>
-                          </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Gains:</span>
+                          <span className="text-sm font-semibold text-green-600">
+                            {(driver.totalEarnings || 0).toFixed(0)} TND
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Annulées:</span>
+                          <span className="text-sm font-semibold text-red-600">
+                            {(driver.cancelledByDriver || 0) + (driver.cancelledByClient || 0)}
+                          </span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-lg font-semibold text-gray-900">
-                            {(driver.totalEarnings || 0).toFixed(2)} TND
-                          </p>
-                          <p className="text-xs text-gray-500">gains</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    
+                    {/* Statut */}
+                    <td className="px-4 py-4">
                       {getStatusBadge(driver.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(driver.createdAt).toLocaleDateString('fr-FR')}
+                    
+                    {/* Inscription */}
+                    <td className="px-4 py-4">
+                      <div className="text-sm">
+                        <p className="text-gray-900">
+                          {new Date(driver.createdAt).toLocaleDateString('fr-FR')}
+                        </p>
+                        <p className="text-gray-500">
+                          {new Date(driver.createdAt).toLocaleTimeString('fr-FR', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                    
+                    {/* Actions */}
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={() => setSelectedDriver(driver)}
                           className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -595,6 +600,127 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Version mobile/tablet - Cards */}
+          <div className="lg:hidden">
+            <div className="divide-y divide-gray-200">
+              {drivers.map((driver) => (
+                <div key={driver.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      {driver.profilePhotoUrl ? (
+                        <img
+                          src={driver.profilePhotoUrl}
+                          alt="Photo de profil"
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                          <User size={24} className="text-gray-700" />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          {driver.firstName} {driver.lastName}
+                        </h3>
+                        <p className="text-sm text-gray-500">{driver.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(driver.status)}
+                      <button
+                        onClick={() => setSelectedDriver(driver)}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Voir les détails"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Contact</p>
+                      <p className="text-sm text-gray-900">{driver.phone || 'Non renseigné'}</p>
+                      <p className="text-sm text-gray-500">{driver.city || 'Ville non renseignée'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Véhicule</p>
+                      {driver.vehicleInfo ? (
+                        <div>
+                          <p className="text-sm text-gray-900">
+                            {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {driver.vehicleInfo.year} - {driver.vehicleInfo.color}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">Non renseigné</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 mb-1">Courses</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {driver.completedBookings || 0}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 mb-1">Gains</p>
+                      <p className="text-lg font-semibold text-green-600">
+                        {(driver.totalEarnings || 0).toFixed(0)} TND
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 mb-1">Annulées</p>
+                      <p className="text-lg font-semibold text-red-600">
+                        {(driver.cancelledByDriver || 0) + (driver.cancelledByClient || 0)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-500">
+                      Inscrit le {new Date(driver.createdAt).toLocaleDateString('fr-FR')}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {driver.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => updateDriverStatus(driver.id, 'active')}
+                            disabled={actionLoading === driver.id}
+                            className="px-3 py-1 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                          >
+                            Approuver
+                          </button>
+                          <button
+                            onClick={() => updateDriverStatus(driver.id, 'rejected')}
+                            disabled={actionLoading === driver.id}
+                            className="px-3 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                          >
+                            Rejeter
+                          </button>
+                        </>
+                      )}
+                      
+                      {driver.status === 'active' && (
+                        <button
+                          onClick={() => updateDriverStatus(driver.id, 'pending')}
+                          disabled={actionLoading === driver.id}
+                          className="px-3 py-1 text-xs bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                        >
+                          Suspendre
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {drivers.length === 0 && (
