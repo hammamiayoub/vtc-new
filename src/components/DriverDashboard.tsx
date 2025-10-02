@@ -405,7 +405,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     .filter(b => b.status === 'accepted')
     .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
   const completedBookings = bookings.filter(b => b.status === 'completed');
-  const totalEarnings = completedBookings.reduce((sum, booking) => sum + booking.priceTnd, 0);
+  const totalEarnings = completedBookings.reduce((sum, booking) => sum + booking.price_tnd, 0);
 
   console.log('📊 Statistiques chauffeur:', {
     totalBookings: bookings.length,
@@ -946,7 +946,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
-                              Réservé pour le {new Date(booking.scheduledTime).toLocaleString('fr-FR', {
+                              Réservé pour le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
                                 weekday: 'long',
                                 year: 'numeric',
                                 month: 'long',
@@ -959,16 +959,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <MapPin size={16} className="text-green-600" />
-                              <span className="font-medium text-gray-900">{booking.pickupAddress}</span>
+                              <span className="font-medium text-gray-900">{booking.pickup_address}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Navigation size={16} className="text-red-600" />
                               <span className="text-sm text-gray-600">Arrivée:</span>
-                              <span className="font-medium text-gray-900">{booking.destinationAddress}</span>
+                              <span className="font-medium text-gray-900">{booking.destination_address}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
                               <span>{booking.distanceKm} km</span>
-                              <span className="font-bold text-green-600">{booking.priceTnd} TND</span>
+                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
                             </div>
                             {booking.notes && (
                               <div className="bg-gray-50 rounded-lg p-3 mt-2">
@@ -1084,16 +1084,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Distance:</span>
-                            <span className="ml-2 font-medium">{booking.distanceKm} km</span>
+                            <span className="ml-2 font-medium">{booking.distance_km} km</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Prix:</span>
-                            <span className="ml-2 font-bold text-green-600">{booking.priceTnd} TND</span>
+                            <span className="ml-2 font-bold text-green-600">{booking.price_tnd} TND</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Réservé le:</span>
                             <span className="ml-2 font-medium">
-                              {new Date(booking.createdAt).toLocaleDateString('fr-FR')}
+                              {new Date(booking.created_at).toLocaleDateString('fr-FR')}
                             </span>
                           </div>
                           <div>
@@ -1126,7 +1126,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
-                              Prévue le {new Date(booking.scheduledTime).toLocaleString('fr-FR', {
+                              Prévue le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
                                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                               })}
                             </span>
@@ -1134,16 +1134,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <MapPin size={16} className="text-green-600" />
-                              <span className="font-medium text-gray-900">{booking.pickupAddress}</span>
+                              <span className="font-medium text-gray-900">{booking.pickup_address}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Navigation size={16} className="text-red-600" />
                               <span className="text-sm text-gray-600">Arrivée:</span>
-                              <span className="font-medium text-gray-900">{booking.destinationAddress}</span>
+                              <span className="font-medium text-gray-900">{booking.destination_address}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <span>{booking.distanceKm} km</span>
-                              <span className="font-bold text-green-600">{booking.priceTnd} TND</span>
+                              <span>{booking.distance_km} km</span>
+                              <span className="font-bold text-green-600">{booking.pricetnd} TND</span>
                             </div>
                           </div>
                         </div>
@@ -1191,8 +1191,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="flex items-center gap-2 mb-2">
                             {getStatusBadge(booking.status)}
                             <span className="text-sm text-gray-500">
-                              Commencée le {booking.pickupTime ? 
-                                new Date(booking.pickupTime).toLocaleString('fr-FR') : 
+                              Commencée le {booking.pickup_time ? 
+                                new Date(booking.pickup_time).toLocaleString('fr-FR') : 
                                 'Maintenant'
                               }
                             </span>
@@ -1200,15 +1200,15 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <MapPin size={14} className="text-green-600" />
-                              <span className="text-sm text-gray-900">{booking.pickupAddress}</span>
+                              <span className="text-sm text-gray-900">{booking.pickup_address}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Navigation size={14} className="text-red-600" />
-                              <span className="text-sm text-gray-900">{booking.destinationAddress}</span>
+                              <span className="text-sm text-gray-900">{booking.destination_address}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                              <span>{booking.distanceKm} km</span>
-                              <span className="font-bold text-green-600">{booking.priceTnd} TND</span>
+                              <span>{booking.distance_km} km</span>
+                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
                             </div>
                           </div>
                         </div>

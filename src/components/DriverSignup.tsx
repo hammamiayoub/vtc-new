@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
-import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { signupSchema } from '../utils/validation';
@@ -37,9 +36,52 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
     setError(null);
     
     try {
-      console.log('🔍 Tentative d\'inscription avec email:', data.email);
+      console.log('🔍 Vérification de l\'email avant création...');
       
-      // Créer l'utilisateur avec Supabase Auth
+      // Vérifier si l'email existe déjà AVANT de créer l'utilisateur
+      // Vérifier si l'email existe déjà dans la table clients
+      const { data: existingClient, error: clientCheckError } = await supabase
+        .from('clients')
+        .select('id, email')
+        .eq('email', data.email)
+        .maybeSingle();
+
+      if (clientCheckError) {
+        console.error('Erreur lors de la vérification des clients:', clientCheckError);
+        setError('Erreur lors de la vérification de l\'email. Veuillez réessayer.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (existingClient) {
+        setError('Cette adresse email est déjà utilisée par un compte client. Veuillez utiliser une autre adresse email ou vous connecter avec votre compte client.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Vérifier si l'email existe déjà dans la table drivers
+      const { data: existingDriver, error: driverCheckError } = await supabase
+        .from('drivers')
+        .select('id, email')
+        .eq('email', data.email)
+        .maybeSingle();
+
+      if (driverCheckError) {
+        console.error('Erreur lors de la vérification des chauffeurs:', driverCheckError);
+        setError('Erreur lors de la vérification de l\'email. Veuillez réessayer.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (existingDriver) {
+        setError('Cette adresse email est déjà utilisée par un compte chauffeur. Veuillez utiliser une autre adresse email ou vous connecter avec votre compte chauffeur.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log('✅ Email libre, création de l\'utilisateur...');
+      
+      // Si l'email n'existe pas, créer l'utilisateur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -53,20 +95,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         }
       });
 
-      // Alternative: Créer l'utilisateur sans confirmation email
-      /* const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: undefined,
-          data: {
-            first_name: data.firstName,
-            last_name: data.lastName,
-            skip_confirmation: true
-          }
-        }
-      }); */
-
       console.log('📧 Réponse Supabase Auth:', { authData, authError });
 
       if (authError) {
@@ -74,11 +102,13 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         
         if (authError.message.includes('email_address_invalid')) {
           setError('Cet email a été rejeté par le serveur. Veuillez essayer avec une adresse email différente.');
+          setIsSubmitting(false);
           return;
         }
         
         if (authError.message.includes('invalid') && authError.message.includes('email')) {
           setError('Email rejeté par le serveur. Essayez avec un email différent.');
+          setIsSubmitting(false);
           return;
         }
         
@@ -87,6 +117,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         } else {
           setError(`Erreur lors de l'inscription: ${authError.message}`);
         }
+        setIsSubmitting(false);
         return;
       }
 
@@ -108,10 +139,20 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         if (profileError) {
           console.error('❌ Erreur profil chauffeur:', profileError);
           setError(`Erreur lors de la création du profil: ${profileError.message}`);
+          setIsSubmitting(false);
           return;
         }
         
         console.log('✅ Profil chauffeur créé avec succès');
+
+        // Déclencher la conversion Google Ads
+        try {
+          import('../utils/googleAdsTrigger').then(({ triggerGoogleAdsConversion }) => {
+            triggerGoogleAdsConversion('signup');
+          });
+        } catch (conversionError) {
+          console.warn('⚠️ Erreur lors du déclenchement de la conversion Google Ads:', conversionError);
+        }
 
         // Envoyer une notification au support
         try {

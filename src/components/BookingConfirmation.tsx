@@ -45,6 +45,15 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
     
     // Conversion spécifique via trigger Google Ads
     triggerGoogleAdsConversion();
+    
+    // Conversion Google Ads spécifique pour les réservations
+    try {
+      import('../utils/googleAdsTrigger').then(({ triggerGoogleAdsConversion }) => {
+        triggerGoogleAdsConversion('booking');
+      });
+    } catch (conversionError) {
+      console.warn('⚠️ Erreur lors du déclenchement de la conversion Google Ads:', conversionError);
+    }
   }, [bookingId]);
 
   const fetchBookingDetails = async () => {
