@@ -1,42 +1,35 @@
-// Hook pour déclencher l'événement Google Ads spécifique
-// Basé sur l'extrait fourni: "C_L0sbDEWU-fU": { "on": "visible", "vars": { "event_name": "conversion", "send_to": ["AW-17599907390/yz0xCPuh36EbEL6MpchB"] } }
+// Fonction utilitaire pour déclencher les conversions Google Ads
+// Utilise l'ID de conversion principal pour les inscriptions et réservations
 
-export const useGoogleAdsConversion = () => {
-  const triggerConversion = () => {
-    if (typeof window !== 'undefined' && window.gtag) {
-      console.log('🎯 Déclenchement conversion Google Ads (trigger visible)');
-      
-      // Implémentation de l'extrait d'événement fourni
-      window.gtag('event', 'conversion', {
-        'send_to': 'AW-17599907390/yz0xCPuh36EbEL6MpchB'
-      });
-      
-      // Log pour debugging
-      console.log('✅ Conversion Google Ads envoyée:', {
-        event_name: 'conversion',
-        send_to: 'AW-17599907390/yz0xCPuh36EbEL6MpchB'
-      });
-    } else {
-      console.warn('⚠️ Google Tag Manager non disponible pour la conversion');
-    }
-  };
-
-  return { triggerConversion };
-};
-
-// Fonction utilitaire pour déclencher la conversion
-export const triggerGoogleAdsConversion = () => {
+export const triggerGoogleAdsConversion = (conversionType: 'signup' | 'booking' = 'signup') => {
   if (typeof window !== 'undefined' && window.gtag) {
-    console.log('🎯 Conversion Google Ads déclenchée (trigger visible)');
+    console.log(`🎯 Conversion Google Ads déclenchée (${conversionType})`);
     
-    // Extrait d'événement exact fourni par l'utilisateur
+    // ID de conversion principal pour les inscriptions et réservations
+    const conversionId = 'AW-17599907390/Q3o8CIfGmaUbEL6MpchB';
+    
     window.gtag('event', 'conversion', {
-      'send_to': 'AW-17599907390/yz0xCPuh36EbEL6MpchB'
+      'send_to': conversionId,
+      'value': 1.0,
+      'currency': 'EUR'
     });
     
-    // Log pour debugging
-    console.log('✅ Conversion envoyée avec succès');
+    console.log('✅ Conversion Google Ads envoyée:', {
+      conversionType,
+      send_to: conversionId,
+      value: 1.0,
+      currency: 'EUR'
+    });
   } else {
     console.error('❌ Google Tag Manager non disponible');
   }
+};
+
+// Hook pour déclencher l'événement Google Ads spécifique
+export const useGoogleAdsConversion = () => {
+  const triggerConversion = (conversionType: 'signup' | 'booking' = 'signup') => {
+    triggerGoogleAdsConversion(conversionType);
+  };
+
+  return { triggerConversion };
 };

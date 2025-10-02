@@ -56,7 +56,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
   // Options pour les types de véhicules
   const vehicleTypeOptions = [
-    { value: '', label: 'Tous types de véhicules' },
     { value: 'sedan', label: 'Berline' },
     { value: 'pickup', label: 'Pickup' },
     { value: 'van', label: 'Van' },
@@ -852,9 +851,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             {errors.vehicleType && (
               <p className="mt-2 text-sm text-red-600">{errors.vehicleType.message}</p>
             )}
-            <p className="mt-1 text-sm text-gray-500">
-              Laissez "Tous types" pour voir tous les chauffeurs disponibles
-            </p>
           </div>
 
           {/* Calcul en cours */}

@@ -731,20 +731,20 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                               minute: '2-digit'
                             })}
                           </span>
-                          <span className="font-bold text-gray-900 text-sm sm:text-base">{booking.priceTnd} TND</span>
+                          <span className="font-bold text-gray-900 text-sm sm:text-base">{booking.price_tnd} TND</span>
                         </div>
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <span className="text-sm text-gray-700">{booking.pickupAddress}</span>
+                            <span className="text-sm text-gray-700">{booking.pickup_address}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <span className="text-sm text-gray-700">{booking.destinationAddress}</span>
+                            <span className="text-sm text-gray-700">{booking.destination_address}</span>
                           </div>
                         </div>
                         <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-4">
-                          <p className="font-semibold text-gray-900">{booking.distanceKm} km</p>
+                          <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
                           {getStatusBadge(booking.status)}
                           {canCancelBooking(booking) && (
                             <Button

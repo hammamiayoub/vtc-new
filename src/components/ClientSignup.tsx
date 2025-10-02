@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Phone, MapPin } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Phone, MapPin, AlertCircle } from 'lucide-react';
 import { Button } from './ui/Button';
 import { CityInput } from './ui/CityInput';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
@@ -18,6 +18,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [cityValue, setCityValue] = useState('');
 
   const {
@@ -40,7 +41,54 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
   const onSubmit = async (data: ClientSignupFormData) => {
     setIsSubmitting(true);
+    setError(null);
     try {
+      // Vérifier si l'email existe déjà AVANT de créer l'utilisateur
+      console.log('🔍 Vérification de l\'email avant création...');
+      
+      // Vérifier si l'email existe déjà dans la table drivers
+      const { data: existingDriver, error: driverCheckError } = await supabase
+        .from('drivers')
+        .select('id, email')
+        .eq('email', data.email)
+        .maybeSingle();
+
+      if (driverCheckError) {
+        console.error('Erreur lors de la vérification des chauffeurs:', driverCheckError);
+        setError('Erreur lors de la vérification de l\'email. Veuillez réessayer.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (existingDriver) {
+        setError('Cette adresse email est déjà utilisée par un compte chauffeur. Veuillez utiliser une autre adresse email ou vous connecter avec votre compte chauffeur.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Vérifier si l'email existe déjà dans la table clients
+      const { data: existingClient, error: clientCheckError } = await supabase
+        .from('clients')
+        .select('id, email')
+        .eq('email', data.email)
+        .maybeSingle();
+
+      if (clientCheckError) {
+        console.error('Erreur lors de la vérification des clients:', clientCheckError);
+        setError('Erreur lors de la vérification de l\'email. Veuillez réessayer.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (existingClient) {
+        setError('Cette adresse email est déjà utilisée par un compte client. Veuillez utiliser une autre adresse email ou vous connecter avec votre compte existant.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log('✅ Email libre, création de l\'utilisateur...');
+      
+      // Si l'email n'existe pas, créer l'utilisateur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -55,10 +103,21 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
       if (authError) {
         console.error("Erreur lors de l'inscription:", authError);
+        if (authError.message.includes('email_address_invalid')) {
+          setError('Cet email a été rejeté par le serveur. Veuillez essayer avec une adresse email différente.');
+        } else if (authError.message.includes('over_email_send_rate_limit')) {
+          setError('Trop de tentatives d\'inscription. Veuillez attendre quelques secondes avant de réessayer.');
+        } else {
+          setError(`Erreur lors de l'inscription: ${authError.message}`);
+        }
+        setIsSubmitting(false);
         return;
       }
 
       if (authData.user) {
+        console.log('✅ Utilisateur créé, insertion du profil...');
+        
+        // Insérer le profil client
         const { error: profileError } = await supabase
           .from('clients')
           .insert({
@@ -72,7 +131,18 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
         if (profileError) {
           console.error('Erreur lors de la création du profil client:', profileError);
+          setError(`Erreur lors de la création du profil: ${profileError.message}`);
+          setIsSubmitting(false);
           return;
+        }
+
+        // Déclencher la conversion Google Ads
+        try {
+          import('../utils/googleAdsTrigger').then(({ triggerGoogleAdsConversion }) => {
+            triggerGoogleAdsConversion('signup');
+          });
+        } catch (conversionError) {
+          console.warn('⚠️ Erreur lors du déclenchement de la conversion Google Ads:', conversionError);
         }
 
         // Envoyer une notification au support
@@ -186,6 +256,16 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Créer un compte client</h1>
               <p className="text-gray-600 text-base sm:text-lg">Rejoignez TuniDrive pour réserver vos courses</p>
             </div>
+
+            {/* Affichage des erreurs */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                  <p className="text-red-800 text-sm font-medium">{error}</p>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
               {/* Prénom / Nom */}
