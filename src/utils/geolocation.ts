@@ -141,6 +141,7 @@ export const popularAddresses = [
   'Aéroport de Sfax',
   'Aéroport de Tabarka',
   'Gare de Tunis',
+  'Tunis',
   'Centre Ville, Tunis',
   'La Marsa',
   'Sidi Bou Said',
@@ -149,7 +150,7 @@ export const popularAddresses = [
   'Ben Arous',
   'Nabeul',
   'Hammamet',
-  'Sousse Centre',
+  'Sousse',
   'Monastir',
   'Mahdia',
   'Kairouan',
@@ -163,6 +164,7 @@ export const popularAddresses = [
 
 // Villes principales de Tunisie pour l'autocomplétion des résidences
 export const tunisianCities = [
+  'Tunis',
   'Sfax',
   'Sousse',
   'Kairouan',
