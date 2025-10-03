@@ -636,9 +636,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
           ) : (
             <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-500">
-                ID: {user.id.slice(0, 8)}...
-              </div>
               <Button
                 onClick={() => setShowDeleteConfirm(true)}
                 variant="outline"

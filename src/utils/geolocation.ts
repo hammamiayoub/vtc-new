@@ -141,7 +141,6 @@ export const popularAddresses = [
   'Aéroport de Sfax',
   'Aéroport de Tabarka',
   'Gare de Tunis',
-  'Tunis',
   'Centre Ville, Tunis',
   'La Marsa',
   'Sidi Bou Said',
@@ -158,7 +157,8 @@ export const popularAddresses = [
   'Gabès',
   'Sfax Centre',
   'Tozeur',
-  'Djerba - Houmt Souk'
+  'Djerba',
+  'Menzel Temime'
 ];
 
 // Villes principales de Tunisie pour l'autocomplétion des résidences
@@ -189,17 +189,21 @@ export const tunisianCities = [
   'Zaghouan',
   'La Marsa',
   'Sidi Bou Said',
+  'Ain Draham',
   'Carthage',
   'Hammamet',
   'Djerba',
   'Zarzis',
   'Douz',
-  'Nefta'
+  'Nefta',
+  'Haouaria',
+  'Tunis',
+  'Menzel Temime'
 ];
 
 // Coordonnées approximatives des principales villes tunisiennes
 export const tunisianCityCoordinates: Record<string, Coordinates> = {
-  'Tunis': { latitude: 36.8065, longitude: 10.1815 },
+  'Tunis': { latitude: 36.8064, longitude: 10.1815 },
   'Sfax': { latitude: 34.7406, longitude: 10.7603 },
   'Sousse': { latitude: 35.8256, longitude: 10.6369 },
   'Béja': { latitude: 36.4330, longitude: 9.1055 },
@@ -212,9 +216,11 @@ export const tunisianCityCoordinates: Record<string, Coordinates> = {
   'Ben Arous': { latitude: 36.7539, longitude: 10.2189 },
   'Kasserine': { latitude: 35.1674, longitude: 8.8363 },
   'Médenine': { latitude: 33.3549, longitude: 10.5055 },
-  'Nabeul': { latitude: 36.4561, longitude: 10.7376 },
+  'Nabeul': { latitude: 36.4550, longitude: 10.7154 },
   'Tataouine': { latitude: 32.9297, longitude: 10.4517 },
   'Beja': { latitude: 36.7256, longitude: 9.1817 },
+  'Ain Draham': { latitude: 36.7736, longitude: 8.6848 },
+  'Haouaria': { latitude: 37.0534, longitude: 11.0117 },
   'Jendouba': { latitude: 36.5014, longitude: 8.7800 },
   'Mahdia': { latitude: 35.5047, longitude: 11.0622 },
   'Sidi Bouzid': { latitude: 35.0381, longitude: 9.4858 },
@@ -228,10 +234,11 @@ export const tunisianCityCoordinates: Record<string, Coordinates> = {
   'Sidi Bou Said': { latitude: 36.8708, longitude: 10.3469 },
   'Carthage': { latitude: 36.8531, longitude: 10.3314 },
   'Hammamet': { latitude: 36.4000, longitude: 10.6167 },
-  'Djerba': { latitude: 33.8076, longitude: 10.8451 },
+  'Djerba': { latitude: 33.8215, longitude: 10.9976 },
   'Zarzis': { latitude: 33.5056, longitude: 11.1122 },
   'Douz': { latitude: 33.4664, longitude: 9.0203 },
-  'Nefta': { latitude: 33.8731, longitude: 7.8775 }
+  'Nefta': { latitude: 33.8731, longitude: 7.8775 },
+  'Menzel Temime': { latitude: 36.7822, longitude: 10.9863 }
 };
 
 // Fonction pour obtenir les coordonnées d'une ville
