@@ -80,6 +80,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const watchPickup = watch('pickupAddress');
   const watchDestination = watch('destinationAddress');
   const watchVehicleType = watch('vehicleType');
+  const watchIsReturnTrip = watch('isReturnTrip');
 
   // Autocomplétion des adresses
   useEffect(() => {
@@ -109,10 +110,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   // Recalcul du prix quand le type de véhicule change
   useEffect(() => {
     if (estimatedDistance && watchVehicleType !== undefined) {
-      const price = calculatePrice(estimatedDistance, watchVehicleType);
-      setEstimatedPrice(price);
+      // Calculer le prix de base sans multiplier par 1.8 ici
+      // car le calcul du trajet retour est déjà fait dans calculateRoute
+      const baseDistance = watchIsReturnTrip ? estimatedDistance / 2 : estimatedDistance;
+      const basePrice = calculatePrice(baseDistance, watchVehicleType);
+      
+      // Appliquer le multiplicateur de trajet retour si nécessaire
+      const finalPrice = watchIsReturnTrip ? basePrice * 1.8 : basePrice;
+      
+      setEstimatedPrice(finalPrice);
     }
-  }, [watchVehicleType, estimatedDistance]);
+  }, [watchVehicleType, estimatedDistance, watchIsReturnTrip]);
 
   // Calcul automatique de la distance et du prix
   useEffect(() => {
@@ -132,16 +140,26 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             setDestinationCoords(destinationResult.coordinates);
 
             // Calculer la distance
-            const distance = calculateDistance(
+            let distance = calculateDistance(
               pickupResult.coordinates.latitude,
               pickupResult.coordinates.longitude,
               destinationResult.coordinates.latitude,
               destinationResult.coordinates.longitude
             );
 
+            // Multiplier la distance par 2 si trajet retour
+            if (watchIsReturnTrip) {
+              distance = distance * 2;
+            }
+
             // Calculer le prix avec le type de véhicule
             const selectedVehicleType = watch('vehicleType');
-            const price = calculatePrice(distance, selectedVehicleType);
+            let price = calculatePrice(distance, selectedVehicleType);
+
+            // Multiplier le prix par 1.8 si trajet retour
+            if (watchIsReturnTrip) {
+              price = price * 1.8;
+            }
 
             setEstimatedDistance(distance);
             setEstimatedPrice(price);
@@ -169,7 +187,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     // Délai pour éviter trop d'appels API
     const timeoutId = setTimeout(calculateRoute, 1000);
     return () => clearTimeout(timeoutId);
-  }, [watchPickup, watchDestination]);
+  }, [watchPickup, watchDestination, watchIsReturnTrip, watch]);
 
   const useCurrentLocation = async () => {
     setGettingLocation(true);
@@ -198,7 +216,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
     
     // Debug: Vérifier l'utilisateur connecté
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     console.log('👤 Utilisateur connecté:', user?.id);
     console.log('👤 Email utilisateur:', user?.email);
     
@@ -302,7 +320,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           console.log('🔍 Test avec différents formats de date:', testDates);
           
           for (const testDate of testDates) {
-            const { data: testData, error: testError } = await supabase
+            const { data: testData } = await supabase
               .from('driver_availability')
               .select('*')
               .eq('date', testDate)
@@ -437,7 +455,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       );
 
       // Filtrer par type de véhicule si spécifié
-      if (selectedVehicleType && selectedVehicleType !== '') {
+      if (selectedVehicleType) {
         console.log('🔍 Filtrage côté client par type de véhicule:', selectedVehicleType);
         availableDriversData = availableDriversData.filter(driver => 
           driver.vehicle_info && driver.vehicle_info.type === selectedVehicleType
@@ -555,6 +573,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         distance_km: estimatedDistance,
         price_tnd: estimatedPrice,
         scheduled_time: data.scheduledTime,
+        is_return_trip: data.isReturnTrip || false,
         notes: data.notes || null,
         status: 'pending'
       };
@@ -581,7 +600,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
       // Tracker la conversion Google Ads
       console.log('📊 Tracking conversion Google Ads...');
-      analytics.trackBookingCreated(clientId, data.price);
+      analytics.trackBookingCreated(clientId, estimatedPrice);
       
       // Tracker la conversion spécifique itinéraire
       console.log('🗺️ Tracking conversion itinéraire...');
@@ -853,6 +872,25 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             )}
           </div>
 
+          {/* Trajet retour */}
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                {...register('isReturnTrip')}
+                type="checkbox"
+                className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">
+                  Trajet retour
+                </span>
+                <p className="text-xs text-gray-500">
+                  Le chauffeur vous attendra et vous ramènera au point de départ
+                </p>
+              </div>
+            </label>
+          </div>
+
           {/* Calcul en cours */}
           {isCalculating && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
@@ -877,6 +915,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 <Route className="w-6 h-6 text-purple-600" />
                 <h3 className="text-base sm:text-lg font-semibold text-purple-900">
                   Estimation du trajet
+                  {watchIsReturnTrip && (
+                    <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      Trajet retour
+                    </span>
+                  )}
                 </h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -884,7 +927,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
                     <Route size={24} className="text-blue-600" />
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">Distance</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Distance {watchIsReturnTrip && '(aller-retour)'}
+                  </p>
                   <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     {estimatedDistance} km
                   </p>
@@ -893,7 +938,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
                     <Calculator size={24} className="text-purple-600" />
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">Prix total</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Prix total {watchIsReturnTrip && '(avec retour)'}
+                  </p>
                   <p className="text-xl sm:text-2xl font-bold text-purple-600">
                     {estimatedPrice} TND
                   </p>
@@ -913,11 +960,21 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                       
                       return (
                         <div>
-                          <div>{estimatedDistance} km × {price.toFixed(2)} TND/km</div>
+                          <div>
+                            {watchIsReturnTrip ? 
+                              `${(estimatedDistance / 2).toFixed(1)} km × 2 (retour) × ${price.toFixed(2)} TND/km` :
+                              `${estimatedDistance} km × ${price.toFixed(2)} TND/km`
+                            }
+                          </div>
                           {discount && <div className="text-green-600 font-semibold">{discount}</div>}
                           {vehicleMultiplier > 1 && (
                             <div className="text-blue-600 font-semibold">
                               ×{vehicleMultiplier} ({vehicleTypeName})
+                            </div>
+                          )}
+                          {watchIsReturnTrip && (
+                            <div className="text-orange-600 font-semibold">
+                              ×1.8 (trajet retour)
                             </div>
                           )}
                         </div>

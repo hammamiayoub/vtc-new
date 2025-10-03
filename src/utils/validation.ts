@@ -92,7 +92,7 @@ export const driverProfileSchema = z.object({
     .string()
     .min(8, 'Le numéro de téléphone doit contenir 8 chiffres')
     .max(8, 'Le numéro de téléphone doit contenir 8 chiffres')
-    .regex(/^[0-9]{8}$/, 'Le numéro doit contenir exactement 8 chiffres (ex: 12345678)'),
+    .regex(/^[0-9]{8}$/, 'Le numéro doit contenir exactement 8 chiffres (ex: 22123456)'),
   city: z
     .string()
     .min(2, 'La ville doit contenir au moins 2 caractères')
@@ -114,37 +114,36 @@ export const driverProfileSchema = z.object({
       .max(new Date().getFullYear() + 1, 'Année invalide'),
     color: z
       .string()
-      .min(3, 'La couleur doit contenir au moins 3 caractères'),
+      .min(2, 'La couleur doit contenir au moins 2 caractères'),
     licensePlate: z
       .string()
-      .min(6, 'La plaque d\'immatriculation doit contenir au moins 6 caractères')
-      .max(10, 'La plaque d\'immatriculation ne peut pas dépasser 10 caractères'),
+      .min(3, 'La plaque d\'immatriculation doit contenir au moins 3 caractères')
+      .max(12, 'La plaque d\'immatriculation ne peut pas dépasser 12 caractères'),
     seats: z
       .number()
       .min(2, 'Le véhicule doit avoir au moins 2 places')
       .max(50, 'Le véhicule ne peut pas avoir plus de 50 places'),
-    type: z.enum(['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'limousine'], {
-      errorMap: () => ({ message: 'Type de véhicule invalide' })
-    })
+    type: z.enum(['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'limousine'])
   })
 });
 
 export const bookingSchema = z.object({
   pickupAddress: z
     .string()
-    .min(5, 'L\'adresse de départ doit contenir au moins 5 caractères')
+    .min(3, 'L\'adresse de départ doit contenir au moins 3 caractères')
     .max(200, 'L\'adresse de départ ne peut pas dépasser 200 caractères'),
   destinationAddress: z
     .string()
-    .min(5, 'L\'adresse d\'arrivée doit contenir au moins 5 caractères')
+    .min(3, 'L\'adresse d\'arrivée doit contenir au moins 3 caractères')
     .max(200, 'L\'adresse d\'arrivée ne peut pas dépasser 200 caractères'),
   scheduledTime: z
     .string()
     .min(1, 'Veuillez sélectionner une heure'),
   vehicleType: z
-    .enum(['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'limousine'], {
-      errorMap: () => ({ message: 'Type de véhicule invalide' })
-    })
+    .enum(['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'limousine'])
+    .optional(),
+  isReturnTrip: z
+    .boolean()
     .optional(),
   notes: z
     .string()

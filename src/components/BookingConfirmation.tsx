@@ -181,10 +181,10 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
           <div className="text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle size={40} className="text-green-600" />
+              <CheckCircle size={40} className="text-orange-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Réservation confirmée !
+            <h1 className="text-3xl font-bold text-orange-900 mb-2">
+              Réservation en attente de confirmation !
             </h1>
             <p className="text-gray-600 text-lg">
               Votre course a été enregistrée avec succès
@@ -222,7 +222,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   <div className="w-3 h-3 bg-green-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Point de départ</p>
-                    <p className="font-medium text-gray-900">{booking.pickupAddress}</p>
+                    <p className="font-medium text-gray-900">{booking.pickup_address}</p>
                   </div>
                 </div>
                 
@@ -230,7 +230,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   <div className="w-3 h-3 bg-red-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Destination</p>
-                    <p className="font-medium text-gray-900">{booking.destinationAddress}</p>
+                    <p className="font-medium text-gray-900">{booking.destination_address}</p>
                   </div>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <span className="text-sm text-gray-600">Heure prévue</span>
                   </div>
                   <p className="font-semibold text-gray-900">
-                    {new Date(booking.scheduledTime).toLocaleString('fr-FR', {
+                    {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
@@ -259,7 +259,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <Navigation size={16} className="text-purple-600" />
                     <span className="text-sm text-gray-600">Distance</span>
                   </div>
-                  <p className="font-semibold text-gray-900">{booking.distanceKm} km</p>
+                  <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
                 </div>
               </div>
 
@@ -268,12 +268,12 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-medium text-purple-900">Prix total</span>
                   <span className="text-2xl font-bold text-purple-600">
-                    {booking.priceTnd} TND
+                    {booking.price_tnd} TND
                   </span>
                 </div>
                 <p className="text-sm text-purple-700 mt-1">
                   Tarif: {(() => {
-                    const { price, discount } = getPricePerKm(booking.distanceKm);
+                    const { price, discount } = getPricePerKm(booking.distance_km);
                     return `${price.toFixed(2)} TND/km ${discount}`;
                   })()}
                 </p>

@@ -125,6 +125,7 @@ export interface Booking {
   scheduledTime: string;
   pickupTime?: string;
   completionTime?: string;
+  isReturnTrip?: boolean;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -145,6 +146,7 @@ export interface BookingFormData {
   destinationAddress: string;
   scheduledTime: string;
   vehicleType?: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'limousine';
+  isReturnTrip?: boolean;
   notes?: string;
 }
 
