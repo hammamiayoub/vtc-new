@@ -28,6 +28,7 @@ import {
   getCurrentPosition,
   popularAddresses,
   calculateDistanceFromCity,
+  getCityCoordinates,
   Coordinates 
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
@@ -125,15 +126,36 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   // Calcul automatique de la distance et du prix
   useEffect(() => {
     const calculateRoute = async () => {
-      if (watchPickup && watchDestination && watchPickup.length > 5 && watchDestination.length > 5) {
+      if (watchPickup && watchDestination && watchPickup.length > 3 && watchDestination.length > 3) {
         setIsCalculating(true);
         
         try {
-          // Géocoder les adresses
-          const [pickupResult, destinationResult] = await Promise.all([
-            geocodeAddress(watchPickup),
-            geocodeAddress(watchDestination)
+          // Essayer d'abord de récupérer les coordonnées des villes prédéfinies
+          const [pickupCoordsResult, destinationCoordsResult] = await Promise.all([
+            getCityCoordinates(watchPickup),
+            getCityCoordinates(watchDestination)
           ]);
+
+          let pickupResult, destinationResult;
+
+          // Si les coordonnées de ville ne sont pas trouvées, utiliser le géocodage
+          if (pickupCoordsResult) {
+            pickupResult = {
+              coordinates: pickupCoordsResult,
+              formattedAddress: watchPickup
+            };
+          } else {
+            pickupResult = await geocodeAddress(watchPickup);
+          }
+
+          if (destinationCoordsResult) {
+            destinationResult = {
+              coordinates: destinationCoordsResult,
+              formattedAddress: watchDestination
+            };
+          } else {
+            destinationResult = await geocodeAddress(watchDestination);
+          }
 
           if (pickupResult && destinationResult) {
             setPickupCoords(pickupResult.coordinates);
