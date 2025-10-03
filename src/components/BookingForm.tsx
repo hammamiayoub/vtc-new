@@ -22,6 +22,7 @@ import { supabase } from '../lib/supabase';
 import { 
   geocodeAddress, 
   calculateDistance, 
+  calculateDrivingDistance,
   calculatePrice, 
   getPricePerKm,
   getVehicleMultiplier,
@@ -45,6 +46,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
   const [estimatedDistance, setEstimatedDistance] = useState<number | null>(null);
+  const [baseDistance, setBaseDistance] = useState<number | null>(null);
   const [showDrivers, setShowDrivers] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [pickupCoords, setPickupCoords] = useState<Coordinates | null>(null);
@@ -108,20 +110,23 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     }
   }, [watchDestination]);
 
-  // Recalcul du prix quand le type de véhicule change
+  // Recalcul du prix et de la distance quand le trajet retour change
   useEffect(() => {
-    if (estimatedDistance && watchVehicleType !== undefined) {
-      // Calculer le prix de base sans multiplier par 1.8 ici
-      // car le calcul du trajet retour est déjà fait dans calculateRoute
-      const baseDistance = watchIsReturnTrip ? estimatedDistance / 2 : estimatedDistance;
+    if (baseDistance && watchVehicleType !== undefined) {
+      // Calculer la distance finale (avec ou sans retour)
+      const finalDistance = watchIsReturnTrip ? baseDistance * 2 : baseDistance;
+      setEstimatedDistance(finalDistance);
+      
+      // Calculer le prix de base
       const basePrice = calculatePrice(baseDistance, watchVehicleType);
       
       // Appliquer le multiplicateur de trajet retour si nécessaire
       const finalPrice = watchIsReturnTrip ? basePrice * 1.8 : basePrice;
       
-      setEstimatedPrice(finalPrice);
+      // Arrondir à 2 décimales pour éviter les erreurs de virgule flottante
+      setEstimatedPrice(Math.round(finalPrice * 100) / 100);
     }
-  }, [watchVehicleType, estimatedDistance, watchIsReturnTrip]);
+  }, [watchVehicleType, baseDistance, watchIsReturnTrip]);
 
   // Calcul automatique de la distance et du prix
   useEffect(() => {
@@ -161,33 +166,30 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             setPickupCoords(pickupResult.coordinates);
             setDestinationCoords(destinationResult.coordinates);
 
-            // Calculer la distance
-            let distance = calculateDistance(
+            // Calculer la distance routière de base (sans retour)
+            let distance = await calculateDrivingDistance(
               pickupResult.coordinates.latitude,
               pickupResult.coordinates.longitude,
               destinationResult.coordinates.latitude,
               destinationResult.coordinates.longitude
             );
 
-            // Multiplier la distance par 2 si trajet retour
-            if (watchIsReturnTrip) {
-              distance = distance * 2;
+            // Si la distance routière n'est pas disponible, utiliser la distance à vol d'oiseau
+            if (distance === null) {
+              distance = calculateDistance(
+                pickupResult.coordinates.latitude,
+                pickupResult.coordinates.longitude,
+                destinationResult.coordinates.latitude,
+                destinationResult.coordinates.longitude
+              );
             }
 
-            // Calculer le prix avec le type de véhicule
-            const selectedVehicleType = watch('vehicleType');
-            let price = calculatePrice(distance, selectedVehicleType);
-
-            // Multiplier le prix par 1.8 si trajet retour
-            if (watchIsReturnTrip) {
-              price = price * 1.8;
-            }
-
-            setEstimatedDistance(distance);
-            setEstimatedPrice(price);
+            // Stocker la distance de base (sans retour)
+            setBaseDistance(distance);
           } else {
             setEstimatedDistance(null);
             setEstimatedPrice(null);
+            setBaseDistance(null);
             setPickupCoords(null);
             setDestinationCoords(null);
           }
@@ -195,12 +197,14 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           console.error('Erreur lors du calcul de la route:', error);
           setEstimatedDistance(null);
           setEstimatedPrice(null);
+          setBaseDistance(null);
         } finally {
           setIsCalculating(false);
         }
       } else {
         setEstimatedDistance(null);
         setEstimatedPrice(null);
+        setBaseDistance(null);
         setPickupCoords(null);
         setDestinationCoords(null);
       }
@@ -209,7 +213,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     // Délai pour éviter trop d'appels API
     const timeoutId = setTimeout(calculateRoute, 1000);
     return () => clearTimeout(timeoutId);
-  }, [watchPickup, watchDestination, watchIsReturnTrip, watch]);
+  }, [watchPickup, watchDestination, watch]);
 
   const useCurrentLocation = async () => {
     setGettingLocation(true);

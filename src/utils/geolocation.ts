@@ -61,6 +61,40 @@ export const calculateDistance = (
   return Math.round(distance * 100) / 100; // Arrondir à 2 décimales
 };
 
+// Fonction pour calculer la distance routière entre deux points
+export const calculateDrivingDistance = async (
+  startLat: number,
+  startLon: number,
+  endLat: number,
+  endLon: number
+): Promise<number | null> => {
+  try {
+    // Utiliser l'API OSRM (Open Source Routing Machine) - gratuite et sans clé API
+    const response = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=false&alternatives=false&steps=false`
+    );
+
+    if (!response.ok) {
+      console.warn('Erreur API OSRM, utilisation de la distance à vol d\'oiseau');
+      return calculateDistance(startLat, startLon, endLat, endLon);
+    }
+
+    const data = await response.json();
+    
+    if (data.routes && data.routes.length > 0) {
+      const distance = data.routes[0].distance / 1000; // Convertir en km
+      return Math.round(distance * 100) / 100; // Arrondir à 2 décimales
+    }
+
+    // Fallback vers la distance à vol d'oiseau
+    return calculateDistance(startLat, startLon, endLat, endLon);
+  } catch (error) {
+    console.error('Erreur lors du calcul de la distance routière:', error);
+    // Fallback vers la distance à vol d'oiseau
+    return calculateDistance(startLat, startLon, endLat, endLon);
+  }
+};
+
 // Fonction pour obtenir le tarif par kilomètre selon la distance
 export const getPricePerKm = (distanceKm: number): { price: number; discount: string } => {
   const basePricePerKm = 2.2; // Tarif de base : 2,2 TND/KM
@@ -119,7 +153,7 @@ export const getCurrentPosition = (): Promise<Coordinates> => {
           longitude: position.coords.longitude
         });
       },
-      (error) => {
+      () => {
         reject(new Error('Impossible d\'obtenir votre position'));
       },
       {
@@ -319,7 +353,7 @@ export const searchTunisianCities = async (query: string): Promise<string[]> => 
     const data = await response.json();
     
     if (data && data.length > 0) {
-      return data.map((result: any) => {
+      return data.map((result: { display_name: string }) => {
         // Extraire le nom de la ville du display_name
         const parts = result.display_name.split(',');
         return parts[0].trim();
