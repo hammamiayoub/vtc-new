@@ -20,6 +20,7 @@ import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 import { initAnalytics, analytics } from './utils/analytics';
+import { updateSEO } from './utils/seo';
 
 type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password';
 
@@ -33,52 +34,70 @@ function AppContent() {
   // Gérer la navigation basée sur l'URL
   useEffect(() => {
     const path = location.pathname;
+    let viewKey: string;
     
     // Mapper les chemins aux vues
     switch (path) {
       case '/':
         setCurrentView('home');
+        viewKey = 'home';
         break;
       case '/signup':
         setCurrentView('signup');
+        viewKey = 'signup';
         break;
       case '/client-signup':
         setCurrentView('client-signup');
+        viewKey = 'client-signup';
         break;
       case '/login':
         setCurrentView('login-selection');
+        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour la sélection de login
         break;
       case '/driver-login':
         setCurrentView('driver-login');
+        viewKey = 'driver-login';
         break;
       case '/client-login':
         setCurrentView('client-login');
+        viewKey = 'client-login';
         break;
       case '/dashboard':
         setCurrentView('dashboard');
+        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour le dashboard chauffeur
         break;
       case '/client-dashboard':
         setCurrentView('client-dashboard');
+        viewKey = 'client-dashboard';
         break;
       case '/admin':
         setCurrentView('admin');
+        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour l'admin
         break;
       case '/admin-dashboard':
         setCurrentView('admin-dashboard');
+        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour le dashboard admin
         break;
       case '/privacy-policy':
         setCurrentView('privacy-policy');
+        viewKey = 'privacy-policy';
         break;
       case '/terms-of-service':
         setCurrentView('terms-of-service');
+        viewKey = 'terms-of-service';
         break;
       case '/reset-password':
         setCurrentView('reset-password');
+        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour la réinitialisation
         break;
       default:
         setCurrentView('home');
+        viewKey = 'home';
         break;
     }
+    
+    // Mettre à jour les balises SEO
+    updateSEO(viewKey);
   }, [location.pathname]);
 
   useEffect(() => {
