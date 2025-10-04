@@ -5,7 +5,6 @@ export interface Driver {
   email: string;
   phone?: string;
   city?: string;
-  city?: string;
   licenseNumber?: string;
   vehicleInfo?: VehicleInfo;
   status: string;
@@ -139,6 +138,15 @@ export interface Booking {
     last_name: string;
     phone?: string;
   };
+}
+
+export interface ClientWithBookings extends Client {
+  bookings: Booking[];
+  totalBookings: number;
+  completedBookings: number;
+  cancelledBookings: number;
+  pendingBookings: number;
+  totalSpent: number;
 }
 
 export interface BookingFormData {
