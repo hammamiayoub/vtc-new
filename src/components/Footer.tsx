@@ -107,3 +107,4 @@ export const Footer: React.FC<FooterProps> = () => {
     </footer>
   );
 };
+
