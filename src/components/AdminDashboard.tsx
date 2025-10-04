@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
-import { Driver } from '../types';
+import { Driver, ClientWithBookings, Booking } from '../types';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -22,17 +22,22 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [clients, setClients] = useState<ClientWithBookings[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [selectedClient, setSelectedClient] = useState<ClientWithBookings | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'drivers' | 'clients'>('drivers');
 
   useEffect(() => {
     fetchDrivers();
+    fetchClients();
     
     // Rafraîchir automatiquement toutes les 30 secondes
     const interval = setInterval(() => {
       fetchDrivers();
+      fetchClients();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -187,6 +192,111 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const fetchClients = async () => {
+    try {
+      console.log('🔍 Admin - Récupération des clients...');
+      
+      // Récupérer tous les clients
+      const { data: clientsData, error: clientsError } = await supabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (clientsError) {
+        console.error('Erreur lors de la récupération des clients:', clientsError);
+        return;
+      }
+
+      console.log('📊 Admin - Clients récupérés:', clientsData?.length || 0);
+
+      // Pour chaque client, récupérer ses courses avec les détails
+      const clientsWithBookings = await Promise.all(
+        clientsData.map(async (client) => {
+          // Récupérer toutes les courses du client
+          const { data: bookingsData, error: bookingsError } = await supabase
+            .from('bookings')
+            .select(`
+              *,
+              drivers (
+                first_name,
+                last_name,
+                phone
+              )
+            `)
+            .eq('client_id', client.id)
+            .order('created_at', { ascending: false });
+
+          if (bookingsError) {
+            console.error(`Erreur récupération courses pour ${client.first_name} ${client.last_name}:`, bookingsError);
+          }
+
+          // Calculer les statistiques
+          const stats = {
+            totalBookings: 0,
+            completedBookings: 0,
+            cancelledBookings: 0,
+            pendingBookings: 0,
+            totalSpent: 0
+          };
+
+          if (bookingsData) {
+            stats.totalBookings = bookingsData.length;
+            
+            bookingsData.forEach((booking: any) => {
+              switch (booking.status) {
+                case 'completed':
+                  stats.completedBookings++;
+                  stats.totalSpent += booking.price_tnd || 0;
+                  break;
+                case 'cancelled':
+                  stats.cancelledBookings++;
+                  break;
+                case 'pending':
+                  stats.pendingBookings++;
+                  break;
+                case 'accepted':
+                case 'in_progress':
+                  // Ces statuts ne sont pas comptés dans les statistiques finales
+                  break;
+              }
+            });
+          }
+
+          return {
+            id: client.id,
+            firstName: client.first_name,
+            lastName: client.last_name,
+            email: client.email,
+            phone: client.phone,
+            city: client.city,
+            status: client.status,
+            profilePhotoUrl: client.profile_photo_url,
+            createdAt: client.created_at,
+            updatedAt: client.updated_at,
+            bookings: bookingsData || [],
+            totalBookings: stats.totalBookings,
+            completedBookings: stats.completedBookings,
+            cancelledBookings: stats.cancelledBookings,
+            pendingBookings: stats.pendingBookings,
+            totalSpent: stats.totalSpent
+          };
+        })
+      );
+
+      console.log('📊 Admin - Clients avec statistiques:', clientsWithBookings.map(c => ({
+        name: `${c.firstName} ${c.lastName}`,
+        totalBookings: c.totalBookings,
+        completedBookings: c.completedBookings,
+        cancelledBookings: c.cancelledBookings,
+        totalSpent: c.totalSpent
+      })));
+
+      setClients(clientsWithBookings);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des clients:', error);
+    }
+  };
+
   const updateDriverStatus = async (driverId: string, newStatus: string) => {
     setActionLoading(driverId);
     
@@ -300,15 +410,77 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const getBookingStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircle size={12} />
+            Terminée
+          </span>
+        );
+      case 'cancelled':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <XCircle size={12} />
+            Annulée
+          </span>
+        );
+      case 'pending':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+            <Clock size={12} />
+            En attente
+          </span>
+        );
+      case 'accepted':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <CheckCircle size={12} />
+            Acceptée
+          </span>
+        );
+      case 'in_progress':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            <Clock size={12} />
+            En cours
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            <AlertTriangle size={12} />
+            Inconnu
+          </span>
+        );
+    }
+  };
+
   const pendingDrivers = drivers.filter(d => d.status === 'pending');
   const activeDrivers = drivers.filter(d => d.status === 'active');
   const rejectedDrivers = drivers.filter(d => d.status === 'rejected');
+
+  // Statistiques des clients
+  const totalClients = clients.length;
+  const totalBookings = clients.reduce((sum, client) => sum + client.totalBookings, 0);
+  const completedBookings = clients.reduce((sum, client) => sum + client.completedBookings, 0);
+  const cancelledBookings = clients.reduce((sum, client) => sum + client.cancelledBookings, 0);
+  const totalRevenue = clients.reduce((sum, client) => sum + client.totalSpent, 0);
 
   console.log('Statistiques:', {
     total: drivers.length,
     pending: pendingDrivers.length,
     active: activeDrivers.length,
     rejected: rejectedDrivers.length
+  });
+
+  console.log('Statistiques clients:', {
+    totalClients,
+    totalBookings,
+    completedBookings,
+    cancelledBookings,
+    totalRevenue
   });
 
   if (loading) {
@@ -356,73 +528,165 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Users size={24} className="text-gray-700" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Total chauffeurs</h3>
-                <p className="text-2xl font-bold text-gray-900">{drivers.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Clock size={24} className="text-orange-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">En attente</h3>
-                <p className="text-2xl font-bold text-gray-900">{pendingDrivers.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <CheckCircle size={24} className="text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Actifs</h3>
-                <p className="text-2xl font-bold text-gray-900">{activeDrivers.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <XCircle size={24} className="text-red-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Rejetés</h3>
-                <p className="text-2xl font-bold text-gray-900">{rejectedDrivers.length}</p>
-              </div>
-            </div>
+        {/* Tabs */}
+        <div className="mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('drivers')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'drivers'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Car size={16} />
+                  Chauffeurs ({drivers.length})
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('clients')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'clients'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Users size={16} />
+                  Clients ({clients.length})
+                </div>
+              </button>
+            </nav>
           </div>
         </div>
 
-        {/* Drivers List - Version améliorée */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Gestion des chauffeurs</h2>
-                <p className="text-gray-600">Validez ou rejetez les inscriptions des nouveaux chauffeurs</p>
-              </div>
-              {refreshing && (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  Actualisation...
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
+          {activeTab === 'drivers' ? (
+            <>
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Users size={24} className="text-gray-700" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Total chauffeurs</h3>
+                    <p className="text-2xl font-bold text-gray-900">{drivers.length}</p>
+                  </div>
                 </div>
-              )}
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Clock size={24} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">En attente</h3>
+                    <p className="text-2xl font-bold text-gray-900">{pendingDrivers.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle size={24} className="text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Actifs</h3>
+                    <p className="text-2xl font-bold text-gray-900">{activeDrivers.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <XCircle size={24} className="text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Rejetés</h3>
+                    <p className="text-2xl font-bold text-gray-900">{rejectedDrivers.length}</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Users size={24} className="text-gray-700" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Total clients</h3>
+                    <p className="text-2xl font-bold text-gray-900">{totalClients}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Car size={24} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Total courses</h3>
+                    <p className="text-2xl font-bold text-gray-900">{totalBookings}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle size={24} className="text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Terminées</h3>
+                    <p className="text-2xl font-bold text-gray-900">{completedBookings}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Revenus</h3>
+                    <p className="text-2xl font-bold text-gray-900">{totalRevenue.toFixed(0)} TND</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Content based on active tab */}
+        {activeTab === 'drivers' ? (
+          /* Drivers List - Version améliorée */
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Gestion des chauffeurs</h2>
+                  <p className="text-gray-600">Validez ou rejetez les inscriptions des nouveaux chauffeurs</p>
+                </div>
+                {refreshing && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Actualisation...
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
           {/* Version desktop - Tableau complet */}
           <div className="hidden lg:block overflow-x-auto">
@@ -737,6 +1001,245 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           )}
         </div>
+        ) : (
+          /* Clients List */
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Gestion des clients</h2>
+                  <p className="text-gray-600">Consultez les informations des clients et leurs courses</p>
+                </div>
+                {refreshing && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Actualisation...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Version desktop - Tableau des clients */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                      Client
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                      Contact
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                      Statistiques
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                      Courses
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                      Inscription
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {clients.map((client) => (
+                    <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+                      {/* Client */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          {client.profilePhotoUrl ? (
+                            <img
+                              src={client.profilePhotoUrl}
+                              alt="Photo de profil"
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                              <User size={24} className="text-gray-700" />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 truncate">
+                              {client.firstName} {client.lastName}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">{client.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      {/* Contact */}
+                      <td className="px-4 py-4">
+                        <div className="text-sm space-y-1">
+                          <p className="text-gray-900 truncate">{client.phone || 'Non renseigné'}</p>
+                          <p className="text-gray-500 truncate">{client.city || 'Ville non renseignée'}</p>
+                        </div>
+                      </td>
+                      
+                      {/* Statistiques */}
+                      <td className="px-4 py-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Total:</span>
+                            <span className="text-sm font-semibold text-gray-900">
+                              {client.totalBookings}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Terminées:</span>
+                            <span className="text-sm font-semibold text-green-600">
+                              {client.completedBookings}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Annulées:</span>
+                            <span className="text-sm font-semibold text-red-600">
+                              {client.cancelledBookings}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      {/* Courses */}
+                      <td className="px-4 py-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Dépensé:</span>
+                            <span className="text-sm font-semibold text-green-600">
+                              {client.totalSpent.toFixed(0)} TND
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">En attente:</span>
+                            <span className="text-sm font-semibold text-orange-600">
+                              {client.pendingBookings}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      {/* Inscription */}
+                      <td className="px-4 py-4">
+                        <div className="text-sm">
+                          <p className="text-gray-900">
+                            {new Date(client.createdAt).toLocaleDateString('fr-FR')}
+                          </p>
+                          <p className="text-gray-500">
+                            {new Date(client.createdAt).toLocaleTimeString('fr-FR', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </p>
+                        </div>
+                      </td>
+                      
+                      {/* Actions */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setSelectedClient(client)}
+                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Voir les détails"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Version mobile/tablet - Cards des clients */}
+            <div className="lg:hidden">
+              <div className="divide-y divide-gray-200">
+                {clients.map((client) => (
+                  <div key={client.id} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        {client.profilePhotoUrl ? (
+                          <img
+                            src={client.profilePhotoUrl}
+                            alt="Photo de profil"
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                            <User size={24} className="text-gray-700" />
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            {client.firstName} {client.lastName}
+                          </h3>
+                          <p className="text-sm text-gray-500">{client.email}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSelectedClient(client)}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Voir les détails"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Contact</p>
+                        <p className="text-sm text-gray-900">{client.phone || 'Non renseigné'}</p>
+                        <p className="text-sm text-gray-500">{client.city || 'Ville non renseignée'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Statistiques</p>
+                        <p className="text-sm text-gray-900">Total: {client.totalBookings}</p>
+                        <p className="text-sm text-gray-500">Terminées: {client.completedBookings}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 mb-1">Dépensé</p>
+                        <p className="text-lg font-semibold text-green-600">
+                          {client.totalSpent.toFixed(0)} TND
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 mb-1">Annulées</p>
+                        <p className="text-lg font-semibold text-red-600">
+                          {client.cancelledBookings}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 mb-1">En attente</p>
+                        <p className="text-lg font-semibold text-orange-600">
+                          {client.pendingBookings}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-gray-500">
+                        Inscrit le {new Date(client.createdAt).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {clients.length === 0 && (
+              <div className="text-center py-12">
+                <Users size={48} className="text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun client inscrit</h3>
+                <p className="text-gray-500">Les nouveaux clients apparaîtront ici une fois inscrits.</p>
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Driver Detail Modal */}
@@ -967,6 +1470,197 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
                 <p><strong>Inscrit le:</strong> {new Date(selectedDriver.createdAt).toLocaleString('fr-FR')}</p>
                 <p><strong>Dernière mise à jour:</strong> {new Date(selectedDriver.updatedAt).toLocaleString('fr-FR')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Client Detail Modal */}
+      {selectedClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Détails du client
+                </h3>
+                <button
+                  onClick={() => setSelectedClient(null)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Personal Info */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Informations personnelles</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Nom complet</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedClient.firstName} {selectedClient.lastName}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Email</p>
+                    <p className="font-semibold text-gray-900">{selectedClient.email}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Téléphone</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedClient.phone || 'Non renseigné'}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Ville</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedClient.city || 'Non renseignée'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statistics */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Statistiques des courses</h4>
+                <div className="grid md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Car size={20} className="text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Total courses</p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {selectedClient.totalBookings}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle size={20} className="text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Terminées</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {selectedClient.completedBookings}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-red-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <XCircle size={20} className="text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Annulées</p>
+                        <p className="text-2xl font-bold text-red-600">
+                          {selectedClient.cancelledBookings}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Total dépensé</p>
+                        <p className="text-2xl font-bold text-purple-600">
+                          {selectedClient.totalSpent.toFixed(0)} TND
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bookings List */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Historique des courses</h4>
+                {selectedClient.bookings.length > 0 ? (
+                  <div className="space-y-4">
+                    {selectedClient.bookings.map((booking: any) => (
+                      <div key={booking.id} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h5 className="font-medium text-gray-900">
+                                Course #{booking.id.slice(-8)}
+                              </h5>
+                              {getBookingStatusBadge(booking.status)}
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <p className="text-gray-600 mb-1">Départ</p>
+                                <p className="text-gray-900">{booking.pickup_address}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600 mb-1">Arrivée</p>
+                                <p className="text-gray-900">{booking.destination_address}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600 mb-1">Date et heure</p>
+                                <p className="text-gray-900">
+                                  {new Date(booking.scheduled_time).toLocaleString('fr-FR')}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600 mb-1">Prix</p>
+                                <p className="text-gray-900 font-semibold">
+                                  {booking.price_tnd} TND
+                                  {booking.is_return_trip && (
+                                    <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                                      Aller-retour
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            {booking.drivers && (
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <p className="text-gray-600 mb-1">Chauffeur assigné</p>
+                                <p className="text-gray-900">
+                                  {booking.drivers.first_name} {booking.drivers.last_name}
+                                </p>
+                              </div>
+                            )}
+                            {booking.notes && (
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <p className="text-gray-600 mb-1">Notes</p>
+                                <p className="text-gray-900">{booking.notes}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Créée le {new Date(booking.created_at).toLocaleString('fr-FR')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <Car size={48} className="text-gray-400 mx-auto mb-4" />
+                    <h5 className="text-lg font-medium text-gray-900 mb-2">Aucune course</h5>
+                    <p className="text-gray-500">Ce client n'a pas encore effectué de réservation.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+                <p><strong>Inscrit le:</strong> {new Date(selectedClient.createdAt).toLocaleString('fr-FR')}</p>
+                <p><strong>Dernière mise à jour:</strong> {new Date(selectedClient.updatedAt).toLocaleString('fr-FR')}</p>
               </div>
             </div>
           </div>
