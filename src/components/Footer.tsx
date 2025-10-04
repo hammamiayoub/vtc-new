@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Shield, FileText, Smartphone } from 'lucide-react';
+import { Heart, Shield, FileText, Smartphone, UserPlus, Car } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface FooterProps {
@@ -11,9 +11,9 @@ export const Footer: React.FC<FooterProps> = () => {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-5 gap-8">
           {/* Logo et description */}
-          <div className="md:col-span-1">
+          <div className="md:col-span-2">
             <h3 className="text-2xl font-bold mb-4">TuniDrive</h3>
             <p className="text-gray-300 mb-4 max-w-md">
               Votre plateforme de transport privé en Tunisie. 
@@ -24,6 +24,31 @@ export const Footer: React.FC<FooterProps> = () => {
               <Heart size={16} className="text-red-500" />
               <span>en Tunisie</span>
             </div>
+          </div>
+
+          {/* Inscription */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Inscription</h4>
+            <ul className="space-y-2 text-gray-300">
+              <li>
+                <Link 
+                  to="/signup" 
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <Car size={16} />
+                  Devenir chauffeur
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/client-signup" 
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <UserPlus size={16} />
+                  Inscription client
+                </Link>
+              </li>
+            </ul>
           </div>
 
           {/* Application mobile */}
@@ -39,29 +64,6 @@ export const Footer: React.FC<FooterProps> = () => {
                 >
                   <Smartphone size={16} />
                   Installer sur Android
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Services */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Services</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>
-                <Link 
-                  to={`tel:+21628528477`}
-                  className="hover:text-white transition-colors"
-                >
-                  Téléphone
-                </Link>
-              </li>
-              <li>
-                <a 
-                  href="mailto:support@tunidrive.net" 
-                  className="hover:text-white transition-colors"
-                >
-                  Support client
                 </a>
               </li>
             </ul>
