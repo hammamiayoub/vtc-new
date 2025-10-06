@@ -198,6 +198,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
     }
   };
 
+
   if (submitSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
@@ -409,6 +410,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               >
                 {isSubmitting ? 'Création du compte...' : 'Créer mon compte chauffeur'}
               </Button>
+
 
               <p className="text-sm text-gray-500 text-center">
                 En créant votre compte, vous acceptez nos{' '}

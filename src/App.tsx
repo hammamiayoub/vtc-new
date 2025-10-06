@@ -107,12 +107,13 @@ function AppContent() {
     // Vérifier si on est sur une page de réinitialisation de mot de passe
     const urlParams = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
-    
+
     console.log('URL params:', urlParams.get('type'));
     console.log('Hash:', hash);
     console.log('Full URL:', window.location.href);
-    
-    if (hash.includes('type=recovery') || urlParams.get('type') === 'recovery' || urlParams.get('type') === 'client' || urlParams.get('type') === 'driver') {
+
+    // Ne déclencher reset-password QUE pour la récupération de mot de passe
+    if (hash.includes('type=recovery') || urlParams.get('type') === 'recovery') {
       console.log('Détection de réinitialisation de mot de passe, redirection vers reset-password');
       setCurrentView('reset-password');
       setIsLoading(false);
@@ -178,9 +179,13 @@ function AppContent() {
             return;
           }
           
-          // Si aucun type trouvé, déconnecter
-          console.log('Type d\'utilisateur non trouvé, déconnexion...');
-          await supabase.auth.signOut();
+          // Si aucun type trouvé, ne pas casser le flux d'inscription
+          if (location.pathname === '/signup' || location.pathname === '/client-signup') {
+            console.log('Utilisateur non typé mais sur une page signup: on laisse continuer.');
+          } else {
+            console.log('Type d\'utilisateur non trouvé, déconnexion...');
+            await supabase.auth.signOut();
+          }
         }
         
         setIsLoading(false);
@@ -197,10 +202,13 @@ function AppContent() {
       async (event, session) => {
         console.log('Changement d\'auth:', event, session?.user?.id);
         
-        if (event === 'SIGNED_OUT' || !session) {
+        if (event === 'SIGNED_OUT') {
           setUserType(null);
-          setCurrentView('home');
-        } else if (event === 'SIGNED_IN' && session) {
+          // Ne pas forcer la vue 'home' pour laisser la navigation par URL fonctionner
+          return;
+        }
+        
+        if (event === 'SIGNED_IN' && session) {
           // Ne pas rediriger automatiquement lors de la connexion
           // Laisser les composants de login gérer la redirection
           console.log('Connexion détectée, laisser le composant de login gérer la redirection');
