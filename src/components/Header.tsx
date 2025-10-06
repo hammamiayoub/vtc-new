@@ -1,9 +1,9 @@
 import React from 'react';
-import { Car, UserPlus, LogIn, Shield, MapPin, Menu, X } from 'lucide-react';
+import { UserPlus, LogIn, Shield, MapPin, Menu, X } from 'lucide-react';
 
 interface HeaderProps {
-  currentView: 'home' | 'signup' | 'login' | 'admin' | 'client-signup';
-  onViewChange: (view: 'home' | 'signup' | 'login' | 'admin' | 'client-signup') => void;
+  currentView: 'home' | 'signup' | 'login' | 'admin' | 'client-signup' | 'client-login';
+  onViewChange: (view: 'home' | 'signup' | 'login' | 'admin' | 'client-signup' | 'client-login') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
@@ -13,7 +13,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const handleNavigation = (view: 'home' | 'signup' | 'login' | 'admin' | 'client-signup') => {
+  const handleNavigation = (view: 'home' | 'signup' | 'login' | 'admin' | 'client-signup' | 'client-login') => {
     onViewChange(view);
     setIsMobileMenuOpen(false); // Fermer le menu après navigation
   };
@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           
           <nav className="hidden md:flex items-center gap-2">
             <button
-              onClick={() => handleNavigation('signup')}
+              onClick={() => { window.location.href = '/signup'; }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'signup'
                   ? 'bg-gray-800 text-white'
@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             </button>
             
             <button
-              onClick={() => handleNavigation('client-login')}
+              onClick={() => { window.location.href = '/client-login'; }}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'client-login' || currentView === 'client-signup'
                   ? 'bg-white text-black'
@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             </button>
             
             <button
-              onClick={() => handleNavigation('login')}
+              onClick={() => { window.location.href = '/login'; }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'login'
                   ? 'bg-gray-800 text-white'
@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           <div className="md:hidden absolute top-full left-0 right-0 bg-black border-t border-gray-800 shadow-lg z-50">
             <div className="px-4 py-4 space-y-2">
               <button
-                onClick={() => handleNavigation('client-login')}
+                onClick={() => { window.location.href = '/client-login'; }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <MapPin size={20} />
@@ -101,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               </button>
               
               <button
-                onClick={() => handleNavigation('signup')}
+                onClick={() => { window.location.href = '/signup'; }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <UserPlus size={20} />
@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               </button>
               
               <button
-                onClick={() => handleNavigation('login')}
+                onClick={() => { window.location.href = '/login'; }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <LogIn size={20} />

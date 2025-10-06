@@ -27,13 +27,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          shouldCreateUser: false,
-          data: {
-            remember_me: rememberMe
-          }
-        }
+        password
       });
 
       if (authError) {
@@ -87,6 +81,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
