@@ -129,6 +129,55 @@ export const deleteVehicleImage = async (
   }
 };
 
+// Upload photo for a specific vehicle (vehicles table)
+export const uploadVehiclePhotoForVehicle = async (
+  file: File,
+  vehicleId: string
+): Promise<string> => {
+  // Generate unique filename and upload to vehicle-photos bucket
+  const fileExt = file.name.split('.').pop();
+  const fileName = `vehicle-${vehicleId}-${Date.now()}.${fileExt}`;
+  const filePath = `vehicles/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('vehicle-photos')
+    .upload(filePath, file, { cacheControl: '3600', upsert: false });
+  if (uploadError) throw uploadError;
+
+  const { data: urlData } = supabase.storage
+    .from('vehicle-photos')
+    .getPublicUrl(filePath);
+  if (!urlData.publicUrl) throw new Error("Impossible d'obtenir l'URL de l'image du véhicule");
+
+  const { error: updateErr } = await supabase
+    .from('vehicles')
+    .update({ photo_url: urlData.publicUrl })
+    .eq('id', vehicleId);
+  if (updateErr) throw updateErr;
+
+  return urlData.publicUrl;
+};
+
+export const deleteVehiclePhotoForVehicle = async (
+  imageUrl: string,
+  vehicleId: string
+): Promise<void> => {
+  // Extract storage path
+  const idx = imageUrl.indexOf('vehicle-photos');
+  if (idx === -1) return;
+  const path = imageUrl.substring(idx + 'vehicle-photos'.length + 1); // after bucket/
+
+  await supabase.storage
+    .from('vehicle-photos')
+    .remove([path]);
+
+  const { error } = await supabase
+    .from('vehicles')
+    .update({ photo_url: null })
+    .eq('id', vehicleId);
+  if (error) throw error;
+};
+
 export const uploadProfileImage = async (
   file: File, 
   userId: string, 

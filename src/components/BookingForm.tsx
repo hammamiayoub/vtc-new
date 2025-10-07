@@ -482,10 +482,36 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
       // Filtrer par type de véhicule si spécifié
       if (selectedVehicleType) {
-        console.log('🔍 Filtrage côté client par type de véhicule:', selectedVehicleType);
-        availableDriversData = availableDriversData.filter(driver => 
+        console.log('🔍 Filtrage par type de véhicule (compat JSON + table vehicles):', selectedVehicleType);
+        // 1) Filtrer via l'ancien JSON vehicle_info si présent
+        let filtered = availableDriversData.filter(driver => 
           driver.vehicle_info && driver.vehicle_info.type === selectedVehicleType
         );
+
+        // 2) Compléter via la table vehicles pour les chauffeurs sans vehicle_info
+        const driversNeedingLookup = availableDriversData
+          .filter(d => !d.vehicle_info)
+          .map(d => d.id);
+
+        if (driversNeedingLookup.length > 0) {
+          const { data: vehiclesRows, error: vehiclesErr } = await supabase
+            .from('vehicles')
+            .select('driver_id')
+            .in('driver_id', driversNeedingLookup)
+            .eq('type', selectedVehicleType)
+            .is('deleted_at', null);
+          if (vehiclesErr) {
+            console.warn('⚠️ Erreur lookup vehicles:', vehiclesErr);
+          } else if (vehiclesRows && vehiclesRows.length > 0) {
+            const okDriverIds = new Set(vehiclesRows.map(v => v.driver_id));
+            const viaVehicles = availableDriversData.filter(d => okDriverIds.has(d.id));
+            // Fusionner en évitant les doublons
+            const idsInFiltered = new Set(filtered.map(d => d.id));
+            viaVehicles.forEach(d => { if (!idsInFiltered.has(d.id)) filtered.push(d); });
+          }
+        }
+
+        availableDriversData = filtered;
         console.log('📊 Chauffeurs après filtrage par type:', availableDriversData.length);
       }
       
@@ -1113,11 +1139,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                               <h4 className="font-medium text-gray-900 truncate">
                                 {driver.firstName} {driver.lastName}
                               </h4>
-                              {driver.city && (
+                                  {driver.city && (
                                 <p className="text-sm text-gray-600 flex items-center gap-1">
                                   <MapPin size={12} className="flex-shrink-0" />
                                   <span className="truncate">{driver.city}</span>
-                                  {driver.distanceFromPickup && driver.distanceFromPickup !== Infinity && (
+                                      {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup > 0 && driver.distanceFromPickup !== Infinity && (
                                     <span className="text-blue-600 font-medium ml-1 flex-shrink-0">
                                       • {driver.distanceFromPickup} km
                                     </span>
@@ -1155,7 +1181,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                       </div>
                       
                       {/* Badge de proximité pour le chauffeur le plus proche */}
-                      {driver.distanceFromPickup && driver.distanceFromPickup !== Infinity && driver.distanceFromPickup <= 10 && (
+                      {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup !== Infinity && driver.distanceFromPickup > 0 && driver.distanceFromPickup <= 10 && (
                         <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
                           <MapPin size={12} />
                           Chauffeur proche

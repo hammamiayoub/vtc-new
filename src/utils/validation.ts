@@ -101,30 +101,6 @@ export const driverProfileSchema = z.object({
     .string()
     .min(5, 'Le numéro de permis doit contenir au moins 5 caractères')
     .max(20, 'Le numéro de permis ne peut pas dépasser 20 caractères'),
-  vehicleInfo: z.object({
-    make: z
-      .string()
-      .min(2, 'La marque doit contenir au moins 2 caractères'),
-    model: z
-      .string()
-      .min(2, 'Le modèle doit contenir au moins 2 caractères'),
-    year: z
-      .number()
-      .min(2000, 'Le véhicule doit être de 2000 ou plus récent')
-      .max(new Date().getFullYear() + 1, 'Année invalide'),
-    color: z
-      .string()
-      .min(2, 'La couleur doit contenir au moins 2 caractères'),
-    licensePlate: z
-      .string()
-      .min(3, 'La plaque d\'immatriculation doit contenir au moins 3 caractères')
-      .max(12, 'La plaque d\'immatriculation ne peut pas dépasser 12 caractères'),
-    seats: z
-      .number()
-      .min(2, 'Le véhicule doit avoir au moins 2 places')
-      .max(50, 'Le véhicule ne peut pas avoir plus de 50 places'),
-    type: z.enum(['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'limousine'])
-  })
 });
 
 export const bookingSchema = z.object({

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Phone, CreditCard, Car, Save, CheckCircle, MapPin } from 'lucide-react';
+import { Phone, CreditCard, Save, CheckCircle, MapPin } from 'lucide-react';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Button } from './ui/Button';
@@ -32,47 +32,14 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
   } = useForm<DriverProfileData>({
     resolver: zodResolver(driverProfileSchema),
     mode: 'onChange',
-    defaultValues: {
-      vehicleInfo: {
-        seats: 4,
-        type: 'sedan'
-      }
-    }
+    defaultValues: {}
   });
 
   // Synchroniser la ville avec le formulaire
   React.useEffect(() => {
     setValue('city', cityValue);
   }, [cityValue, setValue]);
-  const vehicleTypeOptions = [
-    { value: 'sedan', label: 'Berline' },
-    { value: 'pickup', label: 'Pickup' },
-    { value: 'van', label: 'Van' },
-    { value: 'minibus', label: 'Minibus' },
-    { value: 'bus', label: 'Bus' },
-    { value: 'truck', label: 'Camion' },
-    { value: 'utility', label: 'Utilitaire' },
-    { value: 'limousine', label: 'Limousine' }
-  ];
-
-  const seatsOptions = [
-    { value: 2, label: '2 places' },
-    { value: 4, label: '4 places' },
-    { value: 5, label: '5 places' },
-    { value: 7, label: '7 places' },
-    { value: 8, label: '8 places' },
-    { value: 12, label: '12 places' },
-    { value: 16, label: '16 places' },
-    { value: 20, label: '20 places' },
-    { value: 30, label: '30 places' },
-    { value: 50, label: '50 places' }
-  ];
-
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 25 }, (_, i) => ({
-    value: currentYear - i,
-    label: (currentYear - i).toString()
-  }));
+  // anciennes options liées au véhicule supprimées
 
   const onSubmit = async (data: DriverProfileData) => {
     setIsSubmitting(true);
@@ -84,7 +51,6 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
           phone: data.phone,
           city: data.city,
           license_number: data.licenseNumber,
-          vehicle_info: data.vehicleInfo,
           status: 'pending'
         })
         .eq('id', driverId);
@@ -129,9 +95,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Complétez votre profil
         </h2>
-        <p className="text-gray-600">
-          Ajoutez vos informations personnelles et les détails de votre véhicule
-        </p>
+        <p className="text-gray-600">Ajoutez vos informations personnelles.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -185,139 +149,14 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
           </div>
         </div>
 
-        {/* Informations véhicule */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Car className="w-5 h-5 text-blue-600" />
-            Informations véhicule
-          </h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <input
-              {...register('vehicleInfo.make')}
-              type="text"
-              placeholder="Marque (ex: Toyota, BMW)"
-              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                errors.vehicleInfo?.make ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {errors.vehicleInfo?.make && (
-              <p className="mt-2 text-sm text-red-600">{errors.vehicleInfo.make.message}</p>
-            )}
-
-            <input
-              {...register('vehicleInfo.model')}
-              type="text"
-              placeholder="Modèle (ex: Camry, X5)"
-              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                errors.vehicleInfo?.model ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {errors.vehicleInfo?.model && (
-              <p className="mt-2 text-sm text-red-600">{errors.vehicleInfo.model.message}</p>
-            )}
-
-            <div className="relative">
-              <select
-                {...register('vehicleInfo.year', { valueAsNumber: true })}
-                className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none ${
-                  errors.vehicleInfo?.year ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                <option value="">Année</option>
-                {yearOptions.map((year) => (
-                  <option key={year.value} value={year.value}>
-                    {year.label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-            {errors.vehicleInfo?.year && (
-              <p className="mt-2 text-sm text-red-600">{errors.vehicleInfo.year.message}</p>
-            )}
-
-            <input
-              {...register('vehicleInfo.color')}
-              type="text"
-              placeholder="Couleur"
-              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                errors.vehicleInfo?.color ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {errors.vehicleInfo?.color && (
-              <p className="mt-2 text-sm text-red-600">{errors.vehicleInfo.color.message}</p>
-            )}
-
-            <input
-              {...register('vehicleInfo.licensePlate')}
-              type="text"
-              placeholder="Plaque d'immatriculation"
-              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                errors.vehicleInfo?.licensePlate ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {errors.vehicleInfo?.licensePlate && (
-              <p className="mt-2 text-sm text-red-600">{errors.vehicleInfo.licensePlate.message}</p>
-            )}
-
-            <div className="relative">
-              <select
-                {...register('vehicleInfo.seats', { valueAsNumber: true })}
-                className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none ${
-                  errors.vehicleInfo?.seats ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                {seatsOptions.map((seat) => (
-                  <option key={seat.value} value={seat.value}>
-                    {seat.label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-            {errors.vehicleInfo?.seats && (
-              <p className="mt-2 text-sm text-red-600">{errors.vehicleInfo.seats.message}</p>
-            )}
-
-            <div className="relative">
-              <select
-                {...register('vehicleInfo.type')}
-                className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none ${
-                  errors.vehicleInfo?.type ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                {vehicleTypeOptions.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-            {errors.vehicleInfo?.type && (
-              <p className="mt-2 text-sm text-red-600">{errors.vehicleInfo.type.message}</p>
-            )}
-          </div>
-        </div>
+        {/* Section informations véhicule supprimée (gérée dans Mes véhicules) */}
 
         <div className="pt-6 border-t border-gray-200">
           <Button
             type="submit"
             loading={isSubmitting}
             disabled={!isValid || isSubmitting}
-            className="w-full py-4 text-lg flex items-center justify-center gap-2"
+            className={`w-full py-4 text-lg flex items-center justify-center gap-2 ${(!isValid || isSubmitting) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-900'}`}
           >
             <Save size={20} />
             {isSubmitting ? 'Enregistrement...' : 'Enregistrer le profil'}

@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { 
   X, 
   User, 
-  Mail, 
-  Phone, 
-  Car, 
   CreditCard, 
   Trash2, 
   AlertTriangle,
@@ -48,59 +45,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     city: 'city' in user ? user.city || '' : '',
     email: user.email
   });
-  const [editVehicleData, setEditVehicleData] = useState(
-    driver?.vehicleInfo ? {
-      make: driver.vehicleInfo.make,
-      model: driver.vehicleInfo.model,
-      year: driver.vehicleInfo.year,
-      color: driver.vehicleInfo.color,
-      licensePlate: driver.vehicleInfo.licensePlate,
-      seats: driver.vehicleInfo.seats,
-      type: driver.vehicleInfo.type
-    } : {
-      make: '',
-      model: '',
-      year: new Date().getFullYear(),
-      color: '',
-      licensePlate: '',
-      seats: 4,
-      type: 'sedan' as const
-    }
-  );
   const [isSaving, setIsSaving] = useState(false);
 
-  // Options pour les types de véhicules
-  const vehicleTypeOptions = [
-    { value: 'sedan', label: 'Berline' },
-    { value: 'pickup', label: 'Pickup' },
-    { value: 'van', label: 'Van' },
-    { value: 'minibus', label: 'Minibus' },
-    { value: 'bus', label: 'Bus' },
-    { value: 'truck', label: 'Camion' },
-    { value: 'utility', label: 'Utilitaire' },
-    { value: 'limousine', label: 'Limousine' }
-  ];
+  // Ancien bloc véhicule supprimé (gestion multi-véhicules ailleurs)
 
-  // Options pour les sièges
-  const seatsOptions = [
-    { value: 2, label: '2 places' },
-    { value: 4, label: '4 places' },
-    { value: 5, label: '5 places' },
-    { value: 7, label: '7 places' },
-    { value: 8, label: '8 places' },
-    { value: 12, label: '12 places' },
-    { value: 16, label: '16 places' },
-    { value: 20, label: '20 places' },
-    { value: 30, label: '30 places' },
-    { value: 50, label: '50 places' }
-  ];
+  // Anciennes options de véhicule retirées
 
-  // Options pour les années
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 25 }, (_, i) => ({
-    value: currentYear - i,
-    label: (currentYear - i).toString()
-  }));
+  // Anciennes options de sièges retirées
+
+  // Anciennes options d'années retirées
 
   if (!isOpen) return null;
 
@@ -121,19 +74,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     try {
       const tableName = userType === 'driver' ? 'drivers' : 'clients';
       
-      // Préparer les données à mettre à jour
+      // Préparer les données à mettre à jour (email non modifiable ici)
       const updateData: any = {
         first_name: editData.firstName,
         last_name: editData.lastName,
         phone: editData.phone,
-        city: editData.city,
-        email: editData.email
+        city: editData.city
       };
-
-      // Si c'est un chauffeur, inclure les informations véhicule
-      if (userType === 'driver') {
-        updateData.vehicle_info = editVehicleData;
-      }
 
       const { error } = await supabase
         .from(tableName)
@@ -146,16 +93,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         return;
       }
 
-      // Mettre à jour l'email dans Supabase Auth si nécessaire
-      if (editData.email !== user.email) {
-        const { error: authError } = await supabase.auth.updateUser({
-          email: editData.email
-        });
-        
-        if (authError) {
-          console.error('Erreur lors de la mise à jour de l\'email:', authError);
-        }
-      }
+      // Email non modifiable dans ce modal
 
       setIsEditing(false);
       alert('Profil mis à jour avec succès');
@@ -344,15 +282,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
                 <label className="block text-sm text-gray-600 mb-1">Email</label>
-                {isEditing ? (
-                  <input
-                    type="email"
-                    value={editData.email}
-                    onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                ) : (
-                  <p className="font-semibold text-gray-900">{user.email}</p>
+                <p className="font-semibold text-gray-900">{user.email}</p>
+                {isEditing && (
+                  <p className="text-xs text-gray-500 mt-1">Pour modifier l'adresse email, contactez le support.</p>
                 )}
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
@@ -417,142 +349,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 </div>
               </div>
 
-              {/* Informations véhicule */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Car className="w-5 h-5 text-purple-600" />
-                  Véhicule
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm text-gray-600 mb-1">Marque</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editVehicleData.make}
-                        onChange={(e) => setEditVehicleData({ ...editVehicleData, make: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Marque du véhicule"
-                      />
-                    ) : (
-                      <p className="font-semibold text-gray-900">
-                        {driver?.vehicleInfo?.make || 'Non renseigné'}
-                      </p>
-                    )}
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm text-gray-600 mb-1">Modèle</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editVehicleData.model}
-                        onChange={(e) => setEditVehicleData({ ...editVehicleData, model: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Modèle du véhicule"
-                      />
-                    ) : (
-                      <p className="font-semibold text-gray-900">
-                        {driver?.vehicleInfo?.model || 'Non renseigné'}
-                      </p>
-                    )}
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm text-gray-600 mb-1">Année</label>
-                    {isEditing ? (
-                      <select
-                        value={editVehicleData.year}
-                        onChange={(e) => setEditVehicleData({ ...editVehicleData, year: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {yearOptions.map((year) => (
-                          <option key={year.value} value={year.value}>
-                            {year.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <p className="font-semibold text-gray-900">
-                        {driver?.vehicleInfo?.year || 'Non renseigné'}
-                      </p>
-                    )}
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm text-gray-600 mb-1">Couleur</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editVehicleData.color}
-                        onChange={(e) => setEditVehicleData({ ...editVehicleData, color: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Couleur du véhicule"
-                      />
-                    ) : (
-                      <p className="font-semibold text-gray-900">
-                        {driver?.vehicleInfo?.color || 'Non renseigné'}
-                      </p>
-                    )}
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm text-gray-600 mb-1">Plaque d'immatriculation</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editVehicleData.licensePlate}
-                        onChange={(e) => setEditVehicleData({ ...editVehicleData, licensePlate: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Plaque d'immatriculation"
-                      />
-                    ) : (
-                      <p className="font-semibold text-gray-900">
-                        {driver?.vehicleInfo?.licensePlate || 'Non renseigné'}
-                      </p>
-                    )}
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm text-gray-600 mb-1">Nombre de places</label>
-                    {isEditing ? (
-                      <select
-                        value={editVehicleData.seats}
-                        onChange={(e) => setEditVehicleData({ ...editVehicleData, seats: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {seatsOptions.map((seat) => (
-                          <option key={seat.value} value={seat.value}>
-                            {seat.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <p className="font-semibold text-gray-900">
-                        {driver?.vehicleInfo?.seats ? `${driver.vehicleInfo.seats} places` : 'Non renseigné'}
-                      </p>
-                    )}
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm text-gray-600 mb-1">Type de véhicule</label>
-                    {isEditing ? (
-                      <select
-                        value={editVehicleData.type}
-                        onChange={(e) => setEditVehicleData({ ...editVehicleData, type: e.target.value as any })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {vehicleTypeOptions.map((type) => (
-                          <option key={type.value} value={type.value}>
-                            {type.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <p className="font-semibold text-gray-900">
-                        {driver?.vehicleInfo?.type ? 
-                          vehicleTypeOptions.find(opt => opt.value === driver.vehicleInfo.type)?.label || 'Non renseigné'
-                          : 'Non renseigné'
-                        }
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
+              {/* Section véhicule supprimée (gestion multi-véhicules) */}
             </>
           )}
 
@@ -609,25 +406,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     city: 'city' in user ? user.city || '' : '',
                     email: user.email
                   });
-                  setEditVehicleData(
-                    driver?.vehicleInfo ? {
-                      make: driver.vehicleInfo.make,
-                      model: driver.vehicleInfo.model,
-                      year: driver.vehicleInfo.year,
-                      color: driver.vehicleInfo.color,
-                      licensePlate: driver.vehicleInfo.licensePlate,
-                      seats: driver.vehicleInfo.seats,
-                      type: driver.vehicleInfo.type
-                    } : {
-                      make: '',
-                      model: '',
-                      year: new Date().getFullYear(),
-                      color: '',
-                      licensePlate: '',
-                      seats: 4,
-                      type: 'sedan' as const
-                    }
-                  );
                 }}
                 variant="outline"
               >
