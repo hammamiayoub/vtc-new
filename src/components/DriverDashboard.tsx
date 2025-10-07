@@ -11,6 +11,7 @@ import { Footer } from './Footer';
 import { useDriverNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { VehicleImageUpload } from './ui/VehicleImageUpload';
+import { DriverVehicles } from './DriverVehicles';
 import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
 import { analytics } from '../utils/analytics';
@@ -398,7 +399,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     window.location.reload();
   };
 
-  const needsProfileCompletion = !driver?.phone || !driver?.licenseNumber || !driver?.vehicleInfo;
+  // Profil à compléter si info perso incomplètes (le véhicule est géré séparément)
+  const needsProfileCompletion = !driver?.phone || !driver?.licenseNumber || !driver?.city;
 
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const acceptedBookings = bookings
@@ -512,7 +514,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-2 sm:space-x-8 overflow-x-auto">
             <button
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => { setActiveTab('dashboard'); setShowProfileForm(false); }}
               className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'dashboard'
                   ? 'border-black text-black'
@@ -522,7 +524,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               Tableau de bord
             </button>
             <button
-              onClick={() => setActiveTab('availability')}
+              onClick={() => { setActiveTab('availability'); setShowProfileForm(false); }}
               className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'availability'
                   ? 'border-black text-black'
@@ -532,7 +534,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               Disponibilités
             </button>
             <button
-              onClick={() => setActiveTab('bookings')}
+              onClick={() => { setActiveTab('bookings'); setShowProfileForm(false); }}
               className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'bookings'
                   ? 'border-black text-black'
@@ -556,7 +558,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         <NotificationPermission />
         
         {/* Profile Completion Alert */}
-        {needsProfileCompletion && !showProfileForm && (
+        {needsProfileCompletion && !showProfileForm && activeTab === 'dashboard' && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
             <div className="flex items-start gap-4">
               <AlertCircle className="w-6 h-6 text-gray-700 flex-shrink-0 mt-0.5" />
@@ -566,7 +568,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </h3>
                 <p className="text-gray-700 mb-4">
                   Pour commencer à recevoir des courses, vous devez compléter vos informations
-                  personnelles et ajouter les détails de votre véhicule.
+                  personnelles.
                 </p>
                 <Button
                   onClick={() => setShowProfileForm(true)}
@@ -580,7 +582,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         )}
 
         {/* Profile Form */}
-        {showProfileForm && driver && (
+        {showProfileForm && driver && activeTab === 'dashboard' && (
           <div className="mb-8">
             <DriverProfileForm
               driverId={driver.id} 
@@ -789,7 +791,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     <h4 className="font-medium text-gray-900">Compléter le profil</h4>
                     <p className="text-sm text-gray-600">
                       {needsProfileCompletion 
-                        ? 'Ajoutez vos informations personnelles et véhicule'
+                        ? 'Ajoutez vos informations personnelles'
                         : 'Profil complété ✓'
                       }
                     </p>
@@ -851,68 +853,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               </div>
             </div>
 
-            {/* Vehicle Info Display */}
-            {driver?.vehicleInfo && (
-              <div className="bg-white rounded-xl shadow-sm p-6 mt-8">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Car className="w-5 h-5 text-gray-700" />
-                  Mon véhicule
-                </h3>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Photo du véhicule */}
-                  <div className="lg:col-span-1">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Photo du véhicule</h4>
-                    <VehicleImageUpload
-                      currentImageUrl={driver.vehicleInfo.photoUrl}
-                      onImageUpload={handleVehiclePhotoUpload}
-                      onImageDelete={driver.vehicleInfo.photoUrl ? handleVehiclePhotoDelete : undefined}
-                      loading={uploadingVehiclePhoto}
-                    />
-                  </div>
-                  
-                  {/* Informations du véhicule */}
-                  <div className="lg:col-span-2">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Informations</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Véhicule</p>
-                        <p className="font-semibold text-gray-900">
-                          {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Année</p>
-                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.year}</p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Couleur</p>
-                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.color}</p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Places</p>
-                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.seats} places</p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Plaque</p>
-                        <p className="font-semibold text-gray-900">{driver.vehicleInfo.licensePlate}</p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Type</p>
-                        <p className="font-semibold text-gray-900">
-                          {driver.vehicleInfo.type === 'sedan' && 'Berline'}
-                          {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
-                          {driver.vehicleInfo.type === 'van' && 'Van'}
-                          {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
-                          {driver.vehicleInfo.type === 'bus' && 'Bus'}
-                          {driver.vehicleInfo.type === 'truck' && 'Camion'}
-                          {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
-                          {driver.vehicleInfo.type === 'limousine' && 'Limousine'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {/* Ancienne section "Mon véhicule" supprimée (remplacée par gestion multi-véhicules) */}
+
+            {/* Multiple Vehicles Management */}
+            {driver && (
+              <div className="mt-8">
+                <DriverVehicles driverId={driver.id} />
               </div>
             )}
           </>

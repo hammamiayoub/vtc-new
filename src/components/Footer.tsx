@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Shield, FileText, Smartphone, UserPlus, Car } from 'lucide-react';
+import { Heart, Shield, FileText, Smartphone, UserPlus, Car, Mail, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface FooterProps {
@@ -11,7 +11,7 @@ export const Footer: React.FC<FooterProps> = () => {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid md:grid-cols-5 gap-8">
+        <div className="grid md:grid-cols-6 gap-8">
           {/* Logo et description */}
           <div className="md:col-span-2">
             <h3 className="text-2xl font-bold mb-4">TuniDrive</h3>
@@ -51,6 +51,31 @@ export const Footer: React.FC<FooterProps> = () => {
             </ul>
           </div>
 
+          {/* Légal */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Légal</h4>
+            <ul className="space-y-2 text-gray-300">
+              <li>
+                <Link 
+                  to="/terms-of-service" 
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <FileText size={16} />
+                  CGU
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/privacy-policy" 
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <Shield size={16} />
+                  RGPD
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* Application mobile */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Application mobile</h4>
@@ -69,30 +94,35 @@ export const Footer: React.FC<FooterProps> = () => {
             </ul>
           </div>
 
-          {/* Légal */}
+          {/* Contact */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Légal</h4>
+            <h4 className="text-lg font-semibold mb-4">Contact</h4>
             <ul className="space-y-2 text-gray-300">
               <li>
-                <Link 
-                  to="/terms-of-service" 
+                <a
+                  href="https://wa.me/21628528477"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:text-white transition-colors flex items-center gap-2"
                 >
-                  <FileText size={16} />
-                  Conditions d'utilisation
-                </Link>
+                  <MessageCircle size={16} />
+                  WhatsApp
+                </a>
               </li>
               <li>
-                <Link 
-                  to="/privacy-policy" 
+                <a
+                  href="mailto:support@tunidrive.net"
                   className="hover:text-white transition-colors flex items-center gap-2"
                 >
-                  <Shield size={16} />
-                  Politique de confidentialité
-                </Link>
+                  <Mail size={16} />
+                  support@tunidrive.net
+                </a>
               </li>
             </ul>
           </div>
+
+          {/* Légal */}
+         
         </div>
 
         {/* Ligne de séparation */}

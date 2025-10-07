@@ -33,6 +33,27 @@ export interface VehicleInfo {
   photoUrl?: string;
 }
 
+// Multiple vehicles support
+export interface Vehicle {
+  id: string;
+  driverId: string;
+  make: string;
+  model: string;
+  year?: number;
+  color?: string;
+  licensePlate?: string;
+  seats?: number;
+  type?: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'limousine';
+  photoUrl?: string;
+  is_primary?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DriverWithVehicles extends Driver {
+  vehicles?: Vehicle[];
+}
+
 export interface DriverProfileData {
   phone: string;
   city: string;

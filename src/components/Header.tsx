@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserPlus, LogIn, Shield, MapPin, Menu, X } from 'lucide-react';
 
 interface HeaderProps {
@@ -8,6 +9,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const navigate = useNavigate();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -31,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           
           <nav className="hidden md:flex items-center gap-2">
             <button
-              onClick={() => { window.location.href = '/signup'; }}
+              onClick={() => { navigate('/signup'); }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'signup'
                   ? 'bg-gray-800 text-white'
@@ -43,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             </button>
             
             <button
-              onClick={() => { window.location.href = '/client-login'; }}
+              onClick={() => { navigate('/client-login'); }}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'client-login' || currentView === 'client-signup'
                   ? 'bg-white text-black'
@@ -55,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             </button>
             
             <button
-              onClick={() => { window.location.href = '/login'; }}
+              onClick={() => { navigate('/login'); }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'login'
                   ? 'bg-gray-800 text-white'
@@ -93,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           <div className="md:hidden absolute top-full left-0 right-0 bg-black border-t border-gray-800 shadow-lg z-50">
             <div className="px-4 py-4 space-y-2">
               <button
-                onClick={() => { window.location.href = '/client-login'; }}
+                onClick={() => { navigate('/client-login'); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <MapPin size={20} />
@@ -101,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               </button>
               
               <button
-                onClick={() => { window.location.href = '/signup'; }}
+                onClick={() => { navigate('/signup'); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <UserPlus size={20} />
@@ -109,7 +111,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               </button>
               
               <button
-                onClick={() => { window.location.href = '/login'; }}
+                onClick={() => { navigate('/login'); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <LogIn size={20} />
