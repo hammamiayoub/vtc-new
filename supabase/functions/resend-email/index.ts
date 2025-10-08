@@ -7,8 +7,7 @@ const corsHeaders = {
 
 // Configuration Resend
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-// IMPORTANT: Remplacez par votre domaine vérifié dans Resend
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>' // Ou votre domaine configuré
+const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>'
 const SUPPORT_EMAIL = 'support@tunidrive.net'
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -50,7 +49,6 @@ async function sendEmail(to: string, subject: string, html: string) {
         error: errorText
       })
       
-      // Messages d'erreur plus spécifiques
       if (response.status === 401) {
         throw new Error('Erreur d\'authentification Resend - Vérifiez votre RESEND_API_KEY')
       } else if (response.status === 403) {
@@ -76,7 +74,6 @@ serve(async (req) => {
   console.log('🚀 Edge Function resend-email démarrée')
   console.log('📥 Méthode:', req.method)
   
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('✅ Réponse CORS OPTIONS')
     return new Response('ok', { headers: corsHeaders })
@@ -92,15 +89,9 @@ serve(async (req) => {
       clientEmail: requestData.clientData?.email,
       driverEmail: requestData.driverData?.email
     })
-    
-    console.log('📧 === CONFIGURATION EMAIL SUPPORT ===')
-    console.log('📧 SUPPORT_EMAIL configuré:', SUPPORT_EMAIL)
-    console.log('📧 FROM_EMAIL configuré:', FROM_EMAIL)
-    console.log('📧 RESEND_API_KEY présente:', !!RESEND_API_KEY)
 
     const { bookingData, clientData, driverData } = requestData
 
-    // Validation des données requises
     if (!bookingData || !clientData || !driverData) {
       throw new Error('Données manquantes: bookingData, clientData ou driverData')
     }
@@ -109,7 +100,6 @@ serve(async (req) => {
       throw new Error('Adresses email manquantes pour le client ou le chauffeur')
     }
 
-    // Format the scheduled time
     const scheduledDate = new Date(bookingData.scheduled_time)
     const formattedDate = scheduledDate.toLocaleDateString('fr-FR', {
       weekday: 'long',
@@ -119,8 +109,6 @@ serve(async (req) => {
       hour: '2-digit',
       minute: '2-digit'
     })
-
-    console.log('📅 Date formatée:', formattedDate)
 
     // Email content for client
     const clientEmailContent = `
@@ -280,13 +268,6 @@ serve(async (req) => {
             </ul>
           </div>
           
-          <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #64748b; font-size: 14px;">
-              <strong>Note :</strong> Cet email est envoyé automatiquement pour vous tenir informé des nouvelles réservations. 
-              Vous pouvez surveiller l'activité via le tableau de bord administrateur.
-            </p>
-          </div>
-          
           <p style="color: #666; font-size: 14px; margin-top: 30px;">
             Équipe TuniDrive - Support technique
           </p>
@@ -304,6 +285,7 @@ serve(async (req) => {
     // Envoi des emails via Resend
     const emailResults: Array<{type: string, success: boolean, id?: string, error?: string}> = []
     
+    // Email client
     try {
       console.log('📧 Envoi email client à:', clientData.email)
       const clientResult = await sendEmail(
@@ -312,12 +294,12 @@ serve(async (req) => {
         clientEmailContent
       )
       emailResults.push({ type: 'client', success: true, id: clientResult.id })
-
     } catch (clientEmailError) {
       console.error('❌ Erreur email client:', clientEmailError)
       emailResults.push({ type: 'client', success: false, error: clientEmailError.message })
     }
 
+    // Email chauffeur
     try {
       console.log('📧 Envoi email chauffeur à:', driverData.email)
       const driverResult = await sendEmail(
@@ -326,26 +308,20 @@ serve(async (req) => {
         driverEmailContent
       )
       emailResults.push({ type: 'driver', success: true, id: driverResult.id })
-
     } catch (driverEmailError) {
       console.error('❌ Erreur email chauffeur:', driverEmailError)
       emailResults.push({ type: 'driver', success: false, error: driverEmailError.message })
     }
 
-    // Email support - toujours tenté même si les autres échouent
+    // Email support - envoyé après un délai pour respecter la limite de 2 emails/seconde de Resend
     try {
-      console.log('📧 === ENVOI EMAIL SUPPORT ===')
-      console.log('📧 SUPPORT_EMAIL value:', SUPPORT_EMAIL)
-      console.log('📧 SUPPORT_EMAIL type:', typeof SUPPORT_EMAIL)
-      console.log('📧 Destinataire support:', SUPPORT_EMAIL)
-      console.log('📧 Sujet:', 'TuniDrive - Nouvelle réservation créée')
-      console.log('📧 Contenu HTML généré:', supportEmailContent ? supportEmailContent.length : 'undefined', 'caractères')
-      console.log('📧 FROM_EMAIL:', FROM_EMAIL)
-      console.log('📧 RESEND_API_KEY présente:', !!RESEND_API_KEY)
+      console.log('📧 === ENVOI EMAIL SUPPORT (avec délai de 2s) ===')
+      console.log('📧 Attente de 2 secondes pour respecter la limite de Resend...')
       
-      if (!SUPPORT_EMAIL) {
-        throw new Error('SUPPORT_EMAIL est undefined ou vide')
-      }
+      // Attendre 2 secondes avant d'envoyer l'email support
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      console.log('📧 Destinataire:', SUPPORT_EMAIL)
       
       const supportResult = await sendEmail(
         SUPPORT_EMAIL,
@@ -353,43 +329,18 @@ serve(async (req) => {
         supportEmailContent
       )
       
-      console.log('✅ === EMAIL SUPPORT ENVOYÉ AVEC SUCCÈS ===')
-      console.log('✅ ID email support:', supportResult.id)
+      console.log('✅ Email support envoyé avec succès:', supportResult.id)
       emailResults.push({ type: 'support', success: true, id: supportResult.id })
-
     } catch (supportEmailError) {
-      console.error('❌ === ERREUR EMAIL SUPPORT ===')
-      console.error('❌ Type d\'erreur:', supportEmailError.constructor.name)
-      console.error('❌ Erreur détaillée:', supportEmailError)
-      console.error('❌ Message d\'erreur:', supportEmailError.message)
-      console.error('❌ Stack trace:', supportEmailError.stack)
-      console.error('❌ SUPPORT_EMAIL value au moment de l\'erreur:', SUPPORT_EMAIL)
+      console.error('❌ Erreur email support:', supportEmailError)
       emailResults.push({ type: 'support', success: false, error: supportEmailError.message })
     }
 
-    // Vérifier si au moins un email a été envoyé
+    // Résultats
     const successfulEmails = emailResults.filter(result => result.success)
-    const failedEmails = emailResults.filter(result => !result.success)
-
-    console.log('📊 === RÉSULTATS FINAUX ENVOI EMAILS ===')
-    console.log('📊 Total emails tentés:', emailResults.length)
-    console.log('📊 Emails réussis:', successfulEmails.length)
-    console.log('📊 Emails échoués:', failedEmails.length)
-    console.log('📊 Détail des résultats:', emailResults)
-    
-    // Vérifier spécifiquement l'email support
-    const supportResult = emailResults.find(result => result.type === 'support')
-    if (supportResult) {
-      console.log('📧 === RÉSULTAT EMAIL SUPPORT ===')
-      console.log('📧 Support email success:', supportResult.success)
-      console.log('📧 Support email ID:', supportResult.id)
-      console.log('📧 Support email error:', supportResult.error)
-    } else {
-      console.error('❌ === EMAIL SUPPORT NON TROUVÉ DANS LES RÉSULTATS ===')
-    }
+    console.log('📊 Emails envoyés:', successfulEmails.length, '/', emailResults.length)
 
     if (successfulEmails.length === 0) {
-      // Aucun email envoyé avec succès
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -403,7 +354,6 @@ serve(async (req) => {
       )
     }
 
-    // Au moins un email envoyé avec succès
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -417,7 +367,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('💥 Erreur générale dans la fonction:', error)
+    console.error('💥 Erreur générale:', error)
     
     return new Response(
       JSON.stringify({ 
@@ -432,3 +382,4 @@ serve(async (req) => {
     )
   }
 })
+

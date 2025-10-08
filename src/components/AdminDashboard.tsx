@@ -98,6 +98,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             console.error(`Erreur récupération courses pour ${driver.first_name} ${driver.last_name}:`, allBookingsError);
           }
 
+          // Récupérer le véhicule principal (is_primary = true) ou le premier véhicule actif
+          let vehicleInfo = driver.vehicle_info;
+          
+          if (!vehicleInfo) {
+            const { data: vehiclesData, error: vehiclesError } = await supabase
+              .from('vehicles')
+              .select('*')
+              .eq('driver_id', driver.id)
+              .is('deleted_at', null)
+              .order('is_primary', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (!vehiclesError && vehiclesData) {
+              // Convertir le format de la table vehicles en format vehicle_info
+              vehicleInfo = {
+                make: vehiclesData.make,
+                model: vehiclesData.model,
+                year: vehiclesData.year,
+                color: vehiclesData.color,
+                licensePlate: vehiclesData.license_plate,
+                seats: vehiclesData.seats,
+                type: vehiclesData.type,
+                photoUrl: vehiclesData.photo_url
+              };
+            }
+          }
+
           // Calculer les statistiques détaillées
           const stats = {
             completedBookings: 0,
@@ -139,6 +167,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
           return {
             ...driver,
+            vehicle_info: vehicleInfo, // Utiliser le véhicule récupéré (legacy ou table vehicles)
             bookingCount: totalBookings,
             totalEarnings: stats.totalEarnings,
             completedBookings: stats.completedBookings,
