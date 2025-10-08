@@ -493,11 +493,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
         // 2) Rechercher dans la table vehicles pour TOUS les chauffeurs disponibles
         const allDriverIds = availableDriversData.map(d => d.id);
+        const vehiclesByDriver = new Map();
         
         if (allDriverIds.length > 0) {
           const { data: vehiclesRows, error: vehiclesErr } = await supabase
             .from('vehicles')
-            .select('driver_id')
+            .select('driver_id, make, model, year, color, license_plate, seats, type, photo_url')
             .in('driver_id', allDriverIds)
             .eq('type', selectedVehicleType)
             .is('deleted_at', null);
@@ -505,13 +506,42 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           if (vehiclesErr) {
             console.warn('⚠️ Erreur lookup vehicles:', vehiclesErr);
           } else if (vehiclesRows && vehiclesRows.length > 0) {
-            vehiclesRows.forEach(v => matchViaVehicleInfo.add(v.driver_id));
+            // Stocker le premier véhicule correspondant pour chaque chauffeur
+            vehiclesRows.forEach(v => {
+              if (!vehiclesByDriver.has(v.driver_id)) {
+                vehiclesByDriver.set(v.driver_id, {
+                  make: v.make,
+                  model: v.model,
+                  year: v.year,
+                  color: v.color,
+                  licensePlate: v.license_plate,
+                  seats: v.seats,
+                  type: v.type,
+                  photoUrl: v.photo_url
+                });
+              }
+              matchViaVehicleInfo.add(v.driver_id);
+            });
             console.log('✅ Chauffeurs avec véhicule de type', selectedVehicleType, 'dans la table vehicles:', vehiclesRows.length);
           }
         }
 
         // 3) Filtrer pour ne garder que les chauffeurs qui ont au moins un véhicule du type demandé
         availableDriversData = availableDriversData.filter(d => matchViaVehicleInfo.has(d.id));
+        
+        // 4) Remplacer vehicle_info par le véhicule correspondant si disponible dans la table vehicles
+        availableDriversData = availableDriversData.map(driver => {
+          const matchingVehicle = vehiclesByDriver.get(driver.id);
+          if (matchingVehicle) {
+            // Si on a trouvé un véhicule correspondant dans la table vehicles, l'utiliser
+            return { ...driver, vehicle_info: matchingVehicle };
+          } else if (driver.vehicle_info && driver.vehicle_info.type === selectedVehicleType) {
+            // Sinon, garder le vehicle_info si son type correspond
+            return driver;
+          }
+          return driver;
+        });
+        
         console.log('📊 Chauffeurs après filtrage par type:', availableDriversData.length);
       }
       
