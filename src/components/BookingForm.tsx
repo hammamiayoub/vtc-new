@@ -483,35 +483,35 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       // Filtrer par type de véhicule si spécifié
       if (selectedVehicleType) {
         console.log('🔍 Filtrage par type de véhicule (compat JSON + table vehicles):', selectedVehicleType);
+        
         // 1) Filtrer via l'ancien JSON vehicle_info si présent
-        let filtered = availableDriversData.filter(driver => 
-          driver.vehicle_info && driver.vehicle_info.type === selectedVehicleType
+        const matchViaVehicleInfo = new Set(
+          availableDriversData
+            .filter(driver => driver.vehicle_info && driver.vehicle_info.type === selectedVehicleType)
+            .map(d => d.id)
         );
 
-        // 2) Compléter via la table vehicles pour les chauffeurs sans vehicle_info
-        const driversNeedingLookup = availableDriversData
-          .filter(d => !d.vehicle_info)
-          .map(d => d.id);
-
-        if (driversNeedingLookup.length > 0) {
+        // 2) Rechercher dans la table vehicles pour TOUS les chauffeurs disponibles
+        const allDriverIds = availableDriversData.map(d => d.id);
+        
+        if (allDriverIds.length > 0) {
           const { data: vehiclesRows, error: vehiclesErr } = await supabase
             .from('vehicles')
             .select('driver_id')
-            .in('driver_id', driversNeedingLookup)
+            .in('driver_id', allDriverIds)
             .eq('type', selectedVehicleType)
             .is('deleted_at', null);
+          
           if (vehiclesErr) {
             console.warn('⚠️ Erreur lookup vehicles:', vehiclesErr);
           } else if (vehiclesRows && vehiclesRows.length > 0) {
-            const okDriverIds = new Set(vehiclesRows.map(v => v.driver_id));
-            const viaVehicles = availableDriversData.filter(d => okDriverIds.has(d.id));
-            // Fusionner en évitant les doublons
-            const idsInFiltered = new Set(filtered.map(d => d.id));
-            viaVehicles.forEach(d => { if (!idsInFiltered.has(d.id)) filtered.push(d); });
+            vehiclesRows.forEach(v => matchViaVehicleInfo.add(v.driver_id));
+            console.log('✅ Chauffeurs avec véhicule de type', selectedVehicleType, 'dans la table vehicles:', vehiclesRows.length);
           }
         }
 
-        availableDriversData = filtered;
+        // 3) Filtrer pour ne garder que les chauffeurs qui ont au moins un véhicule du type demandé
+        availableDriversData = availableDriversData.filter(d => matchViaVehicleInfo.has(d.id));
         console.log('📊 Chauffeurs après filtrage par type:', availableDriversData.length);
       }
       
