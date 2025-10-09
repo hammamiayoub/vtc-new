@@ -1176,100 +1176,97 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   {availableDrivers.map((driver) => (
                     <div
                       key={driver.id}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                      className={`border-2 rounded-lg p-3 sm:p-4 cursor-pointer transition-all ${
                         selectedDriver === driver.id
                           ? 'border-purple-500 bg-purple-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => setSelectedDriver(driver.id)}
                     >
-                      <div className="flex flex-col gap-3">
-                        {/* Photo du véhicule en grand */}
-                        {driver.vehicleInfo?.photoUrl && (
-                          <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg overflow-hidden">
-                            <img
-                              src={driver.vehicleInfo.photoUrl}
-                              alt={`${driver.vehicleInfo.make} ${driver.vehicleInfo.model}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        
-                        <div className="flex items-start gap-3 min-w-0">
-                          <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                            {driver.profilePhotoUrl ? (
-                              <img
-                                src={driver.profilePhotoUrl}
-                                alt={`${driver.firstName} ${driver.lastName}`}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <User className="w-6 h-6 text-gray-500" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0 flex-1">
-                                <h4 className="font-medium text-gray-900 truncate">
-                                  {driver.firstName} {driver.lastName}
-                                </h4>
-                                    {driver.city && (
-                                  <p className="text-sm text-gray-600 flex items-center gap-1">
-                                    <MapPin size={12} className="flex-shrink-0" />
-                                    <span className="truncate">{driver.city}</span>
-                                        {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup > 0 && driver.distanceFromPickup !== Infinity && (
-                                      <span className="text-blue-600 font-medium ml-1 flex-shrink-0">
-                                        • {driver.distanceFromPickup} km
-                                      </span>
-                                    )}
-                                  </p>
-                                )}
-                                {driver.vehicleInfo && (
-                                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-2">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <Car size={14} className="text-blue-600" />
-                                      <p className="text-xs font-semibold text-blue-900">
-                                        {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-xs text-blue-700">
-                                      <span>{driver.vehicleInfo.color}</span>
-                                      <span>•</span>
-                                      <span>
-                                        {driver.vehicleInfo.type === 'sedan' && 'Berline'}
-                                        {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
-                                        {driver.vehicleInfo.type === 'van' && 'Van'}
-                                        {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
-                                        {driver.vehicleInfo.type === 'bus' && 'Bus'}
-                                        {driver.vehicleInfo.type === 'truck' && 'Camion'}
-                                        {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
-                                        {driver.vehicleInfo.type === 'limousine' && 'Limousine'}
-                                      </span>
-                                      {driver.vehicleInfo.seats && (
-                                        <>
-                                          <span>•</span>
-                                          <span>{driver.vehicleInfo.seats} places</span>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              {selectedDriver === driver.id && (
-                                <CheckCircle className="w-6 h-6 text-purple-600 flex-shrink-0" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Badge de proximité pour le chauffeur le plus proche */}
-                      {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup !== Infinity && driver.distanceFromPickup > 0 && driver.distanceFromPickup <= 10 && (
-                        <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                          <MapPin size={12} />
-                          Chauffeur proche
+                      {/* Photo du véhicule en grand */}
+                      {driver.vehicleInfo?.photoUrl && (
+                        <div className="w-full h-36 sm:h-40 bg-gray-100 rounded-lg overflow-hidden mb-3">
+                          <img
+                            src={driver.vehicleInfo.photoUrl}
+                            alt={`${driver.vehicleInfo.make} ${driver.vehicleInfo.model}`}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                       )}
+                      
+                      {/* Informations chauffeur */}
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                          {driver.profilePhotoUrl ? (
+                            <img
+                              src={driver.profilePhotoUrl}
+                              alt={`${driver.firstName} ${driver.lastName}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-6 h-6 text-gray-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-medium text-gray-900 text-sm sm:text-base">
+                                {driver.firstName} {driver.lastName}
+                              </h4>
+                              {driver.city && (
+                                <p className="text-xs sm:text-sm text-gray-600 flex items-center gap-1 flex-wrap">
+                                  <MapPin size={12} className="flex-shrink-0" />
+                                  <span>{driver.city}</span>
+                                  {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup > 0 && driver.distanceFromPickup !== Infinity && (
+                                    <span className="text-blue-600 font-medium">
+                                      • {driver.distanceFromPickup} km
+                                    </span>
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                            {selectedDriver === driver.id && (
+                              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 flex-shrink-0" />
+                            )}
+                          </div>
+                          
+                          {/* Informations véhicule */}
+                          {driver.vehicleInfo && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Car size={12} className="text-blue-600 flex-shrink-0" />
+                                <p className="text-xs font-semibold text-blue-900 truncate">
+                                  {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-xs text-blue-700">
+                                <span className="bg-blue-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.color}</span>
+                                <span className="bg-blue-100 px-1.5 py-0.5 rounded">
+                                  {driver.vehicleInfo.type === 'sedan' && 'Berline'}
+                                  {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
+                                  {driver.vehicleInfo.type === 'van' && 'Van'}
+                                  {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
+                                  {driver.vehicleInfo.type === 'bus' && 'Bus'}
+                                  {driver.vehicleInfo.type === 'truck' && 'Camion'}
+                                  {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
+                                  {driver.vehicleInfo.type === 'limousine' && 'Limousine'}
+                                </span>
+                                {driver.vehicleInfo.seats && (
+                                  <span className="bg-blue-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.seats} places</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Badge de proximité pour le chauffeur le plus proche */}
+                          {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup !== Infinity && driver.distanceFromPickup > 0 && driver.distanceFromPickup <= 10 && (
+                            <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                              <MapPin size={12} />
+                              Chauffeur proche
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
