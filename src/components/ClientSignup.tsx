@@ -272,7 +272,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               {/* Prénom / Nom */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
@@ -288,7 +288,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
@@ -305,10 +305,10 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               </div>
 
               {/* Email */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+                <div className="relative">
+                  <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
                 <input
                   {...register('email')}
                   type="email"
@@ -358,7 +358,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
               {/* MOT DE PASSE — vient après la ville */}
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -373,7 +373,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute top-0 right-0 pr-3 h-12 flex items-center"
                   aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
@@ -388,7 +388,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
               {/* CONFIRMER — vient en dernier */}
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -403,7 +403,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword((v) => !v)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute top-0 right-0 pr-3 h-12 flex items-center"
                   aria-label={showConfirmPassword ? 'Masquer la confirmation' : 'Afficher la confirmation'}
                 >
                   {showConfirmPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}

@@ -34,6 +34,9 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   const [phonecopied, setPhoneCopied] = useState(false);
 
   useEffect(() => {
+    // Forcer le scroll en haut de la page au chargement
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     fetchBookingDetails();
     
     // Déclencher la conversion Google Ads dès que la page devient visible
@@ -433,15 +436,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <span className="text-sm font-bold text-orange-600">1</span>
                   </div>
                   <p className="text-gray-700">
-                    <strong>En cours:</strong> Recherche d'un chauffeur disponible
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 opacity-50">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-gray-400">2</span>
-                  </div>
-                  <p className="text-gray-500">
-                    Confirmation par le chauffeur
+                    <strong>En cours:</strong> Confirmation par le chauffeur
                   </p>
                 </div>
                 <div className="flex items-center gap-3 opacity-50">
