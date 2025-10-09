@@ -222,9 +222,33 @@ function AppContent() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUserType(null);
-    navigate('/');
+    try {
+      console.log('🚪 Déconnexion en cours...');
+      
+      // Réinitialiser l'état avant la déconnexion
+      setUserType(null);
+      setCurrentView('home');
+      
+      // Déconnexion Supabase
+      await supabase.auth.signOut();
+      
+      console.log('✅ Déconnexion réussie');
+      
+      // Redirection forcée vers la page d'accueil
+      navigate('/', { replace: true });
+      
+      // Double sécurité : forcer le rechargement si la navigation ne fonctionne pas
+      setTimeout(() => {
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Erreur lors de la déconnexion:', error);
+      // En cas d'erreur, forcer la redirection quand même
+      window.location.href = '/';
+    }
   };
 
   if (isLoading) {
