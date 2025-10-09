@@ -97,7 +97,7 @@ export const calculateDrivingDistance = async (
 
 // Fonction pour obtenir le tarif par kilomètre selon la distance
 export const getPricePerKm = (distanceKm: number): { price: number; discount: string } => {
-  const basePricePerKm = 2.2; // Tarif de base : 2,2 TND/KM
+  const basePricePerKm = 1.5; // Tarif de base : 1,5 TND/KM
   
   if (distanceKm >= 30 && distanceKm < 100) {
     // Distance 30–100 km → plein tarif

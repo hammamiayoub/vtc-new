@@ -33,45 +33,45 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead } = useDriverNotifications(driver?.id || '');
 
-  useEffect(() => {
-    const fetchDriverData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          const { data: driverData, error } = await supabase
-            .from('drivers')
-            .select('*')
-            .eq('id', user.id)
-            .neq('status', 'deleted') // Exclure les comptes supprimés
-            .single();
+  const fetchDriverData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: driverData, error } = await supabase
+          .from('drivers')
+          .select('*')
+          .eq('id', user.id)
+          .neq('status', 'deleted') // Exclure les comptes supprimés
+          .single();
 
-          if (error) {
-            console.error('Erreur lors de la récupération des données:', error);
-          } else {
-            setDriver({
-              id: driverData.id,
-              firstName: driverData.first_name,
-              lastName: driverData.last_name,
-              email: driverData.email,
-              phone: driverData.phone,
-              city: driverData.city,
-              licenseNumber: driverData.license_number,
-              vehicleInfo: driverData.vehicle_info,
-              status: driverData.status,
-              profilePhotoUrl: driverData.profile_photo_url,
-              createdAt: driverData.created_at,
-              updatedAt: driverData.updated_at
-            });
-          }
+        if (error) {
+          console.error('Erreur lors de la récupération des données:', error);
+        } else {
+          setDriver({
+            id: driverData.id,
+            firstName: driverData.first_name,
+            lastName: driverData.last_name,
+            email: driverData.email,
+            phone: driverData.phone,
+            city: driverData.city,
+            licenseNumber: driverData.license_number,
+            vehicleInfo: driverData.vehicle_info,
+            status: driverData.status,
+            profilePhotoUrl: driverData.profile_photo_url,
+            createdAt: driverData.created_at,
+            updatedAt: driverData.updated_at
+          });
         }
-      } catch (error) {
-        console.error('Erreur:', error);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchDriverData();
   }, []);
 
@@ -115,7 +115,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               if (booking.client_id) {
                 const { data: clientData, error: clientError } = await supabase
                   .from('clients')
-                  .select('first_name, last_name, phone')
+                  .select('first_name, last_name, phone, email')
                   .eq('id', booking.client_id)
                   .maybeSingle();
 
@@ -135,7 +135,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             id: b.id.slice(0, 8),
             status: b.status,
             client: b.clients ? `${b.clients.first_name} ${b.clients.last_name}` : 'Pas de client',
-            phone: b.clients?.phone || 'Pas de téléphone'
+            phone: b.clients?.phone || 'Pas de téléphone',
+            email: b.clients?.email || 'Pas d\'email'
           })));
 
           setBookings(bookingsWithClients);
@@ -174,7 +175,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             if (booking.client_id) {
               const { data: clientData, error: clientError } = await supabase
                 .from('clients')
-                .select('first_name, last_name, phone')
+                .select('first_name, last_name, phone, email')
                 .eq('id', booking.client_id)
                 .maybeSingle();
 
@@ -241,6 +242,55 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         } catch (notificationError) {
           console.error('❌ Erreur lors de l\'envoi de la notification:', notificationError);
         }
+
+        // Envoyer email de notification d'acceptation
+        try {
+          console.log('📧 Envoi email d\'acceptation au client...');
+          console.log('📊 Booking data brut:', booking);
+          
+          const emailPayload = {
+            bookingData: {
+              id: booking.id,
+              pickup_address: booking.pickup_address,
+              destination_address: booking.destination_address,
+              scheduled_time: booking.scheduled_time,
+              distance_km: booking.distance_km,
+              price_tnd: booking.price_tnd,
+              notes: booking.notes
+            },
+            clientData: {
+              first_name: booking.clients.first_name,
+              last_name: booking.clients.last_name,
+              email: booking.clients.email
+            },
+            driverData: {
+              first_name: driver?.firstName || '',
+              last_name: driver?.lastName || '',
+              phone: driver?.phone || '',
+              vehicle_info: driver?.vehicleInfo || null
+            },
+            status: 'accepted'
+          };
+          
+          console.log('📧 Payload complet envoyé:', emailPayload);
+          
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailPayload)
+          });
+
+          if (response.ok) {
+            console.log('✅ Email d\'acceptation envoyé avec succès');
+          } else {
+            console.error('❌ Erreur envoi email:', await response.text());
+          }
+        } catch (emailError) {
+          console.error('❌ Erreur lors de l\'envoi de l\'email:', emailError);
+        }
       } else if (newStatus === 'completed' && booking.clients) {
         try {
           await pushNotificationService.notifyClientBookingCompleted(
@@ -298,34 +348,25 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         }
       }
 
-      // Envoyer emails d'annulation
+      // Envoyer emails d'annulation via send-cancellation-emails
       if (booking.clients) {
         try {
-          // Récupérer l'email du client depuis la base de données
-          const { data: clientData, error: clientError } = await supabase
-            .from('clients')
-            .select('email')
-            .eq('id', booking.clientId)
-            .single();
-
-          if (clientError) {
-            console.error('❌ Erreur récupération email client:', clientError);
-          }
-
+          console.log('📧 Envoi emails d\'annulation (client + chauffeur)...');
+          
           const emailData = {
             bookingId: booking.id,
             clientName: booking.clients.first_name + ' ' + booking.clients.last_name,
-            clientEmail: clientData?.email || '',
+            clientEmail: booking.clients.email || '',
             driverName: driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
             driverEmail: driver?.email || '',
-            pickupAddress: booking.pickupAddress,
-            destinationAddress: booking.destinationAddress,
-            scheduledTime: booking.scheduledTime,
-            priceTnd: booking.priceTnd,
+            pickupAddress: booking.pickup_address,
+            destinationAddress: booking.destination_address,
+            scheduledTime: booking.scheduled_time,
+            priceTnd: booking.price_tnd,
             cancelledBy: 'driver'
           };
 
-          console.log('📧 Données email d\'annulation:', emailData);
+          console.log('📧 Données email d\'annulation (send-cancellation-emails):', emailData);
 
           const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-cancellation-emails`;
           
@@ -345,6 +386,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             console.log('📊 Résultats:', emailResult.results);
           } else {
             console.error('❌ Erreur envoi emails d\'annulation:', emailResult.error);
+            console.error('📊 Détails:', emailResult);
           }
         } catch (emailError) {
           console.error('❌ Erreur lors de l\'envoi des emails d\'annulation:', emailError);
@@ -1268,6 +1310,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             user={driver}
             userType="driver"
             onProfileDeleted={handleLogout}
+            onProfileUpdated={fetchDriverData}
           />
         )}
       </main>

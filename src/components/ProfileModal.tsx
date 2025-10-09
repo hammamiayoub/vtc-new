@@ -22,6 +22,7 @@ interface ProfileModalProps {
   user: Driver | Client;
   userType: 'driver' | 'client';
   onProfileDeleted: () => void;
+  onProfileUpdated?: () => void;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
@@ -29,7 +30,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onClose,
   user,
   userType,
-  onProfileDeleted
+  onProfileDeleted,
+  onProfileUpdated
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -97,7 +99,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
       setIsEditing(false);
       alert('Profil mis à jour avec succès');
-      window.location.reload(); // Recharger pour voir les changements
+      
+      // Rafraîchir les données utilisateur via callback au lieu de recharger la page
+      if (onProfileUpdated) {
+        onProfileUpdated();
+      }
+      
+      // Fermer le modal après la mise à jour
+      onClose();
     } catch (error) {
       console.error('Erreur:', error);
       alert('Une erreur est survenue');
