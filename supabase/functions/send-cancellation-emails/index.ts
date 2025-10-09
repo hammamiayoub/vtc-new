@@ -3,6 +3,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
@@ -263,49 +264,76 @@ async function sendCancellationEmails(data: CancellationData) {
 serve(async (req) => {
   console.log('🚀 Edge Function send-cancellation-emails démarrée')
   
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { 
+      headers: corsHeaders,
+      status: 200
+    })
   }
 
   try {
     const data: CancellationData = await req.json()
 
-    console.log('📧 Données reçues:', data);
+    console.log('📧 === DONNÉES REÇUES COMPLÈTES ===');
+    console.log('bookingId:', data.bookingId);
+    console.log('clientName:', data.clientName);
+    console.log('clientEmail:', data.clientEmail, '(type:', typeof data.clientEmail, ')');
+    console.log('driverName:', data.driverName);
+    console.log('driverEmail:', data.driverEmail, '(type:', typeof data.driverEmail, ')');
+    console.log('cancelledBy:', data.cancelledBy);
+    console.log('pickupAddress:', data.pickupAddress);
+    console.log('destinationAddress:', data.destinationAddress);
+    console.log('scheduledTime:', data.scheduledTime);
+    console.log('priceTnd:', data.priceTnd);
 
-    // Validation détaillée
+    // Validation détaillée avec logs
     if (!data) {
+      console.error('❌ Aucune donnée reçue');
       throw new Error('Aucune donnée reçue')
     }
     if (!data.bookingId) {
+      console.error('❌ bookingId manquant');
       throw new Error('bookingId manquant')
     }
     if (!data.clientEmail || data.clientEmail.trim() === '') {
+      console.error('❌ clientEmail manquant ou vide. Valeur:', data.clientEmail);
       throw new Error('clientEmail manquant ou vide')
     }
     if (!data.driverEmail || data.driverEmail.trim() === '') {
+      console.error('❌ driverEmail manquant ou vide. Valeur:', data.driverEmail);
       throw new Error('driverEmail manquant ou vide')
     }
     if (!data.clientName) {
+      console.error('❌ clientName manquant');
       throw new Error('clientName manquant')
     }
     if (!data.driverName) {
+      console.error('❌ driverName manquant');
       throw new Error('driverName manquant')
     }
     if (!data.pickupAddress) {
+      console.error('❌ pickupAddress manquant');
       throw new Error('pickupAddress manquant')
     }
     if (!data.destinationAddress) {
+      console.error('❌ destinationAddress manquant');
       throw new Error('destinationAddress manquant')
     }
     if (!data.scheduledTime) {
+      console.error('❌ scheduledTime manquant');
       throw new Error('scheduledTime manquant')
     }
     if (!data.priceTnd) {
+      console.error('❌ priceTnd manquant');
       throw new Error('priceTnd manquant')
     }
     if (!data.cancelledBy) {
+      console.error('❌ cancelledBy manquant');
       throw new Error('cancelledBy manquant')
     }
+    
+    console.log('✅ Toutes les validations passées');
 
     const results = await sendCancellationEmails(data)
 

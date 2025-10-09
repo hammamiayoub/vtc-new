@@ -33,43 +33,43 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead, refreshNotifications } = useClientNotifications(client?.id || '');
 
-  useEffect(() => {
-    const fetchClientData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          const { data: clientData, error } = await supabase
-            .from('clients')
-            .select('*')
-            .eq('id', user.id)
-            .neq('status', 'deleted') // Exclure les comptes supprimés
-            .maybeSingle();
+  const fetchClientData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: clientData, error } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('id', user.id)
+          .neq('status', 'deleted') // Exclure les comptes supprimés
+          .maybeSingle();
 
-          if (error) {
-            console.error('Erreur lors de la récupération des données client:', error);
-          } else if (clientData) {
-            setClient({
-              id: clientData.id,
-              firstName: clientData.first_name,
-              lastName: clientData.last_name,
-              email: clientData.email,
-              phone: clientData.phone,
-              city: clientData.city,
-              status: clientData.status,
-              profilePhotoUrl: clientData.profile_photo_url,
-              createdAt: clientData.created_at,
-              updatedAt: clientData.updated_at
-            });
-          }
+        if (error) {
+          console.error('Erreur lors de la récupération des données client:', error);
+        } else if (clientData) {
+          setClient({
+            id: clientData.id,
+            firstName: clientData.first_name,
+            lastName: clientData.last_name,
+            email: clientData.email,
+            phone: clientData.phone,
+            city: clientData.city,
+            status: clientData.status,
+            profilePhotoUrl: clientData.profile_photo_url,
+            createdAt: clientData.created_at,
+            updatedAt: clientData.updated_at
+          });
         }
-      } catch (error) {
-        console.error('Erreur:', error);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchClientData();
   }, []);
 
@@ -294,14 +294,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             clientEmail: client?.email || '',
             driverName: booking.drivers.first_name + ' ' + booking.drivers.last_name,
             driverEmail: driverData?.email || '',
-            pickupAddress: booking.pickupAddress,
-            destinationAddress: booking.destinationAddress,
-            scheduledTime: booking.scheduledTime,
-            priceTnd: booking.priceTnd,
+            pickupAddress: booking.pickup_address,
+            destinationAddress: booking.destination_address,
+            scheduledTime: booking.scheduled_time,
+            priceTnd: booking.price_tnd,
             cancelledBy: 'client'
           };
 
           console.log('📧 Données email d\'annulation:', emailData);
+          console.log('📊 Booking data brut:', booking);
 
           const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-cancellation-emails`;
           
@@ -617,23 +618,23 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               <div className="space-y-3 sm:space-y-4">
                 {/* Tarif de base - Optimisé mobile */}
                 <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarif de base : 2,2 TND/KM</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarif de base : 1,5 TND/KM</h4>
                   <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-700 flex-1 pr-2">Distance &lt; 30 km</span>
-                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">2,2 TND/KM</span>
+                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">1,5 TND/KM</span>
                     </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-700 flex-1 pr-2">Distance 30-100 km</span>
-                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">2,2 TND/KM</span>
+                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">1,5 TND/KM</span>
                     </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-700 flex-1 pr-2">Distance 100-250 km</span>
-                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1,98 TND/KM (-10%)</span>
+                      <span className="font-medium text-green-600 text-right whitespace-nowrap">0,95 TND/KM (-10%)</span>
                     </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-700 flex-1 pr-2">Distance 250+ km</span>
-                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1,76 TND/KM (-20%)</span>
+                      <span className="font-medium text-green-600 text-right whitespace-nowrap">0,84 TND/KM (-20%)</span>
                     </div>
                   </div>
                 </div>
@@ -822,6 +823,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             user={client}
             userType="client"
             onProfileDeleted={handleLogout}
+            onProfileUpdated={fetchClientData}
           />
         )}
 
