@@ -288,7 +288,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
@@ -305,7 +305,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
@@ -323,7 +323,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               </div>
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -340,7 +340,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               </div>
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -354,7 +354,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute top-0 right-0 pr-3 h-12 flex items-center"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -375,7 +375,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               )}
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute top-0 left-0 pl-3 h-12 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
@@ -389,7 +389,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute top-0 right-0 pr-3 h-12 flex items-center"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />

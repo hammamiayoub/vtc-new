@@ -1,3 +1,13 @@
+# 📋 Checklist de déploiement - Notifications Email (MISE À JOUR)
+
+## 🎯 Changement important : Utilisation d'une seule Edge Function
+
+**Nouvelle stratégie** : Utiliser uniquement `send-booking-status-notification` pour tous les emails (acceptation ET annulation).
+
+L'ancienne fonction `send-cancellation-emails` ne sera plus utilisée.
+
+---
+
 # 📋 Checklist de déploiement - Notifications Email
 
 ## ✅ Modifications apportées

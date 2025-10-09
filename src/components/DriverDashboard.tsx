@@ -312,17 +312,57 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     }
   };
 
+  const canCancelBooking = (booking: { scheduled_time?: string; status: string }) => {
+    try {
+      if (!booking?.scheduled_time) return false;
+      const scheduledMs = new Date(booking.scheduled_time).getTime();
+      const nowMs = Date.now();
+      const hoursUntil = (scheduledMs - nowMs) / 36e5;
+      return hoursUntil >= 24 && (booking.status === 'pending' || booking.status === 'accepted');
+    } catch {
+      return false;
+    }
+  };
+
   const cancelBookingByDriver = async (bookingId: string) => {
-    const confirmed = window.confirm("Confirmer l'annulation de cette course ? Cette action sera notifiée au client.");
+    console.log('🚫🚫🚫 === FONCTION cancelBookingByDriver APPELÉE === 🚫🚫🚫');
+    console.log('🚫 === DÉBUT ANNULATION PAR CHAUFFEUR ===');
+    console.log('📋 Booking ID:', bookingId);
+    
+    // Récupérer les détails de la réservation pour vérifier le délai
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) {
+      alert('Réservation non trouvée');
+      return;
+    }
+    
+    // Vérifier le délai de 24h
+    if (!canCancelBooking(booking)) {
+      const scheduledTime = new Date(booking.scheduled_time);
+      const now = new Date();
+      const hoursUntil = (scheduledTime.getTime() - now.getTime()) / 36e5;
+      
+      alert(
+        `⚠️ Annulation impossible\n\n` +
+        `Les réservations ne peuvent être annulées que si elles sont programmées dans plus de 24 heures.\n\n` +
+        `Cette course est prévue dans ${Math.round(hoursUntil)} heure(s).\n\n` +
+        `Pour annuler cette réservation, veuillez contacter directement le client par téléphone :\n` +
+        `${booking.clients?.phone || 'Numéro non disponible'}\n\n` +
+        `Client : ${booking.clients?.first_name} ${booking.clients?.last_name}`
+      );
+      return;
+    }
+    
+    const confirmed = window.confirm(
+      "Confirmer l'annulation de cette course ?\n\n" +
+      "Cette action sera notifiée au client par email et notification push.\n\n" +
+      "⚠️ L'annulation fréquente peut affecter votre réputation."
+    );
     if (!confirmed) return;
     
+    console.log('📊 Booking trouvé:', booking);
+    
     try {
-      // Récupérer les détails de la réservation avant l'annulation
-      const booking = bookings.find(b => b.id === bookingId);
-      if (!booking) {
-        alert('Réservation non trouvée');
-        return;
-      }
 
       const { error } = await supabase
         .from('bookings')
@@ -334,52 +374,107 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         return;
       }
 
-      // Envoyer notification au client
+      console.log('✅ Statut mis à jour en "cancelled" dans la DB');
+
+      // Envoyer notification push au client
+      console.log('📍 Vérification client - clients:', !!booking.clients);
+      
       if (booking.clients) {
         try {
           await pushNotificationService.notifyClientBookingCancelledByDriver(
             booking.clients.first_name + ' ' + booking.clients.last_name,
             driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
-            booking.pickupAddress
+            booking.pickup_address
           );
-          console.log('✅ Notification d\'annulation envoyée au client');
+          console.log('✅ Notification push envoyée au client');
         } catch (notificationError) {
-          console.error('❌ Erreur lors de l\'envoi de la notification:', notificationError);
+          console.error('❌ Erreur lors de l\'envoi de la notification push:', notificationError);
         }
+      } else {
+        console.log('⚠️ Pas de données client chargées, notification push non envoyée');
       }
 
-      // Envoyer emails d'annulation via send-cancellation-emails
-      if (booking.clients) {
-        try {
-          console.log('📧 Envoi emails d\'annulation (client + chauffeur)...');
-          
-          const emailData = {
-            bookingId: booking.id,
-            clientName: booking.clients.first_name + ' ' + booking.clients.last_name,
-            clientEmail: booking.clients.email || '',
-            driverName: driver?.firstName + ' ' + driver?.lastName || 'Chauffeur',
-            driverEmail: driver?.email || '',
-            pickupAddress: booking.pickup_address,
-            destinationAddress: booking.destination_address,
-            scheduledTime: booking.scheduled_time,
-            priceTnd: booking.price_tnd,
+      // Envoyer emails d'annulation via send-booking-status-notification
+      // Toujours envoyer, même si booking.clients n'est pas chargé
+      console.log('📧 === TENTATIVE ENVOI EMAILS ===');
+      console.log('Booking clients:', booking.clients);
+      console.log('Booking client_id:', booking.client_id);
+      console.log('Driver email:', driver?.email);
+      
+      try {
+        console.log('📧 Préparation emails d\'annulation...');
+        console.log('📊 Booking data brut:', booking);
+        
+        // Récupérer les données complètes du client depuis la DB
+        let clientEmail = '';
+        let clientFirstName = '';
+        let clientLastName = '';
+        
+        if (booking.client_id) {
+          const { data: clientData, error: clientError } = await supabase
+            .from('clients')
+            .select('email, first_name, last_name')
+            .eq('id', booking.client_id)
+            .maybeSingle();
+
+          if (clientError) {
+            console.error('❌ Erreur récupération données client:', clientError);
+          } else if (clientData) {
+            clientEmail = clientData.email || '';
+            clientFirstName = clientData.first_name || '';
+            clientLastName = clientData.last_name || '';
+            console.log('✅ Email client récupéré:', clientEmail);
+          }
+        } else {
+          console.error('❌ Aucun client_id dans le booking');
+        }
+        
+        if (!clientEmail) {
+          console.error('❌ Impossible de récupérer l\'email du client, emails non envoyés');
+        } else {
+          const emailPayload = {
+            bookingData: {
+              id: booking.id,
+              pickup_address: booking.pickup_address,
+              destination_address: booking.destination_address,
+              scheduled_time: booking.scheduled_time,
+              distance_km: booking.distance_km,
+              price_tnd: booking.price_tnd,
+              notes: booking.notes,
+              booking_url: window.location.origin + '/client-login'
+            },
+            clientData: {
+              first_name: clientFirstName,
+              last_name: clientLastName,
+              email: clientEmail
+            },
+            driverData: {
+              first_name: driver?.firstName || '',
+              last_name: driver?.lastName || '',
+              email: driver?.email || '',
+              phone: driver?.phone || '',
+              vehicle_info: driver?.vehicleInfo || null
+            },
+            status: 'cancelled',
             cancelledBy: 'driver'
           };
 
-          console.log('📧 Données email d\'annulation (send-cancellation-emails):', emailData);
+          console.log('📧 Payload envoyé:', emailPayload);
+          console.log('📧 URL fonction:', `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`);
 
-          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-cancellation-emails`;
-          
-          const emailResponse = await fetch(functionUrl, {
+          const emailResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(emailData)
+            body: JSON.stringify(emailPayload)
           });
 
+          console.log('📡 Réponse HTTP status:', emailResponse.status);
+          
           const emailResult = await emailResponse.json();
+          console.log('📡 Réponse JSON:', emailResult);
           
           if (emailResponse.ok && emailResult.success) {
             console.log('✅ Emails d\'annulation envoyés:', emailResult.message);
@@ -388,9 +483,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             console.error('❌ Erreur envoi emails d\'annulation:', emailResult.error);
             console.error('📊 Détails:', emailResult);
           }
-        } catch (emailError) {
-          console.error('❌ Erreur lors de l\'envoi des emails d\'annulation:', emailError);
         }
+      } catch (emailError) {
+        console.error('❌ Erreur lors de l\'envoi des emails d\'annulation:', emailError);
+        console.error('❌ Stack trace:', emailError);
       }
 
       // Rafraîchir les données
@@ -978,15 +1074,25 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                                 <CheckCircle size={16} />
                                 Accepter
                               </Button>
-                              <Button
-                                onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                                variant="outline"
-                                className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                size="sm"
-                              >
-                                <XCircle size={16} />
-                                Refuser
-                              </Button>
+                              {canCancelBooking(booking) ? (
+                                <Button
+                                  onClick={() => cancelBookingByDriver(booking.id)}
+                                  variant="outline"
+                                  className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  size="sm"
+                                >
+                                  <XCircle size={16} />
+                                  Refuser
+                                </Button>
+                              ) : (
+                                <div className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                                  <p className="font-medium text-amber-800">⚠️ Délai d'annulation dépassé</p>
+                                  <p className="mt-1">Contactez le client par téléphone</p>
+                                  {booking.clients?.phone && (
+                                    <p className="font-semibold text-amber-900 mt-1">{booking.clients.phone}</p>
+                                  )}
+                                </div>
+                              )}
                             </>
                           )}
                           {booking.status === 'accepted' && (
@@ -999,15 +1105,29 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                                 <Car size={16} />
                                 Commencer
                               </Button>
-                              <Button
-                                onClick={() => cancelBookingByDriver(booking.id)}
-                                variant="outline"
-                                className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                size="sm"
-                              >
-                                <XCircle size={16} />
-                                Annuler
-                              </Button>
+                              {(() => {
+                                const canCancel = canCancelBooking(booking);
+                                console.log(`🔍 Booking ${booking.id.slice(0, 8)} - canCancelBooking:`, canCancel, 'scheduled:', booking.scheduled_time);
+                                return canCancel;
+                              })() ? (
+                                <Button
+                                  onClick={() => cancelBookingByDriver(booking.id)}
+                                  variant="outline"
+                                  className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  size="sm"
+                                >
+                                  <XCircle size={16} />
+                                  Annuler
+                                </Button>
+                              ) : (
+                                <div className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                                  <p className="font-medium text-amber-800">⚠️ Délai d'annulation dépassé</p>
+                                  <p className="mt-1">Contactez le client par téléphone</p>
+                                  {booking.clients?.phone && (
+                                    <p className="font-semibold text-amber-900 mt-1">{booking.clients.phone}</p>
+                                  )}
+                                </div>
+                              )}
                             </>
                           )}
                         </div>
@@ -1144,15 +1264,25 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             <Car size={16} />
                             Démarrer la course
                           </Button>
-                          <Button
-                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                            variant="outline"
-                            className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
-                            size="sm"
-                          >
-                            <XCircle size={16} />
-                            Annuler
-                          </Button>
+                          {canCancelBooking(booking) ? (
+                            <Button
+                              onClick={() => cancelBookingByDriver(booking.id)}
+                              variant="outline"
+                              className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              size="sm"
+                            >
+                              <XCircle size={16} />
+                              Annuler
+                            </Button>
+                          ) : (
+                            <div className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                              <p className="font-medium text-amber-800">⚠️ Délai d'annulation dépassé</p>
+                              <p className="mt-1">Contactez le client par téléphone</p>
+                              {booking.clients?.phone && (
+                                <p className="font-semibold text-amber-900 mt-1">{booking.clients.phone}</p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

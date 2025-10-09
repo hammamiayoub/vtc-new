@@ -636,6 +636,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       return;
     }
 
+    // Vérification de la distance minimale
+    if (estimatedDistance < 25) {
+      alert(
+        '⚠️ Distance minimale requise\n\n' +
+        'Les réservations sont disponibles uniquement pour les trajets de 25 km et plus.\n\n' +
+        `Distance actuelle : ${estimatedDistance} km\n\n` +
+        'Pour les trajets courts, veuillez utiliser un taxi local ou un service de VTC urbain.'
+      );
+      return;
+    }
+
     if (!selectedDriver) {
       alert('Veuillez sélectionner un chauffeur');
       return;
@@ -1098,10 +1109,31 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
           {/* Recherche de chauffeurs */}
           <div>
+            {/* Alerte si distance < 25km */}
+            {estimatedDistance && estimatedDistance < 25 && (
+              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-amber-900 mb-1">Distance minimale non atteinte</h4>
+                    <p className="text-sm text-amber-800 mb-2">
+                      Les réservations sont disponibles uniquement pour les trajets de <strong>25 km et plus</strong>.
+                    </p>
+                    <p className="text-sm text-amber-700">
+                      Distance actuelle : <strong>{estimatedDistance} km</strong>
+                    </p>
+                    <p className="text-xs text-amber-600 mt-2">
+                      💡 Pour les trajets courts, nous vous recommandons d'utiliser un taxi local ou un service de VTC urbain.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <Button
               type="button"
               onClick={searchAvailableDrivers}
-              disabled={!isValid || !estimatedPrice}
+              disabled={!isValid || !estimatedPrice || (estimatedDistance !== null && estimatedDistance < 25)}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <User className="w-5 h-5 mr-2" />
@@ -1151,61 +1183,82 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                       }`}
                       onClick={() => setSelectedDriver(driver.id)}
                     >
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                          {driver.profilePhotoUrl ? (
+                      <div className="flex flex-col gap-3">
+                        {/* Photo du véhicule en grand */}
+                        {driver.vehicleInfo?.photoUrl && (
+                          <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg overflow-hidden">
                             <img
-                              src={driver.profilePhotoUrl}
-                              alt={`${driver.firstName} ${driver.lastName}`}
+                              src={driver.vehicleInfo.photoUrl}
+                              alt={`${driver.vehicleInfo.make} ${driver.vehicleInfo.model}`}
                               className="w-full h-full object-cover"
                             />
-                          ) : (
-                            <User className="w-6 h-6 text-gray-500" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <h4 className="font-medium text-gray-900 truncate">
-                                {driver.firstName} {driver.lastName}
-                              </h4>
-                                  {driver.city && (
-                                <p className="text-sm text-gray-600 flex items-center gap-1">
-                                  <MapPin size={12} className="flex-shrink-0" />
-                                  <span className="truncate">{driver.city}</span>
-                                      {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup > 0 && driver.distanceFromPickup !== Infinity && (
-                                    <span className="text-blue-600 font-medium ml-1 flex-shrink-0">
-                                      • {driver.distanceFromPickup} km
-                                    </span>
-                                  )}
-                                </p>
-                              )}
-                              <p className="text-sm text-gray-600 truncate">{driver.email}</p>
-                              {driver.phone && (
-                                <p className="text-sm text-gray-600">{driver.phone}</p>
-                              )}
-                              {driver.vehicleInfo && (
-                                <div className="mt-2">
-                                  <p className="text-xs text-gray-500 truncate">
-                                    {driver.vehicleInfo.make} {driver.vehicleInfo.model} - {driver.vehicleInfo.color}
+                          </div>
+                        )}
+                        
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                            {driver.profilePhotoUrl ? (
+                              <img
+                                src={driver.profilePhotoUrl}
+                                alt={`${driver.firstName} ${driver.lastName}`}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <User className="w-6 h-6 text-gray-500" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-medium text-gray-900 truncate">
+                                  {driver.firstName} {driver.lastName}
+                                </h4>
+                                    {driver.city && (
+                                  <p className="text-sm text-gray-600 flex items-center gap-1">
+                                    <MapPin size={12} className="flex-shrink-0" />
+                                    <span className="truncate">{driver.city}</span>
+                                        {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup > 0 && driver.distanceFromPickup !== Infinity && (
+                                      <span className="text-blue-600 font-medium ml-1 flex-shrink-0">
+                                        • {driver.distanceFromPickup} km
+                                      </span>
+                                    )}
                                   </p>
-                                  <p className="text-xs text-blue-600 font-medium">
-                                    {driver.vehicleInfo.type === 'sedan' && 'Berline'}
-                                    {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
-                                    {driver.vehicleInfo.type === 'van' && 'Van'}
-                                    {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
-                                    {driver.vehicleInfo.type === 'bus' && 'Bus'}
-                                    {driver.vehicleInfo.type === 'truck' && 'Camion'}
-                                    {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
-                                    {driver.vehicleInfo.type === 'limousine' && 'Limousine'}
-                                    {driver.vehicleInfo.seats && ` • ${driver.vehicleInfo.seats} places`}
-                                  </p>
-                                </div>
+                                )}
+                                {driver.vehicleInfo && (
+                                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-2">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Car size={14} className="text-blue-600" />
+                                      <p className="text-xs font-semibold text-blue-900">
+                                        {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-xs text-blue-700">
+                                      <span>{driver.vehicleInfo.color}</span>
+                                      <span>•</span>
+                                      <span>
+                                        {driver.vehicleInfo.type === 'sedan' && 'Berline'}
+                                        {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
+                                        {driver.vehicleInfo.type === 'van' && 'Van'}
+                                        {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
+                                        {driver.vehicleInfo.type === 'bus' && 'Bus'}
+                                        {driver.vehicleInfo.type === 'truck' && 'Camion'}
+                                        {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
+                                        {driver.vehicleInfo.type === 'limousine' && 'Limousine'}
+                                      </span>
+                                      {driver.vehicleInfo.seats && (
+                                        <>
+                                          <span>•</span>
+                                          <span>{driver.vehicleInfo.seats} places</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              {selectedDriver === driver.id && (
+                                <CheckCircle className="w-6 h-6 text-purple-600 flex-shrink-0" />
                               )}
                             </div>
-                            {selectedDriver === driver.id && (
-                              <CheckCircle className="w-6 h-6 text-purple-600 flex-shrink-0" />
-                            )}
                           </div>
                         </div>
                       </div>

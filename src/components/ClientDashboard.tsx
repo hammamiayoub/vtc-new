@@ -239,9 +239,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
     const confirmed = window.confirm("Confirmer l'annulation de votre réservation ?");
     if (!confirmed) return;
     
+    console.log('🚫 === DÉBUT ANNULATION PAR CLIENT ===');
+    console.log('📋 Booking ID:', bookingId);
+    
     try {
       // Récupérer les détails de la réservation avant l'annulation
       const booking = bookings.find(b => b.id === bookingId);
+      console.log('📊 Booking trouvé:', booking);
+      
       if (!booking) {
         alert("Réservation non trouvée");
         return;
@@ -257,75 +262,127 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         return;
       }
 
+      console.log('✅ Statut mis à jour en "cancelled" dans la DB');
+
       // Rafraîchir localement
       setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b)));
 
       // Envoyer notification au chauffeur si assigné
+      console.log('📍 Vérification chauffeur assigné - driverId:', booking.driverId, 'drivers:', !!booking.drivers);
+      
       if (booking.driverId && booking.drivers) {
         try {
           await pushNotificationService.notifyDriverBookingCancelledByClient(
             booking.drivers.first_name + ' ' + booking.drivers.last_name,
             client?.firstName + ' ' + client?.lastName || 'Client',
-            booking.pickupAddress
+            booking.pickup_address
           );
-          console.log('✅ Notification d\'annulation envoyée au chauffeur');
+          console.log('✅ Notification push envoyée au chauffeur');
         } catch (notificationError) {
-          console.error('❌ Erreur lors de l\'envoi de la notification:', notificationError);
+          console.error('❌ Erreur lors de l\'envoi de la notification push:', notificationError);
         }
+      } else {
+        console.log('⚠️ Pas de chauffeur assigné, notification push non envoyée');
       }
 
-      // Envoyer emails d'annulation
-      if (booking.driverId && booking.drivers) {
-        try {
-          // Récupérer l'email du chauffeur depuis la base de données
+      // Envoyer emails d'annulation via send-booking-status-notification
+      // Toujours envoyer au moins l'email au client
+      console.log('📧 === TENTATIVE ENVOI EMAILS ===');
+      console.log('Booking driverId:', booking.driverId);
+      console.log('Booking drivers:', booking.drivers);
+      console.log('Client email:', client?.email);
+      
+      try {
+        console.log('📧 Préparation emails d\'annulation...');
+        console.log('📊 Booking data brut:', booking);
+        
+        // Récupérer l'email du chauffeur si assigné
+        let driverEmail = '';
+        let driverFirstName = '';
+        let driverLastName = '';
+        let driverPhone = '';
+        
+        console.log('🔍 Vérification driver_id:', booking.driver_id);
+        
+        if (booking.driver_id) {
+          console.log('✅ Chauffeur assigné, récupération des données...');
           const { data: driverData, error: driverError } = await supabase
             .from('drivers')
-            .select('email')
-            .eq('id', booking.driverId)
-            .single();
+            .select('email, first_name, last_name, phone')
+            .eq('id', booking.driver_id)
+            .maybeSingle();
 
+          console.log('📊 Données chauffeur récupérées:', driverData);
+          
           if (driverError) {
-            console.error('❌ Erreur récupération email chauffeur:', driverError);
-          }
-
-          const emailData = {
-            bookingId: booking.id,
-            clientName: client?.firstName + ' ' + client?.lastName || 'Client',
-            clientEmail: client?.email || '',
-            driverName: booking.drivers.first_name + ' ' + booking.drivers.last_name,
-            driverEmail: driverData?.email || '',
-            pickupAddress: booking.pickup_address,
-            destinationAddress: booking.destination_address,
-            scheduledTime: booking.scheduled_time,
-            priceTnd: booking.price_tnd,
-            cancelledBy: 'client'
-          };
-
-          console.log('📧 Données email d\'annulation:', emailData);
-          console.log('📊 Booking data brut:', booking);
-
-          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-cancellation-emails`;
-          
-          const emailResponse = await fetch(functionUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(emailData)
-          });
-
-          const emailResult = await emailResponse.json();
-          
-          if (emailResponse.ok && emailResult.success) {
-            console.log('✅ Emails d\'annulation envoyés:', emailResult.message);
-            console.log('📊 Résultats:', emailResult.results);
+            console.error('❌ Erreur récupération données chauffeur:', driverError);
+          } else if (driverData) {
+            driverEmail = driverData.email || '';
+            driverFirstName = driverData.first_name || '';
+            driverLastName = driverData.last_name || '';
+            driverPhone = driverData.phone || '';
+            console.log('✅ Email chauffeur récupéré:', driverEmail);
           } else {
-            console.error('❌ Erreur envoi emails d\'annulation:', emailResult.error);
+            console.log('⚠️ Aucune donnée chauffeur trouvée dans la DB');
           }
-        } catch (emailError) {
-          console.error('❌ Erreur lors de l\'envoi des emails d\'annulation:', emailError);
+        } else {
+          console.log('⚠️ Aucun driver_id dans le booking');
         }
+
+        const emailPayload = {
+          bookingData: {
+            id: booking.id,
+            pickup_address: booking.pickup_address,
+            destination_address: booking.destination_address,
+            scheduled_time: booking.scheduled_time,
+            distance_km: booking.distance_km,
+            price_tnd: booking.price_tnd,
+            notes: booking.notes,
+            booking_url: window.location.origin + '/client-login'
+          },
+          clientData: {
+            first_name: client?.firstName || '',
+            last_name: client?.lastName || '',
+            email: client?.email || ''
+          },
+          driverData: {
+            first_name: driverFirstName || 'Chauffeur',
+            last_name: driverLastName || '',
+            email: driverEmail,
+            phone: driverPhone,
+            vehicle_info: null
+          },
+          status: 'cancelled',
+          cancelledBy: 'client'
+        };
+
+        console.log('📧 Payload envoyé:', emailPayload);
+        console.log('📧 URL fonction:', `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`);
+
+        const emailResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailPayload)
+        });
+
+        console.log('📡 Réponse HTTP status:', emailResponse.status);
+        
+        const emailResult = await emailResponse.json();
+        console.log('📡 Réponse JSON:', emailResult);
+        
+        if (emailResponse.ok && emailResult.success) {
+          console.log('✅ Emails d\'annulation envoyés:', emailResult.message);
+          console.log('📊 Résultats:', emailResult.results);
+        } else {
+          console.error('❌ Erreur envoi emails d\'annulation:', emailResult.error);
+          console.error('📊 Détails:', emailResult);
+        }
+      } catch (emailError) {
+        console.error('❌ Erreur lors de l\'envoi des emails d\'annulation:', emailError);
+        console.error('❌ Stack trace:', emailError);
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -747,7 +804,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                         <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-4">
                           <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
                           {getStatusBadge(booking.status)}
-                          {canCancelBooking(booking) && (
+                          {canCancelBooking(booking) ? (
                             <Button
                               variant="outline"
                               size="sm"
@@ -757,6 +814,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                             >
                               Annuler
                             </Button>
+                          ) : (booking.status === 'pending' || booking.status === 'accepted') && (
+                            <div className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2 order-3 w-full sm:w-auto mt-2 sm:mt-0">
+                              <p className="font-medium text-amber-800">⚠️ Délai d'annulation dépassé (24h)</p>
+                              <p className="mt-1">Contactez le chauffeur directement</p>
+                              {booking.drivers?.phone && (
+                                <p className="font-semibold text-amber-900 mt-1">{booking.drivers.phone}</p>
+                              )}
+                            </div>
                           )}
                           {canRateBooking(booking) ? (
                             <Button
