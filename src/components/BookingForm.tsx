@@ -24,13 +24,15 @@ import {
   calculateDistance, 
   calculateDrivingDistance,
   calculatePrice, 
+  calculatePriceWithSurcharges,
   getPricePerKm,
   getVehicleMultiplier,
   getCurrentPosition,
   popularAddresses,
   calculateDistanceFromCity,
   getCityCoordinates,
-  Coordinates 
+  Coordinates,
+  PriceSurcharges
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { analytics } from '../utils/analytics';
@@ -56,6 +58,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
+  const [priceSurcharges, setPriceSurcharges] = useState<PriceSurcharges | null>(null);
 
   // Options pour les types de véhicules
   const vehicleTypeOptions = [
@@ -84,6 +87,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const watchDestination = watch('destinationAddress');
   const watchVehicleType = watch('vehicleType');
   const watchIsReturnTrip = watch('isReturnTrip');
+  const watchScheduledTime = watch('scheduledTime');
 
   // Autocomplétion des adresses
   useEffect(() => {
@@ -110,9 +114,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     }
   }, [watchDestination]);
 
-  // Recalcul du prix et de la distance quand le trajet retour change
+  // Recalcul du prix et de la distance quand le trajet retour ou la date/heure change
   useEffect(() => {
-    if (baseDistance && watchVehicleType !== undefined) {
+    if (baseDistance && watchVehicleType !== undefined && watchScheduledTime) {
       // Calculer la distance finale (avec ou sans retour)
       const finalDistance = watchIsReturnTrip ? baseDistance * 2 : baseDistance;
       setEstimatedDistance(finalDistance);
@@ -121,12 +125,43 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       const basePrice = calculatePrice(baseDistance, watchVehicleType);
       
       // Appliquer le multiplicateur de trajet retour si nécessaire
+      let priceBeforeSurcharges = watchIsReturnTrip ? basePrice * 1.8 : basePrice;
+      
+      // Calculer les suppléments (nuit et week-end)
+      const { surcharges, finalPrice } = calculatePriceWithSurcharges(
+        baseDistance,
+        watchVehicleType,
+        watchScheduledTime
+      );
+      
+      // Appliquer aussi les suppléments au trajet retour si nécessaire
+      if (watchIsReturnTrip) {
+        priceBeforeSurcharges = basePrice * 1.8;
+        const totalSurcharge = priceBeforeSurcharges * (surcharges.totalSurchargePercent / 100);
+        const finalPriceWithReturnAndSurcharges = priceBeforeSurcharges + totalSurcharge;
+        setEstimatedPrice(Math.round(finalPriceWithReturnAndSurcharges * 100) / 100);
+        
+        // Mettre à jour les suppléments pour refléter le prix avec retour
+        setPriceSurcharges({
+          ...surcharges,
+          totalSurcharge: Math.round(totalSurcharge * 100) / 100
+        });
+      } else {
+        setEstimatedPrice(finalPrice);
+        setPriceSurcharges(surcharges);
+      }
+    } else if (baseDistance && watchVehicleType !== undefined && !watchScheduledTime) {
+      // Si pas de date/heure, calculer sans supplément
+      const finalDistance = watchIsReturnTrip ? baseDistance * 2 : baseDistance;
+      setEstimatedDistance(finalDistance);
+      
+      const basePrice = calculatePrice(baseDistance, watchVehicleType);
       const finalPrice = watchIsReturnTrip ? basePrice * 1.8 : basePrice;
       
-      // Arrondir à 2 décimales pour éviter les erreurs de virgule flottante
       setEstimatedPrice(Math.round(finalPrice * 100) / 100);
+      setPriceSurcharges(null);
     }
-  }, [watchVehicleType, baseDistance, watchIsReturnTrip]);
+  }, [watchVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime]);
 
   // Calcul automatique de la distance et du prix
   useEffect(() => {
@@ -1076,6 +1111,48 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   </div>
                 </div>
               </div>
+              
+              {/* Suppléments de prix (nuit et week-end) */}
+              {priceSurcharges && (priceSurcharges.isNightTime || priceSurcharges.isWeekend) && (
+                <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+                  <h4 className="text-sm font-semibold text-yellow-900 mb-2 flex items-center gap-2">
+                    <Clock size={16} />
+                    Suppléments applicables
+                  </h4>
+                  <div className="space-y-2">
+                    {priceSurcharges.isNightTime && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-yellow-800">
+                          🌙 Trajet de nuit (21h-6h)
+                        </span>
+                        <span className="font-bold text-yellow-900">
+                          +{priceSurcharges.nightSurchargePercent}%
+                        </span>
+                      </div>
+                    )}
+                    {priceSurcharges.isWeekend && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-yellow-800">
+                          📅 Week-end (Samedi/Dimanche)
+                        </span>
+                        <span className="font-bold text-yellow-900">
+                          +{priceSurcharges.weekendSurchargePercent}%
+                        </span>
+                      </div>
+                    )}
+                    <div className="border-t-2 border-yellow-300 pt-2 mt-2">
+                      <div className="flex items-center justify-between text-sm font-bold">
+                        <span className="text-yellow-900">
+                          Total des suppléments
+                        </span>
+                        <span className="text-yellow-900">
+                          +{priceSurcharges.totalSurcharge.toFixed(2)} TND ({priceSurcharges.totalSurchargePercent}%)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {pickupCoords && destinationCoords && (
                 <div className="mt-4 p-3 bg-white rounded-lg">

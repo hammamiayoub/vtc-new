@@ -15,7 +15,7 @@ import {
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Booking, Driver } from '../types';
-import { getPricePerKm } from '../utils/geolocation';
+import { getPricePerKm, calculateSurcharges, PriceSurcharges } from '../utils/geolocation';
 import { analytics } from '../utils/analytics';
 import { triggerGoogleAdsConversion } from '../utils/googleAdsTrigger';
 
@@ -32,6 +32,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   const [driver, setDriver] = useState<Driver | null>(null);
   const [loading, setLoading] = useState(true);
   const [phonecopied, setPhoneCopied] = useState(false);
+  const [priceSurcharges, setPriceSurcharges] = useState<PriceSurcharges | null>(null);
 
   useEffect(() => {
     // Forcer le scroll en haut de la page au chargement
@@ -74,6 +75,14 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
       }
 
       setBooking(bookingData);
+
+      // Calculer les suppléments de prix si la date est définie
+      if (bookingData.scheduled_time && bookingData.price_tnd) {
+        // Calculer le prix de base en enlevant les suppléments
+        // On ne peut pas recalculer parfaitement, donc on calcule les suppléments sur le prix total
+        const surcharges = calculateSurcharges(bookingData.scheduled_time, bookingData.price_tnd);
+        setPriceSurcharges(surcharges);
+      }
 
       // Si un chauffeur est assigné, récupérer ses informations
       if (bookingData.driver_id) {
@@ -280,6 +289,27 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     return `${price.toFixed(2)} TND/km ${discount}`;
                   })()}
                 </p>
+                
+                {/* Affichage des suppléments s'ils existent */}
+                {priceSurcharges && (priceSurcharges.isNightTime || priceSurcharges.isWeekend) && (
+                  <div className="mt-3 pt-3 border-t border-purple-300">
+                    <p className="text-xs font-semibold text-purple-900 mb-2">Suppléments inclus:</p>
+                    <div className="space-y-1">
+                      {priceSurcharges.isNightTime && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-purple-800">🌙 Trajet de nuit</span>
+                          <span className="font-semibold text-purple-900">+{priceSurcharges.nightSurchargePercent}%</span>
+                        </div>
+                      )}
+                      {priceSurcharges.isWeekend && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-purple-800">📅 Week-end</span>
+                          <span className="font-semibold text-purple-900">+{priceSurcharges.weekendSurchargePercent}%</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Notes */}

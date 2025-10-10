@@ -129,6 +129,46 @@ export const getVehicleMultiplier = (vehicleType?: string): number => {
   }
 };
 
+// Interface pour les suppléments de prix
+export interface PriceSurcharges {
+  isNightTime: boolean;
+  isWeekend: boolean;
+  nightSurchargePercent: number;
+  weekendSurchargePercent: number;
+  totalSurchargePercent: number;
+  totalSurcharge: number;
+}
+
+// Fonction pour calculer les suppléments (nuit et week-end)
+export const calculateSurcharges = (scheduledTime: string | Date, basePrice: number): PriceSurcharges => {
+  const date = new Date(scheduledTime);
+  const hour = date.getHours();
+  const dayOfWeek = date.getDay(); // 0 = Dimanche, 6 = Samedi
+  
+  // Vérifier si c'est la nuit (à partir de 21h jusqu'à 6h du matin)
+  const isNightTime = hour >= 21 || hour < 6;
+  
+  // Vérifier si c'est le week-end (Samedi ou Dimanche)
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  
+  // Calculer les pourcentages de supplément
+  const nightSurchargePercent = isNightTime ? 15 : 0;
+  const weekendSurchargePercent = isWeekend ? 10 : 0;
+  
+  // Les suppléments sont cumulatifs
+  const totalSurchargePercent = nightSurchargePercent + weekendSurchargePercent;
+  const totalSurcharge = basePrice * (totalSurchargePercent / 100);
+  
+  return {
+    isNightTime,
+    isWeekend,
+    nightSurchargePercent,
+    weekendSurchargePercent,
+    totalSurchargePercent,
+    totalSurcharge: Math.round(totalSurcharge * 100) / 100
+  };
+};
+
 // Fonction pour calculer le prix selon le nouveau schéma tarifaire avec type de véhicule
 export const calculatePrice = (distanceKm: number, vehicleType?: string): number => {
   const { price: pricePerKm } = getPricePerKm(distanceKm);
@@ -136,6 +176,23 @@ export const calculatePrice = (distanceKm: number, vehicleType?: string): number
   const vehicleMultiplier = getVehicleMultiplier(vehicleType);
   const totalPrice = basePrice * vehicleMultiplier;
   return Math.round(totalPrice * 100) / 100; // Arrondir à 2 décimales
+};
+
+// Fonction pour calculer le prix avec les suppléments
+export const calculatePriceWithSurcharges = (
+  distanceKm: number, 
+  vehicleType: string | undefined, 
+  scheduledTime: string | Date
+): { basePrice: number; surcharges: PriceSurcharges; finalPrice: number } => {
+  const basePrice = calculatePrice(distanceKm, vehicleType);
+  const surcharges = calculateSurcharges(scheduledTime, basePrice);
+  const finalPrice = Math.round((basePrice + surcharges.totalSurcharge) * 100) / 100;
+  
+  return {
+    basePrice,
+    surcharges,
+    finalPrice
+  };
 };
 
 // Obtenir la position actuelle de l'utilisateur
