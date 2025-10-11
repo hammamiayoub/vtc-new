@@ -12,6 +12,7 @@ import { useDriverNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { VehicleImageUpload } from './ui/VehicleImageUpload';
 import { DriverVehicles } from './DriverVehicles';
+import { DriverSubscription } from './DriverSubscription';
 import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
 import { analytics } from '../utils/analytics';
@@ -26,9 +27,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [showProfileForm, setShowProfileForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'bookings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'bookings' | 'subscription'>('dashboard');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<{canAcceptMoreBookings: boolean} | null>(null);
 
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead } = useDriverNotifications(driver?.id || '');
@@ -74,6 +76,34 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   useEffect(() => {
     fetchDriverData();
   }, []);
+
+  useEffect(() => {
+    if (driver?.id) {
+      checkSubscriptionStatus();
+    }
+  }, [driver?.id]);
+
+  const checkSubscriptionStatus = async () => {
+    if (!driver?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('get_driver_subscription_status', { p_driver_id: driver.id });
+
+      if (error) {
+        console.error('Erreur vérification statut abonnement:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setSubscriptionStatus({
+          canAcceptMoreBookings: data[0].can_accept_more_bookings
+        });
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -201,6 +231,21 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     try {
       console.log('🔄 Mise à jour du statut:', { bookingId, newStatus });
       
+      // Vérifier le quota si on accepte une nouvelle course
+      if (newStatus === 'accepted') {
+        await checkSubscriptionStatus();
+        
+        if (subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings) {
+          alert(
+            '❌ Limite mensuelle atteinte\n\n' +
+            'Vous avez déjà accepté 2 courses ce mois avec votre compte gratuit.\n\n' +
+            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Premium (47.60 TND/mois).\n\n' +
+            'Rendez-vous dans l\'onglet "Abonnement" pour plus d\'informations.'
+          );
+          return;
+        }
+      }
+      
       // Récupérer les détails de la réservation avant la mise à jour
       const booking = bookings.find(b => b.id === bookingId);
       if (!booking) {
@@ -224,6 +269,11 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       }
 
       console.log('✅ Statut mis à jour avec succès');
+      
+      // Rafraîchir le statut d'abonnement après acceptation
+      if (newStatus === 'accepted') {
+        await checkSubscriptionStatus();
+      }
       
       // Envoyer notifications selon le statut
       if (newStatus === 'accepted' && booking.clients) {
@@ -686,6 +736,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </span>
               )}
             </button>
+            <button
+              onClick={() => { setActiveTab('subscription'); setShowProfileForm(false); }}
+              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                activeTab === 'subscription'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Abonnement
+            </button>
           </nav>
         </div>
       </div>
@@ -993,6 +1053,36 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
             {/* Ancienne section "Mon véhicule" supprimée (remplacée par gestion multi-véhicules) */}
 
+            {/* Alerte abonnement si limite proche ou atteinte */}
+            {driver && subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings && (
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-6 mb-8">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <AlertCircle className="text-white" size={24} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-amber-900 mb-2">
+                      ⚠️ Limite mensuelle atteinte
+                    </h3>
+                    <p className="text-amber-800 mb-4">
+                      Vous avez accepté vos 2 courses gratuites ce mois. Vous ne pouvez plus accepter de nouvelles courses jusqu'au mois prochain.
+                    </p>
+                    <p className="text-amber-900 font-semibold mb-4">
+                      💡 Passez à l'abonnement Premium pour continuer à recevoir des courses !
+                    </p>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => setActiveTab('subscription')}
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
+                      >
+                        Voir l'abonnement Premium
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Multiple Vehicles Management */}
             {driver && (
               <div className="mt-8">
@@ -1006,6 +1096,21 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {!showProfileForm && activeTab === 'availability' && driver && (
           <div className="w-full">
             <AvailabilityCalendar driverId={driver.id} />
+          </div>
+        )}
+
+        {/* Onglet Abonnement */}
+        {!showProfileForm && activeTab === 'subscription' && driver && (
+          <div className="w-full">
+            <div className="mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                Gestion de l'abonnement
+              </h2>
+              <p className="text-gray-600">
+                Gérez votre abonnement et suivez votre quota mensuel de courses
+              </p>
+            </div>
+            <DriverSubscription driverId={driver.id} />
           </div>
         )}
 
