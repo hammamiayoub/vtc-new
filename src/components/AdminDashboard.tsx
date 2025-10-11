@@ -6,38 +6,55 @@ import {
   XCircle, 
   Clock, 
   LogOut, 
-  Shield,
   Eye,
   UserCheck,
   AlertTriangle,
-  User
+  User,
+  Calendar
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
-import { Driver, ClientWithBookings, Booking } from '../types';
+import { Driver, ClientWithBookings, Vehicle, DriverAvailability } from '../types';
 
 interface AdminDashboardProps {
   onLogout: () => void;
 }
 
+interface VehicleWithDriver extends Vehicle {
+  driver?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    city?: string;
+    status: string;
+  };
+  upcomingAvailabilities?: DriverAvailability[];
+  availabilityCount?: number;
+}
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [clients, setClients] = useState<ClientWithBookings[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientWithBookings | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleWithDriver | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'drivers' | 'clients'>('drivers');
+  const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles'>('drivers');
 
   useEffect(() => {
     fetchDrivers();
     fetchClients();
+    fetchVehicles();
     
     // Rafraîchir automatiquement toutes les 30 secondes
     const interval = setInterval(() => {
       fetchDrivers();
       fetchClients();
+      fetchVehicles();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -50,7 +67,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       console.log('🔍 Admin - Récupération des chauffeurs...');
       
       // Vérifier l'utilisateur connecté
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       console.log('👤 Admin - Utilisateur connecté:', user?.id);
       
       if (!user) {
@@ -59,7 +76,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       }
       
       // Vérifier les permissions admin
-      const { data: adminData, error: adminError } = await supabase
+      const { data: adminData } = await supabase
         .from('admin_users')
         .select('*')
         .eq('id', user.id)
@@ -137,7 +154,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           };
 
           if (allBookings) {
-            allBookings.forEach(booking => {
+            allBookings.forEach((booking: { status: string; price_tnd?: number }) => {
               switch (booking.status) {
                 case 'completed':
                   stats.completedBookings++;
@@ -271,7 +288,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           if (bookingsData) {
             stats.totalBookings = bookingsData.length;
             
-            bookingsData.forEach((booking: any) => {
+            bookingsData.forEach((booking: { status: string; price_tnd?: number }) => {
               switch (booking.status) {
                 case 'completed':
                   stats.completedBookings++;
@@ -323,6 +340,146 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       setClients(clientsWithBookings);
     } catch (error) {
       console.error('Erreur lors de la récupération des clients:', error);
+    }
+  };
+
+  const fetchVehicles = async () => {
+    if (!loading) setRefreshing(true);
+    
+    try {
+      console.log('🔍 Admin - Récupération des véhicules...');
+      
+      // Récupérer tous les véhicules non supprimés avec les informations du chauffeur
+      const { data: vehiclesData, error: vehiclesError } = await supabase
+        .from('vehicles')
+        .select(`
+          *,
+          drivers (
+            id,
+            first_name,
+            last_name,
+            email,
+            phone,
+            city,
+            status
+          )
+        `)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      if (vehiclesError) {
+        console.error('Erreur lors de la récupération des véhicules:', vehiclesError);
+        return;
+      }
+
+      console.log('📊 Admin - Véhicules récupérés:', vehiclesData?.length || 0);
+
+      // Pour chaque véhicule, récupérer les disponibilités à venir
+      const vehiclesWithAvailability = await Promise.all(
+        (vehiclesData || []).map(async (vehicle: {
+          id: string;
+          driver_id: string;
+          make: string;
+          model: string;
+          year?: number;
+          color?: string;
+          license_plate?: string;
+          seats?: number;
+          type?: string;
+          photo_url?: string;
+          is_primary?: boolean;
+          created_at: string;
+          updated_at: string;
+          drivers?: {
+            id: string;
+            first_name: string;
+            last_name: string;
+            email: string;
+            phone?: string;
+            city?: string;
+            status: string;
+          };
+        }) => {
+          // Récupérer les disponibilités futures du chauffeur (30 prochains jours)
+          const today = new Date().toISOString().split('T')[0];
+          const futureDate = new Date();
+          futureDate.setDate(futureDate.getDate() + 30);
+          const future = futureDate.toISOString().split('T')[0];
+
+          const { data: availData, error: availError } = await supabase
+            .from('driver_availability')
+            .select('*')
+            .eq('driver_id', vehicle.driver_id)
+            .eq('is_available', true)
+            .gte('date', today)
+            .lte('date', future)
+            .order('date', { ascending: true })
+            .limit(5);
+
+          if (availError) {
+            console.error(`Erreur récupération disponibilités pour véhicule ${vehicle.id}:`, availError);
+          }
+
+          // Compter toutes les disponibilités futures
+          const { count: availCount } = await supabase
+            .from('driver_availability')
+            .select('*', { count: 'exact', head: true })
+            .eq('driver_id', vehicle.driver_id)
+            .eq('is_available', true)
+            .gte('date', today);
+
+          return {
+            id: vehicle.id,
+            driverId: vehicle.driver_id,
+            make: vehicle.make,
+            model: vehicle.model,
+            year: vehicle.year,
+            color: vehicle.color,
+            licensePlate: vehicle.license_plate,
+            seats: vehicle.seats,
+            type: vehicle.type as 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'limousine' | undefined,
+            photoUrl: vehicle.photo_url,
+            is_primary: vehicle.is_primary,
+            createdAt: vehicle.created_at,
+            updatedAt: vehicle.updated_at,
+            driver: vehicle.drivers ? {
+              firstName: vehicle.drivers.first_name,
+              lastName: vehicle.drivers.last_name,
+              email: vehicle.drivers.email,
+              phone: vehicle.drivers.phone,
+              city: vehicle.drivers.city,
+              status: vehicle.drivers.status
+            } : undefined,
+            upcomingAvailabilities: availData?.map((a: {
+              id: string;
+              driver_id: string;
+              date: string;
+              start_time: string;
+              end_time: string;
+              is_available: boolean;
+              created_at: string;
+              updated_at: string;
+            }) => ({
+              id: a.id,
+              driverId: a.driver_id,
+              date: a.date,
+              startTime: a.start_time,
+              endTime: a.end_time,
+              isAvailable: a.is_available,
+              createdAt: a.created_at,
+              updatedAt: a.updated_at
+            })) || [],
+            availabilityCount: availCount || 0
+          };
+        })
+      );
+
+      setVehicles(vehiclesWithAvailability);
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -570,7 +727,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Car size={16} />
+                  <Users size={16} />
                   Chauffeurs ({drivers.length})
                 </div>
               </button>
@@ -583,8 +740,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Users size={16} />
+                  <User size={16} />
                   Clients ({clients.length})
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('vehicles')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'vehicles'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Car size={16} />
+                  Véhicules ({vehicles.length})
                 </div>
               </button>
             </nav>
@@ -593,7 +763,63 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          {activeTab === 'drivers' ? (
+          {activeTab === 'vehicles' ? (
+            <>
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Car size={24} className="text-gray-700" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Total véhicules</h3>
+                    <p className="text-2xl font-bold text-gray-900">{vehicles.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle size={24} className="text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Disponibles</h3>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {vehicles.filter(v => (v.availabilityCount || 0) > 0).length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Users size={24} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Chauffeurs actifs</h3>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {new Set(vehicles.filter(v => v.driver?.status === 'active').map(v => v.driverId)).size}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Calendar size={24} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Créneaux totaux</h3>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {vehicles.reduce((sum, v) => sum + (v.availabilityCount || 0), 0)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : activeTab === 'drivers' ? (
             <>
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <div className="flex items-center gap-3">
@@ -699,7 +925,280 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </div>
 
         {/* Content based on active tab */}
-        {activeTab === 'drivers' ? (
+        {activeTab === 'vehicles' ? (
+          /* Vehicles List */
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Véhicules et disponibilités</h2>
+                  <p className="text-gray-600">Consultez tous les véhicules et leurs disponibilités</p>
+                </div>
+                {refreshing && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Actualisation...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Version desktop - Tableau des véhicules */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                      Véhicule
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">
+                      Chauffeur
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                      Détails
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                      Statut chauffeur
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                      Disponibilités
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                      Prochains créneaux
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {vehicles.map((vehicle) => (
+                    <tr key={vehicle.id} className="hover:bg-gray-50 transition-colors">
+                      {/* Véhicule */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          {vehicle.photoUrl ? (
+                            <img
+                              src={vehicle.photoUrl}
+                              alt="Photo du véhicule"
+                              className="w-16 h-12 rounded object-cover"
+                            />
+                          ) : (
+                            <div className="w-16 h-12 bg-gray-100 rounded flex items-center justify-center">
+                              <Car size={24} className="text-gray-700" />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 truncate">
+                              {vehicle.make} {vehicle.model}
+                            </p>
+                            <p className="text-sm text-gray-500">{vehicle.year}</p>
+                            {vehicle.is_primary && (
+                              <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                Principal
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      
+                      {/* Chauffeur */}
+                      <td className="px-4 py-4">
+                        {vehicle.driver ? (
+                          <div className="text-sm space-y-1">
+                            <p className="text-gray-900 font-medium truncate">
+                              {vehicle.driver.firstName} {vehicle.driver.lastName}
+                            </p>
+                            <p className="text-gray-500 truncate">{vehicle.driver.email}</p>
+                            <p className="text-gray-500 truncate">{vehicle.driver.phone || 'Non renseigné'}</p>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 italic">Aucun chauffeur</p>
+                        )}
+                      </td>
+                      
+                      {/* Détails */}
+                      <td className="px-4 py-4">
+                        <div className="text-sm space-y-1">
+                          <p className="text-gray-900">{vehicle.color || 'N/A'}</p>
+                          <p className="text-gray-500">{vehicle.licensePlate || 'N/A'}</p>
+                          <p className="text-gray-500">{vehicle.seats || 'N/A'} places</p>
+                          <p className="text-gray-500 capitalize">
+                            {vehicle.type === 'sedan' && 'Berline'}
+                            {vehicle.type === 'pickup' && 'Pickup'}
+                            {vehicle.type === 'van' && 'Van'}
+                            {vehicle.type === 'minibus' && 'Minibus'}
+                            {vehicle.type === 'bus' && 'Bus'}
+                            {vehicle.type === 'truck' && 'Camion'}
+                            {vehicle.type === 'utility' && 'Utilitaire'}
+                            {vehicle.type === 'limousine' && 'Limousine'}
+                          </p>
+                        </div>
+                      </td>
+                      
+                      {/* Statut chauffeur */}
+                      <td className="px-4 py-4">
+                        {vehicle.driver ? (
+                          getStatusBadge(vehicle.driver.status)
+                        ) : (
+                          <span className="text-gray-500 italic">N/A</span>
+                        )}
+                      </td>
+                      
+                      {/* Disponibilités */}
+                      <td className="px-4 py-4">
+                        <div className="space-y-2">
+                          {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 ? (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle size={16} className="text-green-600" />
+                                <span className="text-sm font-semibold text-green-600">
+                                  {vehicle.availabilityCount} créneau{vehicle.availabilityCount > 1 ? 'x' : ''}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500">30 prochains jours</p>
+                            </>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <XCircle size={16} className="text-gray-400" />
+                              <span className="text-sm text-gray-500">Aucun créneau</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      
+                      {/* Prochains créneaux */}
+                      <td className="px-4 py-4">
+                        {vehicle.upcomingAvailabilities && vehicle.upcomingAvailabilities.length > 0 ? (
+                          <div className="space-y-1">
+                            {vehicle.upcomingAvailabilities.slice(0, 3).map((avail, idx) => (
+                              <div key={idx} className="text-xs">
+                                <span className="font-medium text-gray-900">
+                                  {new Date(avail.date + 'T00:00:00').toLocaleDateString('fr-FR', { 
+                                    day: '2-digit', 
+                                    month: 'short' 
+                                  })}
+                                </span>
+                                <span className="text-gray-500 ml-2">
+                                  {avail.startTime} - {avail.endTime}
+                                </span>
+                              </div>
+                            ))}
+                            {vehicle.upcomingAvailabilities.length > 3 && (
+                              <p className="text-xs text-gray-400 italic">
+                                +{vehicle.upcomingAvailabilities.length - 3} autres...
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500 italic">Aucun créneau proche</p>
+                        )}
+                      </td>
+                      
+                      {/* Actions */}
+                      <td className="px-4 py-4">
+                        <button
+                          onClick={() => setSelectedVehicle(vehicle)}
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Voir les détails"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Version mobile/tablet - Cards des véhicules */}
+            <div className="lg:hidden">
+              <div className="divide-y divide-gray-200">
+                {vehicles.map((vehicle) => (
+                  <div key={vehicle.id} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        {vehicle.photoUrl ? (
+                          <img
+                            src={vehicle.photoUrl}
+                            alt="Photo du véhicule"
+                            className="w-16 h-12 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="w-16 h-12 bg-gray-100 rounded flex items-center justify-center">
+                            <Car size={24} className="text-gray-700" />
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            {vehicle.make} {vehicle.model}
+                          </h3>
+                          <p className="text-sm text-gray-500">{vehicle.year}</p>
+                          {vehicle.is_primary && (
+                            <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                              Principal
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSelectedVehicle(vehicle)}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Voir les détails"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Chauffeur</p>
+                        {vehicle.driver ? (
+                          <>
+                            <p className="text-sm text-gray-900">
+                              {vehicle.driver.firstName} {vehicle.driver.lastName}
+                            </p>
+                            {getStatusBadge(vehicle.driver.status)}
+                          </>
+                        ) : (
+                          <p className="text-sm text-gray-500 italic">Aucun chauffeur</p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Disponibilités</p>
+                        {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle size={16} className="text-green-600" />
+                            <span className="text-sm font-semibold text-green-600">
+                              {vehicle.availabilityCount} créneau{vehicle.availabilityCount > 1 ? 'x' : ''}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <XCircle size={16} className="text-gray-400" />
+                            <span className="text-sm text-gray-500">Aucun</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-600">
+                      <p>{vehicle.color} • {vehicle.licensePlate} • {vehicle.seats} places</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {vehicles.length === 0 && (
+              <div className="text-center py-12">
+                <Car size={48} className="text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun véhicule enregistré</h3>
+                <p className="text-gray-500">Les véhicules apparaîtront ici une fois ajoutés par les chauffeurs.</p>
+              </div>
+            )}
+          </div>
+        ) : activeTab === 'drivers' ? (
           /* Drivers List - Version améliorée */
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -1348,11 +1847,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <p className="text-sm text-gray-600 mb-1">Type</p>
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-gray-900 capitalize">
                         {selectedDriver.vehicleInfo.type === 'sedan' && 'Berline'}
-                        {selectedDriver.vehicleInfo.type === 'suv' && 'SUV'}
-                        {selectedDriver.vehicleInfo.type === 'luxury' && 'Véhicule de luxe'}
-                        {selectedDriver.vehicleInfo.type === 'van' && 'Monospace'}
+                        {selectedDriver.vehicleInfo.type === 'pickup' && 'Pickup'}
+                        {selectedDriver.vehicleInfo.type === 'van' && 'Van'}
+                        {selectedDriver.vehicleInfo.type === 'minibus' && 'Minibus'}
+                        {selectedDriver.vehicleInfo.type === 'bus' && 'Bus'}
+                        {selectedDriver.vehicleInfo.type === 'truck' && 'Camion'}
+                        {selectedDriver.vehicleInfo.type === 'utility' && 'Utilitaire'}
+                        {selectedDriver.vehicleInfo.type === 'limousine' && 'Limousine'}
                       </p>
                     </div>
                   </div>
@@ -1505,6 +2008,184 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </div>
       )}
 
+      {/* Vehicle Detail Modal */}
+      {selectedVehicle && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Détails du véhicule
+                </h3>
+                <button
+                  onClick={() => setSelectedVehicle(null)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Vehicle Photo */}
+              {selectedVehicle.photoUrl && (
+                <div>
+                  <img
+                    src={selectedVehicle.photoUrl}
+                    alt="Photo du véhicule"
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+
+              {/* Vehicle Info */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Informations du véhicule</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Marque et modèle</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedVehicle.make} {selectedVehicle.model}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Année</p>
+                    <p className="font-semibold text-gray-900">{selectedVehicle.year || 'N/A'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Couleur</p>
+                    <p className="font-semibold text-gray-900">{selectedVehicle.color || 'N/A'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Plaque d'immatriculation</p>
+                    <p className="font-semibold text-gray-900">{selectedVehicle.licensePlate || 'N/A'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Nombre de places</p>
+                    <p className="font-semibold text-gray-900">{selectedVehicle.seats || 'N/A'} places</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Type</p>
+                    <p className="font-semibold text-gray-900 capitalize">
+                      {selectedVehicle.type === 'sedan' && 'Berline'}
+                      {selectedVehicle.type === 'pickup' && 'Pickup'}
+                      {selectedVehicle.type === 'van' && 'Van'}
+                      {selectedVehicle.type === 'minibus' && 'Minibus'}
+                      {selectedVehicle.type === 'bus' && 'Bus'}
+                      {selectedVehicle.type === 'truck' && 'Camion'}
+                      {selectedVehicle.type === 'utility' && 'Utilitaire'}
+                      {selectedVehicle.type === 'limousine' && 'Limousine'}
+                    </p>
+                  </div>
+                  {selectedVehicle.is_primary && (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Statut</p>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <CheckCircle size={12} />
+                        Véhicule principal
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Driver Info */}
+              {selectedVehicle.driver && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Chauffeur propriétaire</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Nom complet</p>
+                      <p className="font-semibold text-gray-900">
+                        {selectedVehicle.driver.firstName} {selectedVehicle.driver.lastName}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Email</p>
+                      <p className="font-semibold text-gray-900">{selectedVehicle.driver.email}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Téléphone</p>
+                      <p className="font-semibold text-gray-900">
+                        {selectedVehicle.driver.phone || 'Non renseigné'}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Ville</p>
+                      <p className="font-semibold text-gray-900">
+                        {selectedVehicle.driver.city || 'Non renseignée'}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Statut</p>
+                      {getStatusBadge(selectedVehicle.driver.status)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Availabilities */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                  Disponibilités à venir
+                  {selectedVehicle.availabilityCount !== undefined && (
+                    <span className="ml-2 text-sm font-normal text-gray-500">
+                      ({selectedVehicle.availabilityCount} créneau{selectedVehicle.availabilityCount > 1 ? 'x' : ''})
+                    </span>
+                  )}
+                </h4>
+                {selectedVehicle.upcomingAvailabilities && selectedVehicle.upcomingAvailabilities.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedVehicle.upcomingAvailabilities.map((avail, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Calendar size={20} className="text-green-600" />
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {new Date(avail.date + 'T00:00:00').toLocaleDateString('fr-FR', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {avail.startTime} - {avail.endTime}
+                            </p>
+                          </div>
+                        </div>
+                        <CheckCircle size={20} className="text-green-600" />
+                      </div>
+                    ))}
+                    {selectedVehicle.availabilityCount && selectedVehicle.availabilityCount > selectedVehicle.upcomingAvailabilities.length && (
+                      <p className="text-sm text-gray-500 text-center mt-4">
+                        +{selectedVehicle.availabilityCount - selectedVehicle.upcomingAvailabilities.length} créneaux supplémentaires...
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <Calendar size={48} className="text-gray-400 mx-auto mb-4" />
+                    <h5 className="text-lg font-medium text-gray-900 mb-2">Aucune disponibilité</h5>
+                    <p className="text-gray-500">
+                      Ce chauffeur n'a pas encore configuré ses disponibilités pour ce véhicule.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+                <p><strong>Ajouté le:</strong> {new Date(selectedVehicle.createdAt).toLocaleString('fr-FR')}</p>
+                <p><strong>Dernière mise à jour:</strong> {new Date(selectedVehicle.updatedAt).toLocaleString('fr-FR')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Client Detail Modal */}
       {selectedClient && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -1619,7 +2300,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Historique des courses</h4>
                 {selectedClient.bookings.length > 0 ? (
                   <div className="space-y-4">
-                    {selectedClient.bookings.map((booking: any) => (
+                    {selectedClient.bookings.map((booking) => (
                       <div key={booking.id} className="bg-gray-50 rounded-lg p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
@@ -1632,23 +2313,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             <div className="grid md:grid-cols-2 gap-4 text-sm">
                               <div>
                                 <p className="text-gray-600 mb-1">Départ</p>
-                                <p className="text-gray-900">{booking.pickup_address}</p>
+                                <p className="text-gray-900">{booking.pickupAddress}</p>
                               </div>
                               <div>
                                 <p className="text-gray-600 mb-1">Arrivée</p>
-                                <p className="text-gray-900">{booking.destination_address}</p>
+                                <p className="text-gray-900">{booking.destinationAddress}</p>
                               </div>
                               <div>
                                 <p className="text-gray-600 mb-1">Date et heure</p>
                                 <p className="text-gray-900">
-                                  {new Date(booking.scheduled_time).toLocaleString('fr-FR')}
+                                  {new Date(booking.scheduledTime).toLocaleString('fr-FR')}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-gray-600 mb-1">Prix</p>
                                 <p className="text-gray-900 font-semibold">
-                                  {booking.price_tnd} TND
-                                  {booking.is_return_trip && (
+                                  {booking.priceTnd} TND
+                                  {booking.isReturnTrip && (
                                     <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
                                       Aller-retour
                                     </span>
@@ -1673,7 +2354,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           </div>
                         </div>
                         <div className="text-xs text-gray-500">
-                          Créée le {new Date(booking.created_at).toLocaleString('fr-FR')}
+                          Créée le {new Date(booking.createdAt).toLocaleString('fr-FR')}
                         </div>
                       </div>
                     ))}
