@@ -10,7 +10,10 @@ import {
   UserCheck,
   AlertTriangle,
   User,
-  Calendar
+  Calendar,
+  CreditCard,
+  TrendingUp,
+  AlertCircle as AlertCircleIcon
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
@@ -33,28 +36,62 @@ interface VehicleWithDriver extends Vehicle {
   availabilityCount?: number;
 }
 
+interface DriverSubscription {
+  id: string;
+  driverId: string;
+  startDate: string;
+  endDate: string;
+  subscriptionType: string;
+  billingPeriod: 'monthly' | 'yearly';
+  priceTnd: number;
+  vatPercentage: number;
+  totalPriceTnd: number;
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentMethod?: string;
+  paymentDate?: string;
+  paymentReference?: string;
+  status: 'active' | 'expired' | 'cancelled';
+  adminNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+  driver?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    city?: string;
+    lifetimeAcceptedBookings?: number;
+  };
+  daysRemaining?: number;
+  expirationStatus?: string;
+}
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [clients, setClients] = useState<ClientWithBookings[]>([]);
   const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
+  const [subscriptions, setSubscriptions] = useState<DriverSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientWithBookings | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleWithDriver | null>(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<DriverSubscription | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles'>('drivers');
+  const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles' | 'subscriptions'>('drivers');
 
   useEffect(() => {
     fetchDrivers();
     fetchClients();
     fetchVehicles();
+    fetchSubscriptions();
     
     // Rafraîchir automatiquement toutes les 30 secondes
     const interval = setInterval(() => {
       fetchDrivers();
       fetchClients();
       fetchVehicles();
+      fetchSubscriptions();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -483,6 +520,124 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const fetchSubscriptions = async () => {
+    if (!loading) setRefreshing(true);
+    
+    try {
+      console.log('🔍 Admin - Récupération des abonnements...');
+      
+      // Récupérer tous les abonnements avec les informations du chauffeur
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
+        .from('driver_subscriptions')
+        .select(`
+          *,
+          drivers (
+            id,
+            first_name,
+            last_name,
+            email,
+            phone,
+            city,
+            lifetime_accepted_bookings
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (subscriptionsError) {
+        console.error('Erreur lors de la récupération des abonnements:', subscriptionsError);
+        return;
+      }
+
+      console.log('📊 Admin - Abonnements récupérés:', subscriptionsData?.length || 0);
+
+      // Formater les données
+      const formattedSubscriptions = (subscriptionsData || []).map((sub: {
+        id: string;
+        driver_id: string;
+        start_date: string;
+        end_date: string;
+        subscription_type: string;
+        billing_period: 'monthly' | 'yearly';
+        price_tnd: number;
+        vat_percentage: number;
+        total_price_tnd: number;
+        payment_status: string;
+        payment_method?: string;
+        payment_date?: string;
+        payment_reference?: string;
+        status: string;
+        admin_notes?: string;
+        created_at: string;
+        updated_at: string;
+        drivers?: {
+          id: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          phone?: string;
+          city?: string;
+          lifetime_accepted_bookings?: number;
+        };
+      }) => {
+        const endDate = new Date(sub.end_date);
+        const today = new Date();
+        const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        let expirationStatus = '';
+        if (daysRemaining < 0) {
+          expirationStatus = 'Expiré';
+        } else if (daysRemaining === 0) {
+          expirationStatus = 'Expire aujourd\'hui';
+        } else if (daysRemaining <= 1) {
+          expirationStatus = 'Expire demain';
+        } else if (daysRemaining <= 7) {
+          expirationStatus = `Expire dans ${daysRemaining} jours`;
+        } else if (daysRemaining <= 30) {
+          expirationStatus = `Expire dans ${daysRemaining} jours`;
+        } else {
+          expirationStatus = 'Actif';
+        }
+
+        return {
+          id: sub.id,
+          driverId: sub.driver_id,
+          startDate: sub.start_date,
+          endDate: sub.end_date,
+          subscriptionType: sub.subscription_type,
+          billingPeriod: sub.billing_period,
+          priceTnd: sub.price_tnd,
+          vatPercentage: sub.vat_percentage,
+          totalPriceTnd: sub.total_price_tnd,
+          paymentStatus: sub.payment_status as 'pending' | 'paid' | 'failed' | 'refunded',
+          paymentMethod: sub.payment_method,
+          paymentDate: sub.payment_date,
+          paymentReference: sub.payment_reference,
+          status: sub.status as 'active' | 'expired' | 'cancelled',
+          adminNotes: sub.admin_notes,
+          createdAt: sub.created_at,
+          updatedAt: sub.updated_at,
+          driver: sub.drivers ? {
+            firstName: sub.drivers.first_name,
+            lastName: sub.drivers.last_name,
+            email: sub.drivers.email,
+            phone: sub.drivers.phone,
+            city: sub.drivers.city,
+            lifetimeAcceptedBookings: sub.drivers.lifetime_accepted_bookings
+          } : undefined,
+          daysRemaining,
+          expirationStatus
+        };
+      });
+
+      setSubscriptions(formattedSubscriptions);
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   const updateDriverStatus = async (driverId: string, newStatus: string) => {
     setActionLoading(driverId);
     
@@ -757,13 +912,82 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   Véhicules ({vehicles.length})
                 </div>
               </button>
+              <button
+                onClick={() => setActiveTab('subscriptions')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'subscriptions'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <CreditCard size={16} />
+                  Abonnements ({subscriptions.length})
+                </div>
+              </button>
             </nav>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          {activeTab === 'vehicles' ? (
+          {activeTab === 'subscriptions' ? (
+            <>
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <CreditCard size={24} className="text-gray-700" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Total abonnements</h3>
+                    <p className="text-2xl font-bold text-gray-900">{subscriptions.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle size={24} className="text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Actifs (payés)</h3>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {subscriptions.filter(s => s.paymentStatus === 'paid' && s.status === 'active' && (s.daysRemaining || 0) >= 0).length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Clock size={24} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">En attente</h3>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {subscriptions.filter(s => s.paymentStatus === 'pending').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp size={24} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Revenus totaux</h3>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {subscriptions.filter(s => s.paymentStatus === 'paid').reduce((sum, s) => sum + s.totalPriceTnd, 0).toFixed(0)} TND
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : activeTab === 'vehicles' ? (
             <>
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <div className="flex items-center gap-3">
@@ -925,7 +1149,296 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </div>
 
         {/* Content based on active tab */}
-        {activeTab === 'vehicles' ? (
+        {activeTab === 'subscriptions' ? (
+          /* Subscriptions List */
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Gestion des abonnements</h2>
+                  <p className="text-gray-600">Visualisez et gérez les abonnements des chauffeurs</p>
+                </div>
+                {refreshing && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Actualisation...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Version desktop - Tableau des abonnements */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                      Chauffeur
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                      Type
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                      Période
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                      Montant
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                      Paiement
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                      Expiration
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                      Statut
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {subscriptions.map((subscription) => (
+                    <tr key={subscription.id} className="hover:bg-gray-50 transition-colors">
+                      {/* Chauffeur */}
+                      <td className="px-4 py-4">
+                        {subscription.driver ? (
+                          <div className="text-sm space-y-1">
+                            <p className="text-gray-900 font-medium truncate">
+                              {subscription.driver.firstName} {subscription.driver.lastName}
+                            </p>
+                            <p className="text-gray-500 truncate">{subscription.driver.email}</p>
+                            <p className="text-gray-500 truncate">{subscription.driver.phone || 'N/A'}</p>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 italic">Chauffeur supprimé</p>
+                        )}
+                      </td>
+                      
+                      {/* Type */}
+                      <td className="px-4 py-4">
+                        <div className="text-sm">
+                          {subscription.billingPeriod === 'yearly' ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              <Calendar size={12} />
+                              Annuel
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              <Calendar size={12} />
+                              Mensuel
+                            </span>
+                          )}
+                          {subscription.billingPeriod === 'yearly' && (
+                            <p className="text-xs text-green-600 mt-1 font-medium">-10%</p>
+                          )}
+                        </div>
+                      </td>
+                      
+                      {/* Période */}
+                      <td className="px-4 py-4">
+                        <div className="text-sm space-y-1">
+                          <p className="text-gray-600">Début:</p>
+                          <p className="text-gray-900 font-medium">
+                            {new Date(subscription.startDate).toLocaleDateString('fr-FR')}
+                          </p>
+                          <p className="text-gray-600 mt-2">Fin:</p>
+                          <p className="text-gray-900 font-medium">
+                            {new Date(subscription.endDate).toLocaleDateString('fr-FR')}
+                          </p>
+                        </div>
+                      </td>
+                      
+                      {/* Montant */}
+                      <td className="px-4 py-4">
+                        <div className="text-sm space-y-1">
+                          <p className="text-2xl font-bold text-gray-900">
+                            {subscription.totalPriceTnd.toFixed(2)}
+                          </p>
+                          <p className="text-xs text-gray-500">TND TTC</p>
+                          <p className="text-xs text-gray-500">
+                            HT: {subscription.priceTnd.toFixed(2)} TND
+                          </p>
+                        </div>
+                      </td>
+                      
+                      {/* Paiement */}
+                      <td className="px-4 py-4">
+                        {subscription.paymentStatus === 'paid' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <CheckCircle size={12} />
+                            Payé
+                          </span>
+                        ) : subscription.paymentStatus === 'pending' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            <Clock size={12} />
+                            En attente
+                          </span>
+                        ) : subscription.paymentStatus === 'failed' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <XCircle size={12} />
+                            Échoué
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <XCircle size={12} />
+                            Remboursé
+                          </span>
+                        )}
+                        {subscription.paymentDate && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(subscription.paymentDate).toLocaleDateString('fr-FR')}
+                          </p>
+                        )}
+                      </td>
+                      
+                      {/* Expiration */}
+                      <td className="px-4 py-4">
+                        <div className="text-sm">
+                          {subscription.daysRemaining !== undefined && subscription.daysRemaining >= 0 ? (
+                            <>
+                              <p className="font-semibold text-gray-900">
+                                {subscription.daysRemaining} jour{subscription.daysRemaining > 1 ? 's' : ''}
+                              </p>
+                              <p className="text-xs text-gray-500">{subscription.expirationStatus}</p>
+                              {subscription.daysRemaining <= 7 && subscription.daysRemaining > 0 && (
+                                <p className="text-xs text-orange-600 font-medium mt-1">
+                                  ⚠️ Expire bientôt
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-red-600">
+                              <p className="font-semibold">Expiré</p>
+                              <p className="text-xs">
+                                Il y a {Math.abs(subscription.daysRemaining || 0)} jour{Math.abs(subscription.daysRemaining || 0) > 1 ? 's' : ''}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      
+                      {/* Statut */}
+                      <td className="px-4 py-4">
+                        {subscription.status === 'active' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <CheckCircle size={12} />
+                            Actif
+                          </span>
+                        ) : subscription.status === 'expired' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <XCircle size={12} />
+                            Expiré
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <XCircle size={12} />
+                            Annulé
+                          </span>
+                        )}
+                      </td>
+                      
+                      {/* Actions */}
+                      <td className="px-4 py-4">
+                        <button
+                          onClick={() => setSelectedSubscription(subscription)}
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Voir les détails"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Version mobile/tablet - Cards des abonnements */}
+            <div className="lg:hidden">
+              <div className="divide-y divide-gray-200">
+                {subscriptions.map((subscription) => (
+                  <div key={subscription.id} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        {subscription.driver ? (
+                          <>
+                            <h3 className="font-medium text-gray-900">
+                              {subscription.driver.firstName} {subscription.driver.lastName}
+                            </h3>
+                            <p className="text-sm text-gray-500">{subscription.driver.email}</p>
+                          </>
+                        ) : (
+                          <p className="text-gray-500 italic">Chauffeur supprimé</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setSelectedSubscription(subscription)}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Voir les détails"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Type</p>
+                        {subscription.billingPeriod === 'yearly' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            Annuel (-10%)
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Mensuel
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Montant</p>
+                        <p className="text-lg font-bold text-gray-900">
+                          {subscription.totalPriceTnd.toFixed(2)} TND
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Paiement</p>
+                        {subscription.paymentStatus === 'paid' ? (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            Payé
+                          </span>
+                        ) : (
+                          <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                            En attente
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Expiration</p>
+                        <p className="text-sm text-gray-900">{subscription.expirationStatus}</p>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-gray-500">
+                      Du {new Date(subscription.startDate).toLocaleDateString('fr-FR')} au {new Date(subscription.endDate).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {subscriptions.length === 0 && (
+              <div className="text-center py-12">
+                <CreditCard size={48} className="text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun abonnement</h3>
+                <p className="text-gray-500">Les abonnements apparaîtront ici une fois créés.</p>
+              </div>
+            )}
+          </div>
+        ) : activeTab === 'vehicles' ? (
           /* Vehicles List */
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -2002,6 +2515,267 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
                 <p><strong>Inscrit le:</strong> {new Date(selectedDriver.createdAt).toLocaleString('fr-FR')}</p>
                 <p><strong>Dernière mise à jour:</strong> {new Date(selectedDriver.updatedAt).toLocaleString('fr-FR')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscription Detail Modal */}
+      {selectedSubscription && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Détails de l'abonnement
+                </h3>
+                <button
+                  onClick={() => setSelectedSubscription(null)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Subscription Info */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Informations de l'abonnement</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Type d'abonnement</p>
+                    <div className="flex items-center gap-2">
+                      {selectedSubscription.billingPeriod === 'yearly' ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                          <Calendar size={14} />
+                          Annuel
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                          <Calendar size={14} />
+                          Mensuel
+                        </span>
+                      )}
+                      {selectedSubscription.billingPeriod === 'yearly' && (
+                        <span className="text-xs text-green-600 font-bold">-10% 🎉</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Statut</p>
+                    {selectedSubscription.status === 'active' ? (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <CheckCircle size={14} />
+                        Actif
+                      </span>
+                    ) : selectedSubscription.status === 'expired' ? (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                        <XCircle size={14} />
+                        Expiré
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                        <XCircle size={14} />
+                        Annulé
+                      </span>
+                    )}
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Date de début</p>
+                    <p className="font-semibold text-gray-900">
+                      {new Date(selectedSubscription.startDate).toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Date de fin</p>
+                    <p className="font-semibold text-gray-900">
+                      {new Date(selectedSubscription.endDate).toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div className={`rounded-lg p-4 ${
+                    selectedSubscription.daysRemaining !== undefined && selectedSubscription.daysRemaining >= 0
+                      ? selectedSubscription.daysRemaining <= 7 
+                        ? 'bg-orange-50 border border-orange-200' 
+                        : 'bg-green-50 border border-green-200'
+                      : 'bg-red-50 border border-red-200'
+                  }`}>
+                    <p className="text-sm text-gray-600 mb-1">Expiration</p>
+                    <p className="font-semibold text-gray-900">{selectedSubscription.expirationStatus}</p>
+                    {selectedSubscription.daysRemaining !== undefined && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        {selectedSubscription.daysRemaining >= 0 
+                          ? `${selectedSubscription.daysRemaining} jour${selectedSubscription.daysRemaining > 1 ? 's' : ''} restant${selectedSubscription.daysRemaining > 1 ? 's' : ''}`
+                          : `Expiré depuis ${Math.abs(selectedSubscription.daysRemaining)} jour${Math.abs(selectedSubscription.daysRemaining) > 1 ? 's' : ''}`
+                        }
+                      </p>
+                    )}
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Durée totale</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedSubscription.billingPeriod === 'yearly' ? '12 mois' : '1 mois'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Info */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Informations de paiement</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Prix HT</p>
+                    <p className="text-2xl font-bold text-gray-900">{selectedSubscription.priceTnd.toFixed(2)} TND</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">TVA ({selectedSubscription.vatPercentage}%)</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {(selectedSubscription.totalPriceTnd - selectedSubscription.priceTnd).toFixed(2)} TND
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-4 md:col-span-2">
+                    <p className="text-sm text-gray-600 mb-1">Prix Total TTC</p>
+                    <p className="text-3xl font-bold text-blue-600">{selectedSubscription.totalPriceTnd.toFixed(2)} TND</p>
+                    {selectedSubscription.billingPeriod === 'yearly' && (
+                      <p className="text-sm text-green-600 mt-2 font-medium">
+                        💰 Économie de {((30 * 1.19 * 12) - selectedSubscription.totalPriceTnd).toFixed(2)} TND vs mensuel
+                      </p>
+                    )}
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Statut du paiement</p>
+                    {selectedSubscription.paymentStatus === 'paid' ? (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <CheckCircle size={14} />
+                        Payé
+                      </span>
+                    ) : selectedSubscription.paymentStatus === 'pending' ? (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                        <Clock size={14} />
+                        En attente
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                        <XCircle size={14} />
+                        {selectedSubscription.paymentStatus === 'failed' ? 'Échoué' : 'Remboursé'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Méthode de paiement</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedSubscription.paymentMethod === 'bank_transfer' ? 'Virement bancaire' : 
+                       selectedSubscription.paymentMethod === 'cash' ? 'Espèces' :
+                       selectedSubscription.paymentMethod || 'Non renseignée'}
+                    </p>
+                  </div>
+                  {selectedSubscription.paymentDate && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Date de paiement</p>
+                      <p className="font-semibold text-gray-900">
+                        {new Date(selectedSubscription.paymentDate).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                  )}
+                  {selectedSubscription.paymentReference && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Référence de paiement</p>
+                      <p className="font-mono text-sm text-gray-900 break-all">
+                        {selectedSubscription.paymentReference}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Driver Info */}
+              {selectedSubscription.driver && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Chauffeur</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Nom complet</p>
+                      <p className="font-semibold text-gray-900">
+                        {selectedSubscription.driver.firstName} {selectedSubscription.driver.lastName}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Email</p>
+                      <p className="font-semibold text-gray-900">{selectedSubscription.driver.email}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Téléphone</p>
+                      <p className="font-semibold text-gray-900">
+                        {selectedSubscription.driver.phone || 'Non renseigné'}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Ville</p>
+                      <p className="font-semibold text-gray-900">
+                        {selectedSubscription.driver.city || 'Non renseignée'}
+                      </p>
+                    </div>
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Courses acceptées (lifetime)</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {selectedSubscription.driver.lifetimeAcceptedBookings || 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Admin Notes */}
+              {selectedSubscription.adminNotes && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                    <AlertCircleIcon size={16} />
+                    Notes administratives
+                  </h4>
+                  <p className="text-sm text-gray-700">{selectedSubscription.adminNotes}</p>
+                </div>
+              )}
+
+              {/* Actions for pending subscriptions */}
+              {selectedSubscription.paymentStatus === 'pending' && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-orange-900 mb-3">Actions administratives</h4>
+                  <div className="space-y-3">
+                    <p className="text-sm text-orange-800">
+                      Ce paiement est en attente de validation. Une fois le virement reçu, vous pouvez valider l'abonnement
+                      en mettant à jour directement dans la table <code className="bg-orange-100 px-1 rounded">driver_subscriptions</code>.
+                    </p>
+                    <div className="text-xs text-gray-600 bg-white rounded p-3 font-mono">
+                      <p>UPDATE driver_subscriptions</p>
+                      <p>SET payment_status = 'paid',</p>
+                      <p className="ml-4">payment_method = 'bank_transfer',</p>
+                      <p className="ml-4">payment_date = NOW(),</p>
+                      <p className="ml-4">payment_reference = 'REF-XXX'</p>
+                      <p>WHERE id = '{selectedSubscription.id}';</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Timeline */}
+              <div className="text-xs text-gray-500 bg-gray-50 p-4 rounded-lg space-y-1">
+                <p><strong>Créé le:</strong> {new Date(selectedSubscription.createdAt).toLocaleString('fr-FR')}</p>
+                <p><strong>Dernière mise à jour:</strong> {new Date(selectedSubscription.updatedAt).toLocaleString('fr-FR')}</p>
+                {selectedSubscription.paymentDate && (
+                  <p><strong>Payé le:</strong> {new Date(selectedSubscription.paymentDate).toLocaleString('fr-FR')}</p>
+                )}
               </div>
             </div>
           </div>
