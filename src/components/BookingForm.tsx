@@ -580,9 +580,58 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         console.log('📊 Chauffeurs après filtrage par type:', availableDriversData.length);
       }
       
-      console.log('✅ Chauffeurs finalement disponibles:', availableDriversData.length);
+      // Étape 4.5: Vérifier le quota d'abonnement de chaque chauffeur
+      console.log('🔍 Étape 4.5: Vérification des quotas d\'abonnement...');
+      const driversWithValidSubscription = [];
+      
+      for (const driver of availableDriversData) {
+        try {
+          const { data: subscriptionData, error: subscriptionError } = await supabase
+            .rpc('get_driver_subscription_status', { p_driver_id: driver.id });
+          
+          if (subscriptionError) {
+            console.warn(`⚠️ Erreur vérification abonnement pour ${driver.id}:`, subscriptionError);
+            // En cas d'erreur, on inclut le chauffeur par défaut
+            driversWithValidSubscription.push(driver);
+            continue;
+          }
+          
+          if (subscriptionData && subscriptionData.length > 0) {
+            const status = subscriptionData[0];
+            console.log(`📊 Chauffeur ${driver.first_name} ${driver.last_name}:`, {
+              type: status.subscription_type,
+              courses: status.monthly_accepted_bookings,
+              canAccept: status.can_accept_more_bookings
+            });
+            
+            // Inclure uniquement si le chauffeur peut accepter plus de courses
+            if (status.can_accept_more_bookings) {
+              driversWithValidSubscription.push(driver);
+              console.log(`✅ Chauffeur ${driver.first_name} ${driver.last_name} peut accepter des courses`);
+            } else {
+              console.log(`❌ Chauffeur ${driver.first_name} ${driver.last_name} a atteint son quota (${status.monthly_accepted_bookings} courses)`);
+            }
+          } else {
+            // Si pas de données, inclure par défaut
+            driversWithValidSubscription.push(driver);
+          }
+        } catch (error) {
+          console.error(`❌ Erreur inattendue pour ${driver.id}:`, error);
+          // En cas d'erreur, on inclut le chauffeur par défaut
+          driversWithValidSubscription.push(driver);
+        }
+      }
+      
+      console.log('✅ Chauffeurs avec quota valide:', driversWithValidSubscription.length);
+      
+      if (driversWithValidSubscription.length === 0) {
+        console.warn('⚠️ Aucun chauffeur disponible (tous ont atteint leur quota)');
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
 
-      const formattedDrivers = availableDriversData.map(driver => ({
+      const formattedDrivers = driversWithValidSubscription.map(driver => ({
         id: driver.id,
         firstName: driver.first_name,
         lastName: driver.last_name,
