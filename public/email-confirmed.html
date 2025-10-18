@@ -64,21 +64,19 @@
             line-height: 1.6;
             margin-bottom: 30px;
         }
-		
-        .button-container {
-			text-align: center;
-		}
-
-		.button {
-			background-color: #000;
-			color: #fff;
-			padding: 12px 24px;
-			border-radius: 8px;
-			text-decoration: none;
-			display: inline-block;
-			text-align: center;
-		}
-
+        
+        .button {
+            display: inline-block;
+            background: #007AFF;
+            color: white;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
         
         .button:hover {
             background: #0056b3;
@@ -140,8 +138,7 @@
                 <strong>📱 Redirection automatique</strong><br>
                 Si vous avez l'application TuniDrive installée, elle s'ouvrira automatiquement dans <span id="countdown">5</span> secondes.
                 <br><br>
-                <div class="button-container"><a href="tunidrive://auth/email-confirmed" class="button">Ouvrir l'application</a>
-			</div>
+                <a href="tunidrive://email-confirmed" class="button">Ouvrir l'application</a>
             </div>
             
             <div>
@@ -159,7 +156,7 @@
         // Auto-redirect to mobile app after countdown
         let countdown = 5;
         const countdownElement = document.getElementById('countdown');
-        const mobileUrl = 'tunidrive://auth/email-confirmed';
+        const mobileUrl = 'tunidrive://email-confirmed';
         
         const timer = setInterval(() => {
             countdown--;
