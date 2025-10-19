@@ -135,9 +135,15 @@
                 Votre compte TuniDrive a été activé avec succès. Vous pouvez maintenant vous connecter à l'application et commencer à utiliser nos services.
             </p>
             
-            <div>
-                <a href="https://tunidrive.net" class="button">Accéder au site web</a>
+            <div class="mobile-note">
+                <strong>✅ Compte activé</strong><br>
+                Votre compte TuniDrive est maintenant actif. Vous pouvez vous connecter à l'application mobile ou utiliser le site web.
+                <br><br>
+				<div class="button-container">
+                    <a href="https://tunidrive.net" class="button">Accéder au site web</a>
+                </div>
             </div>
+            
         </div>
         
         <div class="footer">
@@ -147,32 +153,8 @@
     </div>
 
     <script>
-        // Auto-redirect to mobile app after countdown
-        let countdown = 5;
-        const countdownElement = document.getElementById('countdown');
-        const mobileUrl = 'tunidrive://email-confirmed';
-        
-        const timer = setInterval(() => {
-            countdown--;
-            countdownElement.textContent = countdown;
-            
-            if (countdown <= 0) {
-                clearInterval(timer);
-                // Try to open mobile app
-                window.location.href = mobileUrl;
-                
-                // Fallback: redirect to web after 2 seconds if mobile app doesn't open
-                setTimeout(() => {
-                    window.location.href = 'https://tunidrive.net';
-                }, 2000);
-            }
-        }, 1000);
-        
-        // Also try to open mobile app immediately on page load
-        setTimeout(() => {
-            window.location.href = mobileUrl;
-        }, 100);
+        // Simple confirmation page - no automatic redirects
+        console.log('Email confirmation page loaded successfully');
     </script>
 </body>
 </html>
-
