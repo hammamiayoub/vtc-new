@@ -47,9 +47,11 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
           <div className="prose max-w-none">
             <p className="text-lg text-gray-700 mb-8 leading-relaxed">
               Bienvenue sur TuniDrive.net, une plateforme en ligne permettant la mise en relation entre des clients 
-              souhaitant réserver un trajet en véhicule de transport avec chauffeur (VTC) et des chauffeurs partenaires.
-              En utilisant notre site et nos services, vous acceptez les présentes Conditions générales d'utilisation (CGU).
+              souhaitant réserver un trajet en véhicule de transport avec chauffeur (VTC) et des chauffeurs partenaires.</p>
+              <p className="text-lg text-gray-700 mb-8 leading-relaxed">TuniDrive n’est pas un transporteur et n’exerce aucune activité de transport public de personnes au sens de la loi n°2004-33 du 19 avril 2004 portant organisation des transports terrestres.</p>
+              <p className="text-lg text-gray-700 mb-8 leading-relaxed">En utilisant notre site et nos services, vous acceptez les présentes Conditions générales d'utilisation (CGU).
             </p>
+            
 
             {/* Section 1 */}
             <div className="mb-10">
@@ -208,6 +210,14 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h4 className="font-semibold text-green-900 mb-3">Pour les chauffeurs :</h4>
                   <ul className="space-y-2">
+                     <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2"></div>
+                      <span className="text-green-800 text-sm">Etre titulaire d’une carte d’exploitation ou d’une autorisantion de transport de personnes</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2"></div>
+                      <span className="text-green-800 text-sm">Une assurance couvrant le transport de personnes est obligatoire</span>
+                    </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2"></div>
                       <span className="text-green-800 text-sm">Fournir un véhicule en bon état et conforme aux normes de sécurité.</span>
@@ -226,31 +236,67 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
             </div>
 
             {/* Section 7 */}
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <AlertTriangle size={24} className="text-orange-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">7. Responsabilités</h2>
-              </div>
-              
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
-                    <span className="text-orange-800">TuniDrive.net agit uniquement comme un intermédiaire technique entre clients et chauffeurs.</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
-                    <span className="text-orange-800">Nous ne sommes pas responsables de la qualité des trajets, des retards, des annulations ou de tout dommage causé lors d'un transport.</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
-                    <span className="text-orange-800">Chaque chauffeur est seul responsable de ses prestations vis-à-vis des clients.</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
+            <div className="mb-12">
+  {/* En-tête de section */}
+  <div className="flex items-center gap-4 mb-6">
+    <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center shadow-sm">
+      <AlertTriangle size={26} className="text-orange-600" />
+    </div>
+    <div>
+      <h2 className="text-3xl font-bold text-gray-900">7. Responsabilités</h2>
+      <p className="text-sm text-gray-500 mt-1">Encadré juridique relatif à l’usage de la plateforme TuniDrive.net</p>
+    </div>
+  </div>
+
+  {/* Bloc principal */}
+  <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-200 rounded-2xl shadow-sm p-8">
+    <h3 className="text-lg font-semibold text-orange-700 mb-5">Principes de responsabilité</h3>
+
+    <ul className="space-y-5">
+      <li className="flex items-start gap-3">
+        <div className="mt-1.5">
+          <div className="w-2.5 h-2.5 bg-orange-600 rounded-full"></div>
+        </div>
+        <p className="text-gray-800 leading-relaxed">
+          <strong className="text-orange-800">TuniDrive.net</strong> agit exclusivement comme un 
+          <strong> intermédiaire technique </strong> facilitant la mise en relation entre clients et chauffeurs indépendants.
+        </p>
+      </li>
+
+      <li className="flex items-start gap-3">
+        <div className="mt-1.5">
+          <div className="w-2.5 h-2.5 bg-orange-600 rounded-full"></div>
+        </div>
+        <p className="text-gray-800 leading-relaxed">
+          TuniDrive n’assure ni le transport, ni la gestion des trajets, et ne peut être tenue responsable de la qualité des prestations, 
+          des retards, des annulations ou de tout dommage subi lors d’un déplacement.
+        </p>
+      </li>
+
+      <li className="flex items-start gap-3">
+        <div className="mt-1.5">
+          <div className="w-2.5 h-2.5 bg-orange-600 rounded-full"></div>
+        </div>
+        <p className="text-gray-800 leading-relaxed">
+          Chaque chauffeur est <strong>seul responsable</strong> de ses prestations vis-à-vis des clients et agit en toute indépendance.
+        </p>
+      </li>
+
+      <li className="flex items-start gap-3">
+        <div className="mt-1.5">
+          <div className="w-2.5 h-2.5 bg-orange-600 rounded-full"></div>
+        </div>
+        <p className="text-gray-800 leading-relaxed">
+          Les prestations de transport sont exécutées sous la <strong>responsabilité exclusive</strong> des chauffeurs, qui doivent disposer 
+          de toutes les <strong>autorisations légales</strong> nécessaires à l’exercice du transport de personnes à titre onéreux 
+          (permis, carte d’exploitation, assurance, etc.) conformément à la réglementation tunisienne.
+          Ils assument également toutes les obligations relatives à la sécurité, la conformité des véhicules et au respect du code de la route.
+        </p>
+      </li>
+    </ul>
+  </div>
+</div>
+
 
             {/* Section 8 */}
             <div className="mb-10">

@@ -403,6 +403,27 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 )}
               </div>
 
+            {/* Directive légale pour les chauffeurs */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h4 className="text-yellow-900 font-semibold mb-2">
+                Responsabilités et obligations des chauffeurs indépendants
+              </h4>
+              <p className="text-yellow-900 text-sm mb-2">
+                Les prestations de transport sont entièrement exécutées sous la responsabilité des chauffeurs indépendants, lesquels :
+              </p>
+              <ul className="list-disc pl-5 text-yellow-900 text-sm space-y-1">
+                <li>
+                  sont tenus de disposer de toutes les autorisations légales nécessaires à l’exercice du transport de personnes à titre onéreux (permis, carte d’exploitation, assurance, etc.) conformément à la réglementation tunisienne ;
+                </li>
+                <li>
+                  Ils assument seuls les obligations liées à la sécurité, la conformité des véhicules et le respect du code de la route.
+                </li>
+                <li className="text-yellow-900 font-semibold mb-2">
+                En utilisant TuniDrive.net, les utilisateurs reconnaissent expressément que la plateforme n’assure ni le transport, ni l’exploitation de véhicules, et qu’elle ne peut être tenue responsable des incidents, retards, dommages ou infractions liés à la prestation de transport.
+                </li>
+              </ul>
+            </div>
+
               <Button
                 type="submit"
                 loading={isSubmitting}
