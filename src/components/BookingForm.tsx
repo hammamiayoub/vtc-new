@@ -10,6 +10,7 @@ import {
   MessageSquare,
   CheckCircle,
   User,
+  Star,
   Loader2,
   AlertCircle,
   Target,
@@ -583,6 +584,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       // Étape 4.5: Vérifier le quota d'abonnement de chaque chauffeur
       console.log('🔍 Étape 4.5: Vérification des quotas d\'abonnement...');
       const driversWithValidSubscription = [];
+      const lifetimeByDriver = new Map<string, number>();
       
       for (const driver of availableDriversData) {
         try {
@@ -603,6 +605,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               courses: status.monthly_accepted_bookings,
               canAccept: status.can_accept_more_bookings
             });
+            if (typeof status.lifetime_accepted_bookings === 'number') {
+              lifetimeByDriver.set(driver.id, status.lifetime_accepted_bookings);
+            }
             
             // Inclure uniquement si le chauffeur peut accepter plus de courses
             if (status.can_accept_more_bookings) {
@@ -643,11 +648,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         status: driver.status,
         profilePhotoUrl: driver.profile_photo_url,
         createdAt: driver.created_at,
-        updatedAt: driver.updated_at
+        updatedAt: driver.updated_at,
+        bookingCount: lifetimeByDriver.get(driver.id)
       }));
 
-      // Étape 5: Trier les chauffeurs par proximité géographique
-      console.log('📍 Étape 5: Tri par proximité géographique...');
+      // Étape 5: Trier les chauffeurs en priorisant la photo véhicule, puis proximité
+      console.log('📍 Étape 5: Tri (photo véhicule d\'abord, puis proximité)...');
       
       if (pickupCoords) {
         console.log('📍 Coordonnées du point de départ:', pickupCoords);
@@ -680,9 +686,72 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           })
         );
         
+        // Récupérer les notes moyennes pour les chauffeurs disponibles
+        try {
+          const driverIds = driversWithDistance.map(d => d.id);
+          if (driverIds.length > 0) {
+            const { data: ratingRows, error: ratingErr } = await supabase
+              .from('driver_rating_stats')
+              .select('driver_id, average_rating, total_ratings')
+              .in('driver_id', driverIds);
+            if (ratingErr) {
+              console.warn('⚠️ Erreur récupération notes chauffeurs:', ratingErr);
+            }
+            const ratingsByDriver = new Map<string, { average_rating: any; total_ratings: number }>();
+            (ratingRows || []).forEach(r => {
+              ratingsByDriver.set(r.driver_id, {
+                average_rating: r.average_rating,
+                total_ratings: r.total_ratings
+              });
+            });
+            // Attacher les notes aux objets chauffeurs
+            for (let i = 0; i < driversWithDistance.length; i++) {
+              const d = driversWithDistance[i];
+              const stats = ratingsByDriver.get(d.id);
+              if (stats) {
+                (d as any).averageRating = typeof stats.average_rating === 'number' ? stats.average_rating : parseFloat(stats.average_rating);
+                (d as any).totalRatings = stats.total_ratings;
+              }
+            }
+            // Fallback: récupérer un nombre approximatif de courses depuis bookings si pas fourni par l'abonnement
+            const driversMissingCount = driversWithDistance.filter((d: any) => typeof d.bookingCount !== 'number');
+            if (driversMissingCount.length > 0) {
+              const { data: bookingCounts, error: bookingErr } = await supabase
+                .from('bookings')
+                .select('driver_id, count:id')
+                .in('driver_id', driversMissingCount.map(d => d.id))
+                .in('status', ['accepted','in_progress','completed'])
+                .group('driver_id');
+              if (bookingErr) {
+                console.warn('⚠️ Erreur récupération compte bookings:', bookingErr);
+              }
+              const countsByDriver = new Map<string, number>();
+              (bookingCounts || []).forEach((row: any) => {
+                countsByDriver.set(row.driver_id, row.count);
+              });
+              for (let i = 0; i < driversWithDistance.length; i++) {
+                const d = driversWithDistance[i] as any;
+                if (typeof d.bookingCount !== 'number') {
+                  d.bookingCount = countsByDriver.get(d.id);
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('⚠️ Impossible d\'attacher les notes aux chauffeurs:', err);
+        }
+        
         // Trier par distance croissante (le plus proche en premier)
-        const sortedDrivers = driversWithDistance.sort((a, b) => {
-          // Les chauffeurs avec une distance calculée passent en premier
+        const sortedDrivers = driversWithDistance.sort((a: any, b: any) => {
+          // 1) Priorité aux chauffeurs avec photo de véhicule
+          const aPhoto = !!a.vehicleInfo?.photoUrl;
+          const bPhoto = !!b.vehicleInfo?.photoUrl;
+          if (aPhoto !== bPhoto) return aPhoto ? -1 : 1;
+          // 2) Puis meilleure note moyenne
+          const aRating = typeof a.averageRating === 'number' ? a.averageRating : -1;
+          const bRating = typeof b.averageRating === 'number' ? b.averageRating : -1;
+          if (aRating !== bRating) return bRating - aRating;
+          // 3) Enfin, proximité (distance)
           if (a.distanceFromPickup === Infinity && b.distanceFromPickup !== Infinity) return 1;
           if (a.distanceFromPickup !== Infinity && b.distanceFromPickup === Infinity) return -1;
           return a.distanceFromPickup - b.distanceFromPickup;
@@ -696,10 +765,71 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         
         setAvailableDrivers(sortedDrivers);
       } else {
-        console.log('⚠️ Pas de coordonnées de départ, tri par ordre alphabétique');
-        const sortedDrivers = formattedDrivers.sort((a, b) => 
-          `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
-        );
+        console.log('⚠️ Pas de coordonnées de départ');
+        // Attacher les notes même sans coordonnées pour afficher le badge
+        let driversWithRatings: any[] = [...formattedDrivers];
+        try {
+          const driverIds = driversWithRatings.map(d => d.id);
+          if (driverIds.length > 0) {
+            const { data: ratingRows, error: ratingErr } = await supabase
+              .from('driver_rating_stats')
+              .select('driver_id, average_rating, total_ratings')
+              .in('driver_id', driverIds);
+            if (ratingErr) {
+              console.warn('⚠️ Erreur récupération notes chauffeurs (no pickup):', ratingErr);
+            }
+            const ratingsByDriver = new Map<string, { average_rating: any; total_ratings: number }>();
+            (ratingRows || []).forEach(r => {
+              ratingsByDriver.set(r.driver_id, {
+                average_rating: r.average_rating,
+                total_ratings: r.total_ratings
+              });
+            });
+            driversWithRatings = driversWithRatings.map(d => {
+              const stats = ratingsByDriver.get(d.id);
+              if (!stats) return d;
+              return {
+                ...d,
+                averageRating: typeof stats.average_rating === 'number' ? stats.average_rating : parseFloat(stats.average_rating),
+                totalRatings: stats.total_ratings
+              };
+            });
+            // Fallback: récupérer un nombre approximatif de courses depuis bookings si pas fourni par l'abonnement
+            const missingCountIds = driversWithRatings.filter((d: any) => typeof d.bookingCount !== 'number').map((d: any) => d.id);
+            if (missingCountIds.length > 0) {
+              const { data: bookingCounts, error: bookingErr } = await supabase
+                .from('bookings')
+                .select('driver_id, count:id')
+                .in('driver_id', missingCountIds)
+                .in('status', ['accepted','in_progress','completed'])
+                .group('driver_id');
+              if (bookingErr) {
+                console.warn('⚠️ Erreur récupération compte bookings (no pickup):', bookingErr);
+              }
+              const countsByDriver = new Map<string, number>();
+              (bookingCounts || []).forEach((row: any) => countsByDriver.set(row.driver_id, row.count));
+              driversWithRatings = driversWithRatings.map((d: any) => (
+                typeof d.bookingCount === 'number' ? d : { ...d, bookingCount: countsByDriver.get(d.id) }
+              ));
+            }
+          }
+        } catch (err) {
+          console.warn('⚠️ Impossible d\'attacher les notes (no pickup):', err);
+        }
+
+        // Tri: photo véhicule -> note -> nom
+        console.log('🔢 Tri (photo véhicule d\'abord, puis note, puis nom)');
+        const sortedDrivers = driversWithRatings.sort((a: any, b: any) => {
+          const aPhoto = !!a.vehicleInfo?.photoUrl;
+          const bPhoto = !!b.vehicleInfo?.photoUrl;
+          if (aPhoto !== bPhoto) return aPhoto ? -1 : 1;
+          const aRating = typeof a.averageRating === 'number' ? a.averageRating : -1;
+          const bRating = typeof b.averageRating === 'number' ? b.averageRating : -1;
+          if (aRating !== bRating) return bRating - aRating;
+          const aName = `${a.firstName} ${a.lastName}`;
+          const bName = `${b.firstName} ${b.lastName}`;
+          return aName.localeCompare(bName);
+        });
         setAvailableDrivers(sortedDrivers);
       }
       
@@ -1336,9 +1466,30 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="min-w-0 flex-1">
-                              <h4 className="font-medium text-gray-900 text-sm sm:text-base">
-                                {driver.firstName} {driver.lastName}
-                              </h4>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium text-gray-900 text-sm sm:text-base">
+                                  {driver.firstName} {driver.lastName}
+                                </h4>
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold flex-shrink-0 ${
+                                  typeof (driver as any).averageRating === 'number' && (driver as any).totalRatings > 0
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-gray-100 text-gray-600'
+                                }`}>
+                                  <Star size={12} className={
+                                    typeof (driver as any).averageRating === 'number' && (driver as any).totalRatings > 0
+                                      ? 'text-yellow-500'
+                                      : 'text-gray-400'
+                                  } />
+                                  {typeof (driver as any).averageRating === 'number' && (driver as any).totalRatings > 0
+                                    ? (driver as any).averageRating.toFixed(1)
+                                    : 'Nouveau'}
+                                </span>
+                                {typeof driver.bookingCount === 'number' && driver.bookingCount > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] sm:text-xs font-semibold flex-shrink-0">
+                                    ~{Math.max(1, Math.round(driver.bookingCount / 5) * 5)} courses
+                                  </span>
+                                )}
+                              </div>
                               {driver.city && (
                                 <p className="text-xs sm:text-sm text-gray-600 flex items-center gap-1 flex-wrap">
                                   <MapPin size={12} className="flex-shrink-0" />

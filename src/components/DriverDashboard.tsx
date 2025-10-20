@@ -1065,7 +1065,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       ⚠️ Limite mensuelle atteinte
                     </h3>
                     <p className="text-amber-800 mb-4">
-                      Vous avez accepté vos 2 courses gratuites ce mois. Vous ne pouvez plus accepter de nouvelles courses jusqu'au mois prochain.
+                      Vous avez accepté vos 3 courses gratuites. Vous ne pouvez plus accepter de nouvelles courses.
                     </p>
                     <p className="text-amber-900 font-semibold mb-4">
                       💡 Passez à l'abonnement Premium pour continuer à recevoir des courses !
