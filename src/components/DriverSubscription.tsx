@@ -33,7 +33,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
   const SUBSCRIPTION_PRICE_BASE_MONTHLY = 30.00;
   const VAT_PERCENTAGE = 19.00;
   const YEARLY_DISCOUNT = 0.10; // 10% de réduction
-  const BANK_ACCOUNT = "TN59 04 117 1850077170413 86"; // Sera remplacé plus tard
+  const BANK_ACCOUNT = "XXXX XXX XXX XXX XXX"; // Sera remplacé plus tard
 
   // Calcul des prix selon la période
   const calculatePrices = (billingPeriod: BillingPeriod) => {

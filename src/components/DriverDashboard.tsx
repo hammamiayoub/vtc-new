@@ -813,6 +813,23 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   <p className="text-sm sm:text-base text-gray-600">Tableau de bord chauffeur</p>
                 </div>
               </div>
+              {/* Directive légale pour les chauffeurs */}
+              <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="text-yellow-900 font-semibold mb-2">
+                  Responsabilités et obligations des chauffeurs indépendants
+                </h4>
+                <p className="text-yellow-900 text-sm mb-2">
+                  Les prestations de transport sont entièrement exécutées sous la responsabilité des chauffeurs indépendants, lesquels :
+                </p>
+                <ul className="list-disc pl-5 text-yellow-900 text-sm space-y-1">
+                  <li>
+                    Sont tenus de disposer de toutes les autorisations légales nécessaires à l’exercice du transport de personnes à titre onéreux (permis, autorisations, assurance, etc.) conformément à la réglementation tunisienne ;
+                  </li>
+                  <li>
+                    Ils assument seuls les obligations liées à la sécurité, la conformité des véhicules et le respect du code de la route.
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Status and Stats Cards */}
