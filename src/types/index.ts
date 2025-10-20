@@ -20,6 +20,9 @@ export interface Driver {
   cancelledByClient?: number; // Courses annulées par le client
   pendingBookings?: number; // Courses en attente
   inProgressBookings?: number; // Courses en cours
+  // Notes (calculées)
+  averageRating?: number;
+  totalRatings?: number;
 }
 
 export interface VehicleInfo {

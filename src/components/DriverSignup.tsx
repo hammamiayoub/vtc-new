@@ -86,11 +86,12 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: undefined, // Désactiver la redirection email
+          // Rediriger vers l'application après confirmation
+          emailRedirectTo: `${window.location.origin}/driver-login`,
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
-            email_confirm: true // Désactiver la confirmation par email
+            user_type: 'driver'
           }
         }
       });

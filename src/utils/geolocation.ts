@@ -256,7 +256,7 @@ export const popularAddresses = [
 'Tataouine', 'Remada', 'Ghomrassen', 'Bir Lahmar', 'Dehiba', 'Smar',
 'Tozeur', 'Nefta', 'Degache', 'Tameghza', 'Hezoua',
 'Tunis', 'Bab Souika', 'Bab El Bhar', 'Le Bardo', 'El Menzah', 'La Marsa', 'Sidi Bou Saïd', 'Carthage', 'El Kram', 'La Goulette',
-'Zaghouan', 'Zriba', 'El Fahs', 'Bir Mcherga', 'Saouaf', 'Nadhour'
+'Zaghouan', 'Zriba', 'El Fahs', 'Bir Mcherga', 'Saouaf', 'Nadhour','Ennasr 1','Ennasr 2','Mrezga'
 ];
 
 // Villes principales de Tunisie pour l'autocomplétion des résidences
@@ -284,7 +284,7 @@ export const tunisianCities = [
 'Tataouine', 'Remada', 'Ghomrassen', 'Bir Lahmar', 'Dehiba', 'Smar',
 'Tozeur', 'Nefta', 'Degache', 'Tameghza', 'Hezoua',
 'Tunis', 'Bab Souika', 'Bab El Bhar', 'Le Bardo', 'El Menzah', 'La Marsa', 'Sidi Bou Saïd', 'Carthage', 'El Kram', 'La Goulette',
-'Zaghouan', 'Zriba', 'El Fahs', 'Bir Mcherga', 'Saouaf', 'Nadhour'
+'Zaghouan', 'Zriba', 'El Fahs', 'Bir Mcherga', 'Saouaf', 'Nadhour','Ennasr 1','Ennasr 2','Mrezga'
 ];
 
 // Coordonnées approximatives des principales villes tunisiennes
@@ -300,6 +300,8 @@ export const tunisianCityCoordinates: Record<string, Coordinates> = {
 'La Goulette': { latitude: 36.8183, longitude: 10.3050 },
 'Le Bardo': { latitude: 36.8092, longitude: 10.1404 },
 'El Menzah': { latitude: 36.8390, longitude: 10.1840 },
+'Ennasr 1': { latitude: 36.8622, longitude: 10.1697 },
+'Ennasr 2': { latitude: 36.8622, longitude: 10.1697 },
 
 'Bizerte': { latitude: 37.2746, longitude: 9.8739 },
 'Menzel Bourguiba': { latitude: 37.1536, longitude: 9.7850 },
@@ -326,6 +328,7 @@ export const tunisianCityCoordinates: Record<string, Coordinates> = {
 'Menzel Bouzelfa': { latitude: 36.6950, longitude: 10.5850 },
 'Haouaria': { latitude: 37.0560, longitude: 11.0100 },
 'Beni Khalled': { latitude: 36.6500, longitude: 10.6000 },
+'Mrezga': { latitude: 36.7830, longitude: 10.6830 },
 
 'Sousse': { latitude: 35.8256, longitude: 10.6411 },
 'Msaken': { latitude: 35.7330, longitude: 10.5850 },
