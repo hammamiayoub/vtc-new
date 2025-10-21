@@ -1083,37 +1083,38 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Point de départ */}
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Point de départ
-              </label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <AddressAutocomplete
-                    inputId="pickup-address"
-                    value={pickupAddressValue}
-                    onChange={(value) => {
-                      setPickupAddressValue(value);
-                      setValue('pickupAddress', value);
-                    }}
-                    onPlaceSelect={handlePickupPlaceSelect}
-                    placeholder="Adresse de départ (ex: Avenue Habib Bourguiba, Tunis)"
-                    className={errors.pickupAddress ? 'ring-2 ring-red-500 rounded-lg' : ''}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={useCurrentLocation}
-                  disabled={gettingLocation}
-                  className="px-3 py-3 border border-gray-300 rounded-lg text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-50"
-                  title="Utiliser ma position actuelle"
-                >
-                  {gettingLocation ? (
-                    <Loader2 size={20} className="animate-spin" />
-                  ) : (
-                    <Target size={20} />
-                  )}
-                </button>
-              </div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Point de départ
+  </label>
+
+  <div className="relative">
+    <AddressAutocomplete
+      inputId="pickup-address"
+      value={pickupAddressValue}
+      onChange={(value) => {
+        setPickupAddressValue(value);
+        setValue('pickupAddress', value);
+      }}
+      onPlaceSelect={handlePickupPlaceSelect}
+      placeholder="Adresse de départ (ex: Avenue Habib Bourguiba, Tunis)"
+      className={`w-full pr-12 ${errors.pickupAddress ? 'ring-2 ring-red-500 rounded-lg' : 'rounded-lg border border-gray-300'}`}
+    />
+
+    {/* Bouton de géolocalisation à l'intérieur du champ */}
+    <button
+      type="button"
+      onClick={useCurrentLocation}
+      disabled={gettingLocation}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
+      title="Utiliser ma position actuelle"
+    >
+      {gettingLocation ? (
+        <Loader2 size={18} className="animate-spin" />
+      ) : (
+        <Target size={18} />
+      )}
+    </button>
+  </div>
               
               {errors.pickupAddress && (
                 <p className="mt-2 text-sm text-red-600">{errors.pickupAddress.message}</p>
