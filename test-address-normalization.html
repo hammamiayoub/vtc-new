@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de normalisation d'adresses</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-case {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .result {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .similar {
+            color: #27ae60;
+        }
+        .different {
+            color: #e74c3c;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de normalisation d'adresses</h1>
+        <p>Ce test vérifie que les adresses comme "Nabeul, Tunisie" et "Nabeul" sont considérées comme identiques.</p>
+        
+        <div class="test-case">
+            <h3>Test 1 : Adresses identiques</h3>
+            <div id="test1-result" class="result">En cours...</div>
+        </div>
+        
+        <div class="test-case">
+            <h3>Test 2 : Adresses différentes</h3>
+            <div id="test2-result" class="result">En cours...</div>
+        </div>
+        
+        <div class="test-case">
+            <h3>Test 3 : Variantes de villes</h3>
+            <div id="test3-result" class="result">En cours...</div>
+        </div>
+        
+        <div class="test-case">
+            <h3>Test personnalisé</h3>
+            <input type="text" id="address1" placeholder="Première adresse" value="Nabeul, Tunisie">
+            <input type="text" id="address2" placeholder="Deuxième adresse" value="Nabeul">
+            <button onclick="testCustomAddresses()">Tester la similarité</button>
+            <div id="custom-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Fonction de normalisation d'adresses
+        function normalizeAddress(address) {
+            if (!address) return '';
+            
+            return address
+                .toLowerCase()
+                .replace(/\s+/g, ' ')
+                .trim()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[,.]$/, '')
+                .replace(/\btunisie\b/g, 'tunisia')
+                .replace(/\btunis\b/g, 'tunis')
+                .replace(/\bnabeul\b/g, 'nabeul')
+                .replace(/\bsfax\b/g, 'sfax')
+                .replace(/\bsousse\b/g, 'sousse')
+                .replace(/\bmonastir\b/g, 'monastir')
+                .replace(/\bjerba\b/g, 'jerba')
+                .replace(/\bdjerba\b/g, 'jerba')
+                .replace(/\bzarzis\b/g, 'zarzis')
+                .replace(/\bhammamet\b/g, 'hammamet')
+                .replace(/\benfidha\b/g, 'enfidha')
+                .replace(/\btabarka\b/g, 'tabarka')
+                .replace(/\bbizerte\b/g, 'bizerte')
+                .replace(/\bkairouan\b/g, 'kairouan')
+                .replace(/\bgafsa\b/g, 'gafsa')
+                .replace(/\btozeur\b/g, 'tozeur')
+                .replace(/\btataouine\b/g, 'tataouine')
+                .replace(/\bmedenine\b/g, 'medenine')
+                .replace(/\bkebili\b/g, 'kebili')
+                .replace(/\bsiliana\b/g, 'siliana')
+                .replace(/\bzaghouan\b/g, 'zaghouan')
+                .replace(/\bmanouba\b/g, 'manouba')
+                .replace(/\bben arous\b/g, 'ben arous')
+                .replace(/\bariana\b/g, 'ariana')
+                .replace(/\bmehdia\b/g, 'mehdia')
+                .replace(/\bkelibia\b/g, 'kelibia')
+                .replace(/\bkorba\b/g, 'korba')
+                .replace(/\bmenzel bourguiba\b/g, 'menzel bourguiba')
+                .replace(/\bmenzel temime\b/g, 'menzel temime')
+                .replace(/\bferryville\b/g, 'menzel bourguiba')
+                .replace(/\bporto farina\b/g, 'menzel temime')
+                .replace(/\b(le|la|les|de|du|des|et|à|au|aux|en|dans|sur|sous|avec|pour|par|chez|vers|depuis|jusqu'à|jusqu'au|jusqu'aux)\b/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+        
+        // Fonction de calcul de similarité Jaro-Winkler
+        function calculateJaroWinklerSimilarity(str1, str2) {
+            if (str1 === str2) return 1.0;
+            if (str1.length === 0 || str2.length === 0) return 0.0;
+            
+            const matchWindow = Math.floor(Math.max(str1.length, str2.length) / 2) - 1;
+            if (matchWindow < 0) return 0.0;
+            
+            const str1Matches = new Array(str1.length).fill(false);
+            const str2Matches = new Array(str2.length).fill(false);
+            
+            let matches = 0;
+            let transpositions = 0;
+            
+            for (let i = 0; i < str1.length; i++) {
+                const start = Math.max(0, i - matchWindow);
+                const end = Math.min(i + matchWindow + 1, str2.length);
+                
+                for (let j = start; j < end; j++) {
+                    if (str2Matches[j] || str1[i] !== str2[j]) continue;
+                    str1Matches[i] = true;
+                    str2Matches[j] = true;
+                    matches++;
+                    break;
+                }
+            }
+            
+            if (matches === 0) return 0.0;
+            
+            let k = 0;
+            for (let i = 0; i < str1.length; i++) {
+                if (!str1Matches[i]) continue;
+                while (!str2Matches[k]) k++;
+                if (str1[i] !== str2[k]) transpositions++;
+                k++;
+            }
+            
+            const jaro = (matches / str1.length + matches / str2.length + (matches - transpositions / 2) / matches) / 3;
+            
+            let prefix = 0;
+            for (let i = 0; i < Math.min(str1.length, str2.length, 4); i++) {
+                if (str1[i] === str2[i]) prefix++;
+                else break;
+            }
+            
+            return jaro + (0.1 * prefix * (1 - jaro));
+        }
+        
+        // Fonction de comparaison d'adresses
+        function areAddressesSimilar(address1, address2, threshold = 0.8) {
+            const normalized1 = normalizeAddress(address1);
+            const normalized2 = normalizeAddress(address2);
+            
+            if (normalized1 === normalized2) {
+                return true;
+            }
+            
+            const similarity = calculateJaroWinklerSimilarity(normalized1, normalized2);
+            return similarity >= threshold;
+        }
+        
+        // Tests automatiques
+        function runTests() {
+            // Test 1 : Adresses identiques
+            const test1Result = areAddressesSimilar("Nabeul, Tunisie", "Nabeul");
+            document.getElementById('test1-result').innerHTML = 
+                `"Nabeul, Tunisie" vs "Nabeul" : <span class="${test1Result ? 'similar' : 'different'}">${test1Result ? 'SIMILAIRES ✅' : 'DIFFÉRENTES ❌'}</span>`;
+            
+            // Test 2 : Adresses différentes
+            const test2Result = areAddressesSimilar("Tunis", "Sfax");
+            document.getElementById('test2-result').innerHTML = 
+                `"Tunis" vs "Sfax" : <span class="${test2Result ? 'similar' : 'different'}">${test2Result ? 'SIMILAIRES ❌' : 'DIFFÉRENTES ✅'}</span>`;
+            
+            // Test 3 : Variantes de villes
+            const test3Results = [
+                areAddressesSimilar("Sfax, Tunisie", "Sfax"),
+                areAddressesSimilar("Sousse, Tunisie", "Sousse"),
+                areAddressesSimilar("Monastir, Tunisie", "Monastir")
+            ];
+            
+            const test3HTML = test3Results.map((result, index) => {
+                const cities = ["Sfax", "Sousse", "Monastir"];
+                return `${cities[index]} : <span class="${result ? 'similar' : 'different'}">${result ? 'SIMILAIRE ✅' : 'DIFFÉRENT ❌'}</span>`;
+            }).join('<br>');
+            
+            document.getElementById('test3-result').innerHTML = test3HTML;
+        }
+        
+        // Test personnalisé
+        function testCustomAddresses() {
+            const address1 = document.getElementById('address1').value;
+            const address2 = document.getElementById('address2').value;
+            
+            const normalized1 = normalizeAddress(address1);
+            const normalized2 = normalizeAddress(address2);
+            const similarity = calculateJaroWinklerSimilarity(normalized1, normalized2);
+            const areSimilar = areAddressesSimilar(address1, address2);
+            
+            document.getElementById('custom-result').innerHTML = `
+                <strong>Résultat :</strong><br>
+                Adresse 1 normalisée : "${normalized1}"<br>
+                Adresse 2 normalisée : "${normalized2}"<br>
+                Score de similarité : ${(similarity * 100).toFixed(1)}%<br>
+                <span class="${areSimilar ? 'similar' : 'different'}">
+                    ${areSimilar ? '✅ ADRESSES SIMILAIRES' : '❌ ADRESSES DIFFÉRENTES'}
+                </span>
+            `;
+        }
+        
+        // Lancer les tests au chargement
+        window.onload = function() {
+            runTests();
+        };
+    </script>
+</body>
+</html>

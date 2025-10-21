@@ -1,6 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, ChevronDown } from 'lucide-react';
-import { searchTunisianCities } from '../../utils/geolocation';
+
+// Liste des villes tunisiennes principales
+const tunisianCities = [
+  'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Bizerte', 'Nabeul', 'Hammamet',
+  'Sousse', 'Monastir', 'Mahdia', 'Sfax', 'Gabès', 'Gafsa', 'Kairouan',
+  'Kasserine', 'Le Kef', 'Jendouba', 'Béja', 'Zaghouan', 'Siliana',
+  'Médenine', 'Tataouine', 'Tozeur', 'Kebili', 'Sidi Bouzid'
+];
+
+// Fonction de recherche de villes
+const searchTunisianCities = (query: string): string[] => {
+  if (!query || query.length < 1) return [];
+  
+  const normalizedQuery = query.toLowerCase().trim();
+  return tunisianCities.filter(city => 
+    city.toLowerCase().includes(normalizedQuery)
+  ).slice(0, 10); // Limiter à 10 résultats
+};
 
 interface CityInputProps {
   value: string;
@@ -26,11 +43,11 @@ export const CityInput: React.FC<CityInputProps> = ({
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const searchCities = async () => {
+    const searchCities = () => {
       if (value && value.length > 1) {
         setLoading(true);
         try {
-          const results = await searchTunisianCities(value);
+          const results = searchTunisianCities(value);
           setSuggestions(results);
           setShowSuggestions(true);
         } catch (error) {
