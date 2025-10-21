@@ -1466,16 +1466,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-medium text-gray-900 text-sm sm:text-base">
-                                  {driver.firstName} {driver.lastName}
-                                </h4>
-                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold flex-shrink-0 ${
+                              <div className="flex items-center gap-1 flex-wrap">
+                                <h4 className="font-medium text-gray-900 text-sm sm:text-base flex-shrink-0">
+                                {driver.firstName} {driver.lastName}
+                              </h4>
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold flex-shrink-0 ${
                                   typeof (driver as any).averageRating === 'number' && (driver as any).totalRatings > 0
                                     ? 'bg-yellow-100 text-yellow-800'
                                     : 'bg-gray-100 text-gray-600'
                                 }`}>
-                                  <Star size={12} className={
+                                  <Star size={10} className={
                                     typeof (driver as any).averageRating === 'number' && (driver as any).totalRatings > 0
                                       ? 'text-yellow-500'
                                       : 'text-gray-400'
@@ -1485,7 +1485,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                                     : 'Nouveau'}
                                 </span>
                                 {typeof driver.bookingCount === 'number' && driver.bookingCount > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] sm:text-xs font-semibold flex-shrink-0">
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[9px] sm:text-[10px] font-semibold flex-shrink-0">
                                     ~{Math.max(1, Math.round(driver.bookingCount / 5) * 5)} courses
                                   </span>
                                 )}
