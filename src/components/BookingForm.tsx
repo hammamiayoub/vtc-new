@@ -716,23 +716,24 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             // Fallback: récupérer un nombre approximatif de courses depuis bookings si pas fourni par l'abonnement
             const driversMissingCount = driversWithDistance.filter((d: any) => typeof d.bookingCount !== 'number');
             if (driversMissingCount.length > 0) {
+              const driverIds = driversMissingCount.map(d => d.id);
               const { data: bookingCounts, error: bookingErr } = await supabase
                 .from('bookings')
-                .select('driver_id, count:id')
-                .in('driver_id', driversMissingCount.map(d => d.id))
-                .in('status', ['accepted','in_progress','completed'])
-                .group('driver_id');
+                .select('driver_id')
+                .in('driver_id', driverIds)
+                .in('status', ['accepted','in_progress','completed']);
               if (bookingErr) {
                 console.warn('⚠️ Erreur récupération compte bookings:', bookingErr);
               }
               const countsByDriver = new Map<string, number>();
               (bookingCounts || []).forEach((row: any) => {
-                countsByDriver.set(row.driver_id, row.count);
+                const current = countsByDriver.get(row.driver_id) || 0;
+                countsByDriver.set(row.driver_id, current + 1);
               });
               for (let i = 0; i < driversWithDistance.length; i++) {
                 const d = driversWithDistance[i] as any;
                 if (typeof d.bookingCount !== 'number') {
-                  d.bookingCount = countsByDriver.get(d.id);
+                  d.bookingCount = countsByDriver.get(d.id) || 0;
                 }
               }
             }
@@ -799,17 +800,19 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             if (missingCountIds.length > 0) {
               const { data: bookingCounts, error: bookingErr } = await supabase
                 .from('bookings')
-                .select('driver_id, count:id')
+                .select('driver_id')
                 .in('driver_id', missingCountIds)
-                .in('status', ['accepted','in_progress','completed'])
-                .group('driver_id');
+                .in('status', ['accepted','in_progress','completed']);
               if (bookingErr) {
                 console.warn('⚠️ Erreur récupération compte bookings (no pickup):', bookingErr);
               }
               const countsByDriver = new Map<string, number>();
-              (bookingCounts || []).forEach((row: any) => countsByDriver.set(row.driver_id, row.count));
+              (bookingCounts || []).forEach((row: any) => {
+                const current = countsByDriver.get(row.driver_id) || 0;
+                countsByDriver.set(row.driver_id, current + 1);
+              });
               driversWithRatings = driversWithRatings.map((d: any) => (
-                typeof d.bookingCount === 'number' ? d : { ...d, bookingCount: countsByDriver.get(d.id) }
+                typeof d.bookingCount === 'number' ? d : { ...d, bookingCount: countsByDriver.get(d.id) || 0 }
               ));
             }
           }
