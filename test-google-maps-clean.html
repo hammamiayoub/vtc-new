@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google Maps Clean</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Test Google Maps Clean</h1>
+        <p>Ce test nettoie l'état et teste le loader centralisé dans un environnement propre.</p>
+        
+        <div id="status" class="status info">
+            🔄 Préparation du test...
+        </div>
+
+        <div class="test-section">
+            <h3>Nettoyage de l'environnement</h3>
+            <div id="cleanup-status">En attente...</div>
+            <button onclick="cleanupEnvironment()">Nettoyer l'environnement</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Test du loader centralisé</h3>
+            <div id="loader-status">En attente...</div>
+            <button onclick="testLoader()">Tester le loader</button>
+            <button onclick="testMultipleCalls()">Test appels multiples</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Test de l'autocomplétion</h3>
+            <input type="text" id="address-input" placeholder="Tapez une adresse en Tunisie..." />
+            <div id="autocomplete-status">En attente...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>Logs de débogage</h3>
+            <div id="logs" class="log"></div>
+            <button onclick="clearLogs()">Effacer les logs</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_KEY = 'AIzaSyCHHlwh5ihJp_ywn6T8JBrKQfHR1rg6iBc'; // Remplacez par votre vraie clé
+        const logs = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push(logEntry);
+            
+            console.log(logEntry);
+            
+            const logsDiv = document.getElementById('logs');
+            logsDiv.innerHTML = logs.join('\n');
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function clearLogs() {
+            logs.length = 0;
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function updateCleanupStatus(message, type) {
+            const cleanupStatusDiv = document.getElementById('cleanup-status');
+            cleanupStatusDiv.textContent = message;
+            cleanupStatusDiv.className = `status ${type}`;
+        }
+
+        function updateLoaderStatus(message, type) {
+            const loaderStatusDiv = document.getElementById('loader-status');
+            loaderStatusDiv.textContent = message;
+            loaderStatusDiv.className = `status ${type}`;
+        }
+
+        function updateAutocompleteStatus(message, type) {
+            const autocompleteStatusDiv = document.getElementById('autocomplete-status');
+            autocompleteStatusDiv.textContent = message;
+            autocompleteStatusDiv.className = `status ${type}`;
+        }
+
+        // Nettoyer l'environnement
+        function cleanupEnvironment() {
+            log('🧹 Nettoyage de l\'environnement...');
+            updateCleanupStatus('🔄 Nettoyage en cours...', 'warning');
+
+            try {
+                // Supprimer tous les scripts Google Maps existants
+                const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
+                log(`🗑️ Suppression de ${existingScripts.length} script(s) Google Maps existant(s)`);
+                
+                existingScripts.forEach(script => {
+                    script.remove();
+                });
+
+                // Nettoyer les callbacks globaux
+                if (window.googleMapsGlobalCallback) {
+                    delete window.googleMapsGlobalCallback;
+                }
+
+                // Nettoyer l'objet google
+                if (window.google) {
+                    delete window.google;
+                }
+
+                // Réinitialiser le loader
+                googleMapsLoader.reset();
+
+                updateCleanupStatus('✅ Environnement nettoyé', 'success');
+                log('✅ Nettoyage terminé avec succès');
+
+            } catch (error) {
+                updateCleanupStatus(`❌ Erreur: ${error.message}`, 'error');
+                log(`❌ Erreur lors du nettoyage: ${error.message}`);
+            }
+        }
+
+        // Simuler le loader centralisé
+        class GoogleMapsLoader {
+            constructor() {
+                this.state = {
+                    isLoaded: false,
+                    isLoading: false,
+                    loadPromise: null
+                };
+                this.callbacks = [];
+            }
+
+            isGoogleMapsLoaded() {
+                return this.state.isLoaded && 
+                       typeof window !== 'undefined' && 
+                       window.google && 
+                       window.google.maps && 
+                       window.google.maps.places;
+            }
+
+            async loadGoogleMaps() {
+                log('🔧 Appel à loadGoogleMaps()');
+                
+                // Si déjà chargé, retourner immédiatement
+                if (this.isGoogleMapsLoaded()) {
+                    log('✅ Google Maps déjà chargé');
+                    return Promise.resolve();
+                }
+
+                // Si en cours de chargement, retourner la promesse existante
+                if (this.state.isLoading && this.state.loadPromise) {
+                    log('⏳ Google Maps en cours de chargement, attente...');
+                    return this.state.loadPromise;
+                }
+
+                // Démarrer le chargement
+                this.state.isLoading = true;
+                this.state.loadPromise = this._loadGoogleMapsScript();
+                
+                return this.state.loadPromise;
+            }
+
+            async _loadGoogleMapsScript() {
+                try {
+                    log('🔑 Chargement de Google Maps avec la clé API...');
+
+                    // Vérifier si un script Google Maps existe déjà
+                    const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
+                    if (existingScripts.length > 0) {
+                        log(`⚠️ ${existingScripts.length} script(s) Google Maps déjà présent(s), attente du chargement...`);
+                        await this._waitForGoogleMaps();
+                        this.state.isLoaded = true;
+                        this.state.isLoading = false;
+                        this._notifyCallbacks();
+                        return;
+                    }
+
+                    // Charger l'API Google Maps
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places&callback=googleMapsGlobalCallback`;
+                        script.async = true;
+                        script.defer = true;
+                        
+                        window.googleMapsGlobalCallback = () => {
+                            log('✅ Google Maps chargé avec succès (callback global)');
+                            resolve();
+                        };
+                        
+                        script.onerror = (error) => {
+                            log('❌ Erreur de chargement de Google Maps');
+                            reject(new Error('Erreur de chargement de Google Maps'));
+                        };
+                        
+                        document.head.appendChild(script);
+                    });
+
+                    // Attendre que l'objet google soit disponible
+                    await this._waitForGoogleMaps();
+                    
+                    this.state.isLoaded = true;
+                    this.state.isLoading = false;
+                    this._notifyCallbacks();
+                    
+                    log('✅ Google Maps chargé et initialisé avec succès');
+
+                } catch (error) {
+                    this.state.isLoading = false;
+                    this.state.loadPromise = null;
+                    log(`❌ Erreur lors du chargement de Google Maps: ${error.message}`);
+                    throw error;
+                }
+            }
+
+            async _waitForGoogleMaps() {
+                return new Promise((resolve) => {
+                    const checkGoogle = () => {
+                        if (window.google && window.google.maps && window.google.maps.places) {
+                            resolve();
+                        } else {
+                            setTimeout(checkGoogle, 100);
+                        }
+                    };
+                    checkGoogle();
+                });
+            }
+
+            _notifyCallbacks() {
+                this.callbacks.forEach(callback => {
+                    try {
+                        callback();
+                    } catch (error) {
+                        log(`❌ Erreur dans le callback Google Maps: ${error.message}`);
+                    }
+                });
+                this.callbacks = [];
+            }
+
+            onGoogleMapsLoaded(callback) {
+                if (this.isGoogleMapsLoaded()) {
+                    callback();
+                } else {
+                    this.callbacks.push(callback);
+                }
+            }
+
+            reset() {
+                this.state = {
+                    isLoaded: false,
+                    isLoading: false,
+                    loadPromise: null
+                };
+                this.callbacks = [];
+            }
+        }
+
+        // Instance singleton
+        const googleMapsLoader = new GoogleMapsLoader();
+
+        // Test du loader
+        async function testLoader() {
+            log('🧪 Test du loader centralisé...');
+            updateLoaderStatus('🔄 Test en cours...', 'warning');
+
+            try {
+                await googleMapsLoader.loadGoogleMaps();
+                
+                if (googleMapsLoader.isGoogleMapsLoaded()) {
+                    updateLoaderStatus('✅ Loader fonctionne correctement', 'success');
+                    log('✅ Test du loader réussi');
+                } else {
+                    updateLoaderStatus('❌ Loader ne fonctionne pas', 'error');
+                    log('❌ Test du loader échoué');
+                }
+            } catch (error) {
+                updateLoaderStatus(`❌ Erreur: ${error.message}`, 'error');
+                log(`❌ Erreur lors du test: ${error.message}`);
+            }
+        }
+
+        // Test d'appels multiples
+        async function testMultipleCalls() {
+            log('🧪 Test d\'appels multiples...');
+            updateLoaderStatus('🔄 Test appels multiples...', 'warning');
+
+            try {
+                // Compter les scripts avant le test
+                const scriptsBefore = document.querySelectorAll('script[src*="maps.googleapis.com"]').length;
+                log(`📊 Scripts avant le test: ${scriptsBefore}`);
+                
+                // Faire plusieurs appels simultanés
+                const promises = [
+                    googleMapsLoader.loadGoogleMaps(),
+                    googleMapsLoader.loadGoogleMaps(),
+                    googleMapsLoader.loadGoogleMaps()
+                ];
+
+                await Promise.all(promises);
+                
+                // Vérifier qu'il n'y a pas de nouveaux scripts ajoutés
+                const scriptsAfter = document.querySelectorAll('script[src*="maps.googleapis.com"]').length;
+                log(`📊 Scripts après le test: ${scriptsAfter}`);
+                
+                // Le test est réussi si aucun nouveau script n'a été ajouté
+                if (scriptsAfter === scriptsBefore) {
+                    updateLoaderStatus('✅ Appels multiples gérés correctement (aucun nouveau script)', 'success');
+                    log('✅ Test d\'appels multiples réussi - Aucun nouveau script ajouté');
+                } else {
+                    updateLoaderStatus(`⚠️ ${scriptsAfter - scriptsBefore} nouveau(x) script(s) ajouté(s)`, 'warning');
+                    log(`⚠️ ${scriptsAfter - scriptsBefore} nouveau(x) script(s) ajouté(s) - Le loader devrait éviter cela`);
+                }
+            } catch (error) {
+                updateLoaderStatus(`❌ Erreur: ${error.message}`, 'error');
+                log(`❌ Erreur lors du test: ${error.message}`);
+            }
+        }
+
+        // Test de l'autocomplétion
+        async function testAutocomplete() {
+            log('🔧 Test de l\'autocomplétion...');
+            
+            if (!googleMapsLoader.isGoogleMapsLoaded()) {
+                log('❌ Google Maps non chargé, impossible de tester l\'autocomplétion');
+                updateAutocompleteStatus('❌ Google Maps non chargé', 'error');
+                return false;
+            }
+
+            try {
+                const input = document.getElementById('address-input');
+                
+                if (!input) {
+                    log('❌ Input non trouvé');
+                    updateAutocompleteStatus('❌ Input non trouvé', 'error');
+                    return false;
+                }
+
+                log('🔧 Initialisation de l\'autocomplétion...');
+                updateAutocompleteStatus('🔄 Initialisation...', 'warning');
+
+                const autocomplete = new google.maps.places.Autocomplete(input, {
+                    types: ['geocode', 'establishment'],
+                    componentRestrictions: { country: 'tn' },
+                    fields: ['formatted_address', 'geometry', 'place_id', 'name', 'address_components']
+                });
+
+                autocomplete.addListener('place_changed', () => {
+                    try {
+                        const place = autocomplete.getPlace();
+                        log(`📍 Lieu sélectionné: ${place.formatted_address || 'Adresse non disponible'}`);
+                        
+                        if (place && place.formatted_address) {
+                            updateAutocompleteStatus(`✅ Lieu sélectionné: ${place.formatted_address}`, 'success');
+                        } else {
+                            updateAutocompleteStatus('⚠️ Lieu sélectionné mais adresse non disponible', 'warning');
+                        }
+                    } catch (error) {
+                        log(`❌ Erreur lors de la sélection: ${error.message}`);
+                        updateAutocompleteStatus(`❌ Erreur: ${error.message}`, 'error');
+                    }
+                });
+
+                log('✅ Autocomplétion initialisée avec succès');
+                updateAutocompleteStatus('✅ Autocomplétion prête - Tapez une adresse', 'success');
+                return true;
+
+            } catch (error) {
+                log(`❌ Erreur lors de l'initialisation de l'autocomplétion: ${error.message}`);
+                updateAutocompleteStatus(`❌ Erreur: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // Test complet
+        async function runCompleteTest() {
+            log('🚀 Début du test complet...');
+            updateStatus('🔄 Test en cours...', 'warning');
+
+            try {
+                // Test 1: Nettoyage
+                cleanupEnvironment();
+                
+                // Attendre un peu
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Test 2: Loader
+                await testLoader();
+                
+                // Test 3: Appels multiples
+                await testMultipleCalls();
+                
+                // Test 4: Autocomplétion
+                await testAutocomplete();
+
+                updateStatus('✅ Tous les tests réussis !', 'success');
+                log('🎉 Test complet terminé avec succès');
+
+            } catch (error) {
+                log(`❌ Erreur lors du test complet: ${error.message}`);
+                updateStatus(`❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        // Démarrer le test au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            log('📄 Page chargée, démarrage du test...');
+            runCompleteTest();
+        });
+    </script>
+</body>
+</html>

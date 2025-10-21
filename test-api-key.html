@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google Maps API Key</title>
+</head>
+<body>
+    <h1>Test Google Maps API Key</h1>
+    <div id="status">Chargement...</div>
+    <div id="details"></div>
+
+    <script>
+        // Remplacez par votre vraie clé API
+        const API_KEY = 'AIzaSyCHHlwh5ihJp_ywn6T8JBrKQfHR1rg6iBc';
+        
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.color = isError ? 'red' : 'green';
+        }
+        
+        function addDetail(message) {
+            const details = document.getElementById('details');
+            details.innerHTML += '<p>' + message + '</p>';
+        }
+        
+        async function testGoogleMaps() {
+            try {
+                updateStatus('Test de la clé API...');
+                addDetail('Clé API: ' + API_KEY.substring(0, 20) + '...');
+                
+                // Test direct de l'API
+                const response = await fetch(`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places`);
+                
+                if (response.ok) {
+                    updateStatus('✅ Clé API valide !');
+                    addDetail('✅ L\'API Google Maps est accessible');
+                    
+                    // Test du chargement de l'API
+                    const script = document.createElement('script');
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places&callback=initMap`;
+                    document.head.appendChild(script);
+                    
+                } else {
+                    updateStatus('❌ Clé API invalide', true);
+                    addDetail('❌ Erreur HTTP: ' + response.status);
+                }
+                
+            } catch (error) {
+                updateStatus('❌ Erreur de test', true);
+                addDetail('❌ Erreur: ' + error.message);
+            }
+        }
+        
+        // Fonction de callback pour Google Maps
+        window.initMap = function() {
+            updateStatus('✅ Google Maps chargé avec succès !');
+            addDetail('✅ Objet google disponible: ' + (typeof google !== 'undefined'));
+            addDetail('✅ Places API disponible: ' + (typeof google.maps.places !== 'undefined'));
+        };
+        
+        // Lancer le test
+        testGoogleMaps();
+    </script>
+</body>
+</html>

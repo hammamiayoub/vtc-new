@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
   MapPin, 
-  Navigation, 
   Clock, 
   Calculator, 
   Car, 
@@ -20,8 +19,9 @@ import { Button } from './ui/Button';
 import { bookingSchema } from '../utils/validation';
 import { BookingFormData, Driver } from '../types';
 import { supabase } from '../lib/supabase';
+import AddressAutocomplete from './AddressAutocomplete';
+import { normalizeAddress, areAddressesSimilar } from '../utils/addressNormalization';
 import { 
-  geocodeAddress, 
   calculateDistance, 
   calculateDrivingDistance,
   calculatePrice, 
@@ -29,8 +29,6 @@ import {
   getPricePerKm,
   getVehicleMultiplier,
   getCurrentPosition,
-  popularAddresses,
-  calculateDistanceFromCity,
   getCityCoordinates,
   Coordinates,
   PriceSurcharges
@@ -55,10 +53,59 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const [pickupCoords, setPickupCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
-  const [pickupSuggestions, setPickupSuggestions] = useState<string[]>([]);
-  const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
-  const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
-  const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
+  
+  // États locaux pour les valeurs des champs d'adresse
+  const [pickupAddressValue, setPickupAddressValue] = useState('');
+  const [destinationAddressValue, setDestinationAddressValue] = useState('');
+
+  // Gestion de la sélection des lieux
+  const handlePickupPlaceSelect = (place: google.maps.places.PlaceResult) => {
+    console.log('🔍 handlePickupPlaceSelect appelé avec:', place);
+    
+    if (place.geometry?.location) {
+      const coords = {
+        latitude: place.geometry.location.lat(),
+        longitude: place.geometry.location.lng()
+      };
+      
+      const newAddress = place.formatted_address || '';
+      
+      // Mettre à jour les coordonnées et la valeur locale
+      setPickupCoords(coords);
+      setPickupAddressValue(newAddress);
+      setValue('pickupAddress', newAddress);
+      
+      console.log('📍 Lieu de départ sélectionné:', place.formatted_address, coords);
+      console.log('📍 Adresse normalisée:', normalizeAddress(newAddress));
+      console.log('✅ Valeur du champ de départ mise à jour:', newAddress);
+    } else {
+      console.log('❌ Pas de géométrie dans le lieu sélectionné:', place);
+    }
+  };
+
+  const handleDestinationPlaceSelect = (place: google.maps.places.PlaceResult) => {
+    console.log('🔍 handleDestinationPlaceSelect appelé avec:', place);
+    
+    if (place.geometry?.location) {
+      const coords = {
+        latitude: place.geometry.location.lat(),
+        longitude: place.geometry.location.lng()
+      };
+      
+      const newAddress = place.formatted_address || '';
+      
+      // Mettre à jour les coordonnées et la valeur locale
+      setDestinationCoords(coords);
+      setDestinationAddressValue(newAddress);
+      setValue('destinationAddress', newAddress);
+      
+      console.log('📍 Lieu d\'arrivée sélectionné:', place.formatted_address, coords);
+      console.log('📍 Adresse normalisée:', normalizeAddress(newAddress));
+      console.log('✅ Valeur du champ d\'arrivée mise à jour:', newAddress);
+    } else {
+      console.log('❌ Pas de géométrie dans le lieu sélectionné:', place);
+    }
+  };
   const [priceSurcharges, setPriceSurcharges] = useState<PriceSurcharges | null>(null);
 
   // Options pour les types de véhicules
@@ -91,29 +138,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const watchScheduledTime = watch('scheduledTime');
 
   // Autocomplétion des adresses
-  useEffect(() => {
-    if (watchPickup && watchPickup.length > 2) {
-      const filtered = popularAddresses.filter(addr => 
-        addr.toLowerCase().includes(watchPickup.toLowerCase())
-      );
-      setPickupSuggestions(filtered.slice(0, 5));
-      setShowPickupSuggestions(true);
-    } else {
-      setShowPickupSuggestions(false);
-    }
-  }, [watchPickup]);
-
-  useEffect(() => {
-    if (watchDestination && watchDestination.length > 2) {
-      const filtered = popularAddresses.filter(addr => 
-        addr.toLowerCase().includes(watchDestination.toLowerCase())
-      );
-      setDestinationSuggestions(filtered.slice(0, 5));
-      setShowDestinationSuggestions(true);
-    } else {
-      setShowDestinationSuggestions(false);
-    }
-  }, [watchDestination]);
 
   // Recalcul du prix et de la distance quand le trajet retour ou la date/heure change
   useEffect(() => {
@@ -122,134 +146,130 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       const finalDistance = watchIsReturnTrip ? baseDistance * 2 : baseDistance;
       setEstimatedDistance(finalDistance);
       
-      // Calculer le prix de base
-      const basePrice = calculatePrice(baseDistance, watchVehicleType);
-      
-      // Appliquer le multiplicateur de trajet retour si nécessaire
-      let priceBeforeSurcharges = watchIsReturnTrip ? basePrice * 1.8 : basePrice;
-      
-      // Calculer les suppléments (nuit et week-end)
+      // Calculer les suppléments (nuit et week-end) avec le paramètre isReturnTrip
       const { surcharges, finalPrice } = calculatePriceWithSurcharges(
         baseDistance,
         watchVehicleType,
-        watchScheduledTime
+        watchScheduledTime,
+        watchIsReturnTrip
       );
       
-      // Appliquer aussi les suppléments au trajet retour si nécessaire
-      if (watchIsReturnTrip) {
-        priceBeforeSurcharges = basePrice * 1.8;
-        const totalSurcharge = priceBeforeSurcharges * (surcharges.totalSurchargePercent / 100);
-        const finalPriceWithReturnAndSurcharges = priceBeforeSurcharges + totalSurcharge;
-        setEstimatedPrice(Math.round(finalPriceWithReturnAndSurcharges * 100) / 100);
-        
-        // Mettre à jour les suppléments pour refléter le prix avec retour
-        setPriceSurcharges({
-          ...surcharges,
-          totalSurcharge: Math.round(totalSurcharge * 100) / 100
-        });
-      } else {
-        setEstimatedPrice(finalPrice);
-        setPriceSurcharges(surcharges);
-      }
+      // Utiliser directement le résultat de calculatePriceWithSurcharges
+      setEstimatedPrice(finalPrice);
+      setPriceSurcharges(surcharges);
     } else if (baseDistance && watchVehicleType !== undefined && !watchScheduledTime) {
-      // Si pas de date/heure, calculer sans supplément
+      // Si pas de date/heure, calculer sans supplément mais avec le trajet retour
       const finalDistance = watchIsReturnTrip ? baseDistance * 2 : baseDistance;
       setEstimatedDistance(finalDistance);
       
-      const basePrice = calculatePrice(baseDistance, watchVehicleType);
-      const finalPrice = watchIsReturnTrip ? basePrice * 1.8 : basePrice;
+      // Utiliser calculatePriceWithSurcharges même sans date pour gérer le trajet retour
+      const { surcharges, finalPrice } = calculatePriceWithSurcharges(
+        baseDistance,
+        watchVehicleType,
+        new Date(), // Date actuelle
+        watchIsReturnTrip
+      );
       
-      setEstimatedPrice(Math.round(finalPrice * 100) / 100);
-      setPriceSurcharges(null);
+      setEstimatedPrice(finalPrice);
+      setPriceSurcharges(surcharges);
     }
   }, [watchVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime]);
 
-  // Calcul automatique de la distance et du prix
+  // Calcul automatique de la distance et du prix avec coordonnées Google Maps
   useEffect(() => {
     const calculateRoute = async () => {
-      if (watchPickup && watchDestination && watchPickup.length > 3 && watchDestination.length > 3) {
-        setIsCalculating(true);
-        
-        try {
-          // Essayer d'abord de récupérer les coordonnées des villes prédéfinies
-          const [pickupCoordsResult, destinationCoordsResult] = await Promise.all([
-            getCityCoordinates(watchPickup),
-            getCityCoordinates(watchDestination)
-          ]);
+      // Vérifier que nous avons les coordonnées Google Maps
+      if (!pickupCoords || !destinationCoords) {
+        console.log('📍 En attente des coordonnées Google Maps...');
+        setEstimatedDistance(null);
+        setEstimatedPrice(null);
+        setBaseDistance(null);
+        return;
+      }
 
-          let pickupResult, destinationResult;
+      if (!watchVehicleType) {
+        console.log('📍 En attente de la sélection du type de véhicule...');
+        return;
+      }
 
-          // Si les coordonnées de ville ne sont pas trouvées, utiliser le géocodage
-          if (pickupCoordsResult) {
-            pickupResult = {
-              coordinates: pickupCoordsResult,
-              formattedAddress: watchPickup
-            };
-          } else {
-            pickupResult = await geocodeAddress(watchPickup);
-          }
-
-          if (destinationCoordsResult) {
-            destinationResult = {
-              coordinates: destinationCoordsResult,
-              formattedAddress: watchDestination
-            };
-          } else {
-            destinationResult = await geocodeAddress(watchDestination);
-          }
-
-          if (pickupResult && destinationResult) {
-            setPickupCoords(pickupResult.coordinates);
-            setDestinationCoords(destinationResult.coordinates);
+      setIsCalculating(true);
+      
+      try {
+        console.log('📍 Calcul avec les coordonnées Google Maps:', {
+          pickup: { lat: pickupCoords.latitude, lng: pickupCoords.longitude },
+          destination: { lat: destinationCoords.latitude, lng: destinationCoords.longitude }
+        });
 
             // Calculer la distance routière de base (sans retour)
             let distance = await calculateDrivingDistance(
-              pickupResult.coordinates.latitude,
-              pickupResult.coordinates.longitude,
-              destinationResult.coordinates.latitude,
-              destinationResult.coordinates.longitude
+          pickupCoords.latitude,
+          pickupCoords.longitude,
+          destinationCoords.latitude,
+          destinationCoords.longitude
             );
 
             // Si la distance routière n'est pas disponible, utiliser la distance à vol d'oiseau
             if (distance === null) {
+          console.log('📍 Distance routière non disponible, utilisation de la distance à vol d\'oiseau');
               distance = calculateDistance(
-                pickupResult.coordinates.latitude,
-                pickupResult.coordinates.longitude,
-                destinationResult.coordinates.latitude,
-                destinationResult.coordinates.longitude
-              );
-            }
+            pickupCoords.latitude,
+            pickupCoords.longitude,
+            destinationCoords.latitude,
+            destinationCoords.longitude
+          );
+        }
+
+        console.log('✅ Distance calculée:', distance, 'km');
 
             // Stocker la distance de base (sans retour)
             setBaseDistance(distance);
+        
+        // Calculer le prix avec le type de véhicule sélectionné
+        const selectedVehicleType = watchVehicleType;
+        console.log('🚗 Type de véhicule sélectionné:', selectedVehicleType);
+        
+        if (selectedVehicleType) {
+          const priceResult = calculatePriceWithSurcharges(
+            distance,
+            selectedVehicleType,
+            new Date(), // Date actuelle pour les surcharges
+            watchIsReturnTrip || false
+          );
+          
+          console.log('💰 Prix calculé:', priceResult);
+          
+          // Mettre à jour les états
+          // Calculer la distance finale (avec ou sans retour)
+          const finalDistance = watchIsReturnTrip ? distance * 2 : distance;
+          setEstimatedDistance(finalDistance);
+          setEstimatedPrice(priceResult.finalPrice);
+          
+          console.log('✅ Distance et prix mis à jour:', {
+            distance: distance,
+            price: priceResult.finalPrice,
+            isReturnTrip: watchIsReturnTrip
+          });
           } else {
-            setEstimatedDistance(null);
-            setEstimatedPrice(null);
-            setBaseDistance(null);
-            setPickupCoords(null);
-            setDestinationCoords(null);
+          console.log('⚠️ Type de véhicule non sélectionné, prix non calculé');
+          // Calculer la distance finale (avec ou sans retour)
+          const finalDistance = watchIsReturnTrip ? distance * 2 : distance;
+          setEstimatedDistance(finalDistance);
+          setEstimatedPrice(null);
           }
+        
         } catch (error) {
-          console.error('Erreur lors du calcul de la route:', error);
+        console.error('❌ Erreur lors du calcul de la route:', error);
           setEstimatedDistance(null);
           setEstimatedPrice(null);
           setBaseDistance(null);
         } finally {
           setIsCalculating(false);
-        }
-      } else {
-        setEstimatedDistance(null);
-        setEstimatedPrice(null);
-        setBaseDistance(null);
-        setPickupCoords(null);
-        setDestinationCoords(null);
       }
     };
 
-    // Délai pour éviter trop d'appels API
-    const timeoutId = setTimeout(calculateRoute, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [watchPickup, watchDestination, watch]);
+    calculateRoute();
+  }, [pickupCoords, destinationCoords, watchVehicleType, watchIsReturnTrip]);
+
 
   const useCurrentLocation = async () => {
     setGettingLocation(true);
@@ -264,6 +284,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       if (response.ok) {
         const data = await response.json();
         setValue('pickupAddress', data.display_name);
+        setPickupAddressValue(data.display_name);
         setPickupCoords(position);
       }
     } catch (error) {
@@ -665,12 +686,22 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             
             if (driver.city) {
               try {
-                const calculatedDistance = await calculateDistanceFromCity(driver.city, pickupCoords);
+                // Calculer la distance entre la ville du chauffeur et le point de départ
+                // Utiliser des coordonnées approximatives pour les villes
+                const cityCoords = getCityCoordinates(driver.city);
+                if (cityCoords) {
+                  const calculatedDistance = calculateDistance(
+                    cityCoords.latitude,
+                    cityCoords.longitude,
+                    pickupCoords.latitude,
+                    pickupCoords.longitude
+                  );
                 if (calculatedDistance !== null) {
                   distance = calculatedDistance;
                   console.log(`📏 Distance ${driver.firstName} ${driver.lastName} (${driver.city}): ${distance} km`);
                 } else {
                   console.warn(`⚠️ Impossible de calculer la distance pour ${driver.city}`);
+                  }
                 }
               } catch (error) {
                 console.error(`❌ Erreur calcul distance pour ${driver.city}:`, error);
@@ -1030,15 +1061,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     return now.toISOString().slice(0, 16);
   };
 
-  const selectSuggestion = (address: string, type: 'pickup' | 'destination') => {
-    if (type === 'pickup') {
-      setValue('pickupAddress', address);
-      setShowPickupSuggestions(false);
-    } else {
-      setValue('destinationAddress', address);
-      setShowDestinationSuggestions(false);
-    }
-  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-0">
@@ -1047,6 +1069,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             Réserver une course
           </h2>
+          
+          {/* Test Google Maps - À supprimer après vérification */}
+         
+          
           <p className="text-sm sm:text-base text-gray-600">
             Renseignez les détails de votre trajet en Tunisie
           </p>
@@ -1060,25 +1086,25 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Point de départ
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MapPin className="h-5 w-5 text-green-600" />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <AddressAutocomplete
+                    inputId="pickup-address"
+                    value={pickupAddressValue}
+                    onChange={(value) => {
+                      setPickupAddressValue(value);
+                      setValue('pickupAddress', value);
+                    }}
+                    onPlaceSelect={handlePickupPlaceSelect}
+                    placeholder="Adresse de départ (ex: Avenue Habib Bourguiba, Tunis)"
+                    className={errors.pickupAddress ? 'ring-2 ring-red-500 rounded-lg' : ''}
+                  />
                 </div>
-                <input
-                  {...register('pickupAddress')}
-                  type="text"
-                  placeholder="Adresse de départ (ex: Avenue Habib Bourguiba, Tunis)"
-                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-                    errors.pickupAddress ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  onFocus={() => setShowPickupSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowPickupSuggestions(false), 200)}
-                />
                 <button
                   type="button"
                   onClick={useCurrentLocation}
                   disabled={gettingLocation}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-600 hover:text-blue-700"
+                  className="px-3 py-3 border border-gray-300 rounded-lg text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-50"
                   title="Utiliser ma position actuelle"
                 >
                   {gettingLocation ? (
@@ -1088,25 +1114,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   )}
                 </button>
               </div>
-              
-              {/* Suggestions pour le départ */}
-              {showPickupSuggestions && pickupSuggestions.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {pickupSuggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => selectSuggestion(suggestion, 'pickup')}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="flex items-center gap-2">
-                        <MapPin size={16} className="text-gray-400" />
-                        <span className="text-sm text-gray-900">{suggestion}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
               
               {errors.pickupAddress && (
                 <p className="mt-2 text-sm text-red-600">{errors.pickupAddress.message}</p>
@@ -1118,40 +1125,17 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Point d'arrivée
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Navigation className="h-5 w-5 text-red-600" />
-                </div>
-                <input
-                  {...register('destinationAddress')}
-                  type="text"
-                  placeholder="Adresse d'arrivée (ex: Aéroport Tunis-Carthage)"
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-                    errors.destinationAddress ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  onFocus={() => setShowDestinationSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowDestinationSuggestions(false), 200)}
-                />
-              </div>
-              
-              {/* Suggestions pour l'arrivée */}
-              {showDestinationSuggestions && destinationSuggestions.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {destinationSuggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => selectSuggestion(suggestion, 'destination')}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Navigation size={16} className="text-gray-400" />
-                        <span className="text-sm text-gray-900">{suggestion}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <AddressAutocomplete
+                inputId="destination-address"
+                value={destinationAddressValue}
+                onChange={(value) => {
+                  setDestinationAddressValue(value);
+                  setValue('destinationAddress', value);
+                }}
+                onPlaceSelect={handleDestinationPlaceSelect}
+                placeholder="Adresse d'arrivée (ex: Aéroport Tunis-Carthage)"
+                className={errors.destinationAddress ? 'ring-2 ring-red-500 rounded-lg' : ''}
+              />
               
               {errors.destinationAddress && (
                 <p className="mt-2 text-sm text-red-600">{errors.destinationAddress.message}</p>
@@ -1218,6 +1202,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             </div>
           )}
 
+          {/* Debug: Affichage des valeurs */}
+          {console.log('🔍 Debug section calcul:', {
+            estimatedDistance,
+            estimatedPrice,
+            isCalculating,
+            pickupCoords,
+            destinationCoords,
+            watchVehicleType
+          })}
+
           {/* Estimation de prix */}
           {estimatedDistance && estimatedPrice && !isCalculating && (
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
@@ -1272,7 +1266,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                         <div>
                           <div>
                             {watchIsReturnTrip ? 
-                              `${(estimatedDistance / 2).toFixed(1)} km × 2 (retour) × ${price.toFixed(2)} TND/km` :
+                              `${baseDistance?.toFixed(1)} km × 2 (retour) × ${price.toFixed(2)} TND/km` :
                               `${estimatedDistance} km × ${price.toFixed(2)} TND/km`
                             }
                           </div>
@@ -1333,15 +1327,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-              
-              {pickupCoords && destinationCoords && (
-                <div className="mt-4 p-3 bg-white rounded-lg">
-                  <p className="text-xs text-gray-500">
-                    <strong>Coordonnées:</strong> Départ ({pickupCoords.latitude.toFixed(4)}, {pickupCoords.longitude.toFixed(4)}) 
-                    → Arrivée ({destinationCoords.latitude.toFixed(4)}, {destinationCoords.longitude.toFixed(4)})
-                  </p>
                 </div>
               )}
             </div>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple Google Maps API</title>
+</head>
+<body>
+    <h1>Test Simple Google Maps API</h1>
+    <div id="status">Chargement...</div>
+    <div id="details"></div>
+
+    <script>
+        const API_KEY = 'AIzaSyCHHlwh5ihJp_ywn6T8JBrKQfHR1rg6iBc';
+        
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.color = isError ? 'red' : 'green';
+        }
+        
+        function addDetail(message) {
+            const details = document.getElementById('details');
+            details.innerHTML += '<p>' + message + '</p>';
+        }
+        
+        async function testGoogleMaps() {
+            try {
+                updateStatus('Test de Google Maps API...');
+                addDetail('Clé API: ' + API_KEY.substring(0, 20) + '...');
+                
+                // Test direct avec l'URL Google Maps
+                const script = document.createElement('script');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places&callback=initMap`;
+                document.head.appendChild(script);
+                
+            } catch (error) {
+                updateStatus('❌ Erreur de test', true);
+                addDetail('❌ Erreur: ' + error.message);
+            }
+        }
+        
+        // Fonction de callback pour Google Maps
+        window.initMap = function() {
+            updateStatus('✅ Google Maps chargé avec succès !');
+            addDetail('✅ Objet google disponible: ' + (typeof google !== 'undefined'));
+            addDetail('✅ Maps disponible: ' + (typeof google.maps !== 'undefined'));
+            addDetail('✅ Places disponible: ' + (typeof google.maps.places !== 'undefined'));
+            
+            // Test de l'autocomplétion
+            try {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Test autocomplétion...';
+                document.body.appendChild(input);
+                
+                const autocomplete = new google.maps.places.Autocomplete(input, {
+                    types: ['geocode'],
+                    componentRestrictions: { country: 'tn' }
+                });
+                
+                autocomplete.addListener('place_changed', () => {
+                    const place = autocomplete.getPlace();
+                    addDetail('✅ Autocomplétion fonctionne ! Lieu: ' + (place.formatted_address || 'Non sélectionné'));
+                });
+                
+                addDetail('✅ Autocomplétion initialisée avec succès');
+                
+            } catch (error) {
+                addDetail('❌ Erreur autocomplétion: ' + error.message);
+            }
+        };
+        
+        // Lancer le test
+        testGoogleMaps();
+    </script>
+</body>
+</html>
