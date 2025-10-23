@@ -129,7 +129,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={className}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={inputId}>
           {label}

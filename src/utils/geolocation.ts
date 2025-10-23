@@ -59,35 +59,44 @@ export const calculateDrivingDistance = async (
 
 // Fonction pour obtenir le tarif par kilomètre selon la distance
 export const getPricePerKm = (distanceKm: number): { price: number; discount: string } => {
-  const basePricePerKm = 1.5; // Tarif de base : 1,5 TND/KM
-  
-  if (distanceKm >= 30 && distanceKm < 100) {
-    // Distance 30–100 km → plein tarif
-    return { price: basePricePerKm, discount: '' };
+  if (distanceKm >= 25 && distanceKm < 100) {
+    // Distance 25–100 km → 2.0 TND/km
+    return { price: 2.0, discount: '' };
   } else if (distanceKm >= 100 && distanceKm < 250) {
-    // Distance 100–250 km → -10 %/km
-    return { price: basePricePerKm * 0.9, discount: '(-10%)' };
+    // Distance 100–250 km → 1.75 TND/km
+    return { price: 1.75, discount: '' };
   } else if (distanceKm >= 250) {
-    // Distance 250 km+ → -20 %/km
-    return { price: basePricePerKm * 0.8, discount: '(-20%)' };
+    // Distance 250 km+ → 1.55 TND/km
+    return { price: 1.55, discount: '' };
   } else {
-    // Distance < 30 km → tarif de base (2,2 TND/KM)
-    return { price: basePricePerKm, discount: '' };
+    // Distance < 25 km → tarif de base (2.0 TND/km)
+    return { price: 2.0, discount: '' };
   }
 };
 
 // Fonction pour obtenir le multiplicateur selon le type de véhicule
 export const getVehicleMultiplier = (vehicleType?: string): number => {
   switch (vehicleType) {
-    case 'bus':
-      return 3.5; // Bus : ×3,5
+    case 'sedan':
+      return 1.0;
+    case 'pickup':
+      return 1.25;
+    case 'suv':
+      return 1.0;
+    case 'van':
+      return 1.5;
     case 'minibus':
-      return 2.5; // Minibus : ×2,5
-    case 'limousine':
+      return 2.5;
+    case 'bus':
+      return 3.5;
     case 'truck':
-      return 2.0; // Limousine et Camion : ×2
+      return 1.5;
+    case 'utility':
+      return 1.25;
+    case 'limousine':
+      return 2.5;
     default:
-      return 1.0; // Autres véhicules (berline, pickup, van, utilitaire) : tarif normal
+      return 1.0; // Tarif par défaut pour les types non reconnus
   }
 };
 
