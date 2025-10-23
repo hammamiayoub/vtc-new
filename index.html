@@ -75,7 +75,10 @@
             "@id": "https://tunidrive.net/#org",
             "name": "TuniDrive",
             "url": "https://tunidrive.net",
-            "logo": "https://tunidrive.net/logo.png",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://tunidrive.net/logo.png"
+            },
             "sameAs": [
               "https://www.facebook.com/tunidrive",
               "https://www.instagram.com/tunidrive",
@@ -89,56 +92,46 @@
             "serviceType": "VTC / Chauffeur privé",
             "provider": { "@id": "https://tunidrive.net/#org" },
             "description": "Réservez un chauffeur privé en Tunisie en quelques clics : trajets urbains, inter-villes, aéroports. Prix clairs, réservation en ligne, app mobile.",
-            "areaServed": {
-              "@type": "Country",
-              "name": "Tunisie"
-            },
+            "areaServed": { "@type": "Country", "name": "Tunisie" },
             "availableChannel": [
               {
                 "@type": "ServiceChannel",
                 "serviceUrl": "https://tunidrive.net/rechercher",
-                "availableLanguage": [ "fr", "ar" ]
+                "availableLanguage": ["fr", "ar"]
               },
               {
                 "@type": "ServiceChannel",
                 "serviceUrl": "https://tunidrive.net",
-                "availableLanguage": [ "fr", "ar" ]
+                "availableLanguage": ["fr", "ar"]
               }
             ],
-            "termsOfService": "https://tunidrive.net/terms-of-service",
-            "privacyPolicy": "https://tunidrive.net/privacy-policy",
             "hasOfferCatalog": {
               "@type": "OfferCatalog",
               "name": "Zones de service",
               "itemListElement": [
-                { "@type": "Offer", "name": "Tunis",    "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Tunis", "addressCountry": "TN" } } },
-                { "@type": "Offer", "name": "Sfax",     "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Sfax", "addressCountry": "TN" } } },
-                { "@type": "Offer", "name": "Sousse",   "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Sousse", "addressCountry": "TN" } } },
-                { "@type": "Offer", "name": "Nabeul",   "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Nabeul", "addressCountry": "TN" } } },
-                { "@type": "Offer", "name": "Hammamet", "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Hammamet", "addressCountry": "TN" } } },
-                { "@type": "Offer", "name": "Monastir", "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Monastir", "addressCountry": "TN" } } },
-                { "@type": "Offer", "name": "Djerba",   "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Djerba", "addressCountry": "TN" } } },
-                { "@type": "Offer", "name": "Jendouba", "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Jendouba", "addressCountry": "TN" } } },
-            { "@type": "Offer", "name": "Béja",     "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Béja", "addressCountry": "TN" } } },
-            { "@type": "Offer", "name": "Gafsa",    "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Gafsa", "addressCountry": "TN" } } },
-            { "@type": "Offer", "name": "Gabes",    "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Gabes", "addressCountry": "TN" } } },
-            { "@type": "Offer", "name": "Medenine", "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Medenine", "addressCountry": "TN" } } },
-            { "@type": "Offer", "name": "Tataouine","areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Tataouine", "addressCountry": "TN" } } },
-            { "@type": "Offer", "name": "Tabarka",  "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Tabarka", "addressCountry": "TN" } } }, 
-            { "@type": "Offer", "name": "Bizerte",  "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "bizerte", "addressCountry": "TN" } } }        
-          ]
+                { "@type": "Offer", "name": "Tunis",     "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Tunis", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Sfax",      "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Sfax", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Sousse",    "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Sousse", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Nabeul",    "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Nabeul", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Hammamet",  "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Hammamet", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Monastir",  "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Monastir", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Djerba",    "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Djerba", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Jendouba",  "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Jendouba", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Béja",      "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Béja", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Gafsa",     "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Gafsa", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Gabes",     "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Gabes", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Medenine",  "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Medenine", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Tataouine", "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Tataouine", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Tabarka",   "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Tabarka", "addressCountry": "TN" } } },
+                { "@type": "Offer", "name": "Bizerte",   "areaServed": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Bizerte", "addressCountry": "TN" } } }
+              ]
             },
             "potentialAction": {
               "@type": "ReserveAction",
               "name": "Réserver un trajet",
               "target": {
                 "@type": "EntryPoint",
-                "urlTemplate": "https://tunidrive.net/",
-                "inLanguage": "fr"
-              },
-              "result": {
-                "@type": "TaxiReservation",
-                "bookingTime": "2025-10-23T00:00:00+01:00"
+                "urlTemplate": "https://tunidrive.net/"
               },
               "actionStatus": "https://schema.org/PotentialActionStatus"
             }
@@ -153,19 +146,18 @@
             "potentialAction": [
               {
                 "@type": "SearchAction",
-                "target": "https://tunidrive.net/"
-              },
-              {
-                "@type": "SearchAction",
-                "name": "Chercher un trajet (pickup, dropoff, date)",
-                "target": "https://tunidrive.net/",
-                ]
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://tunidrive.net/rechercher?q={search_term_string}"
+                },
+                "query-input": "required name=search_term_string"
               }
             ]
           }
         ]
       }
       </script>
+      
   </head>
   <body>
     <div id="root"></div>
