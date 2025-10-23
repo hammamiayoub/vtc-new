@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Car, Clock, MapPin, LogOut, UserCircle, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
+import { User, Car, Clock, MapPin, LogOut, UserCircle, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare, FileText } from 'lucide-react';
 import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
@@ -823,12 +823,25 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </p>
                 <ul className="list-disc pl-5 text-yellow-900 text-sm space-y-1">
                   <li>
-                    Sont tenus de disposer de toutes les autorisations légales nécessaires à l’exercice du transport de personnes à titre onéreux (permis, autorisations, assurance, etc.) conformément à la réglementation tunisienne ;
+                    Sont tenus de disposer de toutes les autorisations légales nécessaires à l'exercice du transport de personnes à titre onéreux (permis, autorisations, assurance, etc.) conformément à la réglementation tunisienne ;
                   </li>
                   <li>
                     Ils assument seuls les obligations liées à la sécurité, la conformité des véhicules et le respect du code de la route.
                   </li>
                 </ul>
+                
+                {/* Lien vers le document légal */}
+                <div className="mt-4 pt-3 border-t border-yellow-300">
+                  <a 
+                    href="/Cadre Légal – Transport De Personnes Par Des Particuliers En Tunisie.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-yellow-800 hover:text-yellow-900 font-medium text-sm transition-colors"
+                  >
+                    <FileText size={16} />
+                    Consulter le cadre légal du transport de personnes en Tunisie
+                  </a>
+                </div>
               </div>
             </div>
 
