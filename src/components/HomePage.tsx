@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown } from 'lucide-react';
+import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown, Smartphone, QrCode, Download } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Footer } from './Footer';
 
@@ -13,7 +13,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight tracking-tight max-w-5xl mx-auto">
               Votre transport sur mesure
@@ -43,8 +43,75 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
         </div>
       </section>
 
+      {/* App Download Section */}
+      {/* App Download Section */}
+<section className="py-20 bg-gray-50">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-3xl mx-auto text-center">
+      <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+        Téléchargez l'application TuniDrive
+      </h2>
+      
+      <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+        Réservez vos courses en quelques secondes et gérez tous vos trajets.
+      </p>
+      <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+        Devenez chauffeur et gagnez de l'argent en conduisant.
+      </p>
+
+      {/* Liste des avantages - centrée */}
+      <div className="space-y-4 mb-10 inline-block text-left">
+        {[
+          'Réservation instantanée en 3 clics',
+          'Historique de toutes vos courses',
+          'Notifications push pour vos courses'
+        ].map((feature, index) => (
+          <div key={index} className="flex items-center gap-3">
+            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-gray-700 font-medium">{feature}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Badges des stores - centrés */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <a 
+          href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:scale-105 transition-transform duration-200"
+        >
+          <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+            alt="Disponible sur Google Play"
+            className="h-14 w-auto"
+          />
+        </a>
+        <a 
+          href="https://apps.apple.com/us/app/tunidrive/id6753982765"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:scale-105 transition-transform duration-200"
+        >
+          <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
+            alt="Télécharger sur l'App Store"
+            className="h-14 w-auto"
+          />
+        </a>
+      </div>
+      
+
+    </div>
+  </div>
+</section>
+
       {/* Features Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-6 tracking-tight">
@@ -98,7 +165,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
       </section>
 
       {/* Services Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-6 tracking-tight">
@@ -113,12 +180,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             {/* Van de transport collectif */}
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src="/van.png" 
-                    alt="Van de transport collectif"
+                <img 
+                  src="/van.png" 
+                  alt="Van de transport collectif"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
-                    // Fallback vers l'icône si l'image n'existe pas
                     const target = e.currentTarget as HTMLImageElement;
                     target.style.display = 'none';
                     const nextElement = target.nextElementSibling as HTMLElement;
@@ -148,12 +214,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             {/* Bus */}
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src="/bus.png" 
-                    alt="Bus de transport"
+                <img 
+                  src="/bus.png" 
+                  alt="Bus de transport"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
-                    // Fallback vers l'icône si l'image n'existe pas
                     const target = e.currentTarget as HTMLImageElement;
                     target.style.display = 'none';
                     const nextElement = target.nextElementSibling as HTMLElement;
@@ -183,12 +248,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             {/* Utilitaire */}
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src="/utilitaire.png" 
-                    alt="Véhicule utilitaire"
+                <img 
+                  src="/utilitaire.png" 
+                  alt="Véhicule utilitaire"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
-                    // Fallback vers l'icône si l'image n'existe pas
                     const target = e.currentTarget as HTMLImageElement;
                     target.style.display = 'none';
                     const nextElement = target.nextElementSibling as HTMLElement;
@@ -218,12 +282,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             {/* Limousine */}
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src="/limousine.png" 
-                    alt="Limousine premium"
+                <img 
+                  src="/limousine.png" 
+                  alt="Limousine premium"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
-                    // Fallback vers l'icône si l'image n'existe pas
                     const target = e.currentTarget as HTMLImageElement;
                     target.style.display = 'none';
                     const nextElement = target.nextElementSibling as HTMLElement;
@@ -250,9 +313,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
               </div>
             </div>
           </div>
-
-          {/* Section supplémentaire avec véhicules classiques */}
-          
 
           {/* CTA pour réserver */}
           <div className="text-center mt-16">

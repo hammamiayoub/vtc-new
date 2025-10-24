@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, LogIn, Shield, MapPin, Menu, X } from 'lucide-react';
+import { UserPlus, LogIn, MapPin, Menu, X } from 'lucide-react';
 
 interface HeaderProps {
-  currentView: 'home' | 'signup' | 'login' | 'admin' | 'client-signup' | 'client-login';
-  onViewChange: (view: 'home' | 'signup' | 'login' | 'admin' | 'client-signup' | 'client-login') => void;
+  currentView: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login';
+  onViewChange: (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
@@ -15,7 +15,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const handleNavigation = (view: 'home' | 'signup' | 'login' | 'admin' | 'client-signup' | 'client-login') => {
+  const handleNavigation = (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login') => {
     onViewChange(view);
     setIsMobileMenuOpen(false); // Fermer le menu après navigation
   };
@@ -67,18 +67,6 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               <LogIn size={20} />
               <span className="hidden sm:inline">Connexion</span>
             </button>
-            
-            <button
-              onClick={() => handleNavigation('admin')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
-                currentView === 'admin'
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
-              }`}
-            >
-              <Shield size={20} />
-              <span className="hidden sm:inline">Admin</span>
-            </button>
           </nav>
           
           {/* Mobile menu button */}
@@ -118,13 +106,37 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
                 <span>Connexion</span>
               </button>
               
-              <button
-                onClick={() => handleNavigation('admin')}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                <Shield size={20} />
-                <span>Administration</span>
-              </button>
+
+              {/* Badges des stores mobiles */}
+              <div className="pt-4 border-t border-gray-700">
+                <p className="text-gray-400 text-sm mb-3">Télécharger l'app</p>
+                <div className="flex gap-3">
+                  <a 
+                    href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+                      alt="Disponible sur Google Play"
+                      className="h-8 w-auto"
+                    />
+                  </a>
+                  <a 
+                    href="https://apps.apple.com/us/app/tunidrive/id6753982765"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
+                      alt="Télécharger sur l'App Store"
+                      className="h-8 w-auto"
+                    />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         )}

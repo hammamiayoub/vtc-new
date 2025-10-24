@@ -76,7 +76,7 @@ class GoogleMapsLoader {
       // Charger l'API Google Maps
       await new Promise<void>((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=googleMapsGlobalCallback`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=googleMapsGlobalCallback&language=en`;
         script.async = true;
         script.defer = true;
         

@@ -79,8 +79,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles' | 'subscriptions'>('drivers');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Vérifier l'authentification admin
+  useEffect(() => {
+    const checkAdminAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user) {
+          // Pas de session, rediriger vers la page de connexion admin
+          window.location.href = '/admin';
+          return;
+        }
+        
+        // Vérifier si l'utilisateur est admin
+        const { data: adminData } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('id', session.user.id)
+          .limit(1);
+        
+        if (!adminData || adminData.length === 0) {
+          // Pas admin, rediriger vers la page de connexion admin
+          window.location.href = '/admin';
+          return;
+        }
+        
+        setIsAuthenticated(true);
+        setAuthLoading(false);
+      } catch (error) {
+        console.error('Erreur lors de la vérification admin:', error);
+        window.location.href = '/admin';
+      }
+    };
+    
+    checkAdminAuth();
+  }, []);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     fetchDrivers();
     fetchClients();
     fetchVehicles();
@@ -95,7 +135,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
 
   const fetchDrivers = async () => {
     if (!loading) setRefreshing(true);
@@ -823,6 +863,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     cancelledBookings,
     totalRevenue
   });
+
+  // Afficher un écran de chargement pendant la vérification d'authentification
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Vérification des droits d'accès...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si pas authentifié, ne rien afficher (redirection en cours)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (loading) {
     return (

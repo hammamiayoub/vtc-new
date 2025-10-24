@@ -75,8 +75,31 @@ function AppContent() {
         viewKey = 'home'; // Utiliser les meta de la page d'accueil pour l'admin
         break;
       case '/admin-dashboard':
-        setCurrentView('admin-dashboard');
-        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour le dashboard admin
+        // Vérifier l'authentification admin avant d'autoriser l'accès
+        const checkAdminAuth = async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.user) {
+            navigate('/admin');
+            return;
+          }
+          
+          // Vérifier si l'utilisateur est admin
+          const { data: adminData } = await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('id', session.user.id)
+            .limit(1);
+          
+          if (!adminData || adminData.length === 0) {
+            navigate('/admin');
+            return;
+          }
+          
+          setCurrentView('admin-dashboard');
+        };
+        
+        checkAdminAuth();
+        viewKey = 'home';
         break;
       case '/privacy-policy':
         setCurrentView('privacy-policy');
