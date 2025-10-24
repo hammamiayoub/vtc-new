@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { googleMapsLoader } from '../utils/googleMapsLoader';
 
@@ -53,10 +53,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         if (googleMapsLoader?.loadGoogleMaps) {
           await googleMapsLoader.loadGoogleMaps();
           if (!alive) return;
-          setIsGoogleMapsLoaded(!!(window as any).google?.maps?.places);
+          setIsGoogleMapsLoaded(!!(window as unknown as { google?: { maps?: { places?: unknown } } }).google?.maps?.places);
         } else {
           // Fallback : si déjà présent sur window
-          setIsGoogleMapsLoaded(!!(window as any).google?.maps?.places);
+          setIsGoogleMapsLoaded(!!(window as unknown as { google?: { maps?: { places?: unknown } } }).google?.maps?.places);
         }
       } catch (e) {
         console.error('Erreur chargement Google Maps:', e);
@@ -91,7 +91,61 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       placeChangedListenerRef.current = ac.addListener('place_changed', () => {
         try {
           const place = ac.getPlace();
-          const displayAddress = place?.formatted_address ?? place?.name ?? '';
+          
+          // Construire l'adresse en anglais à partir des address_components
+          let displayAddress = '';
+          if (place?.address_components) {
+            const components = place.address_components;
+            
+            // Extraire les composants principaux
+            const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
+            const route = components.find(c => c.types.includes('route'))?.long_name || '';
+            const locality = components.find(c => c.types.includes('locality'))?.long_name || '';
+            const administrativeArea = components.find(c => c.types.includes('administrative_area_level_1'))?.long_name || '';
+            const country = components.find(c => c.types.includes('country'))?.long_name || '';
+            
+            // Construire l'adresse en anglais
+            const addressParts = [];
+            
+            // Adresse de rue
+            if (streetNumber && route) {
+              addressParts.push(`${streetNumber} ${route}`);
+            } else if (route) {
+              addressParts.push(route);
+            }
+            
+            // Ville
+            if (locality) {
+              addressParts.push(locality);
+            }
+            
+            // Région/État
+            if (administrativeArea) {
+              addressParts.push(administrativeArea);
+            }
+            
+            // Pays - forcer l'affichage en anglais
+            if (country) {
+              // Mapper les noms de pays français vers anglais
+              const countryMapping: { [key: string]: string } = {
+                'TN': 'Tunisia',
+                'Tunisie': 'Tunisia',
+                'France': 'France',
+                'Algérie': 'Algeria',
+                'Maroc': 'Morocco',
+                'Libye': 'Libya'
+              };
+              const englishCountry = countryMapping[country] || country;
+              addressParts.push(englishCountry);
+            }
+            
+            displayAddress = addressParts.join(', ');
+          }
+          
+          // Fallback sur formatted_address si pas d'address_components
+          if (!displayAddress) {
+            displayAddress = place?.formatted_address ?? place?.name ?? '';
+          }
           
           // Utiliser les refs pour éviter les dépendances
           onChangeRef.current(displayAddress);
@@ -114,11 +168,12 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     return () => {
       try {
         placeChangedListenerRef.current?.remove?.();
-        // @ts-ignore typings anciens
         if (autocompleteRef.current) {
           google.maps.event.clearInstanceListeners(autocompleteRef.current);
         }
-      } catch {}
+      } catch {
+        // Ignorer les erreurs de nettoyage
+      }
       autocompleteRef.current = null;
       placeChangedListenerRef.current = null;
     };

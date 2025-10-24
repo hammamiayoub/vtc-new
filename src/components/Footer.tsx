@@ -79,19 +79,32 @@ export const Footer: React.FC<FooterProps> = () => {
           {/* Application mobile */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Application mobile</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>
-                <a 
-                  href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <Smartphone size={16} />
-                  Installer sur Android
-                </a>
-              </li>
-            </ul>
+            <div className="space-y-3">
+              <a 
+                href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block hover:opacity-80 transition-opacity"
+              >
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+                  alt="Disponible sur Google Play"
+                  className="h-10 w-auto"
+                />
+              </a>
+              <a 
+                href="https://apps.apple.com/us/app/tunidrive/id6753982765"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block hover:opacity-80 transition-opacity"
+              >
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
+                  alt="Télécharger sur l'App Store"
+                  className="h-10 w-auto"
+                />
+              </a>
+            </div>
           </div>
 
           {/* Contact */}

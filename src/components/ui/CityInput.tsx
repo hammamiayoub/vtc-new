@@ -1,23 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, ChevronDown } from 'lucide-react';
-
-// Liste des villes tunisiennes principales
-const tunisianCities = [
-  'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Bizerte', 'Nabeul', 'Hammamet',
-  'Sousse', 'Monastir', 'Mahdia', 'Sfax', 'Gabès', 'Gafsa', 'Kairouan',
-  'Kasserine', 'Le Kef', 'Jendouba', 'Béja', 'Zaghouan', 'Siliana',
-  'Médenine', 'Tataouine', 'Tozeur', 'Kebili', 'Sidi Bouzid'
-];
-
-// Fonction de recherche de villes
-const searchTunisianCities = (query: string): string[] => {
-  if (!query || query.length < 1) return [];
-  
-  const normalizedQuery = query.toLowerCase().trim();
-  return tunisianCities.filter(city => 
-    city.toLowerCase().includes(normalizedQuery)
-  ).slice(0, 10); // Limiter à 10 résultats
-};
+import { MapPin, Loader2 } from 'lucide-react';
+import { googleMapsLoader } from '../../utils/googleMapsLoader';
 
 interface CityInputProps {
   value: string;
@@ -36,116 +19,205 @@ export const CityInput: React.FC<CityInputProps> = ({
   className = '',
   required = false
 }) => {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const placeChangedListenerRef = useRef<google.maps.MapsEventListener | null>(null);
+  
+  // Refs stables pour les callbacks (évite de réinitialiser l'autocomplete)
+  const onChangeRef = useRef(onChange);
 
+  // Mise à jour des refs à chaque render (sans déclencher useEffect)
   useEffect(() => {
-    const searchCities = () => {
-      if (value && value.length > 1) {
+    onChangeRef.current = onChange;
+  });
+ 
+  // Charger Google Maps
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      if (typeof window === 'undefined') return;
+      try {
         setLoading(true);
-        try {
-          const results = searchTunisianCities(value);
-          setSuggestions(results);
-          setShowSuggestions(true);
-        } catch (error) {
-          console.error('Erreur lors de la recherche de villes:', error);
-          setSuggestions([]);
-        } finally {
-          setLoading(false);
+        if (googleMapsLoader?.loadGoogleMaps) {
+          await googleMapsLoader.loadGoogleMaps();
+          if (!alive) return;
+          setIsGoogleMapsLoaded(!!(window as unknown as { google?: { maps?: { places?: unknown } } }).google?.maps?.places);
+        } else {
+          setIsGoogleMapsLoaded(!!(window as unknown as { google?: { maps?: { places?: unknown } } }).google?.maps?.places);
         }
-      } else {
-        setSuggestions([]);
-        setShowSuggestions(false);
+      } catch (e) {
+        console.error('Erreur chargement Google Maps:', e);
+      } finally {
+        if (alive) setLoading(false);
       }
     };
-
-    const timeoutId = setTimeout(searchCities, 300);
-    return () => clearTimeout(timeoutId);
-  }, [value]);
-
-  // Fermer les suggestions quand on clique ailleurs
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        setShowSuggestions(false);
-      }
+    load();
+    return () => {
+      alive = false;
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
-  };
-
-  const handleSuggestionClick = (city: string) => {
-    onChange(city);
-    setShowSuggestions(false);
-    inputRef.current?.blur();
-  };
-
-  const handleInputFocus = () => {
-    if (suggestions.length > 0) {
-      setShowSuggestions(true);
+  // Initialiser l'autocomplete Google Places
+  useEffect(() => {
+    if (!isGoogleMapsLoaded) {
+      console.log('🔧 Google Maps pas encore chargé');
+      return;
     }
+    if (!inputRef.current) {
+      console.log('🔧 Input ref pas disponible');
+      return;
+    }
+    if (autocompleteRef.current) {
+      console.log('🔧 Autocomplete déjà initialisé');
+      return;
+    }
+
+    console.log('🔧 Initialisation de l\'autocomplete Google Places...');
+
+    try {
+      const ac = new google.maps.places.Autocomplete(inputRef.current!, {
+        fields: ['formatted_address', 'geometry', 'place_id', 'name', 'address_components'],
+        types: ['geocode', 'establishment'],
+        componentRestrictions: { country: 'tn' },
+      });
+
+      console.log('🔧 Autocomplete créé avec succès');
+
+      // Test pour vérifier que l'autocomplete fonctionne
+      ac.addListener('place_changed', () => {
+        console.log('🔧 TEST: Événement place_changed déclenché !');
+      });
+
+      if (placeChangedListenerRef.current) {
+        placeChangedListenerRef.current.remove();
+        placeChangedListenerRef.current = null;
+      }
+
+      placeChangedListenerRef.current = ac.addListener('place_changed', () => {
+        console.log('🔧 Événement place_changed déclenché !');
+        try {
+          const place = ac.getPlace();
+          
+          console.log('🔍 Place object complet:', place);
+          console.log('🔍 Formatted address:', place?.formatted_address);
+          console.log('🔍 Name:', place?.name);
+          console.log('🔍 Address components:', place?.address_components);
+          
+          // Utiliser exactement la même logique que AddressAutocomplete
+          let cityName = '';
+          if (place?.address_components) {
+            const components = place.address_components;
+            
+            // Extraire les composants principaux
+            const locality = components.find(c => c.types.includes('locality'))?.long_name || '';
+            const administrativeArea = components.find(c => c.types.includes('administrative_area_level_1'))?.long_name || '';
+            const country = components.find(c => c.types.includes('country'))?.long_name || '';
+            
+            // Construire la ville avec le pays en anglais
+            const addressParts = [];
+            
+            // Ville
+            const city = locality || administrativeArea || place.name || '';
+            if (city) {
+              addressParts.push(city);
+            }
+            
+            // Pays - forcer l'affichage en anglais
+            if (country) {
+              // Mapper les noms de pays français vers anglais
+              const countryMapping: { [key: string]: string } = {
+                'TN': 'Tunisia',
+                'Tunisie': 'Tunisia',
+                'France': 'France',
+                'Algérie': 'Algeria',
+                'Maroc': 'Morocco',
+                'Libye': 'Libya'
+              };
+              const englishCountry = countryMapping[country] || country;
+              addressParts.push(englishCountry);
+            }
+            
+            cityName = addressParts.join(', ');
+            console.log('🔍 Ville avec pays construite:', cityName);
+          }
+          
+          // Fallback sur formatted_address si pas d'address_components
+          if (!cityName) {
+            cityName = place?.formatted_address ?? place?.name ?? '';
+            console.log('🔍 Fallback formatted_address:', cityName);
+          }
+          
+          console.log('🏙️ Ville finale sélectionnée:', cityName);
+          // Utiliser les refs pour éviter les dépendances
+          onChangeRef.current(cityName);
+          
+          // Retirer le focus après sélection
+          setTimeout(() => {
+            inputRef.current?.blur();
+          }, 100);
+        } catch (err) {
+          console.error('Erreur place_changed:', err);
+        }
+      });
+
+      autocompleteRef.current = ac;
+    } catch (err) {
+      console.error("Erreur init Autocomplete:", err);
+    }
+
+    return () => {
+      try {
+        placeChangedListenerRef.current?.remove?.();
+        if (autocompleteRef.current) {
+          google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        }
+      } catch {
+        // Ignorer les erreurs de nettoyage
+      }
+      autocompleteRef.current = null;
+      placeChangedListenerRef.current = null;
+    };
+  }, [isGoogleMapsLoaded]); // Plus de dépendances onChange !
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🔧 Input change:', e.target.value);
+    console.log('🔧 Input element:', e.target);
+    console.log('🔧 Input ref:', inputRef.current);
+    onChange(e.target.value);
   };
 
   return (
     <div className={`relative w-full ${className}`}>
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <MapPin className="h-5 w-5 text-gray-400" />
+          {loading ? (
+            <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+          ) : (
+            <MapPin className="h-5 w-5 text-gray-400" />
+          )}
         </div>
         <input
           ref={inputRef}
           type="text"
           value={value}
           onChange={handleInputChange}
-          onFocus={handleInputFocus}
           placeholder={placeholder}
           required={required}
-          className={`block w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+          disabled={!isGoogleMapsLoaded}
+          autoComplete="chrome-off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed ${
             error ? 'border-red-500' : 'border-gray-300'
           }`}
         />
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          {loading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-          ) : (
-            <ChevronDown className="h-4 w-4 text-gray-400" />
-          )}
-        </div>
       </div>
 
-      {/* Suggestions dropdown */}
-      {showSuggestions && suggestions.length > 0 && (
-        <div
-          ref={suggestionsRef}
-          className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-        >
-          {suggestions.map((city, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => handleSuggestionClick(city)}
-              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <MapPin size={16} className="text-gray-400" />
-                <span className="text-gray-900">{city}</span>
-              </div>
-            </button>
-          ))}
-        </div>
+      {!isGoogleMapsLoaded && (
+        <p className="text-xs text-gray-500 mt-1">Autocomplétion en attente du chargement de Google Maps…</p>
       )}
 
       {error && (

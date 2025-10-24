@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { ImageUpload } from './ui/ImageUpload';
+import { CityInput } from './ui/CityInput';
 import { supabase } from '../lib/supabase';
 import { Driver, Client } from '../types';
 import { uploadProfileImage, deleteProfileImage } from '../utils/imageUpload';
@@ -76,13 +77,28 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     try {
       const tableName = userType === 'driver' ? 'drivers' : 'clients';
       
+      // Log pour déboguer
+      console.log('💾 Sauvegarde du profil:', {
+        tableName,
+        userId: user.id,
+        cityValue: editData.city,
+        editData
+      });
+      
       // Préparer les données à mettre à jour (email non modifiable ici)
-      const updateData: any = {
+      const updateData: {
+        first_name: string;
+        last_name: string;
+        phone: string;
+        city: string;
+      } = {
         first_name: editData.firstName,
         last_name: editData.lastName,
-        phone: editData.phone,
-        city: editData.city
+        phone: editData.phone || '',
+        city: editData.city || ''
       };
+
+      console.log('📝 Données à mettre à jour:', updateData);
 
       const { error } = await supabase
         .from(tableName)
@@ -90,10 +106,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         .eq('id', user.id);
 
       if (error) {
-        console.error('Erreur lors de la mise à jour:', error);
+        console.error('❌ Erreur lors de la mise à jour:', error);
         alert('Erreur lors de la mise à jour du profil');
         return;
       }
+
+      console.log('✅ Profil mis à jour avec succès');
 
       // Email non modifiable dans ce modal
 
@@ -314,12 +332,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <div className="bg-gray-50 rounded-lg p-4">
                 <label className="block text-sm text-gray-600 mb-1">Ville de résidence</label>
                 {isEditing ? (
-                  <input
-                    type="text"
+                  <CityInput
                     value={editData.city}
-                    onChange={(e) => setEditData({ ...editData, city: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(value) => setEditData({ ...editData, city: value })}
                     placeholder="Ville de résidence"
+                    className="w-full"
                   />
                 ) : (
                   <p className="font-semibold text-gray-900">
