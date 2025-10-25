@@ -118,7 +118,7 @@ export const Footer: React.FC<FooterProps> = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors flex items-center gap-2"
                 >
-                  <MessageCircle size={16} />
+                  <MessageCircle size={14} />
                   WhatsApp
                 </a>
               </li>
