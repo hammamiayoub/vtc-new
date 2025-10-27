@@ -136,10 +136,9 @@
             </p>
             
             <div class="mobile-note">
-                <strong>📱 Redirection automatique</strong><br>
-                Si vous avez l'application TuniDrive installée, elle s'ouvrira automatiquement dans <span id="countdown">5</span> secondes.
+                <strong>📱 Si vous avez l'application TuniDrive installée, Cliquez sur le lien ci-dessous.</strong>
                 <br><br>
-				<div class="button-container"><a href="tunidrive://email-confirmed" class="button">Ouvrir l'application</a>
+				<div class="button-container"><a href="tunidrive://auth/" class="button">Ouvrir l'application</a>
 			</div>
             </div>
             
@@ -153,33 +152,5 @@
             <p>Besoin d'aide ? <a href="mailto:support@tunidrive.net">support@tunidrive.net</a></p>
         </div>
     </div>
-
-    <script>
-        // Auto-redirect to mobile app after countdown
-        let countdown = 5;
-        const countdownElement = document.getElementById('countdown');
-        const mobileUrl = 'tunidrive://email-confirmed';
-        
-        const timer = setInterval(() => {
-            countdown--;
-            countdownElement.textContent = countdown;
-            
-            if (countdown <= 0) {
-                clearInterval(timer);
-                // Try to open mobile app
-                window.location.href = mobileUrl;
-                
-                // Fallback: redirect to web after 2 seconds if mobile app doesn't open
-                setTimeout(() => {
-                    window.location.href = 'https://tunidrive.net';
-                }, 2000);
-            }
-        }, 1000);
-        
-        // Also try to open mobile app immediately on page load
-        setTimeout(() => {
-            window.location.href = mobileUrl;
-        }, 100);
-    </script>
 </body>
 </html>
