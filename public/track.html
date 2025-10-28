@@ -47,7 +47,7 @@
         return;
       }
 
-      if (!window.TRACK_CONFIG || !window.TRACK_CONFIG.supabaseUrl || !window.TRACK_CONFIG.supabaseAnonKey) {
+      if (!window.TRACK_CONFIG || !window.TRACK_CONFIG.VITE_SUPABASE_URL || !window.TRACK_CONFIG.VITE_SUPABASE_ANON_KEY) {
         setStatus('Configuration Supabase manquante.');
         console.error('TRACK_CONFIG manquant dans public/track-config.js');
         return;
@@ -93,8 +93,8 @@
 
       // Supabase Realtime
       const supabase = window.supabase.createClient(
-        window.TRACK_CONFIG.supabaseUrl,
-        window.TRACK_CONFIG.supabaseAnonKey,
+        window.TRACK_CONFIG.VITE_SUPABASE_URL,
+        window.TRACK_CONFIG.VITE_SUPABASE_ANON_KEY,
         { realtime: { params: { eventsPerSecond: 10 } } }
       );
 
