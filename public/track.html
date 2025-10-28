@@ -28,6 +28,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
   <script>
+    // Attendre que tous les scripts soient chargés
+    window.addEventListener('load', function() {
     (function() {
       const statusEl = document.getElementById('status');
 
@@ -120,6 +122,12 @@
         }
 
         // Supabase Realtime
+        if (!window.supabase) {
+          setStatus('Erreur: Supabase non chargé');
+          console.error('window.supabase is undefined. Vérifiez que le script Supabase est chargé.');
+          return;
+        }
+
         const supa = window.supabase.createClient(
           cfg.supabaseUrl,
           cfg.supabaseAnonKey,
@@ -164,7 +172,7 @@
 
         subscribe();
       })();
-    })();
+    });
   </script>
 </body>
 </html>
