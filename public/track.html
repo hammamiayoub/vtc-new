@@ -196,19 +196,11 @@
           });
         }
 
-        // Gestion reconnexion
-        supa.realtime.on('open', () => {
-          console.log('✅ Connexion Realtime ouverte');
-          setStatus('Connecté • en attente de position…');
-        });
-        supa.realtime.on('close', () => {
-          console.warn('⚠️ Connexion Realtime fermée');
-          setStatus('Déconnecté. Reconnexion…');
-        });
-        supa.realtime.on('error', (error) => {
-          console.error('❌ Erreur Realtime:', error);
-          setStatus('Erreur réseau. Reconnexion…');
-        });
+        // Gestion reconnexion (nouvelle syntaxe Supabase v2)
+        supa.realtime.connect();
+        
+        // Les événements Realtime sont maintenant gérés différemment
+        // On se contente de la gestion d'erreur dans le canal
 
         console.log('🔍 Démarrage de la souscription...');
         subscribe();
