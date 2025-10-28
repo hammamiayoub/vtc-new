@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Suivi de course - TuniDrive</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif; background: #0b0b0b; color: #fff; }
+    #header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; }
+    #status { font-size: 13px; opacity: 0.85; }
+    #map { position: absolute; top: 52px; bottom: 0; left: 0; right: 0; }
+    .pill { padding: 6px 10px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 999px; font-size: 12px; color: #cfcfcf; }
+    .brand { font-weight: 700; letter-spacing: 0.3px; }
+    .badge { padding: 4px 8px; border-radius: 8px; font-size: 12px; border: 1px solid #2a2a2a; background: #111; color: #aaa; }
+    a { color: #61dafb; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div class="brand">TuniDrive • Suivi de course</div>
+    <div id="status" class="badge">Initialisation…</div>
+  </div>
+  <div id="map"></div>
+
+  <script src="./track-config.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+  <script>
+    (function() {
+      const statusEl = document.getElementById('status');
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function getQueryParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
+
+      const token = getQueryParam('token');
+      if (!token) {
+        setStatus('Aucun token de suivi fourni.');
+        alert('Paramètre manquant: ?token=...');
+        return;
+      }
+
+      if (!window.TRACK_CONFIG || !window.TRACK_CONFIG.supabaseUrl || !window.TRACK_CONFIG.supabaseAnonKey) {
+        setStatus('Configuration Supabase manquante.');
+        console.error('TRACK_CONFIG manquant dans public/track-config.js');
+        return;
+      }
+
+      // Initialiser la carte
+      const map = L.map('map', { zoomControl: false });
+      const tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      const tileLayer = L.tileLayer(tileUrl, { attribution: '&copy; OpenStreetMap & CARTO' });
+      tileLayer.addTo(map);
+
+      // Marqueur du véhicule
+      const carIcon = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        shadowSize: [41, 41]
+      });
+
+      let vehicleMarker = null;
+      let lastPosition = null;
+
+      function updateMarker(lat, lng, heading) {
+        const latLng = [lat, lng];
+        if (!vehicleMarker) {
+          vehicleMarker = L.marker(latLng, { icon: carIcon });
+          vehicleMarker.addTo(map);
+          map.setView(latLng, 15);
+        } else {
+          vehicleMarker.setLatLng(latLng);
+        }
+        lastPosition = { lat, lng, heading: heading || 0 };
+      }
+
+      function fitOnce(lat, lng) {
+        if (!map._hasFit) {
+          map._hasFit = true;
+          map.setView([lat, lng], 15);
+        }
+      }
+
+      // Supabase Realtime
+      const supabase = window.supabase.createClient(
+        window.TRACK_CONFIG.supabaseUrl,
+        window.TRACK_CONFIG.supabaseAnonKey,
+        { realtime: { params: { eventsPerSecond: 10 } } }
+      );
+
+      let channel = null;
+      function subscribe() {
+        setStatus('Connexion au canal…');
+        const channelName = `tracking:${token}`;
+        channel = supabase.channel(channelName, { config: { broadcast: { self: false } } });
+
+        channel.on('broadcast', { event: 'position' }, (payload) => {
+          const data = payload?.payload || {};
+          const { lat, lng, heading, speed, ts } = data;
+          if (typeof lat === 'number' && typeof lng === 'number') {
+            updateMarker(lat, lng, heading);
+            fitOnce(lat, lng);
+            const speedKmh = typeof speed === 'number' ? (speed * 3.6).toFixed(0) : '—';
+            const time = ts ? new Date(ts).toLocaleTimeString() : '';
+            setStatus(`En direct • ${lat.toFixed(5)}, ${lng.toFixed(5)} • ${speedKmh} km/h ${time ? '• ' + time : ''}`);
+          }
+        });
+
+        channel.subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            setStatus('En direct • en attente de position…');
+          } else if (status === 'CHANNEL_ERROR') {
+            setStatus('Erreur de canal. Reconnexion…');
+          } else if (status === 'TIMED_OUT') {
+            setStatus('Délai dépassé. Reconnexion…');
+          } else if (status === 'CLOSED') {
+            setStatus('Canal fermé. Tentative de reconnexion…');
+          }
+        });
+      }
+
+      // Gestion reconnexion
+      supabase.realtime.on('open', () => setStatus('Connecté • en attente de position…'));
+      supabase.realtime.on('close', () => setStatus('Déconnecté. Reconnexion…'));
+      supabase.realtime.on('error', () => setStatus('Erreur réseau. Reconnexion…'));
+
+      subscribe();
+    })();
+  </script>
+</body>
+</html>

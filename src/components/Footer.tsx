@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Shield, FileText, Smartphone, UserPlus, Car, Mail, MessageCircle } from 'lucide-react';
+import { Heart, Shield, FileText, UserPlus, Car, Mail, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface FooterProps {
