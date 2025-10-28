@@ -43,12 +43,16 @@
       }
 
       async function loadConfig() {
+        console.log('🔍 Tentative de chargement depuis Netlify Function...');
         // 1) Try to load from Netlify Function at runtime (recommended to avoid exposing keys in repo)
         try {
           const resp = await fetch('/.netlify/functions/public-config', { cache: 'no-store' });
+          console.log('🔍 Réponse Netlify Function:', resp.status, resp.ok);
           if (resp.ok) {
             const json = await resp.json();
+            console.log('🔍 JSON reçu:', json);
             if (json && json.VITE_SUPABASE_URL && json.VITE_SUPABASE_ANON_KEY) {
+              console.log('✅ Configuration trouvée via Netlify Function');
               return {
                 supabaseUrl: json.VITE_SUPABASE_URL,
                 supabaseAnonKey: json.VITE_SUPABASE_ANON_KEY,
@@ -56,15 +60,22 @@
             }
           }
         } catch (e) {
-          console.warn('Netlify public-config indisponible, utilisation du fallback:', e);
+          console.warn('⚠️ Netlify public-config indisponible, utilisation du fallback:', e);
         }
+        
+        console.log('🔍 Tentative de chargement depuis window.TRACK_CONFIG...');
+        console.log('🔍 window.TRACK_CONFIG:', window.TRACK_CONFIG);
+        
         // 2) Fallback to window.TRACK_CONFIG (static file)
         if (window.TRACK_CONFIG && window.TRACK_CONFIG.supabaseUrl && window.TRACK_CONFIG.supabaseAnonKey) {
+          console.log('✅ Configuration trouvée via window.TRACK_CONFIG');
           return {
             supabaseUrl: window.TRACK_CONFIG.supabaseUrl,
             supabaseAnonKey: window.TRACK_CONFIG.supabaseAnonKey,
           };
         }
+        
+        console.log('❌ Aucune configuration trouvée');
         return null;
       }
 
@@ -76,12 +87,17 @@
       }
 
       (async () => {
+        console.log('🔍 Début du chargement de la configuration...');
         const cfg = await loadConfig();
+        console.log('🔍 Configuration chargée:', cfg);
+        
         if (!cfg) {
           setStatus('Configuration Supabase manquante.');
           console.error('Aucune configuration disponible. Configurez la function Netlify \/.netlify\/functions\/public-config ou le fallback public\/track-config.js');
           return;
         }
+        
+        console.log('✅ Configuration trouvée, initialisation de la carte...');
 
         // Initialiser la carte
         const map = L.map('map', { zoomControl: false });
@@ -122,23 +138,31 @@
         }
 
         // Supabase Realtime
+        console.log('🔍 Vérification de window.supabase...');
+        console.log('🔍 window.supabase:', window.supabase);
+        
         if (!window.supabase) {
           setStatus('Erreur: Supabase non chargé');
           console.error('window.supabase is undefined. Vérifiez que le script Supabase est chargé.');
           return;
         }
 
+        console.log('✅ Supabase trouvé, création du client...');
         const supa = window.supabase.createClient(
           cfg.supabaseUrl,
           cfg.supabaseAnonKey,
           { realtime: { params: { eventsPerSecond: 10 } } }
         );
+        console.log('✅ Client Supabase créé:', supa);
 
         let channel = null;
         function subscribe() {
+          console.log('🔍 Début de la souscription au canal...');
           setStatus('Connexion au canal…');
           const channelName = `tracking:${token}`;
+          console.log('🔍 Nom du canal:', channelName);
           channel = supa.channel(channelName, { config: { broadcast: { self: false } } });
+          console.log('🔍 Canal créé:', channel);
 
           channel.on('broadcast', { event: 'position' }, (payload) => {
             const data = payload?.payload || {};
@@ -153,23 +177,38 @@
           });
 
           channel.subscribe((status) => {
+            console.log('🔍 Statut de souscription:', status);
             if (status === 'SUBSCRIBED') {
               setStatus('En direct • en attente de position…');
+              console.log('✅ Canal souscrit avec succès');
             } else if (status === 'CHANNEL_ERROR') {
               setStatus('Erreur de canal. Reconnexion…');
+              console.error('❌ Erreur de canal');
             } else if (status === 'TIMED_OUT') {
               setStatus('Délai dépassé. Reconnexion…');
+              console.warn('⚠️ Délai dépassé');
             } else if (status === 'CLOSED') {
               setStatus('Canal fermé. Tentative de reconnexion…');
+              console.warn('⚠️ Canal fermé');
             }
           });
         }
 
         // Gestion reconnexion
-        supa.realtime.on('open', () => setStatus('Connecté • en attente de position…'));
-        supa.realtime.on('close', () => setStatus('Déconnecté. Reconnexion…'));
-        supa.realtime.on('error', () => setStatus('Erreur réseau. Reconnexion…'));
+        supa.realtime.on('open', () => {
+          console.log('✅ Connexion Realtime ouverte');
+          setStatus('Connecté • en attente de position…');
+        });
+        supa.realtime.on('close', () => {
+          console.warn('⚠️ Connexion Realtime fermée');
+          setStatus('Déconnecté. Reconnexion…');
+        });
+        supa.realtime.on('error', (error) => {
+          console.error('❌ Erreur Realtime:', error);
+          setStatus('Erreur réseau. Reconnexion…');
+        });
 
+        console.log('🔍 Démarrage de la souscription...');
         subscribe();
       })();
     }); }());
