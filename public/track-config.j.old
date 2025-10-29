@@ -2,6 +2,5 @@
 // For Netlify with Vite, prefer providing credentials via environment variables and a serverless function.
 window.TRACK_CONFIG = window.TRACK_CONFIG || {
 	supabaseUrl: "",
-	supabaseAnonKey: "",
-	googleMapsApiKey: "" // Remplacez par votre clé API Google Maps en fallback
+	supabaseAnonKey: ""
 };
