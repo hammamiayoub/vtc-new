@@ -34,6 +34,18 @@
     let supa;
     let channel = null;
 
+    // Vérifier immédiatement le token
+    const token = new URLSearchParams(window.location.search).get('token');
+    console.log('🔍 Token trouvé:', token);
+    
+    if (!token) {
+      console.error('❌ Aucun token trouvé dans l\'URL');
+      document.getElementById('status').textContent = 'Aucun token de suivi fourni.';
+      alert('Paramètre manquant: ?token=...');
+    } else {
+      console.log('✅ Token valide, démarrage de l\'initialisation...');
+    }
+
     function setStatus(text) {
       console.log('📝 Changement de statut:', text);
       document.getElementById('status').textContent = text;
@@ -120,6 +132,7 @@
 
     function subscribeToTracking() {
       const token = getQueryParam('token');
+      console.log('🔍 Token dans subscribeToTracking:', token);
       if (!token) {
         setStatus('Aucun token de suivi fourni.');
         alert('Paramètre manquant: ?token=...');
@@ -190,7 +203,10 @@
       console.log('🗺️ Initialisation de Google Maps...');
       
       // Charger la configuration d'abord
+      console.log('🔍 Chargement de la configuration...');
       const cfg = await loadConfig();
+      console.log('🔍 Configuration chargée:', cfg);
+      
       if (!cfg) {
         setStatus('Configuration manquante.');
         console.error('Aucune configuration disponible.');
@@ -260,6 +276,13 @@
 
     // Exposer initMap globalement pour le callback Google Maps
     window.initMap = initMap;
+    
+    // Démarrer l'initialisation immédiatement
+    console.log('🚀 Démarrage de l\'initialisation...');
+    initMap().catch(error => {
+      console.error('❌ Erreur lors de l\'initialisation:', error);
+      setStatus('Erreur d\'initialisation: ' + error.message);
+    });
   </script>
 </body>
 </html>
