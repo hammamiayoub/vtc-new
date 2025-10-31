@@ -1,5 +1,1 @@
-<<<<<<< HEAD
 google.com, pub-3211329240716276, DIRECT, f08c47fec0942fa0
-=======
-google.com, pub-3211329240716276, DIRECT, f08c47fec0942fa0
->>>>>>> f07dd24 (Corrections multiples)

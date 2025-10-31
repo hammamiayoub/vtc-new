@@ -17,6 +17,7 @@ import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
 import { analytics } from '../utils/analytics';
 import { Driver, Booking } from '../types';
+import { AppDownloadModal } from './AppDownloadModal';
 
 interface DriverDashboardProps {
   onLogout: () => void;
@@ -31,6 +32,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<{canAcceptMoreBookings: boolean} | null>(null);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead } = useDriverNotifications(driver?.id || '');
@@ -75,6 +77,19 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
   useEffect(() => {
     fetchDriverData();
+  }, []);
+
+  // Show app download modal once per session (first load/refresh only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const flagKey = 'td_app_modal_shown_session';
+    const alreadyShown = window.sessionStorage.getItem(flagKey) === '1';
+    if (alreadyShown) return;
+    const t = setTimeout(() => {
+      setIsDownloadOpen(true);
+      window.sessionStorage.setItem(flagKey, '1');
+    }, 600);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -660,6 +675,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <AppDownloadModal isOpen={isDownloadOpen} onClose={() => setIsDownloadOpen(false)} />
       {/* Header */}
       <header className="bg-black border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

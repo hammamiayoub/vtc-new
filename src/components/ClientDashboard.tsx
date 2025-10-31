@@ -13,6 +13,7 @@ import { Footer } from './Footer';
 import { NotificationPermission, NotificationStatus } from './NotificationPermission';
 import { useClientNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
+import { AppDownloadModal } from './AppDownloadModal';
 
 interface ClientDashboardProps {
   onLogout: () => void;
@@ -29,6 +30,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedBookingForRating, setSelectedBookingForRating] = useState<Booking | null>(null);
   const [ratedBookings, setRatedBookings] = useState<Set<string>>(new Set());
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead, refreshNotifications } = useClientNotifications(client?.id || '');
@@ -71,6 +73,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
   useEffect(() => {
     fetchClientData();
+  }, []);
+
+  // Show app download modal once per session (first load/refresh only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const flagKey = 'td_app_modal_shown_session';
+    const alreadyShown = window.sessionStorage.getItem(flagKey) === '1';
+    if (alreadyShown) return;
+    const t = setTimeout(() => {
+      setIsDownloadOpen(true);
+      window.sessionStorage.setItem(flagKey, '1');
+    }, 600);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -474,6 +489,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AppDownloadModal isOpen={isDownloadOpen} onClose={() => setIsDownloadOpen(false)} />
       {/* Header */}
       <header className="bg-black border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
