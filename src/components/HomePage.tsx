@@ -1,7 +1,9 @@
 import React from 'react';
-import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown, Smartphone, QrCode, Download } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Footer } from './Footer';
+import { AppDownloadModal } from './AppDownloadModal';
 
 interface HomePageProps {
   onGetStarted: () => void;
@@ -9,8 +11,27 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin }) => {
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const flagKey = 'td_app_modal_shown_session';
+    const alreadyShown = window.sessionStorage.getItem(flagKey) === '1';
+    if (alreadyShown) return;
+    const t = setTimeout(() => {
+      setIsDownloadOpen(true);
+      window.sessionStorage.setItem(flagKey, '1');
+    }, 600);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleCloseDownload = () => {
+    setIsDownloadOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <AppDownloadModal isOpen={isDownloadOpen} onClose={handleCloseDownload} />
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -64,7 +85,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
         {[
           'Réservation instantanée en 3 clics',
           'Historique de toutes vos courses',
-          'Notifications push pour vos courses'
+          'Notifications push pour vos courses',
+          'Suivi en temps réel de votre course'
         ].map((feature, index) => (
           <div key={index} className="flex items-center gap-3">
             <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
