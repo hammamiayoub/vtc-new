@@ -102,22 +102,58 @@
     }
   </style>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const ua = navigator.userAgent || navigator.vendor || window.opera;
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const PKG = "com.tunidrive.mobile";
+    const PLAY_WEB = "https://play.google.com/store/apps/details?id=" + PKG;
+    const PLAY_MARKET = "market://details?id=" + PKG;
+    const PLAY_INTENT =
+      "intent://details?id=" + PKG +
+      "#Intent;scheme=market;package=com.android.vending;" +
+      "S.browser_fallback_url=" + encodeURIComponent(PLAY_WEB) + ";end";
 
-      // Redirections mobiles (laisse l’affichage sur desktop)
-      if (/android/i.test(ua)) {
-        window.location.replace("https://play.google.com/store/apps/details?id=com.tunidrive.mobile");
-      } else if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
-        window.location.replace("https://apps.apple.com/app/tunidrive/id6753982765");
+    // petit délai "Meta-safe"
+    const META_DELAY = 750;
+
+    function isAndroid() { return /android/i.test(ua); }
+    function isIOS() { return /iPad|iPhone|iPod/.test(ua) && !window.MSStream; }
+    function isFBorIG() { return /FBAN|FBAV|Instagram/i.test(ua); }
+
+    function openPlayStoreAndroid() {
+      // 1) Tente d’ouvrir l’app Play Store
+      let tried = false;
+      function tryMarket() {
+        tried = true;
+        window.location.href = PLAY_MARKET;
+      }
+      function tryIntent() {
+        window.location.href = PLAY_INTENT;
+      }
+      function fallbackWeb() {
+        window.location.href = PLAY_WEB;
       }
 
-      // Masquer le logo si la ressource échoue
-      const logo = document.querySelector('img.logo');
-      logo.addEventListener('error', () => { logo.style.display = 'none'; });
-    });
-  </script>
+      // Les navigateurs in-app (Facebook/Instagram) gèrent mieux l’INTENT que MARKET
+      if (isFBorIG()) {
+        setTimeout(tryIntent, META_DELAY);        // intent:// (avec fallback web)
+      } else {
+        setTimeout(tryMarket, META_DELAY);        // market:// d'abord
+        setTimeout(() => { if (tried) tryIntent(); }, META_DELAY + 800);   // puis intent://
+      }
+      // Dernier recours : page web du Play Store
+      setTimeout(fallbackWeb, META_DELAY + 1800);
+    }
+
+    if (isAndroid()) {
+      openPlayStoreAndroid();
+    } else if (isIOS()) {
+      setTimeout(() => {
+        window.location.replace("https://apps.apple.com/app/tunidrive/id6753982765");
+      }, META_DELAY);
+    }
+  });
+</script>
 </head>
 <body>
   <div class="bg" aria-hidden="true"></div>
@@ -134,10 +170,10 @@
 
     <div class="buttons">
       <a class="btn-store" href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile" target="_blank" rel="noopener">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/2560px-Google_Play_Store_badge_EN.svg.png" alt="Disponible sur Google Play">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Google_Play_Store_badge_FR.svg/2560px-Google_Play_Store_badge_FR.svg.png" alt="Disponible sur Google Play">
       </a>
       <a class="btn-store" href="https://apps.apple.com/app/tunidrive/id6753982765" target="_blank" rel="noopener">
-        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Disponible sur l’App Store">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Download_on_the_App_Store_Badge_FRCA_RGB_blk.svg/2560px-Download_on_the_App_Store_Badge_FRCA_RGB_blk.svg.png" alt="Disponible sur l’App Store">
       </a>
     </div>
   </main>
