@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+   <url>
+      <loc>https://tunidrive.net/</loc>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/signup</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.7</priority>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/client-signup</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.7</priority>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/driver-login</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/client-login</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/login</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/terms-of-service</loc>
+      <changefreq>yearly</changefreq>
+      <priority>0.4</priority>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/privacy-policy</loc>
+      <changefreq>yearly</changefreq>
+      <priority>0.4</priority>
+   </url>
+
+</urlset>
