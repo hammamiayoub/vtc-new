@@ -691,10 +691,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               <div className="space-y-3 sm:space-y-4">
                 {/* Tarif de base - Optimisé mobile */}
                 <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarif de base : 1.8 TND/KM</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarif de base : dès 2.0 TND/KM</h4>
                   <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-700 flex-1 pr-2">Distance &lt; 100 km</span>
+                      <span className="text-gray-700 flex-1 pr-2">Distance 0-50 km</span>
+                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">2.0 TND/KM</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-gray-700 flex-1 pr-2">Distance 50-100 km</span>
                       <span className="font-medium text-gray-900 text-right whitespace-nowrap">1.8 TND/KM</span>
                     </div>
                     <div className="flex justify-between items-center py-1">
@@ -711,8 +715,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 {/* Info bonus - Optimisé mobile */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
                   <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
-                    <strong>💡 Bon à savoir :</strong> Plus votre trajet est long, plus vous économisez ! 
-                    Les remises s'appliquent automatiquement selon la distance.
+                    <strong>💡 Bon à savoir :</strong> Plus votre trajet est long (aller ou aller-retour), plus vous économisez ! 
+                    Les remises s'appliquent automatiquement selon la distance totale.
                   </p>
                 </div>
                 

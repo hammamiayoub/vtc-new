@@ -59,16 +59,23 @@ export const calculateDrivingDistance = async (
 
 // Fonction pour obtenir le tarif par kilomètre selon la distance
 export const getPricePerKm = (distanceKm: number): { price: number; discount: string } => {
-  if (distanceKm >= 100 && distanceKm < 250) {
-    // Distance 100–250 km → 1.6 TND/km
-    return { price: 1.6, discount: '' };
-  } else if (distanceKm >= 250) {
-    // Distance 250 km+ → 1.45 TND/km
-    return { price: 1.45, discount: '' };
-  } else {
-    // Distance < 100 km → tarif de base (1.8 TND/km)
+  if (distanceKm < 50) {
+    // Distance 0–50 km → 2.0 TND/km
+    return { price: 2.0, discount: '' };
+  }
+
+  if (distanceKm < 100) {
+    // Distance 50–100 km → 1.8 TND/km
     return { price: 1.8, discount: '' };
   }
+
+  if (distanceKm < 250) {
+    // Distance 100–250 km → 1.6 TND/km
+    return { price: 1.6, discount: '' };
+  }
+
+  // Distance 250 km+ → 1.45 TND/km
+  return { price: 1.45, discount: '' };
 };
 
 // Fonction pour obtenir le multiplicateur selon le type de véhicule
@@ -138,9 +145,14 @@ export const calculateSurcharges = (scheduledTime: string | Date, basePrice: num
 };
 
 // Fonction pour calculer le prix selon le nouveau schéma tarifaire avec type de véhicule
-export const calculatePrice = (distanceKm: number, vehicleType?: string): number => {
-  const { price: pricePerKm } = getPricePerKm(distanceKm);
-  const basePrice = distanceKm * pricePerKm;
+export const calculatePrice = (
+  distanceKm: number,
+  vehicleType?: string,
+  isReturnTrip: boolean = false
+): number => {
+  const effectiveDistance = isReturnTrip ? distanceKm * 2 : distanceKm;
+  const { price: pricePerKm } = getPricePerKm(effectiveDistance);
+  const basePrice = effectiveDistance * pricePerKm;
   const vehicleMultiplier = getVehicleMultiplier(vehicleType);
   const totalPrice = basePrice * vehicleMultiplier;
   return Math.round(totalPrice * 100) / 100; // Arrondir à 2 décimales
@@ -154,12 +166,7 @@ export const calculatePriceWithSurcharges = (
   isReturnTrip: boolean = false
 ): { basePrice: number; surcharges: PriceSurcharges; finalPrice: number } => {
   // Calculer le prix de base
-  let basePrice = calculatePrice(distanceKm, vehicleType);
-  
-  // Appliquer le multiplicateur pour le trajet retour
-  if (isReturnTrip) {
-    basePrice = basePrice * 1.8; // 80% de majoration pour le retour
-  }
+  const basePrice = calculatePrice(distanceKm, vehicleType, isReturnTrip);
   
   const surcharges = calculateSurcharges(scheduledTime, basePrice);
   const finalPrice = Math.round((basePrice + surcharges.totalSurcharge) * 100) / 100;
