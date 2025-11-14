@@ -93,7 +93,7 @@ export const Footer: React.FC<FooterProps> = () => {
                 />
               </a>
               <a 
-                href="https://apps.apple.com/us/app/tunidrive/id6753982765"
+                href="https://apps.apple.com/fr/app/tunidrive/id6753982765"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block hover:opacity-80 transition-opacity"
