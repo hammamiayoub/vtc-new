@@ -31,8 +31,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'bookings' | 'subscription'>('dashboard');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<{canAcceptMoreBookings: boolean} | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<{
+    canAcceptMoreBookings: boolean;
+    hasActiveSubscription?: boolean;
+    subscriptionType?: 'free' | 'premium';
+    subscriptionEndDate?: string | null;
+    remainingFreeBookings?: number;
+    lastPaidSubscriptionEnd?: string | null;
+    hadPaidSubscription?: boolean;
+  } | null>(null);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [showExpiredSubscriptionModal, setShowExpiredSubscriptionModal] = useState(false);
 
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead } = useDriverNotifications(driver?.id || '');
@@ -110,15 +119,68 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         return;
       }
 
+      let lastPaidSubscriptionEnd: string | null = null;
+      let hadPaidSubscription = false;
+
+      const { data: lastPaidSub } = await supabase
+        .from('driver_subscriptions')
+        .select('end_date')
+        .eq('driver_id', driver.id)
+        .eq('payment_status', 'paid')
+        .order('end_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastPaidSub?.end_date) {
+        lastPaidSubscriptionEnd = lastPaidSub.end_date;
+        hadPaidSubscription = true;
+      }
+
       if (data && data.length > 0) {
         setSubscriptionStatus({
-          canAcceptMoreBookings: data[0].can_accept_more_bookings
+          canAcceptMoreBookings: data[0].can_accept_more_bookings,
+          hasActiveSubscription: data[0].has_active_subscription,
+          subscriptionType: data[0].subscription_type,
+          subscriptionEndDate: data[0].subscription_end_date,
+          remainingFreeBookings: data[0].remaining_free_bookings,
+          lastPaidSubscriptionEnd,
+          hadPaidSubscription
         });
       }
     } catch (error) {
       console.error('Erreur:', error);
     }
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !subscriptionStatus || !driver?.id) return;
+
+    const hasActiveSubscription = subscriptionStatus.hasActiveSubscription;
+    const remainingFree = subscriptionStatus.remainingFreeBookings ?? 0;
+    const lastEndDate = subscriptionStatus.lastPaidSubscriptionEnd
+      ? new Date(subscriptionStatus.lastPaidSubscriptionEnd)
+      : null;
+    const activeEndDate = subscriptionStatus.subscriptionEndDate
+      ? new Date(subscriptionStatus.subscriptionEndDate)
+      : null;
+    const now = new Date();
+
+    const premiumExpired = subscriptionStatus.hadPaidSubscription && !hasActiveSubscription;
+    const endDatePassed =
+      (activeEndDate && activeEndDate < now) ||
+      (lastEndDate && lastEndDate < now);
+    const noFreeRidesLeft = remainingFree <= 0;
+    const shouldShow = premiumExpired || endDatePassed || noFreeRidesLeft;
+
+    const sessionKey = `td_driver_subscription_modal_${driver.id}`;
+    const dismissed = window.sessionStorage.getItem(sessionKey) === 'dismissed';
+
+    if (shouldShow && !dismissed) {
+      setShowExpiredSubscriptionModal(true);
+    } else if (!shouldShow) {
+      setShowExpiredSubscriptionModal(false);
+    }
+  }, [subscriptionStatus, driver?.id]);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -673,6 +735,22 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     );
   }
 
+  const premiumExpired =
+    Boolean(subscriptionStatus?.hadPaidSubscription && !subscriptionStatus?.hasActiveSubscription);
+  const quotaDepleted = (subscriptionStatus?.remainingFreeBookings ?? 1) <= 0;
+  const expirationDateString = subscriptionStatus?.subscriptionEndDate
+    ? new Date(subscriptionStatus.subscriptionEndDate).toLocaleDateString('fr-FR')
+    : subscriptionStatus?.lastPaidSubscriptionEnd
+      ? new Date(subscriptionStatus.lastPaidSubscriptionEnd).toLocaleDateString('fr-FR')
+      : null;
+  const subscriptionModalMessage = premiumExpired
+    ? `${
+        expirationDateString
+          ? `Votre abonnement Premium a expiré le ${expirationDateString}.`
+          : 'Votre dernier abonnement Premium est arrivé à expiration.'
+      } Souscrivez à un nouvel abonnement pour continuer à recevoir des courses.`
+    : 'Vous avez utilisé vos 3 courses gratuites. Souscrivez à l\'abonnement Premium pour continuer à recevoir des courses.';
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <AppDownloadModal isOpen={isDownloadOpen} onClose={() => setIsDownloadOpen(false)} />
@@ -808,6 +886,43 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {/* Contenu conditionnel basé sur l'onglet actif */}
         {!showProfileForm && activeTab === 'dashboard' && (
           <>
+            {showExpiredSubscriptionModal && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="w-6 h-6 text-red-600" />
+                    <h3 className="text-xl font-bold text-gray-900">Abonnement expiré</h3>
+                  </div>
+                  <p className="text-gray-700">{subscriptionModalMessage}</p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+                      onClick={() => {
+                        if (typeof window !== 'undefined' && driver) {
+                          window.sessionStorage.setItem(`td_driver_subscription_modal_${driver.id}`, 'dismissed');
+                        }
+                        setShowExpiredSubscriptionModal(false);
+                        setActiveTab('subscription');
+                      }}
+                    >
+                      Voir l'abonnement
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        if (typeof window !== 'undefined' && driver) {
+                          window.sessionStorage.setItem(`td_driver_subscription_modal_${driver.id}`, 'dismissed');
+                        }
+                        setShowExpiredSubscriptionModal(false);
+                      }}
+                    >
+                      Plus tard
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
             {/* Welcome Section */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -1163,6 +1278,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {/* Onglet Courses */}
         {!showProfileForm && activeTab === 'bookings' && (
           <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900 space-y-2">
+              <h3 className="text-base font-semibold text-blue-950">Tutoriel rapide</h3>
+              <p><strong>Accepter / Refuser :</strong> dans “Nouvelles demandes”, utilisez les boutons <em>Accepter</em> ou <em>Refuser</em>. Si le délai est dépassé, contactez le client.</p>
+              <p><strong>Démarrer :</strong> une fois la course acceptée, appuyez sur <em>Commencer</em> quand vous êtes prêt à prendre en charge le client.</p>
+              <p><strong>Terminer :</strong> après avoir déposé le client, marquez la course comme terminée via le bouton prévu dans les actions.</p>
+            </div>
             {/* Nouvelles demandes - Statut 'pending' */}
             {pendingBookings.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm">

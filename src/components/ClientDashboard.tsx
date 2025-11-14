@@ -691,23 +691,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               <div className="space-y-3 sm:space-y-4">
                 {/* Tarif de base - Optimisé mobile */}
                 <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarif de base : 2.0 TND/KM</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarif de base : 1.8 TND/KM</h4>
                   <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-700 flex-1 pr-2">Distance &lt; 30 km</span>
-                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">2.0 TND/KM</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-700 flex-1 pr-2">Distance 30-100 km</span>
-                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">2.0 TND/KM</span>
+                      <span className="text-gray-700 flex-1 pr-2">Distance &lt; 100 km</span>
+                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">1.8 TND/KM</span>
                     </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-700 flex-1 pr-2">Distance 100-250 km</span>
-                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.75 TND/KM (-10%)</span>
+                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.6 TND/KM (-11%)</span>
                     </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-700 flex-1 pr-2">Distance 250+ km</span>
-                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.55 TND/KM (-20%)</span>
+                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.45 TND/KM (-19%)</span>
                     </div>
                   </div>
                 </div>
