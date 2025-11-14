@@ -68,7 +68,7 @@ export const AppDownloadSection: React.FC<AppDownloadSectionProps> = ({ qrImageS
                 />
               </a>
               <a 
-                href="https://apps.apple.com/us/app/tunidrive/id6753982765"
+                href="https://apps.apple.com/fr/app/tunidrive/id6753982765"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:scale-105 transition-transform durée-200"

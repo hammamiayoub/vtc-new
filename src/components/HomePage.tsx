@@ -114,7 +114,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
           />
         </a>
         <a 
-          href="https://apps.apple.com/us/app/tunidrive/id6753982765"
+          href="https://apps.apple.com/fr/app/tunidrive/id6753982765"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:scale-105 transition-transform duration-200"
