@@ -24,7 +24,6 @@ import { normalizeAddress, areAddressesSimilar } from '../utils/addressNormaliza
 import { 
   calculateDistance, 
   calculateDrivingDistance,
-  calculatePrice, 
   calculatePriceWithSurcharges,
   getPricePerKm,
   getVehicleMultiplier,
@@ -884,17 +883,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       return;
     }
 
-    // Vérification de la distance minimale
-    if (estimatedDistance < 25) {
-      alert(
-        '⚠️ Distance minimale requise\n\n' +
-        'Les réservations sont disponibles uniquement pour les trajets de 25 km et plus.\n\n' +
-        `Distance actuelle : ${estimatedDistance} km\n\n` +
-        'Pour les trajets courts, veuillez utiliser un taxi local ou un service de VTC urbain.'
-      );
-      return;
-    }
-
     if (!selectedDriver) {
       alert('Veuillez sélectionner un chauffeur');
       return;
@@ -1277,11 +1265,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                               ×{vehicleMultiplier} ({vehicleTypeName})
                             </div>
                           )}
-                          {watchIsReturnTrip && (
-                            <div className="text-orange-600 font-semibold">
-                              ×1.8 (trajet retour)
-                            </div>
-                          )}
                         </div>
                       );
                     })()}
@@ -1354,31 +1337,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
           {/* Recherche de chauffeurs */}
           <div>
-            {/* Alerte si distance < 25km */}
-            {estimatedDistance && estimatedDistance < 25 && (
-              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-amber-900 mb-1">Distance minimale non atteinte</h4>
-                    <p className="text-sm text-amber-800 mb-2">
-                      Les réservations sont disponibles uniquement pour les trajets de <strong>25 km et plus</strong>.
-                    </p>
-                    <p className="text-sm text-amber-700">
-                      Distance actuelle : <strong>{estimatedDistance} km</strong>
-                    </p>
-                    <p className="text-xs text-amber-600 mt-2">
-                      💡 Pour les trajets courts, nous vous recommandons d'utiliser un taxi local ou un service de VTC urbain.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <Button
               type="button"
               onClick={searchAvailableDrivers}
-              disabled={!isValid || !estimatedPrice || (estimatedDistance !== null && estimatedDistance < 25)}
+              disabled={!isValid || !estimatedPrice}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <User className="w-5 h-5 mr-2" />
