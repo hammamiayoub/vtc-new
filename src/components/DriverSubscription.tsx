@@ -28,6 +28,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
   const [bankAccountCopied, setBankAccountCopied] = useState(false);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [selectedBillingPeriod, setSelectedBillingPeriod] = useState<BillingPeriod>('monthly');
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
 
   // Informations de paiement
   const SUBSCRIPTION_PRICE_BASE_MONTHLY = 30.00;
@@ -110,6 +111,12 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
           hasUsedFreeTrial: status.has_used_free_trial || false,
           subscriptionEndDate: status.subscription_end_date
         });
+        const now = new Date();
+        const hasExpiredDate = status.subscription_end_date ? new Date(status.subscription_end_date) < now : false;
+        const isPremiumExpired = status.subscription_type === 'premium' && !status.has_active_subscription;
+        if (hasExpiredDate || isPremiumExpired) {
+          setShowExpiredModal(true);
+        }
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -209,9 +216,46 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
   }
 
   const isPremium = subscriptionStatus.hasActiveSubscription || subscriptionStatus.subscriptionType === 'premium';
+  const isExpiredPremium = (subscriptionStatus.subscriptionEndDate
+    ? new Date(subscriptionStatus.subscriptionEndDate) < new Date()
+    : false) || (subscriptionStatus.subscriptionType === 'premium' && !subscriptionStatus.hasActiveSubscription);
 
   return (
     <div className="space-y-6">
+      {showExpiredModal && isExpiredPremium && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+              <h3 className="text-xl font-bold text-gray-900">Abonnement expiré</h3>
+            </div>
+            <p className="text-gray-700">
+              {subscriptionStatus.subscriptionEndDate
+                ? `Votre abonnement Premium a expiré le ${new Date(subscriptionStatus.subscriptionEndDate).toLocaleDateString('fr-FR')}.`
+                : 'Votre dernier abonnement Premium est arrivé à expiration.'}
+              {' '}Souscrivez à un nouvel abonnement pour continuer à recevoir des courses.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+                onClick={() => {
+                  setShowExpiredModal(false);
+                  setSelectedBillingPeriod('monthly');
+                }}
+              >
+                Souscrire maintenant
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowExpiredModal(false)}
+              >
+                Plus tard
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Carte de statut principal */}
       <div className={`rounded-xl shadow-lg p-6 ${
         isPremium 

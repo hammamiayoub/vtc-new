@@ -400,6 +400,17 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
           </div>
         </div>
 
+        {/* Aide / Tutoriel */}
+        <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-4 mb-4 space-y-2 text-sm">
+          <h4 className="font-semibold flex items-center gap-2 text-blue-950">
+            <span role="img" aria-label="aide">ℹ️</span>
+            Tutoriel saisie des disponibilités
+          </h4>
+          <p><strong>Jour :</strong> choisissez une date précise, ajoutez vos créneaux puis enregistrez.</p>
+          <p><strong>Plage :</strong> sélectionnez le premier et le dernier jour, définissez vos horaires, tout sera appliqué d'un coup.</p>
+          <p><strong>Semaine :</strong> cliquez sur une semaine pour appliquer les mêmes créneaux sur les 7 jours.</p>
+        </div>
+
         {/* Mode de sélection */}
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <span className="text-sm text-gray-600">Mode de sélection :</span>

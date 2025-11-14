@@ -59,18 +59,15 @@ export const calculateDrivingDistance = async (
 
 // Fonction pour obtenir le tarif par kilomètre selon la distance
 export const getPricePerKm = (distanceKm: number): { price: number; discount: string } => {
-  if (distanceKm >= 25 && distanceKm < 100) {
-    // Distance 25–100 km → 2.0 TND/km
-    return { price: 2.0, discount: '' };
-  } else if (distanceKm >= 100 && distanceKm < 250) {
-    // Distance 100–250 km → 1.75 TND/km
-    return { price: 1.75, discount: '' };
+  if (distanceKm >= 100 && distanceKm < 250) {
+    // Distance 100–250 km → 1.6 TND/km
+    return { price: 1.6, discount: '' };
   } else if (distanceKm >= 250) {
-    // Distance 250 km+ → 1.55 TND/km
-    return { price: 1.55, discount: '' };
+    // Distance 250 km+ → 1.45 TND/km
+    return { price: 1.45, discount: '' };
   } else {
-    // Distance < 25 km → tarif de base (2.0 TND/km)
-    return { price: 2.0, discount: '' };
+    // Distance < 100 km → tarif de base (1.8 TND/km)
+    return { price: 1.8, discount: '' };
   }
 };
 
