@@ -64,54 +64,24 @@
             line-height: 1.6;
             margin-bottom: 30px;
         }
-
-        /* WHATSAPP BOX STYLES */
-        .whatsapp-box {
-            background: #e7fbe9;
-            border-left: 6px solid #25D366;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-			text-align: center;
-        }
-
-        .whatsapp-box h3 {
-            color: #1c8c3a;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .whatsapp-box p {
-            color: #2f5130;
-            margin-bottom: 15px;
-            font-size: 15px;
-        }
-
-        .whatsapp-btn {
-            background-color: #25D366;
-            color: #fff;
-            padding: 10px 18px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .whatsapp-btn:hover {
-            opacity: 0.9;
-        }
         
         .button-container {
-            text-align: center;
-        }
+  text-align: center;
+}
 
-        .button {
-            background-color: #000;
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            display: inline-block;
+.button {
+  background-color: #000;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+}
+        }
+        
+        .button:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
         }
         
         .mobile-note {
@@ -128,6 +98,13 @@
             padding: 20px;
             color: #6c757d;
             font-size: 14px;
+        }
+        
+        .countdown {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007AFF;
+            margin: 20px 0;
         }
         
         @media (max-width: 480px) {
@@ -157,22 +134,12 @@
             <p class="message">
                 Votre compte TuniDrive a été activé avec succès. Vous pouvez maintenant vous connecter à l'application et commencer à utiliser nos services.
             </p>
-
-            <!-- WHATSAPP NOTICE -->
-            <div class="whatsapp-box">
-                <h3>💬 Pour faciliter les échanges avec vos correspondants</h3>
-                <p>Nous vous recommandons vivement d’installer WhatsApp pour échanger facilement avec votre chauffeur lors de vos trajets.</p>
-                <a class="whatsapp-btn" href="https://whatsapp.com/dl" target="_blank">
-                    Installer WhatsApp
-                </a>
-            </div>
-
+            
             <div class="mobile-note">
-                <strong>📱 Si vous avez l'application TuniDrive installée, cliquez sur le bouton ci-dessous.</strong>
+                <strong>📱 Si vous avez l'application TuniDrive installée, Cliquez sur le lien ci-dessous.</strong>
                 <br><br>
-                <div class="button-container">
-                    <a href="tunidrive://auth/" class="button">Ouvrir l'application</a>
-                </div>
+				<div class="button-container"><a href="tunidrive://auth/" class="button">Ouvrir l'application</a>
+			</div>
             </div>
             
             <div>
