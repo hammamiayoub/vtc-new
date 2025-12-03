@@ -892,32 +892,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Administration</h1>
-                <p className="text-sm text-gray-600">TuniDrive</p>
+      <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">Administration</h1>
+                <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">TuniDrive</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               <button
                 onClick={fetchDrivers}
                 disabled={refreshing}
-                className="p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
                 title="Actualiser"
               >
                 <div className={refreshing ? 'animate-spin' : ''}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                 </div>
               </button>
-              <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50">
-                <LogOut size={16} />
-                Déconnexion
+              <Button 
+                variant="outline" 
+                onClick={handleLogout} 
+                className="flex items-center gap-1 sm:gap-2 border-gray-300 text-gray-700 hover:bg-gray-50 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
+              >
+                <LogOut size={14} className="sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Déconnexion</span>
+                <span className="sm:hidden">Déco</span>
               </Button>
             </div>
           </div>
@@ -925,14 +930,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
         {/* Tabs */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-8">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
+            {/* Desktop Tabs */}
+            <nav className="hidden md:flex -mb-px space-x-8">
               <button
                 onClick={() => setActiveTab('drivers')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'drivers'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -945,7 +951,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               </button>
               <button
                 onClick={() => setActiveTab('clients')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'clients'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -958,7 +964,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               </button>
               <button
                 onClick={() => setActiveTab('vehicles')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'vehicles'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -971,7 +977,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               </button>
               <button
                 onClick={() => setActiveTab('subscriptions')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'subscriptions'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -983,61 +989,129 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
               </button>
             </nav>
+            
+            {/* Mobile Tabs - Scrollable */}
+            <nav className="md:hidden -mb-px flex space-x-4 overflow-x-auto scrollbar-hide pb-2">
+              <button
+                onClick={() => setActiveTab('drivers')}
+                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
+                  activeTab === 'drivers'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Users size={14} />
+                  <span>Chauffeurs</span>
+                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                    {drivers.length}
+                  </span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('clients')}
+                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
+                  activeTab === 'clients'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <User size={14} />
+                  <span>Clients</span>
+                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                    {clients.length}
+                  </span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('vehicles')}
+                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
+                  activeTab === 'vehicles'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Car size={14} />
+                  <span>Véhicules</span>
+                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                    {vehicles.length}
+                  </span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('subscriptions')}
+                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
+                  activeTab === 'subscriptions'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <CreditCard size={14} />
+                  <span>Abonnements</span>
+                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                    {subscriptions.length}
+                  </span>
+                </div>
+              </button>
+            </nav>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
           {activeTab === 'subscriptions' ? (
             <>
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CreditCard size={24} className="text-gray-700" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CreditCard size={20} className="sm:w-6 sm:h-6 text-gray-700" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Total abonnements</h3>
-                    <p className="text-2xl font-bold text-gray-900">{subscriptions.length}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Total abonnements</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{subscriptions.length}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle size={24} className="text-green-600" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Actifs (payés)</h3>
-                    <p className="text-2xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Actifs (payés)</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">
                       {subscriptions.filter(s => s.paymentStatus === 'paid' && s.status === 'active' && (s.daysRemaining || 0) >= 0).length}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Clock size={24} className="text-orange-600" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock size={20} className="sm:w-6 sm:h-6 text-orange-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">En attente</h3>
-                    <p className="text-2xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En attente</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">
                       {subscriptions.filter(s => s.paymentStatus === 'pending').length}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp size={24} className="text-blue-600" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <TrendingUp size={20} className="sm:w-6 sm:h-6 text-blue-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Revenus totaux</h3>
-                    <p className="text-2xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Revenus totaux</h3>
+                    <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                       {subscriptions.filter(s => s.paymentStatus === 'paid').reduce((sum, s) => sum + s.totalPriceTnd, 0).toFixed(0)} TND
                     </p>
                   </div>
@@ -1046,54 +1120,54 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </>
           ) : activeTab === 'vehicles' ? (
             <>
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Car size={24} className="text-gray-700" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Car size={20} className="sm:w-6 sm:h-6 text-gray-700" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Total véhicules</h3>
-                    <p className="text-2xl font-bold text-gray-900">{vehicles.length}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Total véhicules</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{vehicles.length}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle size={24} className="text-green-600" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Disponibles</h3>
-                    <p className="text-2xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Disponibles</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">
                       {vehicles.filter(v => (v.availabilityCount || 0) > 0).length}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Users size={24} className="text-blue-600" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Users size={20} className="sm:w-6 sm:h-6 text-blue-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Chauffeurs actifs</h3>
-                    <p className="text-2xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Chauffeurs actifs</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">
                       {new Set(vehicles.filter(v => v.driver?.status === 'active').map(v => v.driverId)).size}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Calendar size={24} className="text-purple-600" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar size={20} className="sm:w-6 sm:h-6 text-purple-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Créneaux totaux</h3>
-                    <p className="text-2xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Créneaux totaux</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">
                       {vehicles.reduce((sum, v) => sum + (v.availabilityCount || 0), 0)}
                     </p>
                   </div>
@@ -1102,102 +1176,102 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </>
           ) : activeTab === 'drivers' ? (
             <>
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Users size={24} className="text-gray-700" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Users size={20} className="sm:w-6 sm:h-6 text-gray-700" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Total chauffeurs</h3>
-                    <p className="text-2xl font-bold text-gray-900">{drivers.length}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Clock size={24} className="text-orange-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">En attente</h3>
-                    <p className="text-2xl font-bold text-gray-900">{pendingDrivers.length}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Total chauffeurs</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{drivers.length}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle size={24} className="text-green-600" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock size={20} className="sm:w-6 sm:h-6 text-orange-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Actifs</h3>
-                    <p className="text-2xl font-bold text-gray-900">{activeDrivers.length}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En attente</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{pendingDrivers.length}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <XCircle size={24} className="text-red-600" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Rejetés</h3>
-                    <p className="text-2xl font-bold text-gray-900">{rejectedDrivers.length}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Actifs</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{activeDrivers.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <XCircle size={20} className="sm:w-6 sm:h-6 text-red-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Rejetés</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{rejectedDrivers.length}</p>
                   </div>
                 </div>
               </div>
             </>
           ) : (
             <>
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Users size={24} className="text-gray-700" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Users size={20} className="sm:w-6 sm:h-6 text-gray-700" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Total clients</h3>
-                    <p className="text-2xl font-bold text-gray-900">{totalClients}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Car size={24} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Total courses</h3>
-                    <p className="text-2xl font-bold text-gray-900">{totalBookings}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Total clients</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalClients}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle size={24} className="text-green-600" />
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Car size={20} className="sm:w-6 sm:h-6 text-blue-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Terminées</h3>
-                    <p className="text-2xl font-bold text-gray-900">{completedBookings}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Total courses</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalBookings}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Terminées</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{completedBookings}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Revenus</h3>
-                    <p className="text-2xl font-bold text-gray-900">{totalRevenue.toFixed(0)} TND</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Revenus</h3>
+                    <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{totalRevenue.toFixed(0)} TND</p>
                   </div>
                 </div>
               </div>
@@ -1209,48 +1283,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         {activeTab === 'subscriptions' ? (
           /* Subscriptions List */
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Gestion des abonnements</h2>
-                  <p className="text-gray-600">Visualisez et gérez les abonnements des chauffeurs</p>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Gestion des abonnements</h2>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Visualisez et gérez les abonnements des chauffeurs</p>
                 </div>
                 {refreshing && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    Actualisation...
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Version desktop - Tableau des abonnements */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
+            <div className="hidden lg:block overflow-x-hidden">
+              <table className="w-full table-auto">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
                       Chauffeur
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                       Type
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
                       Période
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                       Montant
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
                       Paiement
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
                       Expiration
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                       Statut
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[6%]">
                       Actions
                     </th>
                   </tr>
@@ -1259,117 +1333,108 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   {subscriptions.map((subscription) => (
                     <tr key={subscription.id} className="hover:bg-gray-50 transition-colors">
                       {/* Chauffeur */}
-                      <td className="px-4 py-4">
+                      <td className="px-3 py-3">
                         {subscription.driver ? (
-                          <div className="text-sm space-y-1">
+                          <div className="text-xs">
                             <p className="text-gray-900 font-medium truncate">
                               {subscription.driver.firstName} {subscription.driver.lastName}
                             </p>
-                            <p className="text-gray-500 truncate">{subscription.driver.email}</p>
-                            <p className="text-gray-500 truncate">{subscription.driver.phone || 'N/A'}</p>
+                            <p className="text-gray-500 truncate text-[10px]">{subscription.driver.email}</p>
                           </div>
                         ) : (
-                          <p className="text-gray-500 italic">Chauffeur supprimé</p>
+                          <p className="text-gray-500 italic text-xs">Chauffeur supprimé</p>
                         )}
                       </td>
                       
                       {/* Type */}
-                      <td className="px-4 py-4">
-                        <div className="text-sm">
+                      <td className="px-3 py-3">
+                        <div className="text-xs">
                           {subscription.billingPeriod === 'yearly' ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                              <Calendar size={12} />
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800">
                               Annuel
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              <Calendar size={12} />
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">
                               Mensuel
                             </span>
                           )}
                           {subscription.billingPeriod === 'yearly' && (
-                            <p className="text-xs text-green-600 mt-1 font-medium">-10%</p>
+                            <p className="text-[10px] text-green-600 mt-0.5 font-medium">-10%</p>
                           )}
                         </div>
                       </td>
                       
                       {/* Période */}
-                      <td className="px-4 py-4">
-                        <div className="text-sm space-y-1">
-                          <p className="text-gray-600">Début:</p>
+                      <td className="px-3 py-3">
+                        <div className="text-xs">
                           <p className="text-gray-900 font-medium">
-                            {new Date(subscription.startDate).toLocaleDateString('fr-FR')}
+                            {new Date(subscription.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                           </p>
-                          <p className="text-gray-600 mt-2">Fin:</p>
-                          <p className="text-gray-900 font-medium">
-                            {new Date(subscription.endDate).toLocaleDateString('fr-FR')}
+                          <p className="text-gray-500 text-[10px]">
+                            → {new Date(subscription.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                           </p>
                         </div>
                       </td>
                       
                       {/* Montant */}
-                      <td className="px-4 py-4">
-                        <div className="text-sm space-y-1">
-                          <p className="text-2xl font-bold text-gray-900">
-                            {subscription.totalPriceTnd.toFixed(2)}
+                      <td className="px-3 py-3">
+                        <div className="text-xs">
+                          <p className="text-lg font-bold text-gray-900">
+                            {subscription.totalPriceTnd.toFixed(0)} TND
                           </p>
-                          <p className="text-xs text-gray-500">TND TTC</p>
-                          <p className="text-xs text-gray-500">
-                            HT: {subscription.priceTnd.toFixed(2)} TND
+                          <p className="text-[10px] text-gray-500">
+                            HT: {subscription.priceTnd.toFixed(0)} TND
                           </p>
                         </div>
                       </td>
                       
                       {/* Paiement */}
-                      <td className="px-4 py-4">
-                        {subscription.paymentStatus === 'paid' ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <CheckCircle size={12} />
-                            Payé
-                          </span>
-                        ) : subscription.paymentStatus === 'pending' ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                            <Clock size={12} />
-                            En attente
-                          </span>
-                        ) : subscription.paymentStatus === 'failed' ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            <XCircle size={12} />
-                            Échoué
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            <XCircle size={12} />
-                            Remboursé
-                          </span>
-                        )}
-                        {subscription.paymentDate && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(subscription.paymentDate).toLocaleDateString('fr-FR')}
-                          </p>
-                        )}
+                      <td className="px-3 py-3">
+                        <div className="text-xs">
+                          {subscription.paymentStatus === 'paid' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
+                              Payé
+                            </span>
+                          ) : subscription.paymentStatus === 'pending' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800">
+                              En attente
+                            </span>
+                          ) : subscription.paymentStatus === 'failed' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800">
+                              Échoué
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-800">
+                              Remboursé
+                            </span>
+                          )}
+                          {subscription.paymentDate && (
+                            <p className="text-[10px] text-gray-500 mt-0.5">
+                              {new Date(subscription.paymentDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                            </p>
+                          )}
+                        </div>
                       </td>
                       
                       {/* Expiration */}
-                      <td className="px-4 py-4">
-                        <div className="text-sm">
+                      <td className="px-3 py-3">
+                        <div className="text-xs">
                           {subscription.daysRemaining !== undefined && subscription.daysRemaining >= 0 ? (
                             <>
                               <p className="font-semibold text-gray-900">
-                                {subscription.daysRemaining} jour{subscription.daysRemaining > 1 ? 's' : ''}
+                                {subscription.daysRemaining}j
                               </p>
-                              <p className="text-xs text-gray-500">{subscription.expirationStatus}</p>
                               {subscription.daysRemaining <= 7 && subscription.daysRemaining > 0 && (
-                                <p className="text-xs text-orange-600 font-medium mt-1">
-                                  ⚠️ Expire bientôt
+                                <p className="text-[10px] text-orange-600 font-medium">
+                                  ⚠️ Bientôt
                                 </p>
                               )}
                             </>
                           ) : (
                             <div className="text-red-600">
-                              <p className="font-semibold">Expiré</p>
-                              <p className="text-xs">
-                                Il y a {Math.abs(subscription.daysRemaining || 0)} jour{Math.abs(subscription.daysRemaining || 0) > 1 ? 's' : ''}
+                              <p className="font-semibold text-xs">Expiré</p>
+                              <p className="text-[10px]">
+                                -{Math.abs(subscription.daysRemaining || 0)}j
                               </p>
                             </div>
                           )}
@@ -1377,33 +1442,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </td>
                       
                       {/* Statut */}
-                      <td className="px-4 py-4">
+                      <td className="px-3 py-3">
                         {subscription.status === 'active' ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <CheckCircle size={12} />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
                             Actif
                           </span>
                         ) : subscription.status === 'expired' ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            <XCircle size={12} />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800">
                             Expiré
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            <XCircle size={12} />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-800">
                             Annulé
                           </span>
                         )}
                       </td>
                       
                       {/* Actions */}
-                      <td className="px-4 py-4">
+                      <td className="px-3 py-3">
                         <button
                           onClick={() => setSelectedSubscription(subscription)}
-                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Voir les détails"
                         >
-                          <Eye size={16} />
+                          <Eye size={14} />
                         </button>
                       </td>
                     </tr>
@@ -1416,72 +1478,74 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <div className="lg:hidden">
               <div className="divide-y divide-gray-200">
                 {subscriptions.map((subscription) => (
-                  <div key={subscription.id} className="p-6 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
+                  <div key={subscription.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors active:bg-gray-100">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="min-w-0 flex-1">
                         {subscription.driver ? (
                           <>
-                            <h3 className="font-medium text-gray-900">
+                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                               {subscription.driver.firstName} {subscription.driver.lastName}
                             </h3>
-                            <p className="text-sm text-gray-500">{subscription.driver.email}</p>
+                            <p className="text-xs sm:text-sm text-gray-500 truncate">{subscription.driver.email}</p>
                           </>
                         ) : (
-                          <p className="text-gray-500 italic">Chauffeur supprimé</p>
+                          <p className="text-gray-500 italic text-sm">Chauffeur supprimé</p>
                         )}
                       </div>
                       <button
                         onClick={() => setSelectedSubscription(subscription)}
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 text-gray-600 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors flex-shrink-0 ml-2"
                         title="Voir les détails"
                       >
-                        <Eye size={16} />
+                        <Eye size={18} />
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Type</p>
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div className="bg-gray-50 rounded-lg p-2.5">
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Type</p>
                         {subscription.billingPeriod === 'yearly' ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800">
                             Annuel (-10%)
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800">
                             Mensuel
                           </span>
                         )}
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Montant</p>
-                        <p className="text-lg font-bold text-gray-900">
-                          {subscription.totalPriceTnd.toFixed(2)} TND
+                      <div className="bg-gray-50 rounded-lg p-2.5">
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Montant</p>
+                        <p className="text-base sm:text-lg font-bold text-gray-900">
+                          {subscription.totalPriceTnd.toFixed(0)} TND
                         </p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Paiement</p>
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div className="bg-gray-50 rounded-lg p-2.5">
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Paiement</p>
                         {subscription.paymentStatus === 'paid' ? (
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                          <span className="text-[10px] sm:text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
                             Payé
                           </span>
                         ) : (
-                          <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                          <span className="text-[10px] sm:text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-medium">
                             En attente
                           </span>
                         )}
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Expiration</p>
-                        <p className="text-sm text-gray-900">{subscription.expirationStatus}</p>
+                      <div className="bg-gray-50 rounded-lg p-2.5">
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Expiration</p>
+                        <p className="text-xs sm:text-sm text-gray-900 font-medium">{subscription.expirationStatus}</p>
                       </div>
                     </div>
 
-                    <p className="text-xs text-gray-500">
-                      Du {new Date(subscription.startDate).toLocaleDateString('fr-FR')} au {new Date(subscription.endDate).toLocaleDateString('fr-FR')}
-                    </p>
+                    <div className="bg-blue-50 rounded-lg p-2.5">
+                      <p className="text-[10px] sm:text-xs text-gray-600">
+                        Du {new Date(subscription.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} au {new Date(subscription.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1498,45 +1562,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         ) : activeTab === 'vehicles' ? (
           /* Vehicles List */
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Véhicules et disponibilités</h2>
-                  <p className="text-gray-600">Consultez tous les véhicules et leurs disponibilités</p>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Véhicules et disponibilités</h2>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Consultez tous les véhicules et leurs disponibilités</p>
                 </div>
                 {refreshing && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    Actualisation...
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Version desktop - Tableau des véhicules */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
+            <div className="hidden lg:block overflow-x-hidden">
+              <table className="w-full table-auto">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
                       Véhicule
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[16%]">
                       Chauffeur
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
                       Détails
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
-                      Statut chauffeur
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
+                      Statut
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
                       Disponibilités
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
                       Prochains créneaux
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[6%]">
                       Actions
                     </th>
                   </tr>
@@ -1545,26 +1609,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   {vehicles.map((vehicle) => (
                     <tr key={vehicle.id} className="hover:bg-gray-50 transition-colors">
                       {/* Véhicule */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-2">
                           {vehicle.photoUrl ? (
                             <img
                               src={vehicle.photoUrl}
                               alt="Photo du véhicule"
-                              className="w-16 h-12 rounded object-cover"
+                              className="w-12 h-9 rounded object-cover"
                             />
                           ) : (
-                            <div className="w-16 h-12 bg-gray-100 rounded flex items-center justify-center">
-                              <Car size={24} className="text-gray-700" />
+                            <div className="w-12 h-9 bg-gray-100 rounded flex items-center justify-center">
+                              <Car size={18} className="text-gray-700" />
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 truncate">
+                            <p className="font-medium text-gray-900 truncate text-xs">
                               {vehicle.make} {vehicle.model}
                             </p>
-                            <p className="text-sm text-gray-500">{vehicle.year}</p>
+                            <p className="text-[10px] text-gray-500">{vehicle.year}</p>
                             {vehicle.is_primary && (
-                              <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                              <span className="inline-block mt-0.5 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">
                                 Principal
                               </span>
                             )}
@@ -1573,27 +1637,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </td>
                       
                       {/* Chauffeur */}
-                      <td className="px-4 py-4">
+                      <td className="px-3 py-3">
                         {vehicle.driver ? (
-                          <div className="text-sm space-y-1">
+                          <div className="text-xs">
                             <p className="text-gray-900 font-medium truncate">
                               {vehicle.driver.firstName} {vehicle.driver.lastName}
                             </p>
-                            <p className="text-gray-500 truncate">{vehicle.driver.email}</p>
-                            <p className="text-gray-500 truncate">{vehicle.driver.phone || 'Non renseigné'}</p>
+                            <p className="text-gray-500 truncate text-[10px]">{vehicle.driver.email}</p>
                           </div>
                         ) : (
-                          <p className="text-gray-500 italic">Aucun chauffeur</p>
+                          <p className="text-gray-500 italic text-xs">Aucun chauffeur</p>
                         )}
                       </td>
                       
                       {/* Détails */}
-                      <td className="px-4 py-4">
-                        <div className="text-sm space-y-1">
-                          <p className="text-gray-900">{vehicle.color || 'N/A'}</p>
-                          <p className="text-gray-500">{vehicle.licensePlate || 'N/A'}</p>
-                          <p className="text-gray-500">{vehicle.seats || 'N/A'} places</p>
-                          <p className="text-gray-500 capitalize">
+                      <td className="px-3 py-3">
+                        <div className="text-xs">
+                          <p className="text-gray-900 truncate">{vehicle.color || 'N/A'}</p>
+                          <p className="text-gray-500 text-[10px] truncate">{vehicle.licensePlate || 'N/A'}</p>
+                          <p className="text-gray-500 text-[10px]">{vehicle.seats || 'N/A'} places</p>
+                          <p className="text-gray-500 text-[10px] capitalize truncate">
                             {vehicle.type === 'sedan' && 'Berline'}
                             {vehicle.type === 'pickup' && 'Pickup'}
                             {vehicle.type === 'van' && 'Van'}
@@ -1607,72 +1670,72 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </td>
                       
                       {/* Statut chauffeur */}
-                      <td className="px-4 py-4">
+                      <td className="px-3 py-3">
                         {vehicle.driver ? (
                           getStatusBadge(vehicle.driver.status)
                         ) : (
-                          <span className="text-gray-500 italic">N/A</span>
+                          <span className="text-gray-500 italic text-xs">N/A</span>
                         )}
                       </td>
                       
                       {/* Disponibilités */}
-                      <td className="px-4 py-4">
-                        <div className="space-y-2">
+                      <td className="px-3 py-3">
+                        <div className="text-xs">
                           {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 ? (
                             <>
-                              <div className="flex items-center gap-2">
-                                <CheckCircle size={16} className="text-green-600" />
-                                <span className="text-sm font-semibold text-green-600">
-                                  {vehicle.availabilityCount} créneau{vehicle.availabilityCount > 1 ? 'x' : ''}
+                              <div className="flex items-center gap-1">
+                                <CheckCircle size={12} className="text-green-600" />
+                                <span className="font-semibold text-green-600">
+                                  {vehicle.availabilityCount}
                                 </span>
                               </div>
-                              <p className="text-xs text-gray-500">30 prochains jours</p>
+                              <p className="text-[10px] text-gray-500">30j</p>
                             </>
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <XCircle size={16} className="text-gray-400" />
-                              <span className="text-sm text-gray-500">Aucun créneau</span>
+                            <div className="flex items-center gap-1">
+                              <XCircle size={12} className="text-gray-400" />
+                              <span className="text-gray-500 text-[10px]">Aucun</span>
                             </div>
                           )}
                         </div>
                       </td>
                       
                       {/* Prochains créneaux */}
-                      <td className="px-4 py-4">
+                      <td className="px-3 py-3">
                         {vehicle.upcomingAvailabilities && vehicle.upcomingAvailabilities.length > 0 ? (
-                          <div className="space-y-1">
-                            {vehicle.upcomingAvailabilities.slice(0, 3).map((avail, idx) => (
-                              <div key={idx} className="text-xs">
+                          <div className="space-y-0.5">
+                            {vehicle.upcomingAvailabilities.slice(0, 2).map((avail, idx) => (
+                              <div key={idx} className="text-[10px]">
                                 <span className="font-medium text-gray-900">
                                   {new Date(avail.date + 'T00:00:00').toLocaleDateString('fr-FR', { 
                                     day: '2-digit', 
-                                    month: 'short' 
+                                    month: '2-digit' 
                                   })}
                                 </span>
-                                <span className="text-gray-500 ml-2">
-                                  {avail.startTime} - {avail.endTime}
+                                <span className="text-gray-500 ml-1">
+                                  {avail.startTime.slice(0, 5)}
                                 </span>
                               </div>
                             ))}
-                            {vehicle.upcomingAvailabilities.length > 3 && (
-                              <p className="text-xs text-gray-400 italic">
-                                +{vehicle.upcomingAvailabilities.length - 3} autres...
+                            {vehicle.upcomingAvailabilities.length > 2 && (
+                              <p className="text-[10px] text-gray-400 italic">
+                                +{vehicle.upcomingAvailabilities.length - 2} autres
                               </p>
                             )}
                           </div>
                         ) : (
-                          <p className="text-xs text-gray-500 italic">Aucun créneau proche</p>
+                          <p className="text-[10px] text-gray-500 italic">Aucun</p>
                         )}
                       </td>
                       
                       {/* Actions */}
-                      <td className="px-4 py-4">
+                      <td className="px-3 py-3">
                         <button
                           onClick={() => setSelectedVehicle(vehicle)}
-                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Voir les détails"
                         >
-                          <Eye size={16} />
+                          <Eye size={14} />
                         </button>
                       </td>
                     </tr>
@@ -1771,45 +1834,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         ) : activeTab === 'drivers' ? (
           /* Drivers List - Version améliorée */
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Gestion des chauffeurs</h2>
-                  <p className="text-gray-600">Validez ou rejetez les inscriptions des nouveaux chauffeurs</p>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Gestion des chauffeurs</h2>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Validez ou rejetez les inscriptions des nouveaux chauffeurs</p>
                 </div>
                 {refreshing && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    Actualisation...
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
               </div>
             </div>
 
           {/* Version desktop - Tableau complet */}
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full">
+          <div className="hidden lg:block overflow-x-hidden">
+            <table className="w-full table-auto">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
                     Chauffeur
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
                     Contact
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[16%]">
                     Véhicule
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
                     Performance
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                     Statut
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
                     Inscription
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
                     Actions
                   </th>
                 </tr>
@@ -1818,76 +1881,76 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 {drivers.map((driver) => (
                   <tr key={driver.id} className="hover:bg-gray-50 transition-colors">
                     {/* Chauffeur */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2">
                         {driver.profilePhotoUrl ? (
                           <img
                             src={driver.profilePhotoUrl}
                             alt="Photo de profil"
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                            <User size={24} className="text-gray-700" />
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                            <User size={20} className="text-gray-700" />
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-900 truncate">
+                          <p className="font-medium text-gray-900 truncate text-xs">
                             {driver.firstName} {driver.lastName}
                           </p>
-                          <p className="text-sm text-gray-500 truncate">{driver.email}</p>
+                          <p className="text-[10px] text-gray-500 truncate">{driver.email}</p>
                         </div>
                       </div>
                     </td>
                     
                     {/* Contact */}
-                    <td className="px-4 py-4">
-                      <div className="text-sm space-y-1">
-                        <p className="text-gray-900 truncate">{driver.phone || 'Non renseigné'}</p>
-                        <p className="text-gray-500 truncate">{driver.city || 'Ville non renseignée'}</p>
-                        <p className="text-gray-500 truncate">Permis: {driver.licenseNumber || 'Non renseigné'}</p>
+                    <td className="px-3 py-3">
+                      <div className="text-xs">
+                        <p className="text-gray-900 truncate">{driver.phone || 'N/A'}</p>
+                        <p className="text-gray-500 truncate text-[10px]">{driver.city || 'N/A'}</p>
+                        <p className="text-gray-500 truncate text-[10px]">Permis: {driver.licenseNumber?.slice(0, 8) || 'N/A'}</p>
                       </div>
                     </td>
                     
                     {/* Véhicule */}
-                    <td className="px-4 py-4">
-                      <div className="text-sm">
+                    <td className="px-3 py-3">
+                      <div className="text-xs">
                         {driver.vehicleInfo ? (
-                          <div className="space-y-1">
+                          <div>
                             <p className="text-gray-900 font-medium truncate">
                               {driver.vehicleInfo.make} {driver.vehicleInfo.model}
                             </p>
-                            <p className="text-gray-500 truncate">
+                            <p className="text-gray-500 truncate text-[10px]">
                               {driver.vehicleInfo.year} - {driver.vehicleInfo.color}
                             </p>
-                            <p className="text-gray-500 truncate">
+                            <p className="text-gray-500 truncate text-[10px]">
                               {driver.vehicleInfo.seats} places
                             </p>
                           </div>
                         ) : (
-                          <p className="text-gray-500 italic">Non renseigné</p>
+                          <p className="text-gray-500 italic text-xs">Non renseigné</p>
                         )}
                       </div>
                     </td>
                     
                     {/* Performance */}
-                    <td className="px-4 py-4">
-                      <div className="space-y-2">
+                    <td className="px-3 py-3">
+                      <div className="text-xs space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Courses:</span>
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-[10px] text-gray-500">Courses:</span>
+                          <span className="font-semibold text-gray-900">
                             {driver.completedBookings || 0}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Gains:</span>
-                          <span className="text-sm font-semibold text-green-600">
+                          <span className="text-[10px] text-gray-500">Gains:</span>
+                          <span className="font-semibold text-green-600 text-[10px]">
                             {(driver.totalEarnings || 0).toFixed(0)} TND
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Annulées:</span>
-                          <span className="text-sm font-semibold text-red-600">
+                          <span className="text-[10px] text-gray-500">Annulées:</span>
+                          <span className="font-semibold text-red-600">
                             {(driver.cancelledByDriver || 0) + (driver.cancelledByClient || 0)}
                           </span>
                         </div>
@@ -1895,17 +1958,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </td>
                     
                     {/* Statut */}
-                    <td className="px-4 py-4">
+                    <td className="px-3 py-3">
                       {getStatusBadge(driver.status)}
                     </td>
                     
                     {/* Inscription */}
-                    <td className="px-4 py-4">
-                      <div className="text-sm">
+                    <td className="px-3 py-3">
+                      <div className="text-xs">
                         <p className="text-gray-900">
-                          {new Date(driver.createdAt).toLocaleDateString('fr-FR')}
+                          {new Date(driver.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                         </p>
-                        <p className="text-gray-500">
+                        <p className="text-gray-500 text-[10px]">
                           {new Date(driver.createdAt).toLocaleTimeString('fr-FR', { 
                             hour: '2-digit', 
                             minute: '2-digit' 
@@ -1915,14 +1978,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </td>
                     
                     {/* Actions */}
-                    <td className="px-4 py-4">
+                    <td className="px-3 py-3">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setSelectedDriver(driver)}
-                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Voir les détails"
                         >
-                          <Eye size={16} />
+                          <Eye size={14} />
                         </button>
                         
                         {driver.status === 'pending' && (
@@ -1930,18 +1993,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             <button
                               onClick={() => updateDriverStatus(driver.id, 'active')}
                               disabled={actionLoading === driver.id}
-                              className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50"
+                              className="p-1.5 text-green-600 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50"
                               title="Approuver"
                             >
-                              <UserCheck size={16} />
+                              <UserCheck size={14} />
                             </button>
                             <button
                               onClick={() => updateDriverStatus(driver.id, 'rejected')}
                               disabled={actionLoading === driver.id}
-                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                              className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
                               title="Rejeter"
                             >
-                              <XCircle size={16} />
+                              <XCircle size={14} />
                             </button>
                           </>
                         )}
@@ -1950,10 +2013,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           <button
                             onClick={() => updateDriverStatus(driver.id, 'pending')}
                             disabled={actionLoading === driver.id}
-                            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors disabled:opacity-50"
+                            className="p-1.5 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors disabled:opacity-50"
                             title="Suspendre"
                           >
-                            <Clock size={16} />
+                            <Clock size={14} />
                           </button>
                         )}
                       </div>
@@ -2102,42 +2165,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         ) : (
           /* Clients List */
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Gestion des clients</h2>
-                  <p className="text-gray-600">Consultez les informations des clients et leurs courses</p>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Gestion des clients</h2>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Consultez les informations des clients et leurs courses</p>
                 </div>
                 {refreshing && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    Actualisation...
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Version desktop - Tableau des clients */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
+            <div className="hidden lg:block overflow-x-hidden">
+              <table className="w-full table-auto">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">
                       Client
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
                       Contact
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
                       Statistiques
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
                       Courses
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
                       Inscription
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[8%]">
                       Actions
                     </th>
                   </tr>
@@ -2146,54 +2209,54 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   {clients.map((client) => (
                     <tr key={client.id} className="hover:bg-gray-50 transition-colors">
                       {/* Client */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-2">
                           {client.profilePhotoUrl ? (
                             <img
                               src={client.profilePhotoUrl}
                               alt="Photo de profil"
-                              className="w-12 h-12 rounded-full object-cover"
+                              className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                              <User size={24} className="text-gray-700" />
+                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                              <User size={20} className="text-gray-700" />
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 truncate">
+                            <p className="font-medium text-gray-900 truncate text-xs">
                               {client.firstName} {client.lastName}
                             </p>
-                            <p className="text-sm text-gray-500 truncate">{client.email}</p>
+                            <p className="text-[10px] text-gray-500 truncate">{client.email}</p>
                           </div>
                         </div>
                       </td>
                       
                       {/* Contact */}
-                      <td className="px-4 py-4">
-                        <div className="text-sm space-y-1">
-                          <p className="text-gray-900 truncate">{client.phone || 'Non renseigné'}</p>
-                          <p className="text-gray-500 truncate">{client.city || 'Ville non renseignée'}</p>
+                      <td className="px-3 py-3">
+                        <div className="text-xs">
+                          <p className="text-gray-900 truncate">{client.phone || 'N/A'}</p>
+                          <p className="text-gray-500 truncate text-[10px]">{client.city || 'N/A'}</p>
                         </div>
                       </td>
                       
                       {/* Statistiques */}
-                      <td className="px-4 py-4">
-                        <div className="space-y-2">
+                      <td className="px-3 py-3">
+                        <div className="text-xs space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Total:</span>
-                            <span className="text-sm font-semibold text-gray-900">
+                            <span className="text-[10px] text-gray-500">Total:</span>
+                            <span className="font-semibold text-gray-900">
                               {client.totalBookings}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Terminées:</span>
-                            <span className="text-sm font-semibold text-green-600">
+                            <span className="text-[10px] text-gray-500">Terminées:</span>
+                            <span className="font-semibold text-green-600">
                               {client.completedBookings}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Annulées:</span>
-                            <span className="text-sm font-semibold text-red-600">
+                            <span className="text-[10px] text-gray-500">Annulées:</span>
+                            <span className="font-semibold text-red-600">
                               {client.cancelledBookings}
                             </span>
                           </div>
@@ -2201,17 +2264,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </td>
                       
                       {/* Courses */}
-                      <td className="px-4 py-4">
-                        <div className="space-y-2">
+                      <td className="px-3 py-3">
+                        <div className="text-xs space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Dépensé:</span>
-                            <span className="text-sm font-semibold text-green-600">
+                            <span className="text-[10px] text-gray-500">Dépensé:</span>
+                            <span className="font-semibold text-green-600 text-[10px]">
                               {client.totalSpent.toFixed(0)} TND
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">En attente:</span>
-                            <span className="text-sm font-semibold text-orange-600">
+                            <span className="text-[10px] text-gray-500">En attente:</span>
+                            <span className="font-semibold text-orange-600">
                               {client.pendingBookings}
                             </span>
                           </div>
@@ -2219,12 +2282,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </td>
                       
                       {/* Inscription */}
-                      <td className="px-4 py-4">
-                        <div className="text-sm">
+                      <td className="px-3 py-3">
+                        <div className="text-xs">
                           <p className="text-gray-900">
-                            {new Date(client.createdAt).toLocaleDateString('fr-FR')}
+                            {new Date(client.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                           </p>
-                          <p className="text-gray-500">
+                          <p className="text-gray-500 text-[10px]">
                             {new Date(client.createdAt).toLocaleTimeString('fr-FR', { 
                               hour: '2-digit', 
                               minute: '2-digit' 
@@ -2234,14 +2297,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </td>
                       
                       {/* Actions */}
-                      <td className="px-4 py-4">
+                      <td className="px-3 py-3">
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => setSelectedClient(client)}
-                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                             title="Voir les détails"
                           >
-                            <Eye size={16} />
+                            <Eye size={14} />
                           </button>
                         </div>
                       </td>
@@ -2342,8 +2405,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Driver Detail Modal */}
       {selectedDriver && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-bold text-gray-900">
@@ -2580,8 +2643,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Subscription Detail Modal */}
       {selectedSubscription && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-bold text-gray-900">
@@ -2841,8 +2904,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Vehicle Detail Modal */}
       {selectedVehicle && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-bold text-gray-900">
@@ -3019,8 +3082,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Client Detail Modal */}
       {selectedClient && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-bold text-gray-900">
