@@ -76,6 +76,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [selectedClient, setSelectedClient] = useState<ClientWithBookings | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleWithDriver | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<DriverSubscription | null>(null);
+  const [vehicleForAvailabilities, setVehicleForAvailabilities] = useState<VehicleWithDriver | null>(null);
+  const [allAvailabilities, setAllAvailabilities] = useState<DriverAvailability[]>([]);
+  const [loadingAvailabilities, setLoadingAvailabilities] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles' | 'subscriptions'>('drivers');
@@ -764,6 +767,60 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const fetchAllAvailabilities = async (vehicle: VehicleWithDriver) => {
+    if (!vehicle.driverId) return;
+    
+    setLoadingAvailabilities(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 90); // 90 jours au lieu de 30
+      const future = futureDate.toISOString().split('T')[0];
+
+      const { data: availData, error: availError } = await supabase
+        .from('driver_availability')
+        .select('*')
+        .eq('driver_id', vehicle.driverId)
+        .eq('is_available', true)
+        .gte('date', today)
+        .lte('date', future)
+        .order('date', { ascending: true })
+        .order('start_time', { ascending: true });
+
+      if (availError) {
+        console.error('Erreur récupération disponibilités:', availError);
+        return;
+      }
+
+      const formattedAvailabilities = (availData || []).map((a: {
+        id: string;
+        driver_id: string;
+        date: string;
+        start_time: string;
+        end_time: string;
+        is_available: boolean;
+        created_at: string;
+        updated_at: string;
+      }) => ({
+        id: a.id,
+        driverId: a.driver_id,
+        date: a.date,
+        startTime: a.start_time,
+        endTime: a.end_time,
+        isAvailable: a.is_available,
+        createdAt: a.created_at,
+        updatedAt: a.updated_at
+      }));
+
+      setAllAvailabilities(formattedAvailabilities);
+      setVehicleForAvailabilities(vehicle);
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoadingAvailabilities(false);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     onLogout();
@@ -1402,28 +1459,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       {/* Paiement */}
                       <td className="px-3 py-3">
                         <div className="text-xs">
-                          {subscription.paymentStatus === 'paid' ? (
+                        {subscription.paymentStatus === 'paid' ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
-                              Payé
-                            </span>
-                          ) : subscription.paymentStatus === 'pending' ? (
+                            Payé
+                          </span>
+                        ) : subscription.paymentStatus === 'pending' ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800">
-                              En attente
-                            </span>
-                          ) : subscription.paymentStatus === 'failed' ? (
+                            En attente
+                          </span>
+                        ) : subscription.paymentStatus === 'failed' ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800">
-                              Échoué
-                            </span>
-                          ) : (
+                            Échoué
+                          </span>
+                        ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-800">
-                              Remboursé
-                            </span>
-                          )}
-                          {subscription.paymentDate && (
+                            Remboursé
+                          </span>
+                        )}
+                        {subscription.paymentDate && (
                             <p className="text-[10px] text-gray-500 mt-0.5">
                               {new Date(subscription.paymentDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
-                            </p>
-                          )}
+                          </p>
+                        )}
                         </div>
                       </td>
                       
@@ -1555,7 +1612,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <div className="bg-blue-50 rounded-lg p-2.5">
                       <p className="text-[10px] sm:text-xs text-gray-600">
                         Du {new Date(subscription.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} au {new Date(subscription.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
-                      </p>
+                    </p>
                     </div>
                   </div>
                 ))}
@@ -1694,18 +1751,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <div className="text-xs">
                           {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 ? (
                             <>
-                              <div className="flex items-center gap-1">
-                                <CheckCircle size={12} className="text-green-600" />
-                                <span className="font-semibold text-green-600">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="font-bold text-green-700">
                                   {vehicle.availabilityCount}
                                 </span>
+                                <span className="text-[10px] text-gray-500">créneau{vehicle.availabilityCount > 1 ? 'x' : ''}</span>
                               </div>
-                              <p className="text-[10px] text-gray-500">30j</p>
+                              <div className="flex items-center gap-1 text-[10px]">
+                                <Calendar size={10} className="text-gray-400" />
+                                <span className="text-gray-500">30 prochains jours</span>
+                              </div>
+                              {vehicle.upcomingAvailabilities && vehicle.upcomingAvailabilities.length > 0 && (
+                                <div className="mt-1.5 pt-1.5 border-t border-gray-100">
+                                  <p className="text-[10px] font-medium text-blue-600">
+                                    Prochain: {new Date(vehicle.upcomingAvailabilities[0].date + 'T00:00:00').toLocaleDateString('fr-FR', { 
+                                      day: '2-digit', 
+                                      month: 'short' 
+                                    })}
+                                  </p>
+                                </div>
+                              )}
                             </>
                           ) : (
-                            <div className="flex items-center gap-1">
-                              <XCircle size={12} className="text-gray-400" />
-                              <span className="text-gray-500 text-[10px]">Aucun</span>
+                            <div className="flex flex-col items-start gap-1">
+                              <div className="flex items-center gap-1">
+                                <XCircle size={12} className="text-gray-400" />
+                                <span className="text-gray-500 text-[10px] font-medium">Aucun créneau</span>
+                              </div>
+                              <span className="text-[9px] text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">
+                                ⚠️ Action requise
+                              </span>
                             </div>
                           )}
                         </div>
@@ -1714,40 +1790,81 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       {/* Prochains créneaux */}
                       <td className="px-3 py-3">
                         {vehicle.upcomingAvailabilities && vehicle.upcomingAvailabilities.length > 0 ? (
-                          <div className="space-y-0.5">
-                            {vehicle.upcomingAvailabilities.slice(0, 2).map((avail, idx) => (
-                              <div key={idx} className="text-[10px]">
-                                <span className="font-medium text-gray-900">
-                                  {new Date(avail.date + 'T00:00:00').toLocaleDateString('fr-FR', { 
+                          <div className="space-y-1">
+                            {vehicle.upcomingAvailabilities.slice(0, 3).map((avail, idx) => {
+                              const availDate = new Date(avail.date + 'T00:00:00');
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              const daysDiff = Math.ceil((availDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                              
+                              let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+                              let badgeText = '';
+                              if (daysDiff === 0) {
+                                badgeColor = 'bg-green-50 text-green-700 border-green-200';
+                                badgeText = "Aujourd'hui";
+                              } else if (daysDiff === 1) {
+                                badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                badgeText = 'Demain';
+                              } else if (daysDiff <= 7) {
+                                badgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+                                badgeText = `Dans ${daysDiff}j`;
+                              }
+                              
+                              return (
+                                <div key={idx} className={`flex items-center justify-between p-1.5 rounded border ${badgeColor}`}>
+                                  <div className="flex items-center gap-1.5">
+                                    <Calendar size={10} className="opacity-70" />
+                                    <span className="font-semibold text-[10px]">
+                                      {availDate.toLocaleDateString('fr-FR', { 
                                     day: '2-digit', 
-                                    month: '2-digit' 
+                                        month: '2-digit' 
                                   })}
                                 </span>
-                                <span className="text-gray-500 ml-1">
-                                  {avail.startTime.slice(0, 5)}
+                                    <span className="text-[10px] font-medium">
+                                      {avail.startTime.slice(0, 5)}-{avail.endTime.slice(0, 5)}
                                 </span>
                               </div>
-                            ))}
-                            {vehicle.upcomingAvailabilities.length > 2 && (
-                              <p className="text-[10px] text-gray-400 italic">
-                                +{vehicle.upcomingAvailabilities.length - 2} autres
+                                  {badgeText && (
+                                    <span className="text-[9px] font-medium px-1 py-0.5 rounded">
+                                      {badgeText}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            {vehicle.upcomingAvailabilities.length > 3 && (
+                              <p className="text-[10px] text-gray-400 italic text-center pt-1">
+                                +{vehicle.upcomingAvailabilities.length - 3} autre{vehicle.upcomingAvailabilities.length - 3 > 1 ? 's' : ''}
                               </p>
                             )}
                           </div>
                         ) : (
-                          <p className="text-[10px] text-gray-500 italic">Aucun</p>
+                          <div className="text-center py-2">
+                            <p className="text-[10px] text-gray-400 italic">Aucun créneau</p>
+                          </div>
                         )}
                       </td>
                       
                       {/* Actions */}
                       <td className="px-3 py-3">
+                        <div className="flex items-center gap-1">
+                          {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 && (
+                            <button
+                              onClick={() => fetchAllAvailabilities(vehicle)}
+                              className="p-2 text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-colors flex-shrink-0"
+                              title="Voir toutes les disponibilités"
+                            >
+                              <Calendar size={18} />
+                            </button>
+                          )}
                         <button
                           onClick={() => setSelectedVehicle(vehicle)}
-                          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-2 text-gray-600 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
                           title="Voir les détails"
                         >
-                          <Eye size={14} />
+                            <Eye size={18} />
                         </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1785,6 +1902,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           )}
                         </div>
                       </div>
+                      <div className="flex items-center gap-2">
+                        {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 && (
+                          <button
+                            onClick={() => fetchAllAvailabilities(vehicle)}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Voir toutes les disponibilités"
+                          >
+                            <Calendar size={16} />
+                          </button>
+                        )}
                       <button
                         onClick={() => setSelectedVehicle(vehicle)}
                         className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1792,6 +1919,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       >
                         <Eye size={16} />
                       </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
@@ -1799,10 +1927,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <p className="text-xs text-gray-500 mb-1">Chauffeur</p>
                         {vehicle.driver ? (
                           <>
-                            <p className="text-sm text-gray-900">
+                            <p className="text-sm font-medium text-gray-900">
                               {vehicle.driver.firstName} {vehicle.driver.lastName}
                             </p>
+                            <div className="mt-1">
                             {getStatusBadge(vehicle.driver.status)}
+                            </div>
                           </>
                         ) : (
                           <p className="text-sm text-gray-500 italic">Aucun chauffeur</p>
@@ -1811,23 +1941,110 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Disponibilités</p>
                         {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 ? (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle size={16} className="text-green-600" />
-                            <span className="text-sm font-semibold text-green-600">
-                              {vehicle.availabilityCount} créneau{vehicle.availabilityCount > 1 ? 'x' : ''}
+                          <div className="bg-green-50 rounded-lg p-2 border border-green-200">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span className="text-base font-bold text-green-700">
+                                {vehicle.availabilityCount}
                             </span>
+                              <span className="text-xs text-green-600">créneau{vehicle.availabilityCount > 1 ? 'x' : ''}</span>
+                            </div>
+                            {vehicle.upcomingAvailabilities && vehicle.upcomingAvailabilities.length > 0 && (
+                              <p className="text-[10px] text-green-600 font-medium">
+                                Prochain: {new Date(vehicle.upcomingAvailabilities[0].date + 'T00:00:00').toLocaleDateString('fr-FR', { 
+                                  day: '2-digit', 
+                                  month: 'short' 
+                                })}
+                              </p>
+                            )}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2">
-                            <XCircle size={16} className="text-gray-400" />
-                            <span className="text-sm text-gray-500">Aucun</span>
+                          <div className="bg-orange-50 rounded-lg p-2 border border-orange-200">
+                            <div className="flex items-center gap-2 mb-1">
+                              <XCircle size={14} className="text-orange-600" />
+                              <span className="text-sm font-medium text-orange-700">Aucun créneau</span>
+                            </div>
+                            <p className="text-[10px] text-orange-600 mt-1">Action requise</p>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="text-sm text-gray-600">
-                      <p>{vehicle.color} • {vehicle.licensePlate} • {vehicle.seats} places</p>
+                    {/* Prochains créneaux pour mobile */}
+                    {vehicle.upcomingAvailabilities && vehicle.upcomingAvailabilities.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs text-gray-500 mb-2 font-medium">Prochains créneaux</p>
+                        <div className="space-y-1.5">
+                          {vehicle.upcomingAvailabilities.slice(0, 3).map((avail, idx) => {
+                            const availDate = new Date(avail.date + 'T00:00:00');
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const daysDiff = Math.ceil((availDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                            
+                            let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+                            let badgeText = '';
+                            if (daysDiff === 0) {
+                              badgeColor = 'bg-green-50 text-green-700 border-green-200';
+                              badgeText = "Aujourd'hui";
+                            } else if (daysDiff === 1) {
+                              badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                              badgeText = 'Demain';
+                            } else if (daysDiff <= 7) {
+                              badgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+                              badgeText = `Dans ${daysDiff}j`;
+                            }
+                            
+                            return (
+                              <div key={idx} className={`flex items-center justify-between p-2 rounded border ${badgeColor}`}>
+                          <div className="flex items-center gap-2">
+                                  <Calendar size={12} className="opacity-70" />
+                                  <span className="text-xs font-semibold">
+                                    {availDate.toLocaleDateString('fr-FR', { 
+                                      day: '2-digit', 
+                                      month: 'short' 
+                                    })}
+                                  </span>
+                                  <span className="text-xs font-medium">
+                                    {avail.startTime.slice(0, 5)}-{avail.endTime.slice(0, 5)}
+                                  </span>
+                          </div>
+                                {badgeText && (
+                                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded">
+                                    {badgeText}
+                                  </span>
+                        )}
+                      </div>
+                            );
+                          })}
+                          {vehicle.upcomingAvailabilities.length > 3 && (
+                            <button
+                              onClick={() => fetchAllAvailabilities(vehicle)}
+                              className="w-full mt-2 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors text-xs font-medium"
+                            >
+                              <Calendar size={14} />
+                              Voir toutes les disponibilités ({vehicle.availabilityCount})
+                            </button>
+                          )}
+                    </div>
+                      </div>
+                    )}
+                    
+                    {/* Bouton pour voir toutes les disponibilités si disponibles */}
+                    {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 && (
+                      <button
+                        onClick={() => fetchAllAvailabilities(vehicle)}
+                        className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 active:from-green-800 active:to-blue-800 text-white rounded-lg transition-colors text-sm font-semibold shadow-md"
+                      >
+                        <Calendar size={18} />
+                        <span>Voir toutes les disponibilités</span>
+                        <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-bold">
+                          {vehicle.availabilityCount}
+                        </span>
+                      </button>
+                    )}
+
+                    <div className="text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
+                      <p className="text-xs">{vehicle.color} • {vehicle.licensePlate} • {vehicle.seats} places</p>
                     </div>
                   </div>
                 ))}
@@ -3031,53 +3248,139 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
               {/* Availabilities */}
               <div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-semibold text-gray-900">
                   Disponibilités à venir
-                  {selectedVehicle.availabilityCount !== undefined && (
-                    <span className="ml-2 text-sm font-normal text-gray-500">
-                      ({selectedVehicle.availabilityCount} créneau{selectedVehicle.availabilityCount > 1 ? 'x' : ''})
+                  </h4>
+                  {selectedVehicle.availabilityCount !== undefined && selectedVehicle.availabilityCount > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-50 rounded-lg border border-green-200">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs sm:text-sm font-bold text-green-700">
+                          {selectedVehicle.availabilityCount} créneau{selectedVehicle.availabilityCount > 1 ? 'x' : ''}
                     </span>
-                  )}
-                </h4>
-                {selectedVehicle.upcomingAvailabilities && selectedVehicle.upcomingAvailabilities.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedVehicle.upcomingAvailabilities.map((avail, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100"
+                        <span className="text-[10px] sm:text-xs text-green-600 hidden sm:inline">sur 30 jours</span>
+                      </div>
+                      <button
+                        onClick={() => fetchAllAvailabilities(selectedVehicle)}
+                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors text-xs sm:text-sm font-medium"
                       >
+                        <Calendar size={14} className="sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Voir toutes</span>
+                        <span className="sm:hidden">Toutes</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {selectedVehicle.upcomingAvailabilities && selectedVehicle.upcomingAvailabilities.length > 0 ? (
+                  <div className="space-y-3">
+                    {/* Grouper les disponibilités par date */}
+                    {(() => {
+                      const groupedByDate: { [key: string]: typeof selectedVehicle.upcomingAvailabilities } = {};
+                      selectedVehicle.upcomingAvailabilities.forEach(avail => {
+                        if (!groupedByDate[avail.date]) {
+                          groupedByDate[avail.date] = [];
+                        }
+                        groupedByDate[avail.date].push(avail);
+                      });
+                      
+                      return Object.entries(groupedByDate)
+                        .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                        .map(([date, availabilities]) => {
+                          const availDate = new Date(date + 'T00:00:00');
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const daysDiff = Math.ceil((availDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                          
+                          let dateBadge = '';
+                          let badgeColor = 'bg-blue-100 text-blue-800';
+                          if (daysDiff === 0) {
+                            dateBadge = "Aujourd'hui";
+                            badgeColor = 'bg-green-100 text-green-800';
+                          } else if (daysDiff === 1) {
+                            dateBadge = 'Demain';
+                            badgeColor = 'bg-emerald-100 text-emerald-800';
+                          } else if (daysDiff <= 7) {
+                            dateBadge = `Dans ${daysDiff} jour${daysDiff > 1 ? 's' : ''}`;
+                            badgeColor = 'bg-blue-100 text-blue-800';
+                          } else {
+                            dateBadge = `Dans ${daysDiff} jour${daysDiff > 1 ? 's' : ''}`;
+                            badgeColor = 'bg-gray-100 text-gray-800';
+                          }
+                          
+                          return (
+                            <div key={date} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                              <div className="bg-gradient-to-r from-green-50 to-blue-50 px-4 py-2.5 border-b border-gray-200">
+                                <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Calendar size={20} className="text-green-600" />
+                                    <Calendar size={18} className="text-green-600" />
                           <div>
-                            <p className="font-medium text-gray-900">
-                              {new Date(avail.date + 'T00:00:00').toLocaleDateString('fr-FR', {
+                                      <p className="font-semibold text-gray-900">
+                                        {availDate.toLocaleDateString('fr-FR', {
                                 weekday: 'long',
-                                year: 'numeric',
+                                          day: 'numeric',
                                 month: 'long',
-                                day: 'numeric'
+                                          year: 'numeric'
                               })}
                             </p>
-                            <p className="text-sm text-gray-600">
-                              {avail.startTime} - {avail.endTime}
+                                      <p className="text-xs text-gray-600">
+                                        {availabilities.length} créneau{availabilities.length > 1 ? 'x' : ''} disponible{availabilities.length > 1 ? 's' : ''}
                             </p>
                           </div>
                         </div>
-                        <CheckCircle size={20} className="text-green-600" />
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${badgeColor}`}>
+                                    {dateBadge}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="p-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {availabilities.map((avail, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex items-center justify-between p-2.5 bg-green-50 rounded-lg border border-green-100 hover:bg-green-100 transition-colors"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <Clock size={14} className="text-green-600" />
+                                        <span className="text-sm font-medium text-gray-900">
+                                          {avail.startTime.slice(0, 5)} - {avail.endTime.slice(0, 5)}
+                                        </span>
+                                      </div>
+                                      <CheckCircle size={16} className="text-green-600" />
                       </div>
                     ))}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        });
+                    })()}
                     {selectedVehicle.availabilityCount && selectedVehicle.availabilityCount > selectedVehicle.upcomingAvailabilities.length && (
-                      <p className="text-sm text-gray-500 text-center mt-4">
-                        +{selectedVehicle.availabilityCount - selectedVehicle.upcomingAvailabilities.length} créneaux supplémentaires...
+                      <div className="text-center py-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm font-medium text-blue-700">
+                          +{selectedVehicle.availabilityCount - selectedVehicle.upcomingAvailabilities.length} créneau{selectedVehicle.availabilityCount - selectedVehicle.upcomingAvailabilities.length > 1 ? 'x' : ''} supplémentaire{selectedVehicle.availabilityCount - selectedVehicle.upcomingAvailabilities.length > 1 ? 's' : ''} au-delà des 30 prochains jours
                       </p>
+                      </div>
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg">
-                    <Calendar size={48} className="text-gray-400 mx-auto mb-4" />
-                    <h5 className="text-lg font-medium text-gray-900 mb-2">Aucune disponibilité</h5>
-                    <p className="text-gray-500">
+                  <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border-2 border-dashed border-gray-300">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                        <Calendar size={32} className="text-gray-400" />
+                      </div>
+                      <div>
+                        <h5 className="text-lg font-semibold text-gray-900 mb-1">Aucune disponibilité</h5>
+                        <p className="text-sm text-gray-600 max-w-md">
                       Ce chauffeur n'a pas encore configuré ses disponibilités pour ce véhicule.
                     </p>
+                      </div>
+                      <div className="mt-2 px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg">
+                        <p className="text-xs text-orange-700 font-medium">
+                          ⚠️ Action requise : Le chauffeur doit ajouter des créneaux de disponibilité
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -3086,6 +3389,199 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <p><strong>Ajouté le:</strong> {new Date(selectedVehicle.createdAt).toLocaleString('fr-FR')}</p>
                 <p><strong>Dernière mise à jour:</strong> {new Date(selectedVehicle.updatedAt).toLocaleString('fr-FR')}</p>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* All Availabilities Modal */}
+      {vehicleForAvailabilities && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-0 sm:p-2 md:p-4 z-50">
+          <div className="bg-white rounded-none sm:rounded-xl md:rounded-2xl shadow-xl max-w-5xl w-full h-full sm:h-auto max-h-[100vh] sm:max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 flex-shrink-0 bg-gradient-to-r from-green-50 to-blue-50">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                    Toutes les disponibilités
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">
+                    {vehicleForAvailabilities.driver?.firstName} {vehicleForAvailabilities.driver?.lastName}
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">
+                    {vehicleForAvailabilities.make} {vehicleForAvailabilities.model}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setVehicleForAvailabilities(null);
+                    setAllAvailabilities([]);
+                  }}
+                  className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-white/50 active:bg-white transition-colors flex-shrink-0"
+                >
+                  <XCircle size={20} className="sm:w-6 sm:h-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+              {loadingAvailabilities ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-sm sm:text-base text-gray-600">Chargement des disponibilités...</p>
+                  </div>
+                </div>
+              ) : allAvailabilities.length > 0 ? (
+                <div className="space-y-3 sm:space-y-4">
+                  {/* Statistiques */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <div className="bg-green-50 rounded-lg p-2 sm:p-3 border border-green-200">
+                      <p className="text-[10px] sm:text-xs text-gray-600 mb-1 truncate">Total créneaux</p>
+                      <p className="text-xl sm:text-2xl font-bold text-green-700">{allAvailabilities.length}</p>
+                    </div>
+                    <div className="bg-blue-50 rounded-lg p-2 sm:p-3 border border-blue-200">
+                      <p className="text-[10px] sm:text-xs text-gray-600 mb-1 truncate">Jours uniques</p>
+                      <p className="text-xl sm:text-2xl font-bold text-blue-700">
+                        {new Set(allAvailabilities.map(a => a.date)).size}
+                      </p>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-2 sm:p-3 border border-purple-200">
+                      <p className="text-[10px] sm:text-xs text-gray-600 mb-1 truncate">Cette semaine</p>
+                      <p className="text-xl sm:text-2xl font-bold text-purple-700">
+                        {allAvailabilities.filter(a => {
+                          const date = new Date(a.date + 'T00:00:00');
+                          const today = new Date();
+                          const weekFromNow = new Date(today);
+                          weekFromNow.setDate(today.getDate() + 7);
+                          return date >= today && date <= weekFromNow;
+                        }).length}
+                      </p>
+                    </div>
+                    <div className="bg-orange-50 rounded-lg p-2 sm:p-3 border border-orange-200">
+                      <p className="text-[10px] sm:text-xs text-gray-600 mb-1 truncate">Ce mois</p>
+                      <p className="text-xl sm:text-2xl font-bold text-orange-700">
+                        {allAvailabilities.filter(a => {
+                          const date = new Date(a.date + 'T00:00:00');
+                          const today = new Date();
+                          const monthFromNow = new Date(today);
+                          monthFromNow.setMonth(today.getMonth() + 1);
+                          return date >= today && date <= monthFromNow;
+                        }).length}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Groupement par date */}
+                  {(() => {
+                    const groupedByDate: { [key: string]: typeof allAvailabilities } = {};
+                    allAvailabilities.forEach(avail => {
+                      if (!groupedByDate[avail.date]) {
+                        groupedByDate[avail.date] = [];
+                      }
+                      groupedByDate[avail.date].push(avail);
+                    });
+                    
+                    return Object.entries(groupedByDate)
+                      .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                      .map(([date, availabilities]) => {
+                        const availDate = new Date(date + 'T00:00:00');
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const daysDiff = Math.ceil((availDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        let dateBadge = '';
+                        let badgeColor = 'bg-blue-100 text-blue-800';
+                        if (daysDiff === 0) {
+                          dateBadge = "Aujourd'hui";
+                          badgeColor = 'bg-green-100 text-green-800';
+                        } else if (daysDiff === 1) {
+                          dateBadge = 'Demain';
+                          badgeColor = 'bg-emerald-100 text-emerald-800';
+                        } else if (daysDiff <= 7) {
+                          dateBadge = `Dans ${daysDiff} jour${daysDiff > 1 ? 's' : ''}`;
+                          badgeColor = 'bg-blue-100 text-blue-800';
+                        } else if (daysDiff <= 30) {
+                          dateBadge = `Dans ${daysDiff} jour${daysDiff > 1 ? 's' : ''}`;
+                          badgeColor = 'bg-purple-100 text-purple-800';
+                        } else {
+                          dateBadge = `Dans ${daysDiff} jour${daysDiff > 1 ? 's' : ''}`;
+                          badgeColor = 'bg-gray-100 text-gray-800';
+                        }
+                        
+                        return (
+                          <div key={date} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                            <div className="bg-gradient-to-r from-green-50 to-blue-50 px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200">
+                              <div className="flex items-start sm:items-center justify-between flex-wrap gap-2">
+                                <div className="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                                  <Calendar size={18} className="sm:w-5 sm:h-5 text-green-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-semibold text-gray-900 text-xs sm:text-sm md:text-base">
+                                      <span className="hidden sm:inline">
+                                        {availDate.toLocaleDateString('fr-FR', {
+                                          weekday: 'long',
+                                          day: 'numeric',
+                                          month: 'long',
+                                          year: 'numeric'
+                                        })}
+                                      </span>
+                                      <span className="sm:hidden">
+                                        {availDate.toLocaleDateString('fr-FR', {
+                                          weekday: 'short',
+                                          day: 'numeric',
+                                          month: 'short'
+                                        })}
+                                      </span>
+                                    </p>
+                                    <p className="text-[10px] sm:text-xs text-gray-600">
+                                      {availabilities.length} créneau{availabilities.length > 1 ? 'x' : ''} disponible{availabilities.length > 1 ? 's' : ''}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${badgeColor} flex-shrink-0`}>
+                                  {dateBadge}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="p-2 sm:p-3 md:p-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                {availabilities
+                                  .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                                  .map((avail, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex items-center justify-between p-2 sm:p-3 bg-green-50 rounded-lg border border-green-100 hover:bg-green-100 active:bg-green-200 transition-colors"
+                                    >
+                                      <div className="flex items-center gap-1.5 sm:gap-2">
+                                        <Clock size={14} className="sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-semibold text-gray-900">
+                                          {avail.startTime.slice(0, 5)} - {avail.endTime.slice(0, 5)}
+                                        </span>
+                                      </div>
+                                      <CheckCircle size={14} className="sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      });
+                  })()}
+                </div>
+              ) : (
+                <div className="text-center py-8 sm:py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border-2 border-dashed border-gray-300">
+                  <div className="flex flex-col items-center gap-3 px-4">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                      <Calendar size={24} className="sm:w-8 sm:h-8 text-gray-400" />
+                    </div>
+                    <div>
+                      <h5 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Aucune disponibilité</h5>
+                      <p className="text-xs sm:text-sm text-gray-600 max-w-md">
+                        Ce chauffeur n'a pas encore configuré ses disponibilités pour ce véhicule.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
