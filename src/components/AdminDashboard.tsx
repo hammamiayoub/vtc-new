@@ -426,7 +426,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     try {
       console.log('🔍 Admin - Récupération des véhicules...');
       
-      // Récupérer tous les véhicules non supprimés avec les informations du chauffeur
+      // Récupérer TOUS les véhicules non supprimés (pas seulement les principaux) avec les informations du chauffeur
       const { data: vehiclesData, error: vehiclesError } = await supabase
         .from('vehicles')
         .select(`
@@ -551,7 +551,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         })
       );
 
-      setVehicles(vehiclesWithAvailability);
+      // Trier les véhicules : véhicules principaux en premier, puis par date de création
+      const sortedVehicles = vehiclesWithAvailability.sort((a, b) => {
+        // D'abord par is_primary (true en premier)
+        if (a.is_primary && !b.is_primary) return -1;
+        if (!a.is_primary && b.is_primary) return 1;
+        // Ensuite par date de création (plus récent en premier)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+
+      console.log('📊 Admin - Véhicules triés:', sortedVehicles.length, 'dont', sortedVehicles.filter(v => v.is_primary).length, 'principaux');
+
+      setVehicles(sortedVehicles);
     } catch (error) {
       console.error('Erreur:', error);
     } finally {
