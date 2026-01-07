@@ -71,11 +71,11 @@ export const getPricePerKm = (distanceKm: number): { price: number; discount: st
 
   if (distanceKm < 250) {
     // Distance 100–250 km → 1.6 TND/km
-    return { price: 1.6, discount: '' };
+    return { price: 1.4, discount: '' };
   }
 
   // Distance 250 km+ → 1.45 TND/km
-  return { price: 1.45, discount: '' };
+  return { price: 1.05, discount: '' };
 };
 
 // Fonction pour obtenir le multiplicateur selon le type de véhicule
