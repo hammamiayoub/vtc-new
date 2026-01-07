@@ -566,7 +566,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                   <span className="text-blue-800 font-medium">Numéro de compte :</span>
                   <div className="flex items-center gap-2 mt-1">
                     <code className="bg-white px-3 py-2 rounded border border-blue-300 text-blue-900 font-mono flex-1">
-                      {BANK_ACCOUNT}
+                      TN59 04 117 1850077170413 86
                     </code>
                     <button
                       onClick={copyBankAccount}
