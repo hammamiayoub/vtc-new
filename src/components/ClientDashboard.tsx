@@ -703,11 +703,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-700 flex-1 pr-2">Distance 100-250 km</span>
-                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.6 TND/KM (-11%)</span>
+                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.4 TND/KM (-11%)</span>
                     </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-700 flex-1 pr-2">Distance 250+ km</span>
-                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.45 TND/KM (-19%)</span>
+                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.05 TND/KM (-19%)</span>
                     </div>
                   </div>
                 </div>
@@ -744,7 +744,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     </div>
                     <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100 sm:col-span-2">
                       <span className="text-orange-800 font-medium">Van</span>
-                      <span className="font-bold text-orange-900">×1.5</span>
+                      <span className="font-bold text-orange-900">×2</span>
                     </div>
                     <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100 sm:col-span-2">
                       <span className="text-orange-800 font-medium">Utilitaire / Pickup</span>
