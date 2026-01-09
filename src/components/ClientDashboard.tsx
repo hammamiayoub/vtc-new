@@ -720,43 +720,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   </p>
                 </div>
                 
-                {/* Tarifs par véhicule - Grille responsive */}
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
-                  <h4 className="font-semibold text-orange-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarifs par type de véhicule</h4>
-                  
-                  {/* Grille responsive pour mobile */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
-                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100">
-                      <span className="text-orange-800 font-medium">Bus</span>
-                      <span className="font-bold text-orange-900">×3.5</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100">
-                      <span className="text-orange-800 font-medium">Minibus</span>
-                      <span className="font-bold text-orange-900">×2.5</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100">
-                      <span className="text-orange-800 font-medium">Limousine</span>
-                      <span className="font-bold text-orange-900">×2.0</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100">
-                      <span className="text-orange-800 font-medium">Camion</span>
-                      <span className="font-bold text-orange-900">×2,0</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100 sm:col-span-2">
-                      <span className="text-orange-800 font-medium">Van</span>
-                      <span className="font-bold text-orange-900">×2</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1.5 px-2 bg-white rounded border border-orange-100 sm:col-span-2">
-                      <span className="text-orange-800 font-medium">Utilitaire / Pickup</span>
-                      <span className="font-bold text-orange-900">×1.25</span>
-                    </div>
-                      </div>
-                  
-                  {/* Note explicative pour mobile */}
-                  <div className="mt-3 p-2 bg-orange-100 rounded text-xs text-orange-800">
-                    <strong>Note :</strong> Les multiplicateurs s'appliquent au tarif de base selon le type de véhicule choisi.
-                  </div>
-                </div>
+                
               </div>
             </div>
           </>
