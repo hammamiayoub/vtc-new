@@ -603,6 +603,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       }
 
       console.log('📊 Admin - Abonnements récupérés:', subscriptionsData?.length || 0);
+      
+      // Log pour déboguer les revenus
+      const paidSubscriptions = (subscriptionsData || []).filter((s: any) => s.payment_status === 'paid');
+      const totalRevenue = paidSubscriptions.reduce((sum: number, s: any) => {
+        const price = Number(s.total_price_tnd) || 0;
+        return sum + price;
+      }, 0);
+      console.log('💰 Revenus totaux calculés:', {
+        totalPaid: paidSubscriptions.length,
+        totalRevenue,
+        subscriptions: paidSubscriptions.map((s: any) => ({
+          id: s.id,
+          payment_status: s.payment_status,
+          total_price_tnd: s.total_price_tnd,
+          converted: Number(s.total_price_tnd) || 0
+        }))
+      });
 
       // Formater les données
       const formattedSubscriptions = (subscriptionsData || []).map((sub: {
@@ -659,9 +676,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           endDate: sub.end_date,
           subscriptionType: sub.subscription_type,
           billingPeriod: sub.billing_period,
-          priceTnd: sub.price_tnd,
-          vatPercentage: sub.vat_percentage,
-          totalPriceTnd: sub.total_price_tnd,
+          priceTnd: Number(sub.price_tnd) || 0,
+          vatPercentage: Number(sub.vat_percentage) || 0,
+          totalPriceTnd: Number(sub.total_price_tnd) || 0,
           paymentStatus: sub.payment_status as 'pending' | 'paid' | 'failed' | 'refunded',
           paymentMethod: sub.payment_method,
           paymentDate: sub.payment_date,
@@ -1180,7 +1197,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Revenus totaux</h3>
                     <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
-                      {subscriptions.filter(s => s.paymentStatus === 'paid').reduce((sum, s) => sum + s.totalPriceTnd, 0).toFixed(0)} TND
+                      {subscriptions
+                        .filter(s => s.paymentStatus === 'paid' && s.totalPriceTnd != null && !isNaN(Number(s.totalPriceTnd)))
+                        .reduce((sum, s) => sum + (Number(s.totalPriceTnd) || 0), 0)
+                        .toFixed(0)} TND
                     </p>
                   </div>
                 </div>
