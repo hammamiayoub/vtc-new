@@ -13,7 +13,8 @@ import {
   Loader2,
   AlertCircle,
   Target,
-  Route
+  Route,
+  LocateFixed,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { bookingSchema } from '../utils/validation';
@@ -1097,6 +1098,19 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             <div> 
               <label className="block text-sm font-medium text-gray-700 mb-2 ">
                 Point de départ
+                <button
+                  type="button"
+                  onClick={useCurrentLocation}
+                  disabled={gettingLocation}
+                  className="absolute ml-2 margin-right-10 text-blue-600 hover:text-blue-700 disabled:opacity-50 z-10  bg-transparent"
+                  title="Utiliser ma position actuelle"
+                >
+                  {gettingLocation ? (
+                    <LocateFixed size={18} className="animate-pulse opacity-80" />
+                  ) : (
+                    <Target size={18} />
+                  )}
+                </button>
               </label>
 
               <div className="relative">
@@ -1109,23 +1123,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   }}
                   onPlaceSelect={handlePickupPlaceSelect}
                   placeholder="Adresse de départ"
-                  className={`w-full pr-12 ${errors.pickupAddress ? 'ring-2 ring-red-500 rounded-lg' : 'rounded-lg '}`}
+                  className={errors.pickupAddress ? 'ring-2 ring-red-500 rounded-lg' : ''}
                 />
 
                 {/* Bouton de géolocalisation à l'intérieur du champ */}
-                <button
-                  type="button"
-                  onClick={useCurrentLocation}
-                  disabled={gettingLocation}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 disabled:opacity-50 z-10 border-0 bg-transparent"
-                  title="Utiliser ma position actuelle"
-                >
-                  {gettingLocation ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <Target size={18} />
-                  )}
-                </button>
+                
               </div>
               
               {errors.pickupAddress && (
