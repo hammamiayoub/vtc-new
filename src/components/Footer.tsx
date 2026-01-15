@@ -155,7 +155,7 @@ export const Footer: React.FC<FooterProps> = () => {
                 <Facebook size={20} />
               </a>
               <a
-                href="https://www.instagram.com/tunidrivenet/"
+                href="https://www.instagram.com/tunidrive_tunisia/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors"
@@ -164,7 +164,7 @@ export const Footer: React.FC<FooterProps> = () => {
                 <Instagram size={20} />
               </a>
               <a
-                href="https://www.tiktok.com/@tunidrivenet"
+                href="https://www.tiktok.com/@tunidrive_tunisia"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors"
