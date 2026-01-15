@@ -316,7 +316,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           alert(
             '❌ Limite mensuelle atteinte\n\n' +
             'Vous avez déjà accepté 2 courses ce mois avec votre compte gratuit.\n\n' +
-            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Premium (47.60 TND/mois).\n\n' +
+            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Premium (35.70 TND/mois).\n\n' +
             'Rendez-vous dans l\'onglet "Abonnement" pour plus d\'informations.'
           );
           return;
