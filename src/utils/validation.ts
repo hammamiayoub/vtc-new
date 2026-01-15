@@ -116,7 +116,7 @@ export const bookingSchema = z.object({
     .string()
     .min(1, 'Veuillez sélectionner une heure'),
   vehicleType: z
-    .enum(['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'limousine'])
+    .enum(['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'taxi'])
     .optional(),
   isReturnTrip: z
     .boolean()

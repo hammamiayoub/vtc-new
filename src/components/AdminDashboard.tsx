@@ -517,8 +517,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             color: vehicle.color,
             licensePlate: vehicle.license_plate,
             seats: vehicle.seats,
-            type: vehicle.type as 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'limousine' | undefined,
+            type: vehicle.type as 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'taxi' | undefined,
             photoUrl: vehicle.photo_url,
+            isVip: (vehicle as { is_vip?: boolean }).is_vip ?? false,
             is_primary: vehicle.is_primary,
             createdAt: vehicle.created_at,
             updatedAt: vehicle.updated_at,
@@ -554,12 +555,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         })
       );
 
-      // Trier les véhicules : véhicules principaux en premier, puis par date de création
+      // Trier les véhicules par date de création (plus récent en premier)
       const sortedVehicles = vehiclesWithAvailability.sort((a, b) => {
-        // D'abord par is_primary (true en premier)
-        if (a.is_primary && !b.is_primary) return -1;
-        if (!a.is_primary && b.is_primary) return 1;
-        // Ensuite par date de création (plus récent en premier)
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 
@@ -1752,7 +1749,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             {vehicle.type === 'bus' && 'Bus'}
                             {vehicle.type === 'truck' && 'Camion'}
                             {vehicle.type === 'utility' && 'Utilitaire'}
-                            {vehicle.type === 'limousine' && 'Limousine'}
+                            {vehicle.type === 'taxi' && 'Taxi'}
                           </p>
                         </div>
                       </td>
@@ -2736,7 +2733,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         {selectedDriver.vehicleInfo.type === 'bus' && 'Bus'}
                         {selectedDriver.vehicleInfo.type === 'truck' && 'Camion'}
                         {selectedDriver.vehicleInfo.type === 'utility' && 'Utilitaire'}
-                        {selectedDriver.vehicleInfo.type === 'limousine' && 'Limousine'}
+                        {selectedDriver.vehicleInfo.type === 'taxi' && 'Taxi'}
                       </p>
                     </div>
                   </div>
@@ -3216,7 +3213,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       {selectedVehicle.type === 'bus' && 'Bus'}
                       {selectedVehicle.type === 'truck' && 'Camion'}
                       {selectedVehicle.type === 'utility' && 'Utilitaire'}
-                      {selectedVehicle.type === 'limousine' && 'Limousine'}
+                      {selectedVehicle.type === 'taxi' && 'Taxi'}
                     </p>
                   </div>
                   {selectedVehicle.is_primary && (

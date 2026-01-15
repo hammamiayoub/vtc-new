@@ -166,8 +166,8 @@ export const getVehicleMultiplier = (vehicleType?: string): number => {
       return 1.5;
     case 'utility':
       return 1.25;
-    case 'limousine':
-      return 2.5;
+    case 'taxi':
+      return 1.0;
     default:
       return 1.0; // Tarif par défaut pour les types non reconnus
   }
@@ -227,7 +227,8 @@ export const calculateSurcharges = (scheduledTime: string | Date, basePrice: num
 export const calculatePrice = (
   distanceKm: number,
   vehicleType?: string,
-  isReturnTrip: boolean = false
+  isReturnTrip: boolean = false,
+  vipMultiplier: number = 1
 ): number => {
   const effectiveDistance = isReturnTrip ? distanceKm * 2 : distanceKm;
   
@@ -235,7 +236,7 @@ export const calculatePrice = (
   const basePrice = calculateProgressivePrice(effectiveDistance);
   
   const vehicleMultiplier = getVehicleMultiplier(vehicleType);
-  const totalPrice = basePrice * vehicleMultiplier;
+  const totalPrice = basePrice * vehicleMultiplier * vipMultiplier;
   return Math.round(totalPrice * 100) / 100; // Arrondir à 2 décimales
 };
 
@@ -244,13 +245,14 @@ export const calculatePriceWithSurcharges = (
   distanceKm: number, 
   vehicleType: string | undefined, 
   scheduledTime: string | Date,
-  isReturnTrip: boolean = false
+  isReturnTrip: boolean = false,
+  vipMultiplier: number = 1
 ): { basePrice: number; surcharges: PriceSurcharges; finalPrice: number } => {
   // Calculer le prix de base
-  const basePrice = calculatePrice(distanceKm, vehicleType, isReturnTrip);
+  const basePrice = calculatePrice(distanceKm, vehicleType, isReturnTrip, vipMultiplier);
   
   const surcharges = calculateSurcharges(scheduledTime, basePrice);
-  const finalPrice = Math.round((basePrice + surcharges.totalSurcharge) * 100) / 100;
+  const finalPrice = Math.ceil(basePrice + surcharges.totalSurcharge);
   
   return {
     basePrice,

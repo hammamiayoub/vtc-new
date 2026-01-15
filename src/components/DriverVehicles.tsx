@@ -46,7 +46,7 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
       case 'bus': return 'Bus';
       case 'truck': return 'Camion';
       case 'utility': return 'Utilitaire';
-      case 'limousine': return 'Limousine';
+      case 'taxi': return 'Taxi';
       default: return '';
     }
   };
@@ -61,7 +61,8 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
     color: '',
     seats: '',
     licensePlate: '',
-    type: ''
+    type: '',
+    isVip: false
   });
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const fileInputs = React.useRef<Record<string, HTMLInputElement | null>>({});
@@ -105,9 +106,10 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
         color: form.color,
         seats: parseInt(form.seats, 10),
         licensePlate: form.licensePlate,
-        type: form.type as Vehicle['type']
+        type: form.type as Vehicle['type'],
+        isVip: form.isVip
       });
-      setForm({ make: '', model: '', year: '', color: '', seats: '', licensePlate: '', type: '' });
+      setForm({ make: '', model: '', year: '', color: '', seats: '', licensePlate: '', type: '', isVip: false });
       // Si le profil n'a pas encore de vehicle_info (ancien affichage principal), le définir avec ce nouveau véhicule
       try {
         const { data: driverRow } = await supabase
@@ -127,7 +129,8 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                 licensePlate: created.licensePlate || null,
                 seats: created.seats || null,
                 type: created.type || null,
-                photoUrl: created.photoUrl || null
+                photoUrl: created.photoUrl || null,
+                isVip: created.isVip ?? null
               }
             })
             .eq('id', driverId);
@@ -202,7 +205,8 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
         color: v.color,
         seats: v.seats,
         licensePlate: v.licensePlate,
-        type: v.type
+        type: v.type,
+        isVip: v.isVip ?? false
       }
     });
   };
@@ -228,7 +232,8 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
       color: payload.color,
       seats: Number(payload.seats),
       licensePlate: payload.licensePlate,
-      type: payload.type
+      type: payload.type,
+      isVip: payload.isVip ?? false
     };
     
     // Mise à jour optimiste de l'état local
@@ -243,7 +248,8 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
         color: payload.color,
         seats: Number(payload.seats),
         licensePlate: payload.licensePlate,
-        type: payload.type
+        type: payload.type,
+        isVip: payload.isVip ?? false
       });
       // Refresh silencieux en arrière-plan pour synchroniser
       await refresh(false);
@@ -354,8 +360,23 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
           <option value="bus">Bus</option>
           <option value="truck">Camion</option>
           <option value="utility">Utilitaire</option>
-          <option value="limousine">Limousine</option>
+          <option value="taxi">Taxi</option>
         </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-600">Option</label>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={form.isVip}
+              onChange={(e) => setForm({ ...form, isVip: e.target.checked })}
+              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+            />
+            Véhicule VIP
+          </label>
+          <p className="text-[11px] text-purple-700">
+            Le mode VIP augmente le prix des courses ×2.5.
+          </p>
         </div>
         <div className="flex items-end">
           <Button type="submit" loading={saving} className="flex items-center justify-center gap-2 w-full h-9 px-3 py-1.5 text-sm">
@@ -480,8 +501,19 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                         <option value="bus">Bus</option>
                         <option value="truck">Camion</option>
                         <option value="utility">Utilitaire</option>
-                        <option value="limousine">Limousine</option>
+                        <option value="taxi">Taxi</option>
                       </select>
+                    </div>
+                    <div className="col-span-2 flex items-center gap-2 mt-1">
+                      <input
+                        id={`vip-${v.id}`}
+                        type="checkbox"
+                        checked={!!editForm[v.id]?.isVip}
+                        onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], isVip: e.target.checked } })}
+                      />
+                      <label htmlFor={`vip-${v.id}`} className="text-xs text-purple-700">
+                        VIP (prix ×2.5)
+                      </label>
                     </div>
                     <div className="col-span-2 flex items-center gap-2 mt-1">
                       <input id={`primary-${v.id}`} type="checkbox" checked={!!editForm[v.id]?.is_primary} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], is_primary: e.target.checked } })} />
@@ -499,6 +531,9 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                       )}
                       {v.type && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">{getVehicleTypeLabel(v.type)}</span>
+                      )}
+                      {v.isVip && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">VIP</span>
                       )}
                       {v.seats && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">{v.seats} places</span>
