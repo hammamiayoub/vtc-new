@@ -32,8 +32,9 @@ export interface VehicleInfo {
   color: string;
   licensePlate: string;
   seats: number;
-  type: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'limousine';
+  type: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'taxi';
   photoUrl?: string;
+  isVip?: boolean;
 }
 
 // Multiple vehicles support
@@ -46,8 +47,9 @@ export interface Vehicle {
   color?: string;
   licensePlate?: string;
   seats?: number;
-  type?: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'limousine';
+  type?: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'taxi';
   photoUrl?: string;
+  isVip?: boolean;
   is_primary?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -177,7 +179,7 @@ export interface BookingFormData {
   pickupAddress: string;
   destinationAddress: string;
   scheduledTime: string;
-  vehicleType?: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'limousine';
+  vehicleType?: 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'taxi';
   isReturnTrip?: boolean;
   notes?: string;
 }

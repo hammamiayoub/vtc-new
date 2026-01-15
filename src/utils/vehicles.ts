@@ -22,7 +22,8 @@ export async function createVehicle(driverId: string, payload: Partial<Vehicle>)
     license_plate: payload.licensePlate ?? null,
     seats: payload.seats ?? null,
     type: payload.type ?? null,
-    photo_url: payload.photoUrl ?? null
+    photo_url: payload.photoUrl ?? null,
+    is_vip: payload.isVip ?? null
   };
   const { data, error } = await supabase
     .from('vehicles')
@@ -43,6 +44,7 @@ export async function updateVehicle(vehicleId: string, updates: Partial<Vehicle>
   if (updates.seats !== undefined) patch.seats = updates.seats;
   if (updates.type !== undefined) patch.type = updates.type;
   if (updates.photoUrl !== undefined) patch.photo_url = updates.photoUrl;
+  if (updates.isVip !== undefined) patch.is_vip = updates.isVip;
   if (updates as any && (updates as any).is_primary !== undefined) patch.is_primary = (updates as any).is_primary;
 
   const { data, error } = await supabase
@@ -75,6 +77,7 @@ function mapVehicleRowToVehicle(row: any): Vehicle {
     seats: row.seats ?? undefined,
     type: row.type ?? undefined,
     photoUrl: row.photo_url ?? undefined,
+    isVip: row.is_vip ?? undefined,
     is_primary: row.is_primary ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

@@ -28,7 +28,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [showProfileForm, setShowProfileForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'bookings' | 'subscription'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'vehicles' | 'bookings' | 'subscription'>('dashboard');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<{
@@ -813,7 +813,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Disponibilités
+              Mes disponibilités
+            </button>
+            <button
+              onClick={() => { setActiveTab('vehicles'); setShowProfileForm(false); }}
+              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                activeTab === 'vehicles'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Mes véhicules
             </button>
             <button
               onClick={() => { setActiveTab('bookings'); setShowProfileForm(false); }}
@@ -838,7 +848,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Abonnement
+              Mon abonnement
             </button>
           </nav>
         </div>
@@ -848,6 +858,36 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 w-full">
         {/* Notification Permission */}
         <NotificationPermission />
+
+        {/* Alerte abonnement si limite proche ou atteinte */}
+        {driver && subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-6 mb-8">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="text-white" size={24} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-amber-900 mb-2">
+                  ⚠️ Limite mensuelle atteinte
+                </h3>
+                <p className="text-amber-800 mb-4">
+                  Vous avez accepté vos 3 courses gratuites. Vous ne pouvez plus accepter de nouvelles courses.
+                </p>
+                <p className="text-amber-900 font-semibold mb-4">
+                  💡 Passez à l'abonnement Premium pour continuer à recevoir des courses !
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setActiveTab('subscription')}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
+                  >
+                    Voir l'abonnement Premium
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Profile Completion Alert */}
         {needsProfileCompletion && !showProfileForm && activeTab === 'dashboard' && (
@@ -1214,42 +1254,6 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
             {/* Ancienne section "Mon véhicule" supprimée (remplacée par gestion multi-véhicules) */}
 
-            {/* Alerte abonnement si limite proche ou atteinte */}
-            {driver && subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings && (
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-6 mb-8">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <AlertCircle className="text-white" size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-amber-900 mb-2">
-                      ⚠️ Limite mensuelle atteinte
-                    </h3>
-                    <p className="text-amber-800 mb-4">
-                      Vous avez accepté vos 3 courses gratuites. Vous ne pouvez plus accepter de nouvelles courses.
-                    </p>
-                    <p className="text-amber-900 font-semibold mb-4">
-                      💡 Passez à l'abonnement Premium pour continuer à recevoir des courses !
-                    </p>
-                    <div className="flex gap-3">
-                      <Button
-                        onClick={() => setActiveTab('subscription')}
-                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
-                      >
-                        Voir l'abonnement Premium
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Multiple Vehicles Management */}
-            {driver && (
-              <div className="mt-8">
-                <DriverVehicles driverId={driver.id} />
-              </div>
-            )}
           </>
         )}
 
@@ -1257,6 +1261,13 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {!showProfileForm && activeTab === 'availability' && driver && (
           <div className="w-full">
             <AvailabilityCalendar driverId={driver.id} />
+          </div>
+        )}
+
+        {/* Onglet Mes véhicules */}
+        {!showProfileForm && activeTab === 'vehicles' && driver && (
+          <div className="w-full">
+            <DriverVehicles driverId={driver.id} />
           </div>
         )}
 

@@ -92,9 +92,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         try {
           const place = ac.getPlace();
           
-          // Construire l'adresse en anglais à partir des address_components
-          let displayAddress = '';
-          if (place?.address_components) {
+          // Préférer le nom du lieu s'il existe (points nommés)
+          let displayAddress = place?.name?.trim() || '';
+
+          // Si pas de nom, construire l'adresse en anglais à partir des address_components
+          if (!displayAddress && place?.address_components) {
             const components = place.address_components;
             
             // Extraire les composants principaux

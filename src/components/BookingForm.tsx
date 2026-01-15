@@ -25,7 +25,6 @@ import {
   calculateDistance, 
   calculateDrivingDistance,
   calculatePriceWithSurcharges,
-  getPricePerKm,
   getVehicleMultiplier,
   getCurrentPosition,
   getCityCoordinates,
@@ -67,7 +66,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         longitude: place.geometry.location.lng()
       };
       
-      const newAddress = place.formatted_address || '';
+      const newAddress = place.name?.trim() || place.formatted_address || '';
       
       // Mettre à jour les coordonnées et la valeur locale
       setPickupCoords(coords);
@@ -91,7 +90,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         longitude: place.geometry.location.lng()
       };
       
-      const newAddress = place.formatted_address || '';
+      const newAddress = place.name?.trim() || place.formatted_address || '';
       
       // Mettre à jour les coordonnées et la valeur locale
       setDestinationCoords(coords);
@@ -106,17 +105,19 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     }
   };
   const [priceSurcharges, setPriceSurcharges] = useState<PriceSurcharges | null>(null);
+  const [isImmediateDeparture, setIsImmediateDeparture] = useState(false);
 
   // Options pour les types de véhicules
   const vehicleTypeOptions = [
     { value: 'sedan', label: 'Berline' },
+    { value: 'taxi', label: 'Taxi' },
     { value: 'pickup', label: 'Pickup' },
     { value: 'van', label: 'Van' },
     { value: 'minibus', label: 'Minibus' },
     { value: 'bus', label: 'Bus' },
     { value: 'truck', label: 'Camion' },
     { value: 'utility', label: 'Utilitaire' },
-    { value: 'limousine', label: 'Limousine' }
+    
   ];
 
   const {
@@ -135,6 +136,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const watchVehicleType = watch('vehicleType');
   const watchIsReturnTrip = watch('isReturnTrip');
   const watchScheduledTime = watch('scheduledTime');
+  const selectedDriverData = availableDrivers.find(driver => driver.id === selectedDriver);
+  const vipMultiplier = selectedDriverData?.vehicleInfo?.isVip ? 2.5 : 1;
 
   // Autocomplétion des adresses
 
@@ -150,7 +153,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         baseDistance,
         watchVehicleType,
         watchScheduledTime,
-        watchIsReturnTrip
+        watchIsReturnTrip,
+        vipMultiplier
       );
       
       // Utiliser directement le résultat de calculatePriceWithSurcharges
@@ -166,13 +170,22 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         baseDistance,
         watchVehicleType,
         new Date(), // Date actuelle
-        watchIsReturnTrip
+        watchIsReturnTrip,
+        vipMultiplier
       );
       
       setEstimatedPrice(finalPrice);
       setPriceSurcharges(surcharges);
     }
-  }, [watchVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime]);
+  }, [watchVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime, vipMultiplier]);
+
+  // Départ immédiat : verrouiller la date/heure sur maintenant
+  useEffect(() => {
+    if (!isImmediateDeparture) return;
+    const now = new Date();
+    const nowValue = now.toISOString().slice(0, 16);
+    setValue('scheduledTime', nowValue, { shouldValidate: true });
+  }, [isImmediateDeparture, setValue]);
 
   // Calcul automatique de la distance et du prix avec coordonnées Google Maps
   useEffect(() => {
@@ -232,7 +245,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             distance,
             selectedVehicleType,
             new Date(), // Date actuelle pour les surcharges
-            watchIsReturnTrip || false
+            watchIsReturnTrip || false,
+            vipMultiplier
           );
           
           console.log('💰 Prix calculé:', priceResult);
@@ -267,7 +281,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     };
 
     calculateRoute();
-  }, [pickupCoords, destinationCoords, watchVehicleType, watchIsReturnTrip]);
+  }, [pickupCoords, destinationCoords, watchVehicleType, watchIsReturnTrip, vipMultiplier]);
 
 
   const useCurrentLocation = async () => {
@@ -554,7 +568,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         if (allDriverIds.length > 0) {
           const { data: vehiclesRows, error: vehiclesErr } = await supabase
             .from('vehicles')
-            .select('driver_id, make, model, year, color, license_plate, seats, type, photo_url')
+            .select('driver_id, make, model, year, color, license_plate, seats, type, photo_url, is_vip')
             .in('driver_id', allDriverIds)
             .eq('type', selectedVehicleType)
             .is('deleted_at', null);
@@ -573,7 +587,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   licensePlate: v.license_plate,
                   seats: v.seats,
                   type: v.type,
-                  photoUrl: v.photo_url
+                  photoUrl: v.photo_url,
+                  isVip: v.is_vip ?? false
                 });
               }
               matchViaVehicleInfo.add(v.driver_id);
@@ -656,21 +671,30 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         return;
       }
 
-      const formattedDrivers = driversWithValidSubscription.map(driver => ({
-        id: driver.id,
-        firstName: driver.first_name,
-        lastName: driver.last_name,
-        email: driver.email,
-        phone: driver.phone,
-        city: driver.city,
-        licenseNumber: driver.license_number,
-        vehicleInfo: driver.vehicle_info,
-        status: driver.status,
-        profilePhotoUrl: driver.profile_photo_url,
-        createdAt: driver.created_at,
-        updatedAt: driver.updated_at,
-        bookingCount: lifetimeByDriver.get(driver.id)
-      }));
+      const formattedDrivers = driversWithValidSubscription.map(driver => {
+        const legacyVehicleInfo = driver.vehicle_info as any;
+        const normalizedVehicleInfo = legacyVehicleInfo
+          ? {
+              ...legacyVehicleInfo,
+              isVip: legacyVehicleInfo.isVip ?? legacyVehicleInfo.is_vip ?? false
+            }
+          : undefined;
+        return {
+          id: driver.id,
+          firstName: driver.first_name,
+          lastName: driver.last_name,
+          email: driver.email,
+          phone: driver.phone,
+          city: driver.city,
+          licenseNumber: driver.license_number,
+          vehicleInfo: normalizedVehicleInfo,
+          status: driver.status,
+          profilePhotoUrl: driver.profile_photo_url,
+          createdAt: driver.created_at,
+          updatedAt: driver.updated_at,
+          bookingCount: lifetimeByDriver.get(driver.id)
+        };
+      });
 
       // Étape 5: Trier les chauffeurs en priorisant la photo véhicule, puis proximité
       console.log('📍 Étape 5: Tri (photo véhicule d\'abord, puis proximité)...');
@@ -1085,7 +1109,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   }}
                   onPlaceSelect={handlePickupPlaceSelect}
                   placeholder="Adresse de départ"
-                  className={`w-full pr-12 ${errors.pickupAddress ? 'ring-2 ring-red-500 rounded-lg' : 'rounded-lg border border-gray-300'}`}
+                  className={`w-full pr-12 ${errors.pickupAddress ? 'ring-2 ring-red-500 rounded-lg' : 'rounded-lg '}`}
                 />
 
                 {/* Bouton de géolocalisation à l'intérieur du champ */}
@@ -1155,6 +1179,40 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             )}
           </div>
 
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isImmediateDeparture}
+              onChange={(e) => {
+                const nextValue = e.target.checked;
+                setIsImmediateDeparture(nextValue);
+                if (!nextValue) {
+                  setValue('scheduledTime', '', { shouldValidate: true });
+                }
+              }}
+              className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+            />
+            Départ immédiat
+          </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Clock className="inline w-4 h-4 mr-2" />
+              Date et heure de départ
+            </label>
+            <input
+              {...register('scheduledTime')}
+              type="datetime-local"
+              min={getMinDateTime()}
+              disabled={isImmediateDeparture}
+              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+                errors.scheduledTime ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {errors.scheduledTime && (
+              <p className="mt-2 text-sm text-red-600">{errors.scheduledTime.message}</p>
+            )}
+          </div>
+
           {/* Trajet retour */}
           <div>
             <label className="flex items-center gap-3 cursor-pointer">
@@ -1168,7 +1226,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   Trajet retour
                 </span>
                 <p className="text-xs text-gray-500">
-                  Le chauffeur vous attendra et vous ramènera au point de départ
+                  Possible uniquement si le retour est dans la même journée
                 </p>
               </div>
             </label>
@@ -1215,6 +1273,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   )}
                 </h3>
               </div>
+              {vipMultiplier > 1 && (
+                <div className="mb-4 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-800">
+                  Ce véhicule est marqué <strong>VIP</strong> : le prix est plus élevé qu’un véhicule classique.
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg p-4 text-center">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -1238,33 +1301,86 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                     {estimatedPrice} TND
                   </p>
                 </div>
-                <div className="bg-white rounded-lg p-4 text-center">
+                <div className="bg-white rounded-lg p-4 text-left">
                   <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                     <Calculator size={24} className="text-green-600" />
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">Calcul</p>
+                  <p className="text-sm text-gray-600 mb-1 text-center">Calcul</p>
                   <div className="text-xs sm:text-sm font-medium text-gray-900">
                     {(() => {
-                      if (!estimatedDistance) return '';
-                      const { price, discount } = getPricePerKm(estimatedDistance);
+                      if (!baseDistance && !estimatedDistance) return '';
                       const selectedVehicleType = watch('vehicleType');
                       const vehicleMultiplier = getVehicleMultiplier(selectedVehicleType);
                       const vehicleTypeName = vehicleTypeOptions.find(opt => opt.value === selectedVehicleType)?.label || 'Standard';
-                      
+                      const effectiveDistance = watchIsReturnTrip
+                        ? (baseDistance ?? estimatedDistance ?? 0) * 2
+                        : (baseDistance ?? estimatedDistance ?? 0);
+                      const remaining = effectiveDistance;
+
+                      const tiers = [
+                        { maxKm: 50, rate: 2.0, label: '0–50 km' },
+                        { maxKm: 50, rate: 1.8, label: '50–100 km' },
+                        { maxKm: 150, rate: 1.4, label: '100–250 km' },
+                        { maxKm: Infinity, rate: 1.05, label: '250+ km' }
+                      ];
+
+                      let distanceLeft = remaining;
+                      const breakdown = tiers
+                        .map(tier => {
+                          if (distanceLeft <= 0) return null;
+                          const km = Math.min(distanceLeft, tier.maxKm);
+                          distanceLeft -= km;
+                          return {
+                            label: tier.label,
+                            km,
+                            rate: tier.rate,
+                            subtotal: km * tier.rate
+                          };
+                        })
+                        .filter(Boolean) as Array<{ label: string; km: number; rate: number; subtotal: number }>;
+
+                      const baseTotal = breakdown.reduce((sum, row) => sum + row.subtotal, 0);
+                      const totalWithMultiplier = Math.round(baseTotal * vehicleMultiplier * vipMultiplier * 100) / 100;
+
                       return (
-                        <div>
-                          <div>
-                            {watchIsReturnTrip ? 
-                              `${baseDistance?.toFixed(1)} km × 2 (retour) × ${price.toFixed(2)} TND/km` :
-                              `${estimatedDistance} km × ${price.toFixed(2)} TND/km`
-                            }
+                        <div className="mt-2 space-y-2">
+                          <div className="text-gray-700 text-center">
+                            {watchIsReturnTrip
+                              ? `${(baseDistance ?? estimatedDistance ?? 0).toFixed(0)} km × 2 (retour)`
+                              : `${effectiveDistance.toFixed(0)} km`}
                           </div>
-                          {discount && <div className="text-green-600 font-semibold">{discount}</div>}
-                          {vehicleMultiplier > 1 && (
-                            <div className="text-blue-600 font-semibold">
-                              ×{vehicleMultiplier} ({vehicleTypeName})
+                          <div className="space-y-1">
+                            {breakdown.map((row, index) => (
+                              <div key={index} className="grid grid-cols-[72px_1fr] items-start gap-2 text-gray-700">
+                                <span className="whitespace-nowrap text-[11px] sm:text-xs">{row.label}</span>
+                                <span className="tabular-nums text-[11px] sm:text-xs text-right break-words">
+                                  {row.km.toFixed(1)} km × {row.rate.toFixed(2)} = {row.subtotal.toFixed(2)} TND
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="border-t border-gray-200 pt-2 space-y-1">
+                            <div className="flex items-center justify-between text-gray-800">
+                              <span>Base</span>
+                              <span className="tabular-nums font-semibold">{baseTotal.toFixed(2)} TND</span>
                             </div>
-                          )}
+                            {vehicleMultiplier > 1 && (
+                              <div className="flex items-center justify-between text-blue-600 font-semibold">
+                                <span>Multiplicateur ({vehicleTypeName})</span>
+                                <span className="tabular-nums">×{vehicleMultiplier}</span>
+                              </div>
+                            )}
+                            {vipMultiplier > 1 && (
+                              <div className="flex items-center justify-between text-purple-700 font-semibold">
+                                <span>VIP</span>
+                                <span className="tabular-nums">×{vipMultiplier}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between text-gray-900 font-semibold">
+                              <span>Total (hors suppléments)</span>
+                              <span className="tabular-nums">{totalWithMultiplier.toFixed(2)} TND</span>
+                            </div>
+                          </div>
                         </div>
                       );
                     })()}
@@ -1316,24 +1432,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             </div>
           )}
 
+          
           {/* Date et heure */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Clock className="inline w-4 h-4 mr-2" />
-              Date et heure de départ
-            </label>
-            <input
-              {...register('scheduledTime')}
-              type="datetime-local"
-              min={getMinDateTime()}
-              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-                errors.scheduledTime ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {errors.scheduledTime && (
-              <p className="mt-2 text-sm text-red-600">{errors.scheduledTime.message}</p>
-            )}
-          </div>
+          
 
           {/* Recherche de chauffeurs */}
           <div>
@@ -1458,33 +1559,38 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             )}
                           </div>
                           
-                          {/* Informations véhicule */}
-                          {driver.vehicleInfo && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Car size={12} className="text-blue-600 flex-shrink-0" />
-                                <p className="text-xs font-semibold text-blue-900 truncate">
-                                  {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                                </p>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-xs text-blue-700">
-                                <span className="bg-blue-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.color}</span>
-                                <span className="bg-blue-100 px-1.5 py-0.5 rounded">
-                                  {driver.vehicleInfo.type === 'sedan' && 'Berline'}
-                                  {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
-                                  {driver.vehicleInfo.type === 'van' && 'Van'}
-                                  {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
-                                  {driver.vehicleInfo.type === 'bus' && 'Bus'}
-                                  {driver.vehicleInfo.type === 'truck' && 'Camion'}
-                                  {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
-                                  {driver.vehicleInfo.type === 'limousine' && 'Limousine'}
-                                </span>
-                                {driver.vehicleInfo.seats && (
-                                  <span className="bg-blue-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.seats} places</span>
-                                )}
-                              </div>
-                            </div>
-                          )}
+                      {/* Informations véhicule */}
+                      {driver.vehicleInfo && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Car size={12} className="text-blue-600 flex-shrink-0" />
+                            <p className="text-xs font-semibold text-blue-900 truncate">
+                              {driver.vehicleInfo.make} {driver.vehicleInfo.model}
+                            </p>
+                            {driver.vehicleInfo.isVip && (
+                              <span className="ml-auto inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold bg-purple-100 text-purple-700">
+                                VIP
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-xs text-blue-700">
+                            <span className="bg-blue-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.color}</span>
+                            <span className="bg-blue-100 px-1.5 py-0.5 rounded">
+                              {driver.vehicleInfo.type === 'sedan' && 'Berline'}
+                              {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
+                              {driver.vehicleInfo.type === 'van' && 'Van'}
+                              {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
+                              {driver.vehicleInfo.type === 'bus' && 'Bus'}
+                              {driver.vehicleInfo.type === 'truck' && 'Camion'}
+                              {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
+                              {driver.vehicleInfo.type === 'taxi' && 'Taxi'}
+                            </span>
+                            {driver.vehicleInfo.seats && (
+                              <span className="bg-blue-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.seats} places</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                           
                           {/* Badge de proximité pour le chauffeur le plus proche */}
                           {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup !== Infinity && driver.distanceFromPickup > 0 && driver.distanceFromPickup <= 10 && (

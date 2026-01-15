@@ -302,12 +302,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
               </div>
             </div>
 
-            {/* Limousine */}
+            {/* Taxi */}
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="relative h-48 overflow-hidden">
                 <img 
                   src="/limousine.png" 
-                  alt="Limousine premium"
+                  alt="Taxi"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
                     const target = e.currentTarget as HTMLImageElement;
@@ -325,7 +325,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  Limousine premium
+                  Taxi
                 </h3>
                 <p className="text-gray-600 mb-4 text-sm leading-relaxed">
                   Service de luxe pour les occasions spéciales. Confort et élégance garantis.
