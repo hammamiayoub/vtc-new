@@ -66,11 +66,42 @@ interface DriverSubscription {
   expirationStatus?: string;
 }
 
+interface AdminBooking {
+  id: string;
+  clientId: string;
+  driverId?: string;
+  pickupAddress: string;
+  destinationAddress: string;
+  distanceKm: number;
+  priceTnd: number;
+  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
+  scheduledTime: string;
+  pickupTime?: string;
+  completionTime?: string;
+  isReturnTrip?: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  clients?: {
+    first_name: string;
+    last_name: string;
+    email?: string;
+    phone?: string;
+  };
+  drivers?: {
+    first_name: string;
+    last_name: string;
+    email?: string;
+    phone?: string;
+  };
+}
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [clients, setClients] = useState<ClientWithBookings[]>([]);
   const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
   const [subscriptions, setSubscriptions] = useState<DriverSubscription[]>([]);
+  const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientWithBookings | null>(null);
@@ -81,7 +112,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [loadingAvailabilities, setLoadingAvailabilities] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles' | 'subscriptions'>('drivers');
+  const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings'>('drivers');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -128,6 +159,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     fetchClients();
     fetchVehicles();
     fetchSubscriptions();
+    fetchBookings();
     
     // Rafraîchir automatiquement toutes les 30 secondes
     const interval = setInterval(() => {
@@ -135,6 +167,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       fetchClients();
       fetchVehicles();
       fetchSubscriptions();
+      fetchBookings();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -706,6 +739,65 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const fetchBookings = async () => {
+    if (!loading) setRefreshing(true);
+
+    try {
+      console.log('🔍 Admin - Récupération des réservations...');
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          clients (
+            first_name,
+            last_name,
+            email,
+            phone
+          ),
+          drivers (
+            first_name,
+            last_name,
+            email,
+            phone
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erreur lors de la récupération des réservations:', error);
+        return;
+      }
+
+      const formattedBookings = (data || []).map((booking: any) => ({
+        id: booking.id,
+        clientId: booking.client_id,
+        driverId: booking.driver_id,
+        pickupAddress: booking.pickup_address,
+        destinationAddress: booking.destination_address,
+        distanceKm: booking.distance_km,
+        priceTnd: booking.price_tnd,
+        status: booking.status,
+        scheduledTime: booking.scheduled_time,
+        pickupTime: booking.pickup_time,
+        completionTime: booking.completion_time,
+        isReturnTrip: booking.is_return_trip,
+        notes: booking.notes,
+        createdAt: booking.created_at,
+        updatedAt: booking.updated_at,
+        clients: booking.clients,
+        drivers: booking.drivers
+      }));
+
+      setBookings(formattedBookings);
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   const updateDriverStatus = async (driverId: string, newStatus: string) => {
     setActionLoading(driverId);
     
@@ -931,6 +1023,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const cancelledBookings = clients.reduce((sum, client) => sum + client.cancelledBookings, 0);
   const totalRevenue = clients.reduce((sum, client) => sum + client.totalSpent, 0);
 
+  // Statistiques des réservations
+  const bookingTotalCount = bookings.length;
+  const bookingPendingCount = bookings.filter(b => b.status === 'pending').length;
+  const bookingInProgressCount = bookings.filter(b => b.status === 'in_progress' || b.status === 'accepted').length;
+  const bookingCompletedCount = bookings.filter(b => b.status === 'completed').length;
+  const bookingRevenue = bookings
+    .filter(b => b.status === 'completed')
+    .reduce((sum, b) => sum + (b.priceTnd || 0), 0);
+
   console.log('Statistiques:', {
     total: drivers.length,
     pending: pendingDrivers.length,
@@ -1058,6 +1159,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
               </button>
               <button
+                onClick={() => setActiveTab('bookings')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'bookings'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Calendar size={16} />
+                  Réservations ({bookings.length})
+                </div>
+              </button>
+              <button
                 onClick={() => setActiveTab('subscriptions')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'subscriptions'
@@ -1123,6 +1237,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
               </button>
               <button
+                onClick={() => setActiveTab('bookings')}
+                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
+                  activeTab === 'bookings'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Calendar size={14} />
+                  <span>Réservations</span>
+                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                    {bookings.length}
+                  </span>
+                </div>
+              </button>
+              <button
                 onClick={() => setActiveTab('subscriptions')}
                 className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'subscriptions'
@@ -1144,7 +1274,57 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
-          {activeTab === 'subscriptions' ? (
+          {activeTab === 'bookings' ? (
+            <>
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar size={20} className="sm:w-6 sm:h-6 text-gray-700" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Total réservations</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{bookingTotalCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock size={20} className="sm:w-6 sm:h-6 text-orange-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En attente</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{bookingPendingCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En cours</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{bookingInProgressCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <TrendingUp size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Revenus</h3>
+                    <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{bookingRevenue.toFixed(0)} TND</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : activeTab === 'subscriptions' ? (
             <>
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -1365,7 +1545,118 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </div>
 
         {/* Content based on active tab */}
-        {activeTab === 'subscriptions' ? (
+        {activeTab === 'bookings' ? (
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Réservations</h2>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Toutes les réservations par date de création</p>
+                </div>
+                {refreshing && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <span className="hidden sm:inline">Actualisation...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {bookings.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50">
+                <Calendar size={48} className="text-gray-400 mx-auto mb-4" />
+                <h5 className="text-lg font-medium text-gray-900 mb-2">Aucune réservation</h5>
+                <p className="text-gray-500">Aucune réservation n'a encore été créée.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {bookings.map((booking) => (
+                  <div key={booking.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-3 mb-3">
+                          <h3 className="text-sm sm:text-base font-semibold text-gray-900">
+                            Réservation #{booking.id.slice(-8)}
+                          </h3>
+                          {getBookingStatusBadge(booking.status)}
+                          {booking.isReturnTrip && (
+                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                              Aller-retour
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-500">
+                            Créée le {new Date(booking.createdAt).toLocaleString('fr-FR')}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 mb-3 lg:hidden">
+                          <span className="text-xs text-gray-500">Prix</span>
+                          <span className="text-base font-bold text-gray-900">
+                            {booking.priceTnd?.toFixed(0)} TND
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                          <div className="bg-white rounded-lg border border-gray-200 p-3">
+                            <p className="text-gray-500 text-xs mb-1">Départ</p>
+                            <p className="text-gray-900 font-medium">{booking.pickupAddress}</p>
+                          </div>
+                          <div className="bg-white rounded-lg border border-gray-200 p-3">
+                            <p className="text-gray-500 text-xs mb-1">Arrivée</p>
+                            <p className="text-gray-900 font-medium">{booking.destinationAddress}</p>
+                          </div>
+                          <div className="bg-white rounded-lg border border-gray-200 p-3">
+                            <p className="text-gray-500 text-xs mb-1">Date et heure</p>
+                            <p className="text-gray-900 font-medium">
+                              {new Date(booking.scheduledTime).toLocaleString('fr-FR')}
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-lg border border-gray-200 p-3">
+                            <p className="text-gray-500 text-xs mb-1">Client</p>
+                            <p className="text-gray-900 font-medium">
+                              {booking.clients ? `${booking.clients.first_name} ${booking.clients.last_name}` : 'Client inconnu'}
+                            </p>
+                            {booking.clients?.phone && (
+                              <p className="text-xs text-gray-500">{booking.clients.phone}</p>
+                            )}
+                          </div>
+                          <div className="bg-white rounded-lg border border-gray-200 p-3">
+                            <p className="text-gray-500 text-xs mb-1">Chauffeur</p>
+                            <p className="text-gray-900 font-medium">
+                              {booking.drivers ? `${booking.drivers.first_name} ${booking.drivers.last_name}` : 'Non assigné'}
+                            </p>
+                            {booking.drivers?.phone && (
+                              <p className="text-xs text-gray-500">{booking.drivers.phone}</p>
+                            )}
+                          </div>
+                          <div className="bg-white rounded-lg border border-gray-200 p-3">
+                            <p className="text-gray-500 text-xs mb-1">Distance</p>
+                            <p className="text-gray-900 font-medium">{booking.distanceKm?.toFixed(1)} km</p>
+                          </div>
+                        </div>
+
+                        {booking.notes && (
+                          <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
+                            <p className="text-yellow-900 font-semibold mb-1">Notes</p>
+                            <p className="text-yellow-800">{booking.notes}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="hidden lg:flex flex-col items-start lg:items-end gap-2 min-w-[160px]">
+                        <div className="text-2xl font-bold text-gray-900">
+                          {booking.priceTnd?.toFixed(0)} TND
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Statut: {booking.status}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : activeTab === 'subscriptions' ? (
           /* Subscriptions List */
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
