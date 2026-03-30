@@ -147,6 +147,26 @@ export const calculateProgressivePrice = (distanceKm: number): number => {
   return Math.round(totalPrice * 100) / 100; // Arrondir à 2 décimales
 };
 
+/** Distance minimale facturable (aller simple) pour les véhicules autres que taxi. */
+export const MIN_NON_TAXI_ONE_WAY_KM = 20;
+
+/** Seuil en dessous duquel un trajet non-taxi est considéré comme trop court (message + blocage réservation). */
+export const SHORT_TRIP_NON_TAXI_WARNING_KM = 30;
+
+/**
+ * Distance aller utilisée pour la tarification : pas de plancher pour le taxi,
+ * sinon au minimum {@link MIN_NON_TAXI_ONE_WAY_KM} km.
+ */
+export const getBillableOneWayDistanceKm = (
+  actualOneWayKm: number,
+  vehicleType?: string
+): number => {
+  if (vehicleType === 'taxi') {
+    return actualOneWayKm;
+  }
+  return Math.max(actualOneWayKm, MIN_NON_TAXI_ONE_WAY_KM);
+};
+
 // Fonction pour obtenir le multiplicateur selon le type de véhicule
 export const getVehicleMultiplier = (vehicleType?: string): number => {
   switch (vehicleType) {
@@ -230,7 +250,8 @@ export const calculatePrice = (
   isReturnTrip: boolean = false,
   vipMultiplier: number = 1
 ): number => {
-  const effectiveDistance = isReturnTrip ? distanceKm * 2 : distanceKm;
+  const oneWayBillable = getBillableOneWayDistanceKm(distanceKm, vehicleType);
+  const effectiveDistance = isReturnTrip ? oneWayBillable * 2 : oneWayBillable;
   
   // Utiliser la tarification progressive au lieu du tarif unique
   const basePrice = calculateProgressivePrice(effectiveDistance);

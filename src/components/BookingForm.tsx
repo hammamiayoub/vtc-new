@@ -27,6 +27,8 @@ import {
   calculateDrivingDistance,
   calculatePriceWithSurcharges,
   getVehicleMultiplier,
+  getBillableOneWayDistanceKm,
+  SHORT_TRIP_NON_TAXI_WARNING_KM,
   getCurrentPosition,
   getCityCoordinates,
   Coordinates,
@@ -139,6 +141,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const watchScheduledTime = watch('scheduledTime');
   const selectedDriverData = availableDrivers.find(driver => driver.id === selectedDriver);
   const vipMultiplier = selectedDriverData?.vehicleInfo?.isVip ? 2.5 : 1;
+
+  /** Trajet trop court pour les véhicules hors taxi : message + pas de réservation tant que distance aller < seuil. */
+  const isShortTripBlockedForNonTaxi =
+    !!watchVehicleType &&
+    watchVehicleType !== 'taxi' &&
+    baseDistance !== null &&
+    baseDistance < SHORT_TRIP_NON_TAXI_WARNING_KM;
 
   // Autocomplétion des adresses
 
@@ -311,6 +320,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
   const searchAvailableDrivers = async () => {
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
+
+    if (isShortTripBlockedForNonTaxi) {
+      alert(
+        `Pour une distance aller inférieure à ${SHORT_TRIP_NON_TAXI_WARNING_KM} km avec ce type de véhicule, augmentez la distance du trajet ou choisissez le type « Taxi » pour les courses courtes.`
+      );
+      return;
+    }
     
     // Debug: Vérifier l'utilisateur connecté
     const { data: { user } } = await supabase.auth.getUser();
@@ -908,6 +924,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       return;
     }
 
+    if (isShortTripBlockedForNonTaxi) {
+      alert(
+        `Pour une distance aller inférieure à ${SHORT_TRIP_NON_TAXI_WARNING_KM} km avec ce type de véhicule, augmentez la distance du trajet ou choisissez le type « Taxi » pour les courses courtes.`
+      );
+      return;
+    }
+
     if (!selectedDriver) {
       alert('Veuillez sélectionner un chauffeur');
       return;
@@ -1280,6 +1303,14 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   Ce véhicule est marqué <strong>VIP</strong> : le prix est plus élevé qu’un véhicule classique.
                 </div>
               )}
+              {isShortTripBlockedForNonTaxi && (
+                <div className="mb-4 rounded-lg border-2 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-950 flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5" />
+                  <p>
+                    La distance aller ({baseDistance} km) est inférieure à {SHORT_TRIP_NON_TAXI_WARNING_KM} km pour ce type de véhicule. Augmentez la distance du trajet ou choisissez le type <strong>Taxi</strong> pour les courses courtes.
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg p-4 text-center">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -1314,9 +1345,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                       const selectedVehicleType = watch('vehicleType');
                       const vehicleMultiplier = getVehicleMultiplier(selectedVehicleType);
                       const vehicleTypeName = vehicleTypeOptions.find(opt => opt.value === selectedVehicleType)?.label || 'Standard';
+                      const rawOneWay =
+                        baseDistance ??
+                        (watchIsReturnTrip ? (estimatedDistance ?? 0) / 2 : (estimatedDistance ?? 0));
+                      const oneWayBillable = getBillableOneWayDistanceKm(rawOneWay, selectedVehicleType);
                       const effectiveDistance = watchIsReturnTrip
-                        ? (baseDistance ?? estimatedDistance ?? 0) * 2
-                        : (baseDistance ?? estimatedDistance ?? 0);
+                        ? oneWayBillable * 2
+                        : oneWayBillable;
                       const remaining = effectiveDistance;
 
                       const tiers = [
@@ -1348,8 +1383,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                         <div className="mt-2 space-y-2">
                           <div className="text-gray-700 text-center">
                             {watchIsReturnTrip
-                              ? `${(baseDistance ?? estimatedDistance ?? 0).toFixed(0)} km × 2 (retour)`
+                              ? `${oneWayBillable.toFixed(0)} km × 2 (retour)`
                               : `${effectiveDistance.toFixed(0)} km`}
+                            {selectedVehicleType && selectedVehicleType !== 'taxi' && rawOneWay < oneWayBillable && (
+                              <span className="block text-[11px] text-gray-500 mt-1">
+                                (distance réelle {rawOneWay.toFixed(1)} km — minimum {oneWayBillable.toFixed(0)} km appliqué au tarif)
+                              </span>
+                            )}
                           </div>
                           <div className="space-y-1">
                             {breakdown.map((row, index) => (
@@ -1443,7 +1483,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             <Button
               type="button"
               onClick={searchAvailableDrivers}
-              disabled={!isValid || !estimatedPrice}
+              disabled={!isValid || !estimatedPrice || isShortTripBlockedForNonTaxi}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <User className="w-5 h-5 mr-2" />
@@ -1627,7 +1667,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           {/* Bouton de soumission */}
           <Button
             type="submit"
-            disabled={isSubmitting || !selectedDriver || !estimatedPrice}
+            disabled={isSubmitting || !selectedDriver || !estimatedPrice || isShortTripBlockedForNonTaxi}
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-4 px-6 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
