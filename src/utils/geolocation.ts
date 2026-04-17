@@ -151,7 +151,7 @@ export const calculateProgressivePrice = (distanceKm: number): number => {
 export const MIN_NON_TAXI_ONE_WAY_KM = 20;
 
 /** Seuil en dessous duquel un trajet non-taxi est considéré comme trop court (message + blocage réservation). */
-export const SHORT_TRIP_NON_TAXI_WARNING_KM = 30;
+export const SHORT_TRIP_NON_TAXI_WARNING_KM = 20;
 
 /**
  * Distance aller utilisée pour la tarification : pas de plancher pour le taxi,

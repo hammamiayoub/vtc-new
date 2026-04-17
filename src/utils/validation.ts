@@ -1,5 +1,69 @@
 import { z } from 'zod';
 
+/**
+ * Normalise un numéro de téléphone :
+ * - 8 chiffres commençant par 2, 5 ou 9 → ajoute le préfixe +216 (Tunisie)
+ * - +CC0local ou 00CC0local (hors +216) → supprime le 0 de troncature local
+ *   ex: +330601646792 → +33601646792 | 00330601646792 → 0033601646792
+ */
+export function normalizePhone(raw: string): string {
+  const value = raw.trim().replace(/\s+/g, '');
+
+  if (!value) return value;
+
+  // 8 chiffres tunisiens (2X / 5X / 9X) → préfixe +216
+  if (/^[259]\d{7}$/.test(value)) {
+    return '+216' + value;
+  }
+
+  // +CC0local → supprime le 0 de troncature si CC ≠ 216
+  // Le local doit contenir ≥ 6 chiffres pour éviter la transformation prématurée lors de la saisie
+  const plusMatch = value.match(/^\+(\d{1,3})0(\d{6,12})$/);
+  if (plusMatch && plusMatch[1] !== '216') {
+    return '+' + plusMatch[1] + plusMatch[2];
+  }
+
+  // 00CC0local → supprime le 0 de troncature si CC ≠ 216
+  const doubleZeroMatch = value.match(/^00(\d{1,3})0(\d{6,12})$/);
+  if (doubleZeroMatch && doubleZeroMatch[1] !== '216') {
+    return '00' + doubleZeroMatch[1] + doubleZeroMatch[2];
+  }
+
+  return value;
+}
+
+const phoneFieldSchema = z.string().superRefine((val, ctx) => {
+  const v = val.trim().replace(/\s+/g, '');
+
+  if (!v) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le numéro de téléphone est requis' });
+    return;
+  }
+
+  // Commence par un seul 0 → demander l'indicatif pays
+  if (/^0[^0]/.test(v)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Numéro commençant par 0 : veuillez entrer l'indicatif du pays au format +XX (ex: +33 pour la France)",
+    });
+    return;
+  }
+
+  // 8 chiffres tunisiens (2X / 5X / 9X) — avant normalisation
+  if (/^[259]\d{7}$/.test(v)) return;
+  // +216 + 8 chiffres tunisiens — après normalisation
+  if (/^\+216[259]\d{7}$/.test(v)) return;
+  // Format international E.164 (+CC…)
+  if (/^\+\d{7,15}$/.test(v)) return;
+  // Format 00CC…
+  if (/^00\d{7,15}$/.test(v)) return;
+
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    message: 'Numéro invalide. Ex : 22123456 (Tunisie) ou +33601234567 (France)',
+  });
+});
+
 export const passwordSchema = z
   .string()
   .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
@@ -39,11 +103,7 @@ export const clientSignupSchema = z.object({
   email: z
     .string()
     .email('Veuillez entrer une adresse email valide'),
-  phone: z
-    .string()
-    .min(8, 'Le numéro de téléphone doit contenir 8 chiffres')
-    .max(8, 'Le numéro de téléphone doit contenir 8 chiffres')
-    .regex(/^[0-9]{8}$/, 'Le numéro doit contenir exactement 8 chiffres (ex: 12345678)'),
+  phone: phoneFieldSchema,
   city: z
     .string()
     .min(2, 'La ville doit contenir au moins 2 caractères')
@@ -88,11 +148,7 @@ export const validatePassword = (password: string) => {
 };
 
 export const driverProfileSchema = z.object({
-  phone: z
-    .string()
-    .min(8, 'Le numéro de téléphone doit contenir 8 chiffres')
-    .max(8, 'Le numéro de téléphone doit contenir 8 chiffres')
-    .regex(/^[0-9]{8}$/, 'Le numéro doit contenir exactement 8 chiffres (ex: 22123456)'),
+  phone: phoneFieldSchema,
   city: z
     .string()
     .min(2, 'La ville doit contenir au moins 2 caractères')
