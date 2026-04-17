@@ -5,7 +5,7 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Phone, MapPin, A
 import { Button } from './ui/Button';
 import { CityInput } from './ui/CityInput';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
-import { clientSignupSchema } from '../utils/validation';
+import { clientSignupSchema, normalizePhone } from '../utils/validation';
 import { ClientSignupFormData } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -42,6 +42,8 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
   const onSubmit = async (data: ClientSignupFormData) => {
     setIsSubmitting(true);
     setError(null);
+    // Normalisation du numéro avant envoi (sécurité si onBlur n'a pas encore été déclenché)
+    data.phone = normalizePhone(data.phone);
     try {
       // Vérifier si l'email existe déjà AVANT de créer l'utilisateur
       console.log('🔍 Vérification de l\'email avant création...');
@@ -330,10 +332,14 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 <input
                   {...register('phone')}
                   type="tel"
-                  placeholder="Numéro de téléphone (8 chiffres)"
+                  placeholder="Ex : 22123456 ou +33601234567"
                   autoComplete="tel"
-                  inputMode="numeric"
-                  pattern="[0-9]{8}"
+                  onBlur={(e) => {
+                    const normalized = normalizePhone(e.target.value);
+                    if (normalized !== e.target.value) {
+                      setValue('phone', normalized, { shouldValidate: true });
+                    }
+                  }}
                   className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
                     errors.phone ? 'border-red-500' : 'border-gray-300'
                   }`}

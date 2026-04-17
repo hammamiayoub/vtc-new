@@ -6,7 +6,7 @@ import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Button } from './ui/Button';
 import { CityInput } from './ui/CityInput';
-import { driverProfileSchema } from '../utils/validation';
+import { driverProfileSchema, normalizePhone } from '../utils/validation';
 import { DriverProfileData } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -43,6 +43,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
 
   const onSubmit = async (data: DriverProfileData) => {
     setIsSubmitting(true);
+    data.phone = normalizePhone(data.phone);
     
     try {
       const { error } = await supabase
@@ -113,7 +114,14 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
               <input
                 {...register('phone')}
                 type="tel"
-                placeholder="Numéro de téléphone (8 chiffres)"
+                placeholder="Ex : 22123456 ou +33601234567"
+                autoComplete="tel"
+                onBlur={(e) => {
+                  const normalized = normalizePhone(e.target.value);
+                  if (normalized !== e.target.value) {
+                    setValue('phone', normalized, { shouldValidate: true });
+                  }
+                }}
                 className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                   errors.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
