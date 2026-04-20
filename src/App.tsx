@@ -21,6 +21,7 @@ import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 import { initAnalytics, analytics } from './utils/analytics';
 import { updateSEO } from './utils/seo';
+import { ChatWidget } from './components/ChatWidget';
 
 type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password';
 
@@ -372,6 +373,7 @@ function AppContent() {
         <Header currentView={currentView} onViewChange={setCurrentView} />
       )}
       {renderContent()}
+      <ChatWidget />
     </div>
   );
 }
