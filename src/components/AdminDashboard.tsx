@@ -13,10 +13,12 @@ import {
   Calendar,
   CreditCard,
   TrendingUp,
-  AlertCircle as AlertCircleIcon
+  AlertCircle as AlertCircleIcon,
+  Edit
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
+import { updateVehicle } from '../utils/vehicles';
 import { Driver, ClientWithBookings, Vehicle, DriverAvailability } from '../types';
 
 interface AdminDashboardProps {
@@ -106,7 +108,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientWithBookings | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleWithDriver | null>(null);
+  const [editingVehicle, setEditingVehicle] = useState<VehicleWithDriver | null>(null);
+  const [vehicleEditForm, setVehicleEditForm] = useState<{
+    make: string;
+    model: string;
+    year: string;
+    color: string;
+    licensePlate: string;
+    seats: string;
+    type: string;
+  }>({ make: '', model: '', year: '', color: '', licensePlate: '', seats: '', type: '' });
+  const [savingVehicle, setSavingVehicle] = useState(false);
+  const [vehicleEditError, setVehicleEditError] = useState<string | null>(null);
+  const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
+  const [driverEditForm, setDriverEditForm] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    city: string;
+    licenseNumber: string;
+  }>({ firstName: '', lastName: '', email: '', phone: '', city: '', licenseNumber: '' });
+  const [savingDriver, setSavingDriver] = useState(false);
+  const [driverEditError, setDriverEditError] = useState<string | null>(null);
+  const [editingClient, setEditingClient] = useState<ClientWithBookings | null>(null);
+  const [clientEditForm, setClientEditForm] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    city: string;
+  }>({ firstName: '', lastName: '', email: '', phone: '', city: '' });
+  const [savingClient, setSavingClient] = useState(false);
+  const [clientEditError, setClientEditError] = useState<string | null>(null);
+  const [bookingToCancel, setBookingToCancel] = useState<AdminBooking | null>(null);
+  const [cancellingBooking, setCancellingBooking] = useState(false);
+  const [cancelBookingError, setCancelBookingError] = useState<string | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<DriverSubscription | null>(null);
+  const [validatingPayment, setValidatingPayment] = useState(false);
+  const [paymentValidationError, setPaymentValidationError] = useState<string | null>(null);
+  const [paymentForm, setPaymentForm] = useState<{ method: string; reference: string }>({
+    method: 'bank_transfer',
+    reference: ''
+  });
   const [vehicleForAvailabilities, setVehicleForAvailabilities] = useState<VehicleWithDriver | null>(null);
   const [allAvailabilities, setAllAvailabilities] = useState<DriverAvailability[]>([]);
   const [loadingAvailabilities, setLoadingAvailabilities] = useState(false);
@@ -172,6 +216,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
     return () => clearInterval(interval);
   }, [isAuthenticated]);
+
+  // Préparer le formulaire de validation de paiement à l'ouverture d'un abonnement
+  useEffect(() => {
+    if (selectedSubscription) {
+      setPaymentValidationError(null);
+      setPaymentForm({
+        method: selectedSubscription.paymentMethod || 'bank_transfer',
+        reference:
+          selectedSubscription.paymentReference ||
+          `ABONNEMENT-${selectedSubscription.id.slice(0, 8).toUpperCase()}`
+      });
+    }
+  }, [selectedSubscription]);
 
   const fetchDrivers = async () => {
     if (!loading) setRefreshing(true);
@@ -601,6 +658,359 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const openEditVehicle = (vehicle: VehicleWithDriver) => {
+    setVehicleEditError(null);
+    setVehicleEditForm({
+      make: vehicle.make ?? '',
+      model: vehicle.model ?? '',
+      year: vehicle.year ? String(vehicle.year) : '',
+      color: vehicle.color ?? '',
+      licensePlate: vehicle.licensePlate ?? '',
+      seats: vehicle.seats ? String(vehicle.seats) : '',
+      type: vehicle.type ?? ''
+    });
+    setEditingVehicle(vehicle);
+  };
+
+  const handleSaveVehicle = async () => {
+    if (!editingVehicle) return;
+    if (!vehicleEditForm.make.trim() || !vehicleEditForm.model.trim()) {
+      setVehicleEditError('La marque et le modèle sont requis.');
+      return;
+    }
+
+    setSavingVehicle(true);
+    setVehicleEditError(null);
+
+    try {
+      const updated = await updateVehicle(editingVehicle.id, {
+        make: vehicleEditForm.make.trim(),
+        model: vehicleEditForm.model.trim(),
+        year: vehicleEditForm.year ? Number(vehicleEditForm.year) : undefined,
+        color: vehicleEditForm.color || undefined,
+        licensePlate: vehicleEditForm.licensePlate
+          ? vehicleEditForm.licensePlate.trim().toUpperCase()
+          : undefined,
+        seats: vehicleEditForm.seats ? Number(vehicleEditForm.seats) : undefined,
+        type: (vehicleEditForm.type || undefined) as Vehicle['type']
+      });
+
+      // Mettre à jour la liste et la modale de détail localement
+      setVehicles(prev =>
+        prev.map(v =>
+          v.id === editingVehicle.id
+            ? {
+                ...v,
+                make: updated.make,
+                model: updated.model,
+                year: updated.year,
+                color: updated.color,
+                licensePlate: updated.licensePlate,
+                seats: updated.seats,
+                type: updated.type,
+                updatedAt: updated.updatedAt
+              }
+            : v
+        )
+      );
+      setSelectedVehicle(prev =>
+        prev && prev.id === editingVehicle.id
+          ? {
+              ...prev,
+              make: updated.make,
+              model: updated.model,
+              year: updated.year,
+              color: updated.color,
+              licensePlate: updated.licensePlate,
+              seats: updated.seats,
+              type: updated.type,
+              updatedAt: updated.updatedAt
+            }
+          : prev
+      );
+      setEditingVehicle(null);
+    } catch (e) {
+      console.error('Erreur lors de la mise à jour du véhicule:', e);
+      const msg = e instanceof Error ? e.message : 'Erreur lors de la mise à jour du véhicule.';
+      setVehicleEditError(msg);
+    } finally {
+      setSavingVehicle(false);
+    }
+  };
+
+  const openEditDriver = (driver: Driver) => {
+    setDriverEditError(null);
+    setDriverEditForm({
+      firstName: driver.firstName ?? '',
+      lastName: driver.lastName ?? '',
+      email: driver.email ?? '',
+      phone: driver.phone ?? '',
+      city: driver.city ?? '',
+      licenseNumber: driver.licenseNumber ?? ''
+    });
+    setEditingDriver(driver);
+  };
+
+  const handleSaveDriver = async () => {
+    if (!editingDriver) return;
+    if (!driverEditForm.firstName.trim() || !driverEditForm.lastName.trim()) {
+      setDriverEditError('Le prénom et le nom sont requis.');
+      return;
+    }
+    if (!driverEditForm.email.trim()) {
+      setDriverEditError("L'email est requis.");
+      return;
+    }
+
+    setSavingDriver(true);
+    setDriverEditError(null);
+
+    try {
+      const { error } = await supabase
+        .from('drivers')
+        .update({
+          first_name: driverEditForm.firstName.trim(),
+          last_name: driverEditForm.lastName.trim(),
+          email: driverEditForm.email.trim(),
+          phone: driverEditForm.phone.trim() || null,
+          city: driverEditForm.city.trim() || null,
+          license_number: driverEditForm.licenseNumber.trim() || null
+        })
+        .eq('id', editingDriver.id);
+
+      if (error) throw error;
+
+      const patch = {
+        firstName: driverEditForm.firstName.trim(),
+        lastName: driverEditForm.lastName.trim(),
+        email: driverEditForm.email.trim(),
+        phone: driverEditForm.phone.trim() || undefined,
+        city: driverEditForm.city.trim() || undefined,
+        licenseNumber: driverEditForm.licenseNumber.trim() || undefined
+      };
+
+      setDrivers(prev => prev.map(d => (d.id === editingDriver.id ? { ...d, ...patch } : d)));
+      setSelectedDriver(prev => (prev && prev.id === editingDriver.id ? { ...prev, ...patch } : prev));
+      setEditingDriver(null);
+    } catch (e) {
+      console.error('Erreur lors de la mise à jour du chauffeur:', e);
+      const msg = e instanceof Error ? e.message : 'Erreur lors de la mise à jour du chauffeur.';
+      setDriverEditError(msg);
+    } finally {
+      setSavingDriver(false);
+    }
+  };
+
+  const openEditClient = (client: ClientWithBookings) => {
+    setClientEditError(null);
+    setClientEditForm({
+      firstName: client.firstName ?? '',
+      lastName: client.lastName ?? '',
+      email: client.email ?? '',
+      phone: client.phone ?? '',
+      city: client.city ?? ''
+    });
+    setEditingClient(client);
+  };
+
+  const handleSaveClient = async () => {
+    if (!editingClient) return;
+    if (!clientEditForm.firstName.trim() || !clientEditForm.lastName.trim()) {
+      setClientEditError('Le prénom et le nom sont requis.');
+      return;
+    }
+    if (!clientEditForm.email.trim()) {
+      setClientEditError("L'email est requis.");
+      return;
+    }
+
+    setSavingClient(true);
+    setClientEditError(null);
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({
+          first_name: clientEditForm.firstName.trim(),
+          last_name: clientEditForm.lastName.trim(),
+          email: clientEditForm.email.trim(),
+          phone: clientEditForm.phone.trim() || null,
+          city: clientEditForm.city.trim() || null
+        })
+        .eq('id', editingClient.id);
+
+      if (error) throw error;
+
+      const patch = {
+        firstName: clientEditForm.firstName.trim(),
+        lastName: clientEditForm.lastName.trim(),
+        email: clientEditForm.email.trim(),
+        phone: clientEditForm.phone.trim(),
+        city: clientEditForm.city.trim() || undefined
+      };
+
+      setClients(prev => prev.map(c => (c.id === editingClient.id ? { ...c, ...patch } : c)));
+      setSelectedClient(prev => (prev && prev.id === editingClient.id ? { ...prev, ...patch } : prev));
+      setEditingClient(null);
+    } catch (e) {
+      console.error('Erreur lors de la mise à jour du client:', e);
+      const msg = e instanceof Error ? e.message : 'Erreur lors de la mise à jour du client.';
+      setClientEditError(msg);
+    } finally {
+      setSavingClient(false);
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    if (!bookingToCancel) return;
+
+    setCancellingBooking(true);
+    setCancelBookingError(null);
+
+    try {
+      // 1. Passer la réservation au statut "annulée"
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingToCancel.id);
+
+      if (error) throw error;
+
+      // 2. Libérer le créneau de disponibilité du chauffeur correspondant
+      if (bookingToCancel.driverId && bookingToCancel.scheduledTime) {
+        try {
+          const scheduled = new Date(bookingToCancel.scheduledTime);
+          const pad = (n: number) => String(n).padStart(2, '0');
+          const dateStr = `${scheduled.getFullYear()}-${pad(scheduled.getMonth() + 1)}-${pad(scheduled.getDate())}`;
+          const timeStr = `${pad(scheduled.getHours())}:${pad(scheduled.getMinutes())}:00`;
+
+          const { error: availError } = await supabase
+            .from('driver_availability')
+            .update({ is_available: true })
+            .eq('driver_id', bookingToCancel.driverId)
+            .eq('date', dateStr)
+            .lte('start_time', timeStr)
+            .gte('end_time', timeStr);
+
+          if (availError) {
+            console.error('⚠️ Erreur lors de la libération du créneau de disponibilité:', availError);
+          } else {
+            console.log('✅ Créneau de disponibilité libéré pour le chauffeur', bookingToCancel.driverId);
+          }
+        } catch (availException) {
+          console.error('⚠️ Exception lors de la libération du créneau:', availException);
+        }
+      }
+
+      // 3. Notifier le client et le chauffeur par email
+      try {
+        const clientEmail = bookingToCancel.clients?.email;
+        if (clientEmail) {
+          const emailPayload = {
+            bookingData: {
+              id: bookingToCancel.id,
+              pickup_address: bookingToCancel.pickupAddress,
+              destination_address: bookingToCancel.destinationAddress,
+              scheduled_time: bookingToCancel.scheduledTime,
+              distance_km: bookingToCancel.distanceKm,
+              price_tnd: bookingToCancel.priceTnd,
+              notes: bookingToCancel.notes,
+              booking_url: window.location.origin + '/client-login'
+            },
+            clientData: {
+              first_name: bookingToCancel.clients?.first_name || '',
+              last_name: bookingToCancel.clients?.last_name || '',
+              email: clientEmail
+            },
+            driverData: {
+              first_name: bookingToCancel.drivers?.first_name || '',
+              last_name: bookingToCancel.drivers?.last_name || '',
+              email: bookingToCancel.drivers?.email || '',
+              phone: bookingToCancel.drivers?.phone || ''
+            },
+            status: 'cancelled',
+            cancelledBy: 'admin'
+          };
+
+          const emailResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailPayload)
+          });
+
+          const emailResult = await emailResponse.json().catch(() => null);
+          if (emailResponse.ok && emailResult?.success) {
+            console.log("✅ Emails d'annulation envoyés:", emailResult.message);
+          } else {
+            console.error("❌ Erreur envoi emails d'annulation:", emailResult?.error || emailResponse.statusText);
+          }
+        } else {
+          console.warn("⚠️ Email du client introuvable, notification non envoyée");
+        }
+      } catch (emailError) {
+        console.error("❌ Erreur lors de l'envoi des emails d'annulation:", emailError);
+      }
+
+      setBookings(prev =>
+        prev.map(b => (b.id === bookingToCancel.id ? { ...b, status: 'cancelled' } : b))
+      );
+      setBookingToCancel(null);
+    } catch (e) {
+      console.error("Erreur lors de l'annulation de la réservation:", e);
+      const msg = e instanceof Error ? e.message : "Erreur lors de l'annulation de la réservation.";
+      setCancelBookingError(msg);
+    } finally {
+      setCancellingBooking(false);
+    }
+  };
+
+  const validateSubscriptionPayment = async () => {
+    if (!selectedSubscription) return;
+    if (!paymentForm.reference.trim()) {
+      setPaymentValidationError('La référence de paiement est requise.');
+      return;
+    }
+
+    setValidatingPayment(true);
+    setPaymentValidationError(null);
+
+    try {
+      const nowIso = new Date().toISOString();
+      const { error } = await supabase
+        .from('driver_subscriptions')
+        .update({
+          payment_status: 'paid',
+          payment_method: paymentForm.method,
+          payment_date: nowIso,
+          payment_reference: paymentForm.reference.trim(),
+          status: 'active'
+        })
+        .eq('id', selectedSubscription.id);
+
+      if (error) throw error;
+
+      const patch = {
+        paymentStatus: 'paid' as const,
+        paymentMethod: paymentForm.method,
+        paymentDate: nowIso,
+        paymentReference: paymentForm.reference.trim(),
+        status: 'active' as const
+      };
+
+      setSubscriptions(prev => prev.map(s => (s.id === selectedSubscription.id ? { ...s, ...patch } : s)));
+      setSelectedSubscription(prev => (prev ? { ...prev, ...patch } : prev));
+    } catch (e) {
+      console.error('Erreur lors de la validation du paiement:', e);
+      const msg = e instanceof Error ? e.message : 'Erreur lors de la validation du paiement.';
+      setPaymentValidationError(msg);
+    } finally {
+      setValidatingPayment(false);
     }
   };
 
@@ -1649,8 +2059,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <div className="text-xs text-gray-500">
                           Statut: {booking.status}
                         </div>
+                        {['pending', 'accepted', 'in_progress'].includes(booking.status) && (
+                          <Button
+                            onClick={() => { setCancelBookingError(null); setBookingToCancel(booking); }}
+                            size="sm"
+                            className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 mt-1"
+                          >
+                            <XCircle size={16} />
+                            Annuler
+                          </Button>
+                        )}
                       </div>
                     </div>
+
+                    {['pending', 'accepted', 'in_progress'].includes(booking.status) && (
+                      <div className="mt-4 flex lg:hidden">
+                        <Button
+                          onClick={() => { setCancelBookingError(null); setBookingToCancel(booking); }}
+                          size="sm"
+                          className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                        >
+                          <XCircle size={16} />
+                          Annuler la réservation
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1836,13 +2269,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       
                       {/* Actions */}
                       <td className="px-3 py-3">
-                        <button
-                          onClick={() => setSelectedSubscription(subscription)}
-                          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                          title="Voir les détails"
-                        >
-                          <Eye size={14} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setSelectedSubscription(subscription)}
+                            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Voir les détails"
+                          >
+                            <Eye size={14} />
+                          </button>
+                          {subscription.paymentStatus === 'pending' && (
+                            <button
+                              onClick={() => setSelectedSubscription(subscription)}
+                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              title="Valider le paiement"
+                            >
+                              <CheckCircle size={14} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -2172,6 +2616,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         >
                             <Eye size={18} />
                         </button>
+                          <button
+                            onClick={() => openEditVehicle(vehicle)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-colors flex-shrink-0"
+                            title="Modifier le véhicule"
+                          >
+                            <Edit size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -2226,6 +2677,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         title="Voir les détails"
                       >
                         <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => openEditVehicle(vehicle)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Modifier le véhicule"
+                      >
+                        <Edit size={16} />
                       </button>
                       </div>
                     </div>
@@ -2948,12 +3406,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <h3 className="text-2xl font-bold text-gray-900">
                   Détails du chauffeur
                 </h3>
-                <button
-                  onClick={() => setSelectedDriver(null)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <XCircle size={24} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openEditDriver(selectedDriver)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  >
+                    <Edit size={18} />
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => setSelectedDriver(null)}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <XCircle size={24} />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -3407,19 +3874,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               {/* Actions for pending subscriptions */}
               {selectedSubscription.paymentStatus === 'pending' && (
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-orange-900 mb-3">Actions administratives</h4>
-                  <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-orange-900 mb-3">Valider le paiement</h4>
+                  <div className="space-y-4">
                     <p className="text-sm text-orange-800">
-                      Ce paiement est en attente de validation. Une fois le virement reçu, vous pouvez valider l'abonnement
-                      en mettant à jour directement dans la table <code className="bg-orange-100 px-1 rounded">driver_subscriptions</code>.
+                      Ce paiement est en attente. Une fois le virement (ou l'encaissement) reçu, validez l'abonnement
+                      ci-dessous : le statut passera à <span className="font-semibold">Payé</span> et l'abonnement sera activé.
                     </p>
-                    <div className="text-xs text-gray-600 bg-white rounded p-3 font-mono">
-                      <p>UPDATE driver_subscriptions</p>
-                      <p>SET payment_status = 'paid',</p>
-                      <p className="ml-4">payment_method = 'bank_transfer',</p>
-                      <p className="ml-4">payment_date = NOW(),</p>
-                      <p className="ml-4">payment_reference = 'REF-XXX'</p>
-                      <p>WHERE id = '{selectedSubscription.id}';</p>
+
+                    {paymentValidationError && (
+                      <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
+                        <span>{paymentValidationError}</span>
+                      </div>
+                    )}
+
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Méthode de paiement</label>
+                        <select
+                          value={paymentForm.method}
+                          onChange={(e) => setPaymentForm(f => ({ ...f, method: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="bank_transfer">Virement bancaire</option>
+                          <option value="cash">Espèces</option>
+                          <option value="card">Carte bancaire</option>
+                          <option value="other">Autre</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Référence de paiement</label>
+                        <input
+                          type="text"
+                          value={paymentForm.reference}
+                          onChange={(e) => setPaymentForm(f => ({ ...f, reference: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Ex: ABONNEMENT-XXXX"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={validateSubscriptionPayment}
+                        loading={validatingPayment}
+                        className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                      >
+                        <CheckCircle size={18} />
+                        {validatingPayment ? 'Validation...' : 'Valider le paiement'}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -3438,6 +3941,379 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </div>
       )}
 
+      {/* Cancel Booking Confirmation Modal */}
+      {bookingToCancel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle size={20} className="text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Annuler la réservation</h3>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">
+                Êtes-vous sûr de vouloir annuler la réservation{' '}
+                <span className="font-semibold text-gray-900">#{bookingToCancel.id.slice(-8)}</span>
+                {bookingToCancel.clients && (
+                  <> de <span className="font-semibold text-gray-900">{bookingToCancel.clients.first_name} {bookingToCancel.clients.last_name}</span></>
+                )}
+                {' '}? Cette action passera son statut à « Annulée », libérera le créneau de disponibilité du chauffeur et enverra un email de notification au client{bookingToCancel.drivers ? ' et au chauffeur' : ''}.
+              </p>
+
+              <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
+                <p className="text-gray-700"><span className="text-gray-500">Trajet :</span> {bookingToCancel.pickupAddress} → {bookingToCancel.destinationAddress}</p>
+                <p className="text-gray-700"><span className="text-gray-500">Date :</span> {new Date(bookingToCancel.scheduledTime).toLocaleString('fr-FR')}</p>
+              </div>
+
+              {cancelBookingError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
+                  <span>{cancelBookingError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex items-center justify-end gap-3">
+              <Button variant="outline" onClick={() => setBookingToCancel(null)} disabled={cancellingBooking}>
+                Retour
+              </Button>
+              <Button
+                onClick={handleCancelBooking}
+                loading={cancellingBooking}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {cancellingBooking ? 'Annulation...' : 'Confirmer l\'annulation'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Driver Edit Modal */}
+      {editingDriver && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-gray-900">Modifier le chauffeur</h3>
+                <button
+                  onClick={() => setEditingDriver(null)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  disabled={savingDriver}
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {driverEditError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
+                  <span>{driverEditError}</span>
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                  <input
+                    type="text"
+                    value={driverEditForm.firstName}
+                    onChange={(e) => setDriverEditForm(f => ({ ...f, firstName: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                  <input
+                    type="text"
+                    value={driverEditForm.lastName}
+                    onChange={(e) => setDriverEditForm(f => ({ ...f, lastName: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={driverEditForm.email}
+                    onChange={(e) => setDriverEditForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                  <input
+                    type="tel"
+                    value={driverEditForm.phone}
+                    onChange={(e) => setDriverEditForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
+                  <input
+                    type="text"
+                    value={driverEditForm.city}
+                    onChange={(e) => setDriverEditForm(f => ({ ...f, city: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Permis de conduire</label>
+                  <input
+                    type="text"
+                    value={driverEditForm.licenseNumber}
+                    onChange={(e) => setDriverEditForm(f => ({ ...f, licenseNumber: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex items-center justify-end gap-3">
+              <Button variant="outline" onClick={() => setEditingDriver(null)} disabled={savingDriver}>
+                Annuler
+              </Button>
+              <Button onClick={handleSaveDriver} loading={savingDriver}>
+                {savingDriver ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Client Edit Modal */}
+      {editingClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-gray-900">Modifier le client</h3>
+                <button
+                  onClick={() => setEditingClient(null)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  disabled={savingClient}
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {clientEditError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
+                  <span>{clientEditError}</span>
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                  <input
+                    type="text"
+                    value={clientEditForm.firstName}
+                    onChange={(e) => setClientEditForm(f => ({ ...f, firstName: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                  <input
+                    type="text"
+                    value={clientEditForm.lastName}
+                    onChange={(e) => setClientEditForm(f => ({ ...f, lastName: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={clientEditForm.email}
+                    onChange={(e) => setClientEditForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                  <input
+                    type="tel"
+                    value={clientEditForm.phone}
+                    onChange={(e) => setClientEditForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
+                  <input
+                    type="text"
+                    value={clientEditForm.city}
+                    onChange={(e) => setClientEditForm(f => ({ ...f, city: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex items-center justify-end gap-3">
+              <Button variant="outline" onClick={() => setEditingClient(null)} disabled={savingClient}>
+                Annuler
+              </Button>
+              <Button onClick={handleSaveClient} loading={savingClient}>
+                {savingClient ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vehicle Edit Modal */}
+      {editingVehicle && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-gray-900">Modifier le véhicule</h3>
+                <button
+                  onClick={() => setEditingVehicle(null)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  disabled={savingVehicle}
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+              {editingVehicle.driver && (
+                <p className="mt-1 text-sm text-gray-500">
+                  Chauffeur : {editingVehicle.driver.firstName} {editingVehicle.driver.lastName}
+                </p>
+              )}
+            </div>
+
+            <div className="p-6 space-y-4">
+              {vehicleEditError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
+                  <span>{vehicleEditError}</span>
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Marque</label>
+                  <input
+                    type="text"
+                    value={vehicleEditForm.make}
+                    onChange={(e) => setVehicleEditForm(f => ({ ...f, make: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Ex: Mercedes"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Modèle</label>
+                  <input
+                    type="text"
+                    value={vehicleEditForm.model}
+                    onChange={(e) => setVehicleEditForm(f => ({ ...f, model: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Ex: Classe E"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Année</label>
+                  <select
+                    value={vehicleEditForm.year}
+                    onChange={(e) => setVehicleEditForm(f => ({ ...f, year: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Sélectionner</option>
+                    {Array.from({ length: new Date().getFullYear() - 1990 + 1 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Couleur</label>
+                  <select
+                    value={vehicleEditForm.color}
+                    onChange={(e) => setVehicleEditForm(f => ({ ...f, color: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Sélectionner</option>
+                    {['Blanc','Noir','Gris','Argent','Bleu','Rouge','Vert','Jaune','Orange','Marron','Beige','Violet','Rose','Or','Bronze'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de places</label>
+                  <select
+                    value={vehicleEditForm.seats}
+                    onChange={(e) => setVehicleEditForm(f => ({ ...f, seats: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Sélectionner</option>
+                    {Array.from({ length: 99 }, (_, i) => i + 2).map(s => (
+                      <option key={s} value={s}>{s} places</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <select
+                    value={vehicleEditForm.type}
+                    onChange={(e) => setVehicleEditForm(f => ({ ...f, type: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Sélectionner</option>
+                    <option value="sedan">Berline</option>
+                    <option value="pickup">Pickup</option>
+                    <option value="van">Van</option>
+                    <option value="minibus">Minibus</option>
+                    <option value="bus">Bus</option>
+                    <option value="truck">Camion</option>
+                    <option value="utility">Utilitaire</option>
+                    <option value="taxi">Taxi</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Plaque d'immatriculation</label>
+                  <input
+                    type="text"
+                    value={vehicleEditForm.licensePlate}
+                    onChange={(e) => setVehicleEditForm(f => ({ ...f, licensePlate: e.target.value.toUpperCase() }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                    placeholder="Ex: 123 TUN 4567"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex items-center justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setEditingVehicle(null)}
+                disabled={savingVehicle}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleSaveVehicle}
+                loading={savingVehicle}
+              >
+                {savingVehicle ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Vehicle Detail Modal */}
       {selectedVehicle && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
@@ -3447,12 +4323,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <h3 className="text-2xl font-bold text-gray-900">
                   Détails du véhicule
                 </h3>
-                <button
-                  onClick={() => setSelectedVehicle(null)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <XCircle size={24} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openEditVehicle(selectedVehicle)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  >
+                    <Edit size={18} />
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => setSelectedVehicle(null)}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <XCircle size={24} />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -3904,12 +4789,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <h3 className="text-2xl font-bold text-gray-900">
                   Détails du client
                 </h3>
-                <button
-                  onClick={() => setSelectedClient(null)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <XCircle size={24} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openEditClient(selectedClient)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  >
+                    <Edit size={18} />
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => setSelectedClient(null)}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <XCircle size={24} />
+                  </button>
+                </div>
               </div>
             </div>
 

@@ -177,11 +177,15 @@ serve(async (req) => {
       console.log('Type de cancelledBy:', typeof cancelledBy);
       
       const cancelledByDriver = cancelledBy === 'driver';
+      const cancelledByAdmin = cancelledBy === 'admin';
       console.log('cancelledByDriver calculé:', cancelledByDriver);
+      console.log('cancelledByAdmin calculé:', cancelledByAdmin);
       
       emailSubject = cancelledByDriver 
         ? '❌ TuniDrive - Réservation annulée par le chauffeur'
-        : '❌ TuniDrive - Réservation annulée';
+        : cancelledByAdmin
+          ? '❌ TuniDrive - Réservation annulée par TuniDrive'
+          : '❌ TuniDrive - Réservation annulée';
       
       console.log('Email subject choisi:', emailSubject);
       
@@ -197,7 +201,9 @@ serve(async (req) => {
             <p style="font-size: 16px; line-height: 1.6; color: #555;">
               ${cancelledByDriver 
                 ? 'Nous sommes désolés de vous informer que votre chauffeur a dû <strong style="color: #ef4444;">annuler votre réservation</strong>.'
-                : 'Votre réservation a été <strong style="color: #ef4444;">annulée avec succès</strong>.'
+                : cancelledByAdmin
+                  ? 'Nous sommes désolés de vous informer que votre réservation a été <strong style="color: #ef4444;">annulée par notre équipe TuniDrive</strong>.'
+                  : 'Votre réservation a été <strong style="color: #ef4444;">annulée avec succès</strong>.'
               }
             </p>
             
@@ -293,9 +299,12 @@ serve(async (req) => {
         console.log('📧 Envoi email chauffeur à:', driverData.email)
         
         const cancelledByDriver = cancelledBy === 'driver';
+        const cancelledByAdmin = cancelledBy === 'admin';
         const driverEmailSubject = cancelledByDriver
           ? '❌ TuniDrive - Vous avez annulé une course'
-          : '❌ TuniDrive - Course annulée par le client';
+          : cancelledByAdmin
+            ? '❌ TuniDrive - Course annulée par TuniDrive'
+            : '❌ TuniDrive - Course annulée par le client';
         
         const driverEmailContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -309,7 +318,9 @@ serve(async (req) => {
               <p style="font-size: 16px; line-height: 1.6; color: #555;">
                 ${cancelledByDriver 
                   ? 'Vous avez annulé la course suivante :'
-                  : `Le client <strong>${clientData.first_name} ${clientData.last_name}</strong> a annulé sa réservation.`
+                  : cancelledByAdmin
+                    ? 'La course suivante a été <strong style="color: #ef4444;">annulée par l\'équipe TuniDrive</strong> :'
+                    : `Le client <strong>${clientData.first_name} ${clientData.last_name}</strong> a annulé sa réservation.`
                 }
               </p>
               
