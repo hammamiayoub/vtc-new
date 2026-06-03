@@ -61,18 +61,18 @@ export const seoData: Record<string, SEOData> = {
   },
   "privacy-policy": {
     title: "Politique de Confidentialité | TuniDrive Tunisie",
-    description: "Politique de confidentialité de TuniDrive. Protection des données personnelles des clients et chauffeurs privés en Tunisie. Transparence et sécurité garanties.",
-    keywords: "politique confidentialité Tunisie, protection données TuniDrive, RGPD Tunisie, confidentialité chauffeur privé Tunisie",
+    description: "Politique de confidentialité de TuniDrive. Protection des données des clients, chauffeurs VTC et transporteurs de colis Europe ↔ Tunisie.",
+    keywords: "politique confidentialité Tunisie, protection données TuniDrive, RGPD Tunisie, transport colis Tunisie, confidentialité transporteur",
     ogTitle: "Politique de Confidentialité | TuniDrive",
-    ogDescription: "Politique de confidentialité de TuniDrive. Protection des données personnelles des clients et chauffeurs en Tunisie.",
+    ogDescription: "Protection des données personnelles sur TuniDrive : VTC, devis colis internationaux et comptes transporteurs.",
     canonical: "/privacy-policy"
   },
   "terms-of-service": {
     title: "Conditions d'Utilisation | TuniDrive Tunisie",
-    description: "Conditions d'utilisation de TuniDrive. Règles et conditions pour l'utilisation des services de chauffeur privé, VTC et transport collectif en Tunisie.",
-    keywords: "conditions utilisation Tunisie, règles TuniDrive, chauffeur privé Tunisie, VTC Tunisie, transport collectif Tunisie",
+    description: "CGU TuniDrive : réservation VTC, devis transport de colis Europe ↔ Tunisie, obligations des chauffeurs et transporteurs partenaires.",
+    keywords: "conditions utilisation Tunisie, CGU TuniDrive, chauffeur privé Tunisie, transporteur colis Tunisie, VTC Tunisie",
     ogTitle: "Conditions d'Utilisation | TuniDrive",
-    ogDescription: "Conditions d'utilisation de TuniDrive. Règles pour l'utilisation des services de chauffeur privé en Tunisie.",
+    ogDescription: "Conditions générales d'utilisation de TuniDrive : mobilité VTC et mise en relation pour le transport international de colis.",
     canonical: "/terms-of-service"
   }
 };

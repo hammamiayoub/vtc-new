@@ -17,7 +17,9 @@ import { DriverSubscription } from './DriverSubscription';
 import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
 import { analytics } from '../utils/analytics';
-import { Driver, Booking } from '../types';
+import { Driver, Booking, DriverAcceptedParcelTrip } from '../types';
+import { fetchDriverAcceptedParcelTrips, completeParcelDelivery } from '../utils/parcelService';
+import { DriverParcelTripCard } from './DriverParcelTripCard';
 import { AppDownloadModal } from './AppDownloadModal';
 
 interface DriverDashboardProps {
@@ -27,6 +29,8 @@ interface DriverDashboardProps {
 export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) => {
   const [driver, setDriver] = useState<Driver | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [parcelTrips, setParcelTrips] = useState<DriverAcceptedParcelTrip[]>([]);
+  const [completingParcelRequestId, setCompletingParcelRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'vehicles' | 'bookings' | 'subscription' | 'parcel-requests'>('dashboard');
@@ -215,9 +219,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
           if (!bookingsData || bookingsData.length === 0) {
             setBookings([]);
-            return;
-          }
-
+          } else {
           // Récupérer les informations des clients pour chaque réservation
           const bookingsWithClients = await Promise.all(
             bookingsData.map(async (booking) => {
@@ -249,6 +251,21 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           })));
 
           setBookings(bookingsWithClients);
+          }
+
+          const isTransporteur =
+            driver.driverType === 'transporteur' || driver.driverType === 'both';
+          if (isTransporteur) {
+            try {
+              const trips = await fetchDriverAcceptedParcelTrips(driver.id);
+              setParcelTrips(trips);
+            } catch (parcelErr) {
+              console.error('Erreur récupération transports colis:', parcelErr);
+              setParcelTrips([]);
+            }
+          } else {
+            setParcelTrips([]);
+          }
         } catch (error) {
           console.error('Erreur:', error);
         }
@@ -257,6 +274,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
     fetchBookings();
   }, [driver]);
+
+  useEffect(() => {
+    if (activeTab !== 'bookings' || !driver?.id) return;
+    const isTransporteur =
+      driver.driverType === 'transporteur' || driver.driverType === 'both';
+    if (!isTransporteur) return;
+
+    fetchDriverAcceptedParcelTrips(driver.id)
+      .then(setParcelTrips)
+      .catch((err) => console.error('Erreur refresh colis (onglet courses):', err));
+  }, [activeTab, driver?.id, driver?.driverType]);
 
   // Fonction pour rafraîchir les réservations après une action
   const refreshBookings = async () => {
@@ -275,31 +303,40 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
         if (!bookingsData || bookingsData.length === 0) {
           setBookings([]);
-          return;
+        } else {
+          const bookingsWithClients = await Promise.all(
+            bookingsData.map(async (booking) => {
+              if (booking.client_id) {
+                const { data: clientData, error: clientError } = await supabase
+                  .from('clients')
+                  .select('first_name, last_name, phone, email')
+                  .eq('id', booking.client_id)
+                  .maybeSingle();
+
+                if (clientError) {
+                  console.error('Erreur récupération client:', clientError);
+                  return { ...booking, clients: null };
+                }
+
+                return { ...booking, clients: clientData };
+              }
+              return { ...booking, clients: null };
+            })
+          );
+
+          setBookings(bookingsWithClients);
         }
 
-        // Récupérer les informations des clients
-        const bookingsWithClients = await Promise.all(
-          bookingsData.map(async (booking) => {
-            if (booking.client_id) {
-              const { data: clientData, error: clientError } = await supabase
-                .from('clients')
-                .select('first_name, last_name, phone, email')
-                .eq('id', booking.client_id)
-                .maybeSingle();
-
-              if (clientError) {
-                console.error('Erreur récupération client:', clientError);
-                return { ...booking, clients: null };
-              }
-
-              return { ...booking, clients: clientData };
-            }
-            return { ...booking, clients: null };
-          })
-        );
-
-        setBookings(bookingsWithClients);
+        const isTransporteur =
+          driver.driverType === 'transporteur' || driver.driverType === 'both';
+        if (isTransporteur) {
+          try {
+            const trips = await fetchDriverAcceptedParcelTrips(driver.id);
+            setParcelTrips(trips);
+          } catch (parcelErr) {
+            console.error('Erreur refresh transports colis:', parcelErr);
+          }
+        }
       } catch (error) {
         console.error('Erreur refresh:', error);
       }
@@ -676,6 +713,101 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const completedBookings = bookings.filter(b => b.status === 'completed');
   const totalEarnings = completedBookings.reduce((sum, booking) => sum + booking.price_tnd, 0);
 
+  const activeParcelTrips = parcelTrips
+    .filter((t) => t.request.status === 'accepted')
+    .sort((a, b) => a.request.desiredDate.localeCompare(b.request.desiredDate));
+  const completedParcelTrips = parcelTrips
+    .filter((t) => t.request.status === 'completed')
+    .sort((a, b) => {
+      const aDate = a.request.completedAt || a.request.desiredDate;
+      const bDate = b.request.completedAt || b.request.desiredDate;
+      return bDate.localeCompare(aDate);
+    });
+
+  const reloadParcelTrips = async () => {
+    if (!driver?.id) return;
+    const isTransporteur =
+      driver.driverType === 'transporteur' || driver.driverType === 'both';
+    if (!isTransporteur) {
+      setParcelTrips([]);
+      return;
+    }
+    const trips = await fetchDriverAcceptedParcelTrips(driver.id);
+    setParcelTrips(trips);
+  };
+
+  useEffect(() => {
+    if (!driver?.id) return;
+    const isTransporteur =
+      driver.driverType === 'transporteur' || driver.driverType === 'both';
+    if (!isTransporteur) return;
+
+    const channel = supabase
+      .channel(`driver-parcel-trips-${driver.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'parcel_quote_proposals',
+          filter: `driver_id=eq.${driver.id}`,
+        },
+        () => {
+          fetchDriverAcceptedParcelTrips(driver.id)
+            .then(setParcelTrips)
+            .catch((err) => console.error('Realtime colis (proposals):', err));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'parcel_quote_requests',
+        },
+        () => {
+          fetchDriverAcceptedParcelTrips(driver.id)
+            .then(setParcelTrips)
+            .catch((err) => console.error('Realtime colis (requests):', err));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [driver?.id, driver?.driverType]);
+
+  const handleCompleteParcelDelivery = async (requestId: string) => {
+    if (
+      !window.confirm(
+        'Confirmer que la livraison a bien été effectuée ? Cette action clôture le transport.'
+      )
+    ) {
+      return;
+    }
+    setCompletingParcelRequestId(requestId);
+    try {
+      await completeParcelDelivery(requestId);
+      await reloadParcelTrips();
+    } catch (err) {
+      console.error('Erreur clôture livraison colis:', err);
+      alert(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de confirmer la livraison. Réessayez ou contactez le support.'
+      );
+    } finally {
+      setCompletingParcelRequestId(null);
+    }
+  };
+  const historyBookings = bookings.filter(
+    (b) => !['pending', 'accepted', 'in_progress'].includes(b.status)
+  );
+  const showParcelInBookings =
+    driver?.driverType === 'transporteur' || driver?.driverType === 'both';
+  const totalTripsCount = bookings.length + (showParcelInBookings ? parcelTrips.length : 0);
+
   console.log('📊 Statistiques chauffeur:', {
     totalBookings: bookings.length,
     pendingBookings: pendingBookings.length,
@@ -835,7 +967,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Mes courses ({bookings.length})
+              Mes courses ({totalTripsCount})
               {pendingBookings.length > 0 && (
                 <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
                   {pendingBookings.length}
@@ -851,8 +983,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <Package size={14} className="hidden sm:inline" />
-                Demandes colis
+                Mes devis de colis
               </button>
             )}
             <button
@@ -932,7 +1063,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {showProfileForm && driver && activeTab === 'dashboard' && (
           <div className="mb-8">
             <DriverProfileForm
-              driverId={driver.id} 
+              driverId={driver.id}
+              initialDriverType={driver.driverType}
               onProfileComplete={handleProfileComplete}
             />
           </div>
@@ -1324,6 +1456,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               <p><strong>Accepter / Refuser :</strong> dans “Nouvelles demandes”, utilisez les boutons <em>Accepter</em> ou <em>Refuser</em>. Si le délai est dépassé, contactez le client.</p>
               <p><strong>Démarrer :</strong> une fois la course acceptée, appuyez sur <em>Commencer</em> quand vous êtes prêt à prendre en charge le client.</p>
               <p><strong>Terminer :</strong> après avoir déposé le client, marquez la course comme terminée via le bouton prévu dans les actions.</p>
+              {showParcelInBookings && (
+                <p>
+                  <strong>Colis :</strong> lorsqu&apos;un client accepte votre devis, le transport apparaît ci-dessous.
+                  Une fois la marchandise livrée, cliquez sur <em>Livraison effectuée</em> pour archiver le trajet.
+                </p>
+              )}
             </div>
             {/* Nouvelles demandes - Statut 'pending' */}
             {pendingBookings.length > 0 && (
@@ -1604,6 +1742,32 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               </div>
             )}
 
+            {/* Transports colis programmés */}
+            {showParcelInBookings && activeParcelTrips.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Package className="w-5 h-5 text-gray-700" />
+                    Transports colis en cours ({activeParcelTrips.length})
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    Devis acceptés — à livrer puis à clôturer avec le bouton dédié
+                  </p>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {activeParcelTrips.map((trip) => (
+                    <DriverParcelTripCard
+                      key={trip.proposalId}
+                      trip={trip}
+                      variant="active"
+                      onMarkDelivered={handleCompleteParcelDelivery}
+                      isCompleting={completingParcelRequestId === trip.request.id}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Courses en cours */}
             {bookings.filter(b => b.status === 'in_progress').length > 0 && (
               <div className="bg-white rounded-xl shadow-sm">
@@ -1694,24 +1858,31 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               </div>
             )}
 
-            {/* Historique des courses */}
+            {/* Historique */}
             <div className="bg-white rounded-xl shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Historique des courses</h3>
-                <p className="text-sm sm:text-base text-gray-600">Toutes vos courses passées</p>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Historique</h3>
+                <p className="text-sm sm:text-base text-gray-600">
+                  Courses VTC terminées ou annulées et transports colis passés
+                </p>
               </div>
               
-              {bookings.length === 0 ? (
+              {historyBookings.length === 0 &&
+              (!showParcelInBookings || completedParcelTrips.length === 0) ? (
                 <div className="text-center py-12">
                   <Car size={48} className="text-gray-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">Aucune course</h4>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">Aucun historique</h4>
                   <p className="text-gray-500">
-                    Vous n'avez pas encore reçu de demande de course.
+                    Vos courses et transports colis acceptés apparaîtront ici.
                   </p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200">
-                  {bookings.filter(b => !['pending', 'accepted', 'in_progress'].includes(b.status)).map((booking) => (
+                  {showParcelInBookings &&
+                    completedParcelTrips.map((trip) => (
+                      <DriverParcelTripCard key={trip.proposalId} trip={trip} variant="completed" />
+                    ))}
+                  {historyBookings.map((booking) => (
                     <div key={booking.id} className="p-6">
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                         <div className="flex-1 min-w-0">

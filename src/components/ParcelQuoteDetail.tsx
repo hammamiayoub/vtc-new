@@ -146,11 +146,33 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
         )}
       </div>
 
-      {acceptedProposal && (
+      {request.status === 'completed' && acceptedProposal && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-3">
+            <CheckCircle className="text-emerald-600" size={20} />
+            <h3 className="font-semibold text-emerald-900">Livraison effectuée</h3>
+          </div>
+          <p className="text-lg font-bold text-emerald-800 mb-2">
+            {acceptedProposal.price} {acceptedProposal.currency}
+          </p>
+          {request.completedAt && (
+            <p className="text-sm text-emerald-800">
+              Clôturée le {new Date(request.completedAt).toLocaleString('fr-FR')}
+            </p>
+          )}
+          {acceptedProposal.drivers && (
+            <p className="text-sm text-emerald-900 mt-2">
+              Transporteur : {acceptedProposal.drivers.first_name} {acceptedProposal.drivers.last_name}
+            </p>
+          )}
+        </div>
+      )}
+
+      {request.status === 'accepted' && acceptedProposal && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle className="text-green-600" size={20} />
-            <h3 className="font-semibold text-green-900">Offre acceptée</h3>
+            <h3 className="font-semibold text-green-900">Offre acceptée — livraison en cours</h3>
           </div>
           <p className="text-lg font-bold text-green-800 mb-3">
             {acceptedProposal.price} {acceptedProposal.currency}

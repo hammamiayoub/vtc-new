@@ -219,16 +219,31 @@ export const uploadParcelAttachment = async (
     throw new Error("Impossible d'obtenir l'URL du fichier");
   }
 
-  const { data: row, error: insertError } = await supabase
+  const insertPayload = {
+    request_id: requestId,
+    photo_url: urlData.publicUrl,
+    document_type: documentType,
+  };
+
+  let { data: row, error: insertError } = await supabase
     .from('parcel_photos')
-    .insert({
-      request_id: requestId,
-      photo_url: urlData.publicUrl,
-      document_type: documentType,
-    })
+    .insert(insertPayload)
     .select('id, photo_url, document_type')
     .single();
-  if (insertError) {
+
+  // Prod sans migration document_type : repli (tout enregistré comme photo côté UI)
+  if (insertError?.code === 'PGRST204' && insertError.message?.includes('document_type')) {
+    console.warn('⚠️ Colonne document_type absente — insertion sans ce champ (appliquer la migration en prod)');
+    const fallback = await supabase
+      .from('parcel_photos')
+      .insert({ request_id: requestId, photo_url: urlData.publicUrl })
+      .select('id, photo_url')
+      .single();
+    row = fallback.data;
+    insertError = fallback.error;
+  }
+
+  if (insertError || !row) {
     console.error('🚨 Erreur insertion parcel_photos:', insertError);
     throw new Error("Erreur lors de l'enregistrement du fichier");
   }
@@ -236,7 +251,7 @@ export const uploadParcelAttachment = async (
   return {
     id: row.id,
     photoUrl: row.photo_url,
-    documentType: row.document_type as 'photo' | 'invoice',
+    documentType: (row.document_type as 'photo' | 'invoice' | undefined) ?? documentType,
   };
 };
 

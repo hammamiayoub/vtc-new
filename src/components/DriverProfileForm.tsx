@@ -7,22 +7,27 @@ import { Select } from './ui/Select';
 import { Button } from './ui/Button';
 import { CityInput } from './ui/CityInput';
 import { driverProfileSchema, normalizePhone } from '../utils/validation';
-import { DriverProfileData } from '../types';
+import { DriverProfileData, Driver } from '../types';
+import { DRIVER_ACTIVITY_PROFILE_OPTIONS } from '../utils/driverActivity';
 import { supabase } from '../lib/supabase';
 
 interface DriverProfileFormProps {
   driverId: string;
+  initialDriverType?: Driver['driverType'];
   onProfileComplete: () => void;
 }
 
 export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({ 
-  driverId, 
+  driverId,
+  initialDriverType = 'vtc',
   onProfileComplete 
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [cityValue, setCityValue] = useState('');
-  const [driverType, setDriverType] = useState<'vtc' | 'transporteur' | 'both'>('vtc');
+  const [driverType, setDriverType] = useState<'vtc' | 'transporteur' | 'both'>(
+    initialDriverType ?? 'vtc'
+  );
 
   const {
     register,
@@ -166,12 +171,18 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
             onChange={(e) => setDriverType(e.target.value as 'vtc' | 'transporteur' | 'both')}
             className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="vtc">Transport de personnes (VTC)</option>
-            <option value="transporteur">Transport de colis international</option>
-            <option value="both">Les deux activités</option>
+            {DRIVER_ACTIVITY_PROFILE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
           <p className="text-xs text-gray-500 mt-2">
-            Les transporteurs de colis reçoivent les demandes Europe ↔ Tunisie correspondant à leurs disponibilités.
+            {driverType === 'transporteur'
+              ? 'Vous recevrez les demandes de colis Europe ↔ Tunisie selon vos disponibilités.'
+              : driverType === 'both'
+              ? 'Courses de personnes et demandes de colis internationales.'
+              : 'Vous recevrez des demandes de courses de personnes.'}
           </p>
         </div>
 

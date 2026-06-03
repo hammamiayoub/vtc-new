@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Car, Package } from 'lucide-react';
 import { Button } from './ui/Button';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
-import { signupSchema } from '../utils/validation';
-import { SignupFormData } from '../types';
+import { driverSignupSchema } from '../utils/validation';
+import { DriverSignupFormData } from '../types';
+import { DRIVER_ACTIVITY_SIGNUP_OPTIONS } from '../utils/driverActivity';
 import { supabase } from '../lib/supabase';
 
 interface DriverSignupProps {
@@ -17,6 +18,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [registeredActivityType, setRegisteredActivityType] = useState<'vtc' | 'transporteur'>('vtc');
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -24,14 +26,19 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
     handleSubmit,
     watch,
     formState: { errors, isValid }
-  } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-    mode: 'onChange'
+  } = useForm<DriverSignupFormData>({
+    resolver: zodResolver(driverSignupSchema),
+    mode: 'onChange',
+    defaultValues: {
+      activityType: 'vtc',
+    },
   });
 
   const watchPassword = watch('password', '');
 
-  const onSubmit = async (data: SignupFormData) => {
+  const watchActivityType = watch('activityType');
+
+  const onSubmit = async (data: DriverSignupFormData) => {
     setIsSubmitting(true);
     setError(null);
     
@@ -134,7 +141,8 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             id: authData.user.id,
             first_name: data.firstName,
             last_name: data.lastName,
-            email: data.email
+            email: data.email,
+            driver_type: data.activityType,
           });
 
         if (profileError) {
@@ -189,6 +197,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
       }
 
       console.log('🎉 Inscription terminée avec succès');
+      setRegisteredActivityType(data.activityType);
       setSubmitSuccess(true);
       
     } catch (error) {
@@ -238,14 +247,18 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               <li>• Vérifiez votre boîte email (et le dossier spam)</li>
               <li>• Cliquez sur le lien de confirmation</li>
               <li>• Connectez-vous à votre compte chauffeur</li>
-              <li>• Complétez votre profil et commencez à recevoir des courses !</li>
+              <li>• Complétez votre profil et commencez à recevoir des demandes !</li>
             </ul>
           </div>
 
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
             <h4 className="font-semibold text-green-800 mb-2">🚗 Bienvenue dans l'équipe TuniDrive !</h4>
             <p className="text-green-700 text-sm">
-              Une fois votre compte activé, vous pourrez compléter votre profil chauffeur et commencer à recevoir des demandes de courses.
+              Une fois votre compte activé, complétez votre profil pour recevoir des{' '}
+              {registeredActivityType === 'transporteur'
+                ? 'demandes de transport de colis'
+                : 'courses de personnes'}
+              .
             </p>
           </div>
 
@@ -273,10 +286,10 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                Devenez chauffeur
+                Devenez partenaire TuniDrive
               </h1>
               <p className="text-gray-600 text-lg">
-                Rejoignez TuniDrive - notre réseau de chauffeurs professionnels
+                Transport de personnes ou de colis — choisissez votre activité
               </p>
             </div>
 
@@ -286,6 +299,58 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   <p className="text-red-800 text-sm">{error}</p>
                 </div>
               )}
+
+              <div>
+                <p className="text-sm font-medium text-gray-900 mb-3">
+                  Type d&apos;activité *
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {DRIVER_ACTIVITY_SIGNUP_OPTIONS.map((option) => {
+                    const selected = watchActivityType === option.value;
+                    const Icon = option.value === 'vtc' ? Car : Package;
+                    return (
+                      <label
+                        key={option.value}
+                        className={`relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                          selected
+                            ? option.value === 'vtc'
+                              ? 'border-black bg-gray-50 ring-1 ring-black'
+                              : 'border-blue-600 bg-blue-50 ring-1 ring-blue-600'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          value={option.value}
+                          {...register('activityType')}
+                          className="sr-only"
+                        />
+                        <Icon
+                          size={28}
+                          className={
+                            option.value === 'vtc'
+                              ? selected
+                                ? 'text-gray-900'
+                                : 'text-gray-500'
+                              : selected
+                              ? 'text-blue-600'
+                              : 'text-gray-500'
+                          }
+                        />
+                        <span className="font-semibold text-gray-900 mt-2 text-sm">
+                          {option.label}
+                        </span>
+                        <span className="text-xs text-gray-600 mt-1 leading-snug">
+                          {option.description}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {errors.activityType && (
+                  <p className="mt-2 text-sm text-red-600">{errors.activityType.message}</p>
+                )}
+              </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="relative">
@@ -430,7 +495,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 disabled={!isValid || isSubmitting}
                 className="w-full py-4 text-lg"
               >
-                {isSubmitting ? 'Création du compte...' : 'Créer mon compte chauffeur'}
+                {isSubmitting ? 'Création du compte...' : 'Créer mon compte partenaire'}
               </Button>
 
 
@@ -463,12 +528,15 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
           {/* Right side - Benefits */}
           <div className="lg:w-96 bg-black p-8 lg:p-12 text-white">
-            <h2 className="text-3xl font-bold mb-8">Avantages chauffeur</h2>
+            <h2 className="text-3xl font-bold mb-8">Avantages partenaire</h2>
             <div className="space-y-6">
               {[
+                watchActivityType === 'transporteur'
+                  ? 'Demandes de colis Europe ↔ Tunisie'
+                  : 'Courses de personnes sur demande',
                 'Revenus attractifs et transparents',
                 'Flexibilité totale des horaires',
-                'Support 24/7 dédiée aux chauffeurs'
+                'Support 24/7 dédié aux partenaires',
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <CheckCircle size={20} className="text-gray-400 flex-shrink-0" />
