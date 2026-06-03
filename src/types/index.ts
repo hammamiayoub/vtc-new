@@ -75,6 +75,10 @@ export interface SignupFormData {
   confirmPassword: string;
 }
 
+export interface DriverSignupFormData extends SignupFormData {
+  activityType: 'vtc' | 'transporteur';
+}
+
 export interface AuthState {
   user: Driver | null;
   loading: boolean;
@@ -213,7 +217,13 @@ export interface RatingFormData {
 // Transport international de colis (devis)
 // ============================================================
 export type ParcelDirection = 'europe_to_tunisia' | 'tunisia_to_europe';
-export type ParcelRequestStatus = 'pending' | 'quoted' | 'accepted' | 'cancelled' | 'expired';
+export type ParcelRequestStatus =
+  | 'pending'
+  | 'quoted'
+  | 'accepted'
+  | 'completed'
+  | 'cancelled'
+  | 'expired';
 export type ParcelProposalStatus = 'sent' | 'accepted' | 'rejected';
 export type ParcelCurrency = 'EUR' | 'TND';
 
@@ -254,6 +264,7 @@ export interface ParcelQuoteRequest {
   notes?: string;
   status: ParcelRequestStatus;
   acceptedProposalId?: string;
+  completedAt?: string;
   createdAt: string;
   updatedAt: string;
   items?: ParcelItem[];
@@ -265,6 +276,16 @@ export interface ParcelQuoteRequest {
     email?: string;
     phone?: string;
   };
+}
+
+/** Transport colis accepté par le client, pour l'historique chauffeur/transporteur */
+export interface DriverAcceptedParcelTrip {
+  proposalId: string;
+  price: number;
+  currency: ParcelCurrency;
+  estimatedDeliveryDate?: string;
+  acceptedAt: string;
+  request: ParcelQuoteRequest;
 }
 
 export interface ParcelProposal {

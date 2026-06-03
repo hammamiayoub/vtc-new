@@ -4,6 +4,7 @@ import type {
   ParcelItem,
   ParcelProposal,
   ParcelDirection,
+  DriverAcceptedParcelTrip,
 } from '../types';
 
 function mapItem(row: Record<string, unknown>): ParcelItem {
@@ -68,6 +69,7 @@ export function mapRequest(row: Record<string, unknown>): ParcelQuoteRequest {
     notes: row.notes as string | undefined,
     status: row.status as ParcelQuoteRequest['status'],
     acceptedProposalId: row.accepted_proposal_id as string | undefined,
+    completedAt: row.completed_at as string | undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
     items: items?.map(mapItem),
@@ -129,6 +131,108 @@ export async function fetchParcelRequestById(requestId: string): Promise<ParcelQ
 
   if (error) throw error;
   return data ? mapRequest(data) : null;
+}
+
+function mapRpcParcelTrip(row: Record<string, unknown>): DriverAcceptedParcelTrip {
+  const requestPayload = row.request as Record<string, unknown>;
+  const request = mapRequest({
+    ...requestPayload,
+    parcel_items: requestPayload.parcel_items,
+    clients: requestPayload.clients,
+  });
+
+  return {
+    proposalId: row.proposal_id as string,
+    price: Number(row.price),
+    currency: row.currency as DriverAcceptedParcelTrip['currency'],
+    estimatedDeliveryDate: row.estimated_delivery_date as string | undefined,
+    acceptedAt: row.accepted_at as string,
+    request,
+  };
+}
+
+/** Fallback PostgREST si la RPC n'est pas encore déployée */
+async function fetchDriverAcceptedParcelTripsLegacy(
+  driverId: string
+): Promise<DriverAcceptedParcelTrip[]> {
+  const { data, error } = await supabase
+    .from('parcel_quote_proposals')
+    .select(
+      `
+      *,
+      parcel_quote_requests!inner(
+        *,
+        parcel_items(*),
+        clients(first_name, last_name, email, phone)
+      )
+    `
+    )
+    .eq('driver_id', driverId)
+    .eq('status', 'accepted')
+    .order('updated_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data || [])
+    .map((row) => {
+      const requestRow = row.parcel_quote_requests as Record<string, unknown>;
+      const request = mapRequest(requestRow);
+      if (
+        !['accepted', 'completed'].includes(request.status) ||
+        request.acceptedProposalId !== row.id
+      ) {
+        return null;
+      }
+      return {
+        proposalId: row.id as string,
+        price: Number(row.price),
+        currency: row.currency as DriverAcceptedParcelTrip['currency'],
+        estimatedDeliveryDate: row.estimated_delivery_date as string | undefined,
+        acceptedAt: row.updated_at as string,
+        request,
+      };
+    })
+    .filter((t): t is DriverAcceptedParcelTrip => t !== null);
+}
+
+/** Demandes colis dont la proposition du transporteur a été acceptée par le client */
+export async function fetchDriverAcceptedParcelTrips(
+  driverId: string
+): Promise<DriverAcceptedParcelTrip[]> {
+  await expireOldParcelRequests();
+
+  const { data, error } = await supabase.rpc('get_driver_accepted_parcel_trips', {
+    p_driver_id: driverId,
+  });
+
+  if (error) {
+    const missingRpc =
+      error.code === 'PGRST202' ||
+      error.message?.includes('get_driver_accepted_parcel_trips') ||
+      error.message?.includes('Could not find the function');
+    if (missingRpc) {
+      console.warn(
+        'RPC get_driver_accepted_parcel_trips absente — repli sur requête directe. Appliquez la migration SQL.'
+      );
+      return fetchDriverAcceptedParcelTripsLegacy(driverId);
+    }
+    throw error;
+  }
+
+  const rows = Array.isArray(data) ? data : [];
+  return rows.map((row) => mapRpcParcelTrip(row as Record<string, unknown>));
+}
+
+export async function completeParcelDelivery(requestId: string): Promise<ParcelQuoteRequest> {
+  const { error } = await supabase.rpc('complete_parcel_delivery', {
+    p_request_id: requestId,
+  });
+
+  if (error) throw error;
+
+  const full = await fetchParcelRequestById(requestId);
+  if (!full) throw new Error('Demande introuvable après clôture');
+  return full;
 }
 
 export async function fetchTransporteurParcelRequests(): Promise<ParcelQuoteRequest[]> {
@@ -289,6 +393,7 @@ export function statusLabel(status: ParcelQuoteRequest['status']): string {
     pending: 'En attente de propositions',
     quoted: 'Propositions reçues',
     accepted: 'Offre acceptée',
+    completed: 'Livraison effectuée',
     cancelled: 'Annulée',
     expired: 'Expirée',
   };

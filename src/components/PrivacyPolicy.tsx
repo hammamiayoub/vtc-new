@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Shield, Eye, Lock, Users, FileText, Mail, Calendar } from 'lucide-react';
+import { ArrowLeft, Shield, Eye, Lock, Users, FileText, Mail, Calendar, Package } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface PrivacyPolicyProps {
@@ -46,9 +46,11 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
           {/* Introduction */}
           <div className="prose max-w-none">
             <p className="text-lg text-gray-700 mb-8 leading-relaxed">
-              La présente Politique de confidentialité décrit la manière dont TuniDrive.net collecte, 
-              utilise, conserve et protège vos données personnelles lorsque vous utilisez notre 
-              plateforme de réservation de véhicules de transport avec chauffeur (VTC) en Tunisie.
+              La présente Politique de confidentialité décrit la manière dont TuniDrive.net collecte,
+              utilise, conserve et protège vos données personnelles lorsque vous utilisez notre plateforme
+              pour réserver des trajets VTC, déposer des demandes de devis pour le transport international
+              de colis et marchandises (Europe ↔ Tunisie), ou proposer vos services en tant que chauffeur
+              ou transporteur partenaire.
             </p>
 
             {/* Section 1 */}
@@ -71,8 +73,25 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 </div>
                 
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">Informations de réservation :</h4>
-                  <p className="text-gray-700">adresses de départ et d'arrivée, date, heure, détails du trajet.</p>
+                  <h4 className="font-semibold text-gray-900 mb-2">Informations de réservation VTC :</h4>
+                  <p className="text-gray-700">adresses de départ et d&apos;arrivée, date, heure, détails du trajet.</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Demandes de devis colis :</h4>
+                  <p className="text-gray-700">
+                    direction du trajet (Europe → Tunisie ou inverse), adresses, date souhaitée, description des objets
+                    (nom, quantité, poids, volume), notes, photos et documents joints (factures, justificatifs), propositions
+                    de prix des transporteurs et statut de la demande.
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Profil chauffeur / transporteur :</h4>
+                  <p className="text-gray-700">
+                    type d&apos;activité (transport de personnes, transport de colis, ou les deux), disponibilités,
+                    véhicules, ville, permis et informations professionnelles fournies à l&apos;inscription ou dans le profil.
+                  </p>
                 </div>
                 
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -112,11 +131,19 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Mettre en relation les clients avec les chauffeurs partenaires.</span>
+                  <span className="text-gray-700">Mettre en relation les clients avec les chauffeurs et transporteurs partenaires.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Assurer le suivi des réservations et l'historique des trajets.</span>
+                  <span className="text-gray-700">Gérer les demandes de devis colis, le matching selon les disponibilités et la comparaison des propositions.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <span className="text-gray-700">Assurer le suivi des réservations VTC et l&apos;historique des demandes de transport.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <span className="text-gray-700">Permettre l&apos;échange de coordonnées entre client et transporteur après acceptation d&apos;un devis.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
@@ -148,8 +175,11 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               
               <div className="space-y-4">
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-orange-900 mb-2">Les chauffeurs partenaires :</h4>
-                  <p className="text-orange-800">uniquement les données nécessaires pour réaliser le trajet (nom, numéro de téléphone, adresse de départ et d'arrivée).</p>
+                  <h4 className="font-semibold text-orange-900 mb-2">Les chauffeurs et transporteurs partenaires :</h4>
+                  <p className="text-orange-800">
+                    uniquement les données nécessaires à la prestation : pour un trajet VTC (nom, téléphone, adresses) ;
+                    pour un devis colis (éléments de la demande, coordonnées après acceptation du devis par le client).
+                  </p>
                 </div>
                 
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
@@ -185,7 +215,12 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 </p>
                 
                 <p className="text-gray-700">
-                  Certaines données (facturation, historiques de réservation) peuvent être conservées conformément aux obligations légales tunisiennes.
+                  Certaines données (facturation, historiques de réservation, demandes et propositions de devis colis, pièces jointes)
+                  peuvent être conservées conformément aux obligations légales et pour la gestion des litiges éventuels.
+                </p>
+                <p className="text-gray-700">
+                  Les photos et documents liés aux colis sont hébergés sur nos serveurs sécurisés et accessibles uniquement
+                  aux personnes autorisées (client concerné, transporteurs sollicités, administration TuniDrive).
                 </p>
                 
                 <p className="text-gray-700">
@@ -304,13 +339,46 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               </div>
             </div>
 
-            {/* Section 8 */}
+            {/* Section 8 — Colis */}
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Package size={24} className="text-gray-700" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">8. Données relatives au transport de colis</h2>
+              </div>
+
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gray-600 rounded-full mt-2"></div>
+                  <span className="text-gray-700">
+                    En déposant une demande, vous êtes informé que les transporteurs correspondant à votre date et à votre trajet
+                    pourront consulter les informations et pièces jointes utiles à l&apos;établissement d&apos;un devis.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gray-600 rounded-full mt-2"></div>
+                  <span className="text-gray-700">
+                    Nous vous recommandons de ne pas joindre de documents contenant des données sensibles non nécessaires au transport.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gray-600 rounded-full mt-2"></div>
+                  <span className="text-gray-700">
+                    Les notifications par email (nouvelle demande, proposition, acceptation) peuvent contenir un résumé de la demande
+                    sans inclure l&apos;ensemble des pièces jointes.
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Section 9 */}
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <FileText size={24} className="text-gray-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">8. Modifications de la politique</h2>
+                <h2 className="text-2xl font-bold text-gray-900">9. Modifications de la politique</h2>
               </div>
               
               <div className="space-y-4">
@@ -323,13 +391,13 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               </div>
             </div>
 
-            {/* Section 9 */}
+            {/* Section 10 */}
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <Mail size={24} className="text-green-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">9. Contact</h2>
+                <h2 className="text-2xl font-bold text-gray-900">10. Contact</h2>
               </div>
               
               <p className="text-gray-700 mb-4">

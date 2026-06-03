@@ -16,8 +16,8 @@ export const Footer: React.FC<FooterProps> = () => {
           <div className="md:col-span-2">
             <h3 className="text-2xl font-bold mb-4">TuniDrive</h3>
             <p className="text-gray-300 mb-4 max-w-md">
-              Votre plateforme de transport privé en Tunisie. 
-              Des trajets fiables avec des chauffeurs professionnels.
+              Mobilité et transport en Tunisie : courses VTC avec chauffeurs professionnels
+              et transport de colis <p className="text-gray-300">Europe ↔ Tunisie.</p>
             </p>
             <div className="flex items-center gap-2 text-gray-400">
               <span>Fait avec</span>
@@ -35,8 +35,8 @@ export const Footer: React.FC<FooterProps> = () => {
                   to="/signup" 
                   className="hover:text-white transition-colors flex items-center gap-2"
                 >
-                  <Car size={16} />
-                  Devenir chauffeur
+                  <Car size={24} />
+                  Devenir chauffeur ou transporteur
                 </Link>
               </li>
               <li>

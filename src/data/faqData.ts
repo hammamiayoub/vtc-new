@@ -65,6 +65,73 @@ export const faqCategories: FaqCategory[] = [
         answer:
           "À la fin de votre course, une fenêtre de notation apparaît automatiquement. Vous pouvez attribuer une note de 1 à 5 étoiles et laisser un commentaire. Votre avis est précieux pour maintenir la qualité du service.",
       },
+      {
+        id: "c9",
+        question: "Puis-je aussi envoyer des colis via TuniDrive ?",
+        answer:
+          "Oui ! En plus des courses VTC, TuniDrive propose le transport international de colis et marchandises entre l'Europe et la Tunisie.\n\nConnectez-vous à votre espace client, onglet « Transport colis », puis déposez une demande de devis. Pour plus de détails, choisissez la catégorie « Transport de colis » ci-dessous.",
+      },
+    ],
+  },
+  {
+    id: "parcel",
+    label: "Transport de colis",
+    emoji: "📦",
+    items: [
+      {
+        id: "p1",
+        question: "Comment demander un devis pour un colis ?",
+        answer:
+          "Créez un compte client ou connectez-vous, puis ouvrez l'onglet « Transport colis » dans votre tableau de bord.\n\nRenseignez la direction (Europe → Tunisie ou Tunisie → Europe), les adresses, la date souhaitée, la description de vos objets et ajoutez des photos ou factures si besoin. Votre demande est envoyée aux transporteurs correspondants.",
+      },
+      {
+        id: "p2",
+        question: "Quels trajets sont couverts ?",
+        answer:
+          "Le service concerne le transport international de colis et marchandises entre l'Europe et la Tunisie, dans les deux sens :\n• Europe → Tunisie\n• Tunisie → Europe\n\nLes adresses sont saisies via l'autocomplétion dédiée à ces zones.",
+      },
+      {
+        id: "p3",
+        question: "Comment sont fixés les prix ?",
+        answer:
+          "Les transporteurs partenaires vous envoient des propositions de prix libres. Vous les comparez dans votre espace client et acceptez l'offre qui vous convient.\n\nLes autres propositions sont alors automatiquement refusées. Le tarif est en EUR pour un envoi Europe → Tunisie, et en TND pour Tunisie → Europe.",
+      },
+      {
+        id: "p4",
+        question: "Puis-je joindre des photos ou des factures ?",
+        answer:
+          "Oui. Lors de la création de votre demande, vous pouvez ajouter des photos de vos colis et des documents (factures, justificatifs) pour aider les transporteurs à établir un devis précis.",
+      },
+      {
+        id: "p5",
+        question: "Que se passe-t-il après avoir accepté un devis ?",
+        answer:
+          "Une fois que vous acceptez une proposition, le transporteur est notifié par email. Vos coordonnées peuvent alors être échangées pour organiser l'enlèvement et la livraison.\n\nTuniDrive facilite la mise en relation : le contrat et le paiement se font directement entre vous et le transporteur retenu.",
+      },
+      {
+        id: "p6",
+        question: "Comment devenir transporteur de colis ?",
+        answer:
+          "Cliquez sur « Devenir chauffeur / transporteur » depuis l'accueil. À l'inscription, choisissez « Transport de colis » (ou « Les deux activités » plus tard depuis votre profil).\n\nComplétez votre profil, vos véhicules et vos disponibilités : vous recevrez les demandes correspondant à vos dates.",
+      },
+      {
+        id: "p7",
+        question: "Comment recevoir et répondre aux demandes (transporteur) ?",
+        answer:
+          "Connectez-vous à votre espace chauffeur/transporteur. Si votre type d'activité inclut le transport de colis, l'onglet « Demandes colis » affiche les demandes compatibles avec vos disponibilités.\n\nVous proposez votre prix, un délai estimé et un message. Le client est notifié par email de votre proposition.",
+      },
+      {
+        id: "p8",
+        question: "Puis-je être chauffeur VTC et transporteur de colis ?",
+        answer:
+          "Oui. Depuis votre profil, vous pouvez sélectionner « Les deux activités ». Vous recevrez alors les demandes de courses de personnes et les demandes de devis colis internationaux, selon vos disponibilités et votre type de véhicule.",
+      },
+      {
+        id: "p9",
+        question: "Une demande de devis peut-elle expirer ?",
+        answer:
+          "Oui. Si aucune proposition n'est acceptée dans le délai prévu, la demande peut passer au statut « expiré ». Vous pouvez en déposer une nouvelle à tout moment depuis votre espace client.",
+      },
     ],
   },
   {
@@ -74,9 +141,9 @@ export const faqCategories: FaqCategory[] = [
     items: [
       {
         id: "d1",
-        question: "Comment m'inscrire comme chauffeur ?",
+        question: "Comment m'inscrire comme chauffeur ou transporteur ?",
         answer:
-          "Cliquez sur « Devenir chauffeur » depuis la page d'accueil. Remplissez le formulaire d'inscription avec vos informations personnelles, les détails de votre véhicule et vos documents (permis, assurance, etc.). Votre dossier sera examiné par notre équipe.",
+          "Cliquez sur « Devenir chauffeur / transporteur » depuis la page d'accueil. Choisissez votre type d'activité :\n• Transport de personnes (VTC)\n• Transport de colis (Europe ↔ Tunisie)\n\nComplétez le formulaire, votre profil, vos véhicules et vos disponibilités. Vous pourrez activer « Les deux activités » depuis votre profil par la suite.",
       },
       {
         id: "d2",
@@ -131,7 +198,7 @@ export const faqCategories: FaqCategory[] = [
         id: "g1",
         question: "Qu'est-ce que TuniDrive ?",
         answer:
-          "TuniDrive est une plateforme de transport VTC (Véhicule de Tourisme avec Chauffeur) qui met en relation des clients et des chauffeurs professionnels. Nous proposons des trajets fiables, ponctuels et sécurisés pour particuliers et entreprises.",
+          "TuniDrive est une plateforme de mobilité et de transport qui met en relation :\n• des clients et des chauffeurs pour des courses VTC en Tunisie ;\n• des clients et des transporteurs pour des devis de colis et marchandises entre l'Europe et la Tunisie.\n\nTuniDrive agit comme intermédiaire technique : les prestations sont réalisées par des professionnels partenaires indépendants.",
       },
       {
         id: "g2",
@@ -143,7 +210,13 @@ export const faqCategories: FaqCategory[] = [
         id: "g3",
         question: "L'application mobile est-elle disponible ?",
         answer:
-          "Oui ! L'application TuniDrive est disponible sur l'App Store (iPhone) et Google Play (Android). Téléchargez-la pour réserver vos courses en quelques secondes et recevoir des notifications en temps réel.",
+          "Oui ! L'application TuniDrive est disponible sur l'App Store (iPhone) et Google Play (Android). Réservez vos courses, suivez vos demandes de devis colis et gérez votre activité chauffeur ou transporteur avec des notifications en temps réel.",
+      },
+      {
+        id: "g6",
+        question: "Quelle est la différence entre une course VTC et un devis colis ?",
+        answer:
+          "La course VTC concerne le transport de personnes en Tunisie : vous réservez un trajet avec un chauffeur et un tarif affiché avant confirmation.\n\nLe devis colis concerne l'envoi de marchandises entre l'Europe et la Tunisie : vous déposez une demande, plusieurs transporteurs vous proposent un prix, et vous choisissez l'offre retenue.",
       },
       {
         id: "g4",

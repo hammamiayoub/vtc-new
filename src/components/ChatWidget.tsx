@@ -15,7 +15,11 @@ export const ChatWidget: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<FaqCategory | null>(null);
   const [selectedItem, setSelectedItem] = useState<FaqItem | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { type: 'bot', text: 'Bonjour ! Je suis l\'assistant TuniDrive 👋\nChoisissez une catégorie pour que je puisse vous aider.' },
+    {
+      type: 'bot',
+      text:
+        'Bonjour ! Je suis l\'assistant TuniDrive 👋\nJe peux vous aider sur les courses VTC, le transport de colis Europe ↔ Tunisie, l\'inscription chauffeur/transporteur et plus encore.\nChoisissez une catégorie ci-dessous.',
+    },
   ]);
   const [hasUnread, setHasUnread] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);

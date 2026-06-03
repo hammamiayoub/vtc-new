@@ -15,6 +15,7 @@ import { ImageUpload } from './ui/ImageUpload';
 import { CityInput } from './ui/CityInput';
 import { supabase } from '../lib/supabase';
 import { Driver, Client } from '../types';
+import { DRIVER_ACTIVITY_PROFILE_OPTIONS, driverActivityLabel } from '../utils/driverActivity';
 import { uploadProfileImage, deleteProfileImage } from '../utils/imageUpload';
 
 interface ProfileModalProps {
@@ -391,17 +392,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="vtc">Transport de personnes (VTC)</option>
-                        <option value="transporteur">Transport de colis international</option>
-                        <option value="both">Les deux activités</option>
+                        {DRIVER_ACTIVITY_PROFILE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
                       </select>
                     ) : (
                       <p className="font-semibold text-gray-900">
-                        {driver.driverType === 'transporteur'
-                          ? 'Transport de colis'
-                          : driver.driverType === 'both'
-                          ? 'VTC + Transport de colis'
-                          : 'Transport de personnes (VTC)'}
+                        {driverActivityLabel(driver.driverType)}
                       </p>
                     )}
                   </div>

@@ -72,7 +72,7 @@ export const passwordSchema = z
   .regex(/(?=.*\d)/, 'Le mot de passe doit contenir au moins un chiffre')
   .regex(/(?=.*[^a-zA-Z0-9])/, 'Le mot de passe doit contenir au moins un caractère spécial');
 
-export const signupSchema = z.object({
+const signupObjectSchema = z.object({
   firstName: z
     .string()
     .min(2, 'Le prénom doit contenir au moins 2 caractères')
@@ -85,11 +85,24 @@ export const signupSchema = z.object({
     .string()
     .email('Veuillez entrer une adresse email valide'),
   password: passwordSchema,
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword']
+  confirmPassword: z.string(),
 });
+
+export const signupSchema = signupObjectSchema.refine(
+  (data) => data.password === data.confirmPassword,
+  { message: 'Les mots de passe ne correspondent pas', path: ['confirmPassword'] }
+);
+
+export const driverSignupSchema = signupObjectSchema
+  .extend({
+    activityType: z.enum(['vtc', 'transporteur'], {
+      message: 'Veuillez choisir votre type d\'activité',
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Les mots de passe ne correspondent pas',
+    path: ['confirmPassword'],
+  });
 
 export const clientSignupSchema = z.object({
   firstName: z

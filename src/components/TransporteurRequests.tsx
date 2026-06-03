@@ -78,7 +78,7 @@ export const TransporteurRequests: React.FC<TransporteurRequestsProps> = ({
       }
     };
 
-    if (request.status === 'accepted' || request.status === 'expired') {
+    if (request.status === 'accepted' || request.status === 'completed' || request.status === 'expired') {
       return (
         <p className="text-sm text-gray-500 mt-3">
           {request.status === 'expired' ? 'Cette demande a expiré.' : 'Une offre a déjà été acceptée.'}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown } from 'lucide-react';
+import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown, Package, Globe } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Footer } from './Footer';
 import { AppDownloadModal } from './AppDownloadModal';
@@ -37,19 +37,32 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight tracking-tight max-w-5xl mx-auto">
-              Votre transport sur mesure
+            Voyagez, expédiez, transportez
             </h1>
-            <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Des trajets fiables avec des chauffeurs professionnels. 
-              Simple, rapide et sécurisé.
+            <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
+              Réservez vos trajets avec des chauffeurs professionnels, ou faites transporter vos colis
+              et grosses marchandises entre l&apos;Europe et la Tunisie en toute simplicité.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
+            <p className="text-base text-gray-500 mb-12 max-w-2xl mx-auto">
+              TuniDrive met en relation clients et transporteurs pour des devis personnalisés,
+              rapides et transparents.
+            </p>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center max-w-3xl mx-auto">
               <Button 
                 size="lg" 
                 onClick={onClientLogin}
                 className="text-lg px-8 py-4 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                Réserver une course
+                Réservez une course
+                <ArrowRight size={20} />
+              </Button>
+              <Button 
+                size="lg" 
+                onClick={onClientLogin}
+                className="text-lg px-8 py-4 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                
+                Envoyez vos colis
                 <ArrowRight size={20} />
               </Button>
               <Button 
@@ -57,9 +70,163 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
                 onClick={onGetStarted} 
                 className="text-lg px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 whitespace-nowrap"
               >
-                Devenir chauffeur
+                Devenir chauffeur / transporteur
+                
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Transport de personnes — activité principale */}
+      <section className="py-20 bg-gray-50 border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+              Transport de personnes
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Notre service historique : réservez un chauffeur professionnel pour vos déplacements en Tunisie.
+              Berline, van, minibus ou véhicule de luxe — choisissez le véhicule adapté à votre trajet.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
+            <div className="bg-gray-50 rounded-2xl p-8 shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
+                <Users className="text-gray-700" size={24} />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Pour les clients</h3>
+              <ul className="space-y-2 text-gray-600 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Réservez votre course en quelques clics (adresse, date, véhicule)
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Tarif transparent communiqué avant validation
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Chauffeurs partenaires vérifiés et suivi de votre réservation
+                </li>
+              </ul>
+            </div>
+            <div className="bg-gray-50 rounded-2xl p-8 shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
+                <Car className="text-gray-700" size={24} />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Pour les chauffeurs</h3>
+              <ul className="space-y-2 text-gray-600 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Recevez des demandes de courses selon vos disponibilités
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Gérez vos véhicules et votre planning depuis votre espace
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Développez votre activité VTC avec une visibilité accrue
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button
+              size="lg"
+              onClick={onClientLogin}
+              className="text-lg px-8 py-4 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 inline-flex items-center gap-2"
+            >
+              Réserver une course
+              <ArrowRight size={20} />
+            </Button>
+            <Button
+              size="lg"
+              onClick={onGetStarted}
+              className="text-lg px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 inline-flex items-center gap-2"
+            >
+              Devenir chauffeur partenaire
+              <ArrowRight size={20} />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Transport international de colis */}
+      <section className="py-20 bg-white-50  border-white-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-medium">
+                <Globe size={16} />
+                Europe ↔ Tunisie
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+              Transport de colis et marchandises
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Vous envoyez ou recevez des colis à l&apos;international ? Déposez une demande de devis :
+              les transporteurs qualifiés vous proposent leurs tarifs, vous comparez et validez en ligne.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
+                <Package className="text-gray-700" size={24} />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Pour les clients</h3>
+              <ul className="space-y-2 text-gray-600 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Décrivez votre envoi (adresses, date, photos, factures)
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Recevez plusieurs propositions de prix
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Choisissez la meilleure offre et organisez la livraison
+                </li>
+              </ul>
+            </div>
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
+                <Truck className="text-gray-700" size={24} />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Pour les transporteurs</h3>
+              <ul className="space-y-2 text-gray-600 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Recevez les demandes correspondant à vos disponibilités
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Proposez votre tarif en EUR ou TND selon le trajet
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  Échangez vos coordonnées avec le client après acceptation
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Button
+              size="lg"
+              onClick={onClientLogin}
+              className="text-lg px-8 py-4 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 inline-flex items-center gap-2"
+            >
+              Demander un devis transport de colis
+              <ArrowRight size={20} />
+            </Button>
           </div>
         </div>
       </section>
@@ -74,10 +241,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
       </h2>
       
       <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-        Réservez vos courses en quelques secondes et gérez tous vos trajets.
+        Réservez vos courses, demandez des devis pour vos colis et gérez tous vos transports.
       </p>
       <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-        Devenez chauffeur et gagnez de l'argent en conduisant.
+        Devenez chauffeur ou transporteur et développez votre activité.
       </p>
 
       {/* Liste des avantages - centrée */}
@@ -141,7 +308,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
               Pourquoi choisir TuniDrive ?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Une expérience de transport premium et accessible
+              Courses de personnes, colis internationaux et marchandises volumineuses
             </p>
           </div>
 
@@ -195,7 +362,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
               Nos services de transport
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Une gamme complète de véhicules pour tous vos besoins de transport
+              Une gamme complète de véhicules pour vos trajets et le transport de marchandises
             </p>
           </div>
 
@@ -364,10 +531,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-black rounded-3xl p-12 text-center text-white">
             <h2 className="text-4xl font-bold mb-6 tracking-tight">
-              Devenez chauffeur partenaire
+              Devenez chauffeur ou transporteur partenaire
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Rejoignez des milliers de chauffeurs qui ont choisi la liberté et la flexibilité
+              Proposez vos courses et vos services de transport de colis entre l&apos;Europe et la Tunisie
             </p>
             <div className="grid md:grid-cols-3 gap-8 mb-10">
               {[
