@@ -14,8 +14,10 @@ import {
   CreditCard,
   TrendingUp,
   AlertCircle as AlertCircleIcon,
-  Edit
+  Edit,
+  Package,
 } from 'lucide-react';
+import { AdminParcelQuotes } from './AdminParcelQuotes';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { updateVehicle } from '../utils/vehicles';
@@ -156,7 +158,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [loadingAvailabilities, setLoadingAvailabilities] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings'>('drivers');
+  const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings' | 'parcels'>('drivers');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -1594,6 +1596,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   Abonnements ({subscriptions.length})
                 </div>
               </button>
+              <button
+                onClick={() => setActiveTab('parcels')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'parcels'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Package size={16} />
+                  Colis international
+                </div>
+              </button>
             </nav>
             
             {/* Mobile Tabs - Scrollable */}
@@ -1676,6 +1691,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
                     {subscriptions.length}
                   </span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('parcels')}
+                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
+                  activeTab === 'parcels'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Package size={14} />
+                  <span>Colis</span>
                 </div>
               </button>
             </nav>
@@ -2378,6 +2406,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <p className="text-gray-500">Les abonnements apparaîtront ici une fois créés.</p>
               </div>
             )}
+          </div>
+        ) : activeTab === 'parcels' ? (
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+              Demandes de transport international de colis
+            </h2>
+            <AdminParcelQuotes />
           </div>
         ) : activeTab === 'vehicles' ? (
           /* Vehicles List */

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Clock, User, LogOut, UserCircle, Car, Plus, CheckCircle, XCircle } from 'lucide-react';
+import { MapPin, Clock, User, LogOut, UserCircle, Car, Plus, CheckCircle, XCircle, Package } from 'lucide-react';
+import { ParcelQuoteForm } from './ParcelQuoteForm';
+import { ParcelQuoteList } from './ParcelQuoteList';
+import { ParcelQuoteDetail } from './ParcelQuoteDetail';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Client, Booking } from '../types';
@@ -22,8 +25,10 @@ interface ClientDashboardProps {
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) => {
   const [client, setClient] = useState<Client | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'new-booking' | 'bookings' | 'confirmation'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'new-booking' | 'bookings' | 'confirmation' | 'new-parcel' | 'parcel-requests'>('dashboard');
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [selectedParcelRequestId, setSelectedParcelRequestId] = useState<string | null>(null);
+  const [parcelRefreshKey, setParcelRefreshKey] = useState(0);
   const [confirmationBookingId, setConfirmationBookingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -161,6 +166,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
     setShowBookingForm(false);
     setConfirmationBookingId(bookingId);
     setActiveTab('confirmation');
+  };
+
+  const handleParcelSuccess = (requestId: string) => {
+    setParcelRefreshKey((k) => k + 1);
+    setSelectedParcelRequestId(requestId);
+    setActiveTab('parcel-requests');
   };
 
   const handleBackFromConfirmation = () => {
@@ -570,6 +581,34 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             >
               Mes réservations ({bookings.length})
             </button>
+            <button
+              onClick={() => {
+                setActiveTab('new-parcel');
+                setShowBookingForm(false);
+                setSelectedParcelRequestId(null);
+              }}
+              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap flex items-center gap-1 ${
+                activeTab === 'new-parcel'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Package size={14} className="hidden sm:inline" />
+              Transport colis
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('parcel-requests');
+                setShowBookingForm(false);
+              }}
+              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                activeTab === 'parcel-requests'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Mes devis colis
+            </button>
           </nav>
         </div>
       </div>
@@ -588,11 +627,31 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         )}
 
         {/* Formulaire de réservation */}
-        {showBookingForm && client && activeTab !== 'confirmation' && (
+        {showBookingForm && client && activeTab !== 'confirmation' && activeTab !== 'new-parcel' && activeTab !== 'parcel-requests' && (
           <BookingForm 
             clientId={client.id} 
             onBookingSuccess={handleBookingSuccess}
           />
+        )}
+
+        {activeTab === 'new-parcel' && client && (
+          <ParcelQuoteForm clientId={client.id} onSuccess={handleParcelSuccess} />
+        )}
+
+        {activeTab === 'parcel-requests' && client && (
+          selectedParcelRequestId ? (
+            <ParcelQuoteDetail
+              requestId={selectedParcelRequestId}
+              onBack={() => setSelectedParcelRequestId(null)}
+              onAccepted={() => setParcelRefreshKey((k) => k + 1)}
+            />
+          ) : (
+            <ParcelQuoteList
+              clientId={client.id}
+              onSelectRequest={setSelectedParcelRequestId}
+              refreshKey={parcelRefreshKey}
+            />
+          )
         )}
 
         {/* Dashboard principal */}

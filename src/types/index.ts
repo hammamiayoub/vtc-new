@@ -8,6 +8,7 @@ export interface Driver {
   licenseNumber?: string;
   vehicleInfo?: VehicleInfo;
   status: string;
+  driverType?: 'vtc' | 'transporteur' | 'both';
   profilePhotoUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -206,4 +207,97 @@ export interface Rating {
 export interface RatingFormData {
   rating: number;
   comment?: string;
+}
+
+// ============================================================
+// Transport international de colis (devis)
+// ============================================================
+export type ParcelDirection = 'europe_to_tunisia' | 'tunisia_to_europe';
+export type ParcelRequestStatus = 'pending' | 'quoted' | 'accepted' | 'cancelled' | 'expired';
+export type ParcelProposalStatus = 'sent' | 'accepted' | 'rejected';
+export type ParcelCurrency = 'EUR' | 'TND';
+
+export interface ParcelItem {
+  id?: string;
+  requestId?: string;
+  name: string;
+  quantity: number;
+  weightKg?: number;
+  volumeM3?: number;
+  createdAt?: string;
+}
+
+export type ParcelDocumentType = 'photo' | 'invoice';
+
+export interface ParcelPhoto {
+  id: string;
+  requestId: string;
+  photoUrl: string;
+  documentType: ParcelDocumentType;
+  createdAt: string;
+}
+
+export interface ParcelQuoteRequest {
+  id: string;
+  clientId: string;
+  direction: ParcelDirection;
+  departureAddress: string;
+  departureCountry?: string;
+  departureLatitude?: number;
+  departureLongitude?: number;
+  arrivalAddress: string;
+  arrivalCountry?: string;
+  arrivalLatitude?: number;
+  arrivalLongitude?: number;
+  desiredDate: string;
+  currency: ParcelCurrency;
+  notes?: string;
+  status: ParcelRequestStatus;
+  acceptedProposalId?: string;
+  createdAt: string;
+  updatedAt: string;
+  items?: ParcelItem[];
+  photos?: ParcelPhoto[];
+  proposals?: ParcelProposal[];
+  clients?: {
+    first_name: string;
+    last_name: string;
+    email?: string;
+    phone?: string;
+  };
+}
+
+export interface ParcelProposal {
+  id: string;
+  requestId: string;
+  driverId: string;
+  price: number;
+  currency: ParcelCurrency;
+  estimatedDeliveryDate?: string;
+  message?: string;
+  status: ParcelProposalStatus;
+  createdAt: string;
+  updatedAt: string;
+  drivers?: {
+    first_name: string;
+    last_name: string;
+    email?: string;
+    phone?: string;
+    profile_photo_url?: string;
+  };
+}
+
+export interface ParcelQuoteFormData {
+  direction: ParcelDirection;
+  departureAddress: string;
+  arrivalAddress: string;
+  desiredDate: string;
+  items: ParcelItem[];
+  notes?: string;
+}
+
+export interface ParcelProposalFormData {
+  price: number;
+  estimatedDeliveryDate?: string;
+  message?: string;
 }

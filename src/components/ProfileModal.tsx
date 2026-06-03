@@ -46,7 +46,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     lastName: user.lastName,
     phone: 'phone' in user ? user.phone : '',
     city: 'city' in user ? user.city || '' : '',
-    email: user.email
+    email: user.email,
+    driverType: (userType === 'driver' && 'driverType' in user ? user.driverType : 'vtc') as 'vtc' | 'transporteur' | 'both',
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -91,12 +92,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         last_name: string;
         phone: string;
         city: string;
+        driver_type?: string;
       } = {
         first_name: editData.firstName,
         last_name: editData.lastName,
         phone: editData.phone || '',
-        city: editData.city || ''
+        city: editData.city || '',
       };
+
+      if (userType === 'driver') {
+        updateData.driver_type = editData.driverType;
+      }
 
       console.log('📝 Données à mettre à jour:', updateData);
 
@@ -371,6 +377,33 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     <p className="font-semibold text-gray-900">
                       {driver.licenseNumber || 'Non renseigné'}
                     </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="block text-sm text-gray-600 mb-1">Type d'activité</label>
+                    {isEditing ? (
+                      <select
+                        value={editData.driverType}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            driverType: e.target.value as 'vtc' | 'transporteur' | 'both',
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="vtc">Transport de personnes (VTC)</option>
+                        <option value="transporteur">Transport de colis international</option>
+                        <option value="both">Les deux activités</option>
+                      </select>
+                    ) : (
+                      <p className="font-semibold text-gray-900">
+                        {driver.driverType === 'transporteur'
+                          ? 'Transport de colis'
+                          : driver.driverType === 'both'
+                          ? 'VTC + Transport de colis'
+                          : 'Transport de personnes (VTC)'}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

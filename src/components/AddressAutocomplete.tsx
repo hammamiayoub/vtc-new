@@ -14,6 +14,12 @@ interface AddressAutocompleteProps {
   disabled?: boolean;
   /** Identifiant unique (très important pour neutraliser l'autofill). */
   inputId: string;
+  /**
+   * Restriction de pays pour l'autocomplétion (codes ISO 2 lettres).
+   * Par défaut 'tn' (Tunisie). Pour l'international, passer une liste,
+   * ex: ['fr','it','de','es','be','nl', ...] ou undefined pour aucun filtre.
+   */
+  countries?: string | string[] | null;
 }
 
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
@@ -25,7 +31,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   className = '',
   disabled = false,
   inputId,
+  countries = 'tn',
 }) => {
+  // Clé stable pour déclencher la réinitialisation quand la restriction pays change
+  const countriesKey = Array.isArray(countries) ? countries.join(',') : (countries ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const placeChangedListenerRef = useRef<google.maps.MapsEventListener | null>(null);
@@ -77,10 +86,16 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     if (autocompleteRef.current) return; // déjà prêt
 
     try {
+      const restrictionCountries = countriesKey
+        ? countriesKey.split(',').map((c) => c.trim()).filter(Boolean)
+        : null;
+
       const ac = new google.maps.places.Autocomplete(inputRef.current!, {
         fields: ['formatted_address', 'geometry', 'place_id', 'name', 'address_components'],
         types: ['geocode', 'establishment'],
-        componentRestrictions: { country: 'tn' },
+        ...(restrictionCountries && restrictionCountries.length > 0
+          ? { componentRestrictions: { country: restrictionCountries } }
+          : {}),
       });
 
       if (placeChangedListenerRef.current) {
@@ -179,7 +194,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       autocompleteRef.current = null;
       placeChangedListenerRef.current = null;
     };
-  }, [isGoogleMapsLoaded]); // Plus de dépendances onChange/onPlaceSelect !
+  }, [isGoogleMapsLoaded, countriesKey]); // Réinitialise si la restriction pays change
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
