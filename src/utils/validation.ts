@@ -193,3 +193,62 @@ export const ratingSchema = z.object({
     .max(500, 'Le commentaire ne peut pas dépasser 500 caractères')
     .optional()
 });
+
+// ============================================================
+// Transport international de colis (devis)
+// ============================================================
+export const parcelItemSchema = z.object({
+  name: z
+    .string()
+    .min(2, 'Le nom de l\'objet doit contenir au moins 2 caractères')
+    .max(150, 'Le nom de l\'objet ne peut pas dépasser 150 caractères'),
+  quantity: z.coerce
+    .number()
+    .int('Le nombre de colis doit être un entier')
+    .min(1, 'Au moins 1 colis'),
+  weightKg: z.preprocess(
+    (v) => (v === '' || v === undefined || v === null ? undefined : Number(v)),
+    z.number().min(0, 'Le poids ne peut pas être négatif').optional()
+  ),
+  volumeM3: z.preprocess(
+    (v) => (v === '' || v === undefined || v === null ? undefined : Number(v)),
+    z.number().min(0, 'Le volume ne peut pas être négatif').optional()
+  ),
+});
+
+export const parcelQuoteSchema = z.object({
+  direction: z.enum(['europe_to_tunisia', 'tunisia_to_europe'], {
+    message: 'Veuillez sélectionner une direction',
+  }),
+  departureAddress: z
+    .string()
+    .min(3, 'L\'adresse de départ doit contenir au moins 3 caractères')
+    .max(250, 'L\'adresse de départ ne peut pas dépasser 250 caractères'),
+  arrivalAddress: z
+    .string()
+    .min(3, 'L\'adresse d\'arrivée doit contenir au moins 3 caractères')
+    .max(250, 'L\'adresse d\'arrivée ne peut pas dépasser 250 caractères'),
+  desiredDate: z
+    .string()
+    .min(1, 'Veuillez sélectionner une date souhaitée'),
+  items: z
+    .array(parcelItemSchema)
+    .min(1, 'Veuillez décrire au moins un objet'),
+  notes: z
+    .string()
+    .max(1000, 'Les notes ne peuvent pas dépasser 1000 caractères')
+    .optional(),
+});
+
+export const parcelProposalSchema = z.object({
+  price: z.coerce
+    .number()
+    .min(1, 'Veuillez saisir un prix valide'),
+  estimatedDeliveryDate: z
+    .string()
+    .optional(),
+  message: z
+    .string()
+    .max(1000, 'Le message ne peut pas dépasser 1000 caractères')
+    .optional(),
+});

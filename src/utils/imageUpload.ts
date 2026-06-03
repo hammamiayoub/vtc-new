@@ -178,6 +178,74 @@ export const deleteVehiclePhotoForVehicle = async (
   if (error) throw error;
 };
 
+const PARCEL_MAX_FILE_BYTES = 5 * 1024 * 1024;
+
+/** Upload photo ou facture (bucket parcel-photos) + insertion en base */
+export const uploadParcelAttachment = async (
+  file: File,
+  requestId: string,
+  documentType: 'photo' | 'invoice'
+): Promise<{ id: string; photoUrl: string; documentType: 'photo' | 'invoice' }> => {
+  if (file.size > PARCEL_MAX_FILE_BYTES) {
+    throw new Error('Le fichier ne doit pas dépasser 5 Mo');
+  }
+
+  const isImage = file.type.startsWith('image/');
+  const isPdf = file.type === 'application/pdf';
+  if (documentType === 'photo' && !isImage) {
+    throw new Error('Les photos doivent être au format image (JPG, PNG, etc.)');
+  }
+  if (documentType === 'invoice' && !isImage && !isPdf) {
+    throw new Error('Les factures doivent être une image ou un PDF');
+  }
+
+  const fileExt = file.name.split('.').pop() || (isPdf ? 'pdf' : 'jpg');
+  const prefix = documentType === 'invoice' ? 'invoice' : 'photo';
+  const fileName = `parcel-${prefix}-${requestId}-${Date.now()}.${fileExt}`;
+  const filePath = `parcels/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('parcel-photos')
+    .upload(filePath, file, { cacheControl: '3600', upsert: false });
+  if (uploadError) {
+    console.error('🚨 Erreur upload colis:', uploadError);
+    throw new Error("Erreur lors de l'upload du fichier");
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('parcel-photos')
+    .getPublicUrl(filePath);
+  if (!urlData.publicUrl) {
+    throw new Error("Impossible d'obtenir l'URL du fichier");
+  }
+
+  const { data: row, error: insertError } = await supabase
+    .from('parcel_photos')
+    .insert({
+      request_id: requestId,
+      photo_url: urlData.publicUrl,
+      document_type: documentType,
+    })
+    .select('id, photo_url, document_type')
+    .single();
+  if (insertError) {
+    console.error('🚨 Erreur insertion parcel_photos:', insertError);
+    throw new Error("Erreur lors de l'enregistrement du fichier");
+  }
+
+  return {
+    id: row.id,
+    photoUrl: row.photo_url,
+    documentType: row.document_type as 'photo' | 'invoice',
+  };
+};
+
+/** @deprecated Utiliser uploadParcelAttachment */
+export const uploadParcelPhoto = async (file: File, requestId: string) => {
+  const result = await uploadParcelAttachment(file, requestId, 'photo');
+  return { id: result.id, photoUrl: result.photoUrl };
+};
+
 export const uploadProfileImage = async (
   file: File, 
   userId: string, 

@@ -22,6 +22,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [cityValue, setCityValue] = useState('');
+  const [driverType, setDriverType] = useState<'vtc' | 'transporteur' | 'both'>('vtc');
 
   const {
     register,
@@ -52,6 +53,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
           phone: data.phone,
           city: data.city,
           license_number: data.licenseNumber,
+          driver_type: driverType,
           status: 'pending'
         })
         .eq('id', driverId);
@@ -155,6 +157,22 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
               )}
             </div>
           </div>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Type d'activité</h3>
+          <select
+            value={driverType}
+            onChange={(e) => setDriverType(e.target.value as 'vtc' | 'transporteur' | 'both')}
+            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="vtc">Transport de personnes (VTC)</option>
+            <option value="transporteur">Transport de colis international</option>
+            <option value="both">Les deux activités</option>
+          </select>
+          <p className="text-xs text-gray-500 mt-2">
+            Les transporteurs de colis reçoivent les demandes Europe ↔ Tunisie correspondant à leurs disponibilités.
+          </p>
         </div>
 
         {/* Section informations véhicule supprimée (gérée dans Mes véhicules) */}

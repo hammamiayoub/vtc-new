@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { User, Car, Clock, MapPin, LogOut, UserCircle, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare, FileText } from 'lucide-react';
+import { User, Car, Clock, MapPin, LogOut, UserCircle, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare, FileText, Package } from 'lucide-react';
+import { TransporteurRequests } from './TransporteurRequests';
 import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
@@ -28,7 +29,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [showProfileForm, setShowProfileForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'vehicles' | 'bookings' | 'subscription'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'vehicles' | 'bookings' | 'subscription' | 'parcel-requests'>('dashboard');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<{
@@ -71,6 +72,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             licenseNumber: driverData.license_number,
             vehicleInfo: driverData.vehicle_info,
             status: driverData.status,
+            driverType: driverData.driver_type || 'vtc',
             profilePhotoUrl: driverData.profile_photo_url,
             createdAt: driverData.created_at,
             updatedAt: driverData.updated_at
@@ -840,6 +842,19 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </span>
               )}
             </button>
+            {(driver?.driverType === 'transporteur' || driver?.driverType === 'both') && (
+              <button
+                onClick={() => { setActiveTab('parcel-requests'); setShowProfileForm(false); }}
+                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap flex items-center gap-1 ${
+                  activeTab === 'parcel-requests'
+                    ? 'border-black text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Package size={14} className="hidden sm:inline" />
+                Demandes colis
+              </button>
+            )}
             <button
               onClick={() => { setActiveTab('subscription'); setShowProfileForm(false); }}
               className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
@@ -1283,6 +1298,21 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               </p>
             </div>
             <DriverSubscription driverId={driver.id} />
+          </div>
+        )}
+
+        {/* Onglet Demandes de transport de colis */}
+        {!showProfileForm && activeTab === 'parcel-requests' && driver && (
+          <div className="w-full">
+            <div className="mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                Demandes de transport de colis
+              </h2>
+              <p className="text-gray-600">
+                Consultez les demandes éligibles et envoyez vos propositions de prix
+              </p>
+            </div>
+            <TransporteurRequests driverId={driver.id} />
           </div>
         )}
 
