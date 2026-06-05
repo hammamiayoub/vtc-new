@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Car, Package } from 'lucide-react';
 import { Button } from './ui/Button';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
-import { driverSignupSchema } from '../utils/validation';
+import { SignupCountryPhoneFields } from './ui/SignupCountryPhoneFields';
+import { CityInput } from './ui/CityInput';
+import { driverSignupSchema, normalizePhone } from '../utils/validation';
 import { DriverSignupFormData } from '../types';
 import { DRIVER_ACTIVITY_SIGNUP_OPTIONS } from '../utils/driverActivity';
+import type { SignupCountryCode } from '../utils/signupCountries';
 import { supabase } from '../lib/supabase';
 
 interface DriverSignupProps {
@@ -20,27 +23,44 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [registeredActivityType, setRegisteredActivityType] = useState<'vtc' | 'transporteur'>('vtc');
   const [error, setError] = useState<string | null>(null);
-
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isValid }
   } = useForm<DriverSignupFormData>({
     resolver: zodResolver(driverSignupSchema),
     mode: 'onChange',
     defaultValues: {
       activityType: 'vtc',
+      country: 'TN',
+      city: '',
     },
   });
 
   const watchPassword = watch('password', '');
 
   const watchActivityType = watch('activityType');
+  const watchCountry = watch('country', 'TN') as SignupCountryCode;
+  const watchCity = watch('city', '');
+  const prevCountryRef = useRef(watchCountry);
+
+  const handleCityChange = (value: string) => {
+    setValue('city', value, { shouldValidate: true, shouldDirty: true });
+  };
+
+  useEffect(() => {
+    if (prevCountryRef.current !== watchCountry) {
+      setValue('city', '', { shouldValidate: true });
+      prevCountryRef.current = watchCountry;
+    }
+  }, [watchCountry, setValue]);
 
   const onSubmit = async (data: DriverSignupFormData) => {
     setIsSubmitting(true);
     setError(null);
+    data.phone = normalizePhone(data.phone, data.country);
     
     try {
       console.log('🔍 Vérification de l\'email avant création...');
@@ -142,6 +162,9 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             first_name: data.firstName,
             last_name: data.lastName,
             email: data.email,
+            phone: data.phone,
+            country: data.country,
+            city: data.city,
             driver_type: data.activityType,
           });
 
@@ -178,8 +201,9 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 first_name: data.firstName,
                 last_name: data.lastName,
                 email: data.email,
-                phone: '',
-                city: '',
+                phone: data.phone,
+                country: data.country,
+                city: data.city,
                 vehicle_make: '',
                 vehicle_model: '',
                 status: 'pending',
@@ -403,6 +427,28 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 {errors.email && (
                   <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
                 )}
+              </div>
+
+              <SignupCountryPhoneFields
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+                focusRingClass="focus:ring-2 focus:ring-blue-500"
+              />
+
+              <div>
+                <label htmlFor="driver-city" className="block text-sm font-medium text-gray-700 mb-1">
+                  Ville
+                </label>
+                <CityInput
+                  value={watchCity}
+                  onChange={handleCityChange}
+                  country={watchCountry}
+                  placeholder="Rechercher votre ville"
+                  error={errors.city?.message}
+                  required
+                />
               </div>
 
               <div className="relative">

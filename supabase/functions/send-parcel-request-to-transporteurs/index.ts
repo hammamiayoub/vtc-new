@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { sendExpoPushBatch } from '../_shared/expoPush.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -106,6 +107,22 @@ serve(async (req) => {
       );
     }
 
+    const pushTokens = (transporteurs || [])
+      .map((t: { push_token?: string | null }) => t.push_token)
+      .filter(Boolean);
+
+    const routeShort = `${request.departure_address} → ${request.arrival_address}`;
+    const pushSent = await sendExpoPushBatch(pushTokens, {
+      title: '📦 Nouvelle demande de colis',
+      body: `${directionLabel(request.direction)} — ${routeShort}. Connectez-vous pour proposer un devis.`,
+      data: {
+        type: 'parcel_request_new',
+        requestId,
+        role: 'driver',
+      },
+    });
+    console.log(`[push] transporteurs: ${pushSent}/${pushTokens.length} tokens`);
+
     for (const t of transporteurs || []) {
       const driverHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -142,9 +159,16 @@ serve(async (req) => {
       `<p>Nouvelle demande #${requestId}</p><p>${request.departure_address} → ${request.arrival_address}</p><p>${(transporteurs || []).length} transporteur(s) notifié(s).</p>`
     );
 
-    return new Response(JSON.stringify({ success: true, notified: (transporteurs || []).length }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        notified: (transporteurs || []).length,
+        pushSent,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
   } catch (e) {
     console.error(e);
     return new Response(JSON.stringify({ error: String(e) }), {

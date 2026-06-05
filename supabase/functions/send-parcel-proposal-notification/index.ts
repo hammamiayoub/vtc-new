@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { sendExpoPush } from '../_shared/expoPush.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,7 +33,7 @@ serve(async (req) => {
   }
 
   try {
-    const { proposalId } = await req.json();
+    const { proposalId, requestId: bodyRequestId } = await req.json();
     if (!proposalId) throw new Error('proposalId requis');
 
     const supabase = createClient(
@@ -42,20 +43,34 @@ serve(async (req) => {
 
     const { data: proposal } = await supabase
       .from('parcel_quote_proposals')
-      .select('*, drivers(first_name, last_name, email)')
+      .select('id, request_id, driver_id, price, currency, message')
       .eq('id', proposalId)
       .single();
     if (!proposal) throw new Error('Proposition introuvable');
 
+    if (bodyRequestId && bodyRequestId !== proposal.request_id) {
+      throw new Error('requestId ne correspond pas à la proposition');
+    }
+
     const { data: request } = await supabase
       .from('parcel_quote_requests')
-      .select('*, clients(first_name, last_name, email)')
+      .select('id, client_id')
       .eq('id', proposal.request_id)
       .single();
-    if (!request) throw new Error('Demande introuvable');
+    if (!request?.client_id) throw new Error('Demande introuvable');
 
-    const client = request.clients;
-    const driver = proposal.drivers;
+    const { data: client, error: clientErr } = await supabase
+      .from('clients')
+      .select('id, first_name, last_name, email, push_token')
+      .eq('id', request.client_id)
+      .single();
+    if (clientErr || !client) throw new Error('Client destinataire introuvable');
+
+    const { data: driver } = await supabase
+      .from('drivers')
+      .select('first_name, last_name, email')
+      .eq('id', proposal.driver_id)
+      .single();
 
     const clientHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -63,7 +78,7 @@ serve(async (req) => {
           <h1 style="color:#333;margin:0;">TuniDrive — Nouvelle proposition</h1>
         </div>
         <div style="padding:30px 20px;">
-          <h2>Bonjour ${client?.first_name || ''} ${client?.last_name || ''},</h2>
+          <h2>Bonjour ${client.first_name || ''} ${client.last_name || ''},</h2>
           <p>Un transporteur vous a envoyé une proposition pour votre demande de colis.</p>
           <div style="background:#e8f5e8;padding:20px;border-radius:8px;margin:20px 0;">
             <p><strong>Transporteur :</strong> ${driver?.first_name || ''} ${driver?.last_name || ''}</p>
@@ -75,12 +90,31 @@ serve(async (req) => {
         </div>
       </div>`;
 
-    if (client?.email) {
+    if (client.email) {
       await sendEmail(
         client.email,
         'TuniDrive — Nouvelle proposition de transport de colis',
         clientHtml
       );
+    }
+
+    const driverName = `${driver?.first_name || ''} ${driver?.last_name || ''}`.trim();
+    const pushSent = await sendExpoPush(client.push_token, {
+      title: '📦 Nouvelle proposition de colis',
+      body: `${driverName || 'Un transporteur'} propose ${proposal.price} ${proposal.currency}. Consultez vos devis.`,
+      data: {
+        type: 'parcel_proposal_received',
+        requestId: proposal.request_id,
+        proposalId,
+        clientId: client.id,
+        role: 'client',
+      },
+    });
+
+    if (!pushSent) {
+      console.warn('[push] Aucun push_token pour le client', client.id);
+    } else {
+      console.log('[push] Proposition colis notifiée au client', client.id);
     }
 
     if (driver?.email) {
@@ -95,9 +129,14 @@ serve(async (req) => {
       );
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        notifiedClientId: client.id,
+        pushSent,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
   } catch (e) {
     console.error(e);
     return new Response(JSON.stringify({ error: String(e) }), {

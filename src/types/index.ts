@@ -4,6 +4,7 @@ export interface Driver {
   lastName: string;
   email: string;
   phone?: string;
+  country?: string;
   city?: string;
   licenseNumber?: string;
   vehicleInfo?: VehicleInfo;
@@ -67,6 +68,8 @@ export interface DriverProfileData {
   vehicleInfo: VehicleInfo;
 }
 
+import type { SignupCountryCode } from '../utils/signupCountries';
+
 export interface SignupFormData {
   firstName: string;
   lastName: string;
@@ -77,6 +80,9 @@ export interface SignupFormData {
 
 export interface DriverSignupFormData extends SignupFormData {
   activityType: 'vtc' | 'transporteur';
+  country: SignupCountryCode;
+  phone: string;
+  city: string;
 }
 
 export interface AuthState {
@@ -105,6 +111,7 @@ export interface Client {
   lastName: string;
   email: string;
   phone: string;
+  country?: string;
   city?: string;
   status: string;
   profilePhotoUrl?: string;
@@ -116,6 +123,7 @@ export interface ClientSignupFormData {
   firstName: string;
   lastName: string;
   email: string;
+  country: SignupCountryCode;
   phone: string;
   city: string;
   password: string;

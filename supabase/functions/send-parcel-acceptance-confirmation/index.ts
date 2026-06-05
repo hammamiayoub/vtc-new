@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { sendExpoPush } from '../_shared/expoPush.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,7 +43,7 @@ serve(async (req) => {
 
     const { data: proposal } = await supabase
       .from('parcel_quote_proposals')
-      .select('*, drivers(first_name, last_name, email, phone)')
+      .select('*, drivers(first_name, last_name, email, phone, push_token)')
       .eq('id', proposalId)
       .single();
     if (!proposal) throw new Error('Proposition introuvable');
@@ -114,6 +115,18 @@ serve(async (req) => {
         driverHtml
       );
     }
+
+    const clientName = `${client?.first_name || ''} ${client?.last_name || ''}`.trim();
+    await sendExpoPush(driver?.push_token, {
+      title: '✅ Offre colis acceptée',
+      body: `${clientName || 'Le client'} a accepté votre offre (${proposal.price} ${proposal.currency}). Ouvrez l'app pour les coordonnées.`,
+      data: {
+        type: 'parcel_proposal_accepted',
+        requestId: proposal.request_id,
+        proposalId,
+        role: 'driver',
+      },
+    });
 
     // Notifier les transporteurs non retenus
     const { data: rejected } = await supabase
