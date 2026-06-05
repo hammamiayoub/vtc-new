@@ -241,7 +241,7 @@ export async function fetchTransporteurParcelRequests(): Promise<ParcelQuoteRequ
   const { data, error } = await supabase
     .from('parcel_quote_requests')
     .select(REQUEST_SELECT)
-    .in('status', ['pending', 'quoted', 'accepted'])
+    .in('status', ['pending', 'quoted'])
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -341,7 +341,15 @@ export async function submitParcelProposal(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    const closed =
+      error.message?.includes("n'accepte plus") ||
+      error.message?.includes('accepte plus de nouvelles');
+    if (closed) {
+      throw new Error('Cette demande n\'accepte plus de nouvelles propositions.');
+    }
+    throw error;
+  }
 
   const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-parcel-proposal-notification`;
   try {

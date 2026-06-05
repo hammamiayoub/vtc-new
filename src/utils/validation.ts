@@ -1,68 +1,109 @@
 import { z } from 'zod';
+import {
+  getSignupCountryDialCode,
+  SIGNUP_COUNTRY_CODES,
+  type SignupCountryCode,
+} from './signupCountries';
 
 /**
- * Normalise un numéro de téléphone :
- * - 8 chiffres commençant par 2, 5 ou 9 → ajoute le préfixe +216 (Tunisie)
- * - +CC0local ou 00CC0local (hors +216) → supprime le 0 de troncature local
- *   ex: +330601646792 → +33601646792 | 00330601646792 → 0033601646792
+ * Normalise un numéro selon le pays choisi :
+ * - +indicatif… ou 00indicatif… → conserve (avec correction du 0 de troncature hors +216)
+ * - numéro commençant par un seul 0 → supprime le 0 et applique l'indicatif du pays
+ * - numéro local sans préfixe → applique l'indicatif du pays
  */
-export function normalizePhone(raw: string): string {
+export function normalizePhone(raw: string, country: SignupCountryCode = 'TN'): string {
   const value = raw.trim().replace(/\s+/g, '');
 
   if (!value) return value;
 
-  // 8 chiffres tunisiens (2X / 5X / 9X) → préfixe +216
-  if (/^[259]\d{7}$/.test(value)) {
+  const dialCode = getSignupCountryDialCode(country);
+
+  if (value.startsWith('+')) {
+    const plusMatch = value.match(/^\+(\d{1,3})0(\d{6,12})$/);
+    if (plusMatch && plusMatch[1] !== '216') {
+      return '+' + plusMatch[1] + plusMatch[2];
+    }
+    return value;
+  }
+
+  if (value.startsWith('00')) {
+    const doubleZeroMatch = value.match(/^00(\d{1,3})0(\d{6,12})$/);
+    if (doubleZeroMatch && doubleZeroMatch[1] !== '216') {
+      return '00' + doubleZeroMatch[1] + doubleZeroMatch[2];
+    }
+    return value;
+  }
+
+  if (/^0[^0]/.test(value)) {
+    return dialCode + value.slice(1);
+  }
+
+  if (country === 'TN' && /^[259]\d{7}$/.test(value)) {
     return '+216' + value;
   }
 
-  // +CC0local → supprime le 0 de troncature si CC ≠ 216
-  // Le local doit contenir ≥ 6 chiffres pour éviter la transformation prématurée lors de la saisie
-  const plusMatch = value.match(/^\+(\d{1,3})0(\d{6,12})$/);
-  if (plusMatch && plusMatch[1] !== '216') {
-    return '+' + plusMatch[1] + plusMatch[2];
-  }
-
-  // 00CC0local → supprime le 0 de troncature si CC ≠ 216
-  const doubleZeroMatch = value.match(/^00(\d{1,3})0(\d{6,12})$/);
-  if (doubleZeroMatch && doubleZeroMatch[1] !== '216') {
-    return '00' + doubleZeroMatch[1] + doubleZeroMatch[2];
+  if (/^\d{6,12}$/.test(value)) {
+    return dialCode + value;
   }
 
   return value;
 }
 
-const phoneFieldSchema = z.string().superRefine((val, ctx) => {
-  const v = val.trim().replace(/\s+/g, '');
+export function isValidNormalizedPhone(normalized: string): boolean {
+  const v = normalized.trim().replace(/\s+/g, '');
+  if (!v) return false;
+  if (/^\+\d{7,15}$/.test(v)) return true;
+  if (/^00\d{7,15}$/.test(v)) return true;
+  return false;
+}
+
+function refineSignupPhone(
+  data: { phone: string; country: SignupCountryCode },
+  ctx: z.RefinementCtx
+) {
+  const v = data.phone.trim().replace(/\s+/g, '');
 
   if (!v) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le numéro de téléphone est requis' });
-    return;
-  }
-
-  // Commence par un seul 0 → demander l'indicatif pays
-  if (/^0[^0]/.test(v)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Numéro commençant par 0 : veuillez entrer l'indicatif du pays au format +XX (ex: +33 pour la France)",
+      message: 'Le numéro de téléphone est requis',
+      path: ['phone'],
     });
     return;
   }
 
-  // 8 chiffres tunisiens (2X / 5X / 9X) — avant normalisation
-  if (/^[259]\d{7}$/.test(v)) return;
-  // +216 + 8 chiffres tunisiens — après normalisation
-  if (/^\+216[259]\d{7}$/.test(v)) return;
-  // Format international E.164 (+CC…)
-  if (/^\+\d{7,15}$/.test(v)) return;
-  // Format 00CC…
-  if (/^00\d{7,15}$/.test(v)) return;
+  const normalized = normalizePhone(v, data.country);
+  if (!isValidNormalizedPhone(normalized)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        'Numéro invalide. Saisissez un numéro local (ex : 0612345678) ou international (+33…).',
+      path: ['phone'],
+    });
+  }
+}
 
-  ctx.addIssue({
-    code: z.ZodIssueCode.custom,
-    message: 'Numéro invalide. Ex : 22123456 (Tunisie) ou +33601234567 (France)',
-  });
+const phoneFieldSchema = z.string().superRefine((val, ctx) => {
+  if (!isValidNormalizedPhone(normalizePhone(val, 'TN'))) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Numéro invalide. Ex : 22123456 (Tunisie) ou +33601234567 (France)',
+    });
+  }
 });
+
+export const signupCountrySchema = z.enum(SIGNUP_COUNTRY_CODES, {
+  message: 'Veuillez sélectionner un pays',
+});
+
+const signupContactFieldsSchema = {
+  country: signupCountrySchema,
+  phone: z.string().min(1, 'Le numéro de téléphone est requis'),
+  city: z
+    .string()
+    .min(2, 'La ville doit contenir au moins 2 caractères')
+    .max(100, 'La ville ne peut pas dépasser 100 caractères'),
+};
 
 export const passwordSchema = z
   .string()
@@ -98,35 +139,34 @@ export const driverSignupSchema = signupObjectSchema
     activityType: z.enum(['vtc', 'transporteur'], {
       message: 'Veuillez choisir votre type d\'activité',
     }),
+    ...signupContactFieldsSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Les mots de passe ne correspondent pas',
     path: ['confirmPassword'],
-  });
+  })
+  .superRefine(refineSignupPhone);
 
-export const clientSignupSchema = z.object({
-  firstName: z
-    .string()
-    .min(2, 'Le prénom doit contenir au moins 2 caractères')
-    .max(50, 'Le prénom ne peut pas dépasser 50 caractères'),
-  lastName: z
-    .string()
-    .min(2, 'Le nom doit contenir au moins 2 caractères')
-    .max(50, 'Le nom ne peut pas dépasser 50 caractères'),
-  email: z
-    .string()
-    .email('Veuillez entrer une adresse email valide'),
-  phone: phoneFieldSchema,
-  city: z
-    .string()
-    .min(2, 'La ville doit contenir au moins 2 caractères')
-    .max(100, 'La ville ne peut pas dépasser 100 caractères'),
-  password: passwordSchema,
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword']
-});
+export const clientSignupSchema = z
+  .object({
+    firstName: z
+      .string()
+      .min(2, 'Le prénom doit contenir au moins 2 caractères')
+      .max(50, 'Le prénom ne peut pas dépasser 50 caractères'),
+    lastName: z
+      .string()
+      .min(2, 'Le nom doit contenir au moins 2 caractères')
+      .max(50, 'Le nom ne peut pas dépasser 50 caractères'),
+    email: z.string().email('Veuillez entrer une adresse email valide'),
+    ...signupContactFieldsSchema,
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Les mots de passe ne correspondent pas',
+    path: ['confirmPassword'],
+  })
+  .superRefine(refineSignupPhone);
 
 export const validatePassword = (password: string) => {
   const requirements = [

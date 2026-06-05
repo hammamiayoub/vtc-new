@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Phone, MapPin, AlertCircle } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { SignupCountryPhoneFields } from './ui/SignupCountryPhoneFields';
 import { Button } from './ui/Button';
 import { CityInput } from './ui/CityInput';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { clientSignupSchema, normalizePhone } from '../utils/validation';
 import { ClientSignupFormData } from '../types';
+import type { SignupCountryCode } from '../utils/signupCountries';
 import { supabase } from '../lib/supabase';
 
 interface ClientSignupProps {
@@ -19,8 +21,6 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cityValue, setCityValue] = useState('');
-
   const {
     register,
     handleSubmit,
@@ -29,21 +29,34 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
     formState: { errors, isValid }
   } = useForm<ClientSignupFormData>({
     resolver: zodResolver(clientSignupSchema),
-    mode: 'onChange'
+    mode: 'onChange',
+    defaultValues: {
+      country: 'TN',
+      city: '',
+    },
   });
 
   const watchPassword = watch('password', '');
+  const watchCountry = watch('country', 'TN') as SignupCountryCode;
+  const watchCity = watch('city', '');
+  const prevCountryRef = useRef(watchCountry);
 
-  // Synchroniser la ville avec le formulaire
+  const handleCityChange = (value: string) => {
+    setValue('city', value, { shouldValidate: true, shouldDirty: true });
+  };
+
   useEffect(() => {
-    setValue('city', cityValue);
-  }, [cityValue, setValue]);
+    if (prevCountryRef.current !== watchCountry) {
+      setValue('city', '', { shouldValidate: true });
+      prevCountryRef.current = watchCountry;
+    }
+  }, [watchCountry, setValue]);
 
   const onSubmit = async (data: ClientSignupFormData) => {
     setIsSubmitting(true);
     setError(null);
     // Normalisation du numéro avant envoi (sécurité si onBlur n'a pas encore été déclenché)
-    data.phone = normalizePhone(data.phone);
+    data.phone = normalizePhone(data.phone, data.country);
     try {
       // Vérifier si l'email existe déjà AVANT de créer l'utilisateur
       console.log('🔍 Vérification de l\'email avant création...');
@@ -128,6 +141,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             last_name: data.lastName,
             email: data.email,
             phone: data.phone,
+            country: data.country,
             city: data.city,
           });
 
@@ -163,6 +177,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 last_name: data.lastName,
                 email: data.email,
                 phone: data.phone,
+                country: data.country,
                 city: data.city,
                 created_at: new Date().toISOString()
               },
@@ -324,42 +339,26 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
               </div>
 
-              {/* Téléphone */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  {...register('phone')}
-                  type="tel"
-                  placeholder="Ex : 22123456 ou +33601234567"
-                  autoComplete="tel"
-                  onBlur={(e) => {
-                    const normalized = normalizePhone(e.target.value);
-                    if (normalized !== e.target.value) {
-                      setValue('phone', normalized, { shouldValidate: true });
-                    }
-                  }}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-                    errors.phone ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-                {errors.phone && <p className="mt-2 text-sm text-red-600">{errors.phone.message}</p>}
-              </div>
+              <SignupCountryPhoneFields
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+                focusRingClass="focus:ring-2 focus:ring-purple-500"
+              />
 
-              {/* VILLE — déplacé ICI sous téléphone */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MapPin className="h-5 w-5 text-gray-400" />
-                </div>
-                  <CityInput
-                    value={cityValue}
-                    onChange={setCityValue}
-                    placeholder="Ville de résidence"
-                    error={errors.city?.message}
-                    required
-                  />
-                {errors.city && <p className="mt-2 text-sm text-red-600">{errors.city.message}</p>}
+              <div>
+                <label htmlFor="client-city" className="block text-sm font-medium text-gray-700 mb-1">
+                  Ville
+                </label>
+                <CityInput
+                  value={watchCity}
+                  onChange={handleCityChange}
+                  country={watchCountry}
+                  placeholder="Rechercher votre ville"
+                  error={errors.city?.message}
+                  required
+                />
               </div>
 
               {/* MOT DE PASSE — vient après la ville */}
