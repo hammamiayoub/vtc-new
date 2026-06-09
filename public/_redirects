@@ -1,3 +1,8 @@
-# Redirections pour SPA - Toutes les routes vers index.html
-/*    /index.html   200
+# Fichiers statiques SEO — doivent être servis tels quels (pas le fallback SPA)
+/robots.txt       /robots.txt       200
+/sitemap.xml      /sitemap.xml      200
+/favicon.ico      /favicon.ico      200
+/tunidrive-logo.png  /tunidrive-logo.png  200
 
+# Fallback SPA — toutes les autres routes vers index.html
+/*                /index.html       200
