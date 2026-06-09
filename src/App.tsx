@@ -22,8 +22,9 @@ import { supabase } from './lib/supabase';
 import { initAnalytics, analytics } from './utils/analytics';
 import { updateSEO } from './utils/seo';
 import { ChatWidget } from './components/ChatWidget';
+import { ParcelTransportPage } from './components/ParcelTransportPage';
 
-type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password';
+type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password' | 'parcel-transport';
 
 function AppContent() {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -101,6 +102,10 @@ function AppContent() {
         
         checkAdminAuth();
         viewKey = 'home';
+        break;
+      case '/transport-colis-europe-tunisie':
+        setCurrentView('parcel-transport');
+        viewKey = 'parcel-transport';
         break;
       case '/privacy-policy':
         setCurrentView('privacy-policy');
@@ -357,6 +362,8 @@ function AppContent() {
             onSuccess={() => navigate('/')}
           />
         );
+      case 'parcel-transport':
+        return <ParcelTransportPage />;
       default:
         return (
           <HomePage 
@@ -369,7 +376,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {(currentView === 'home' || currentView === 'admin') && (
+      {(currentView === 'home' || currentView === 'admin' || currentView === 'parcel-transport') && (
         <Header currentView={currentView} onViewChange={setCurrentView} />
       )}
       {renderContent()}

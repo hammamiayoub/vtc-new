@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, LogIn, MapPin, Menu, X } from 'lucide-react';
+import { UserPlus, LogIn, MapPin, Menu, X, Package } from 'lucide-react';
 
 interface HeaderProps {
-  currentView: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login';
-  onViewChange: (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login') => void;
+  currentView: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'admin';
+  onViewChange: (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'admin') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
@@ -28,10 +28,22 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => handleNavigation('home')}
           >
-            <h1 className="text-3xl font-bold text-white tracking-tight">TuniDrive</h1>
+            <span className="text-3xl font-bold text-white tracking-tight">TuniDrive</span>
           </div>
           
           <nav className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => { navigate('/transport-colis-europe-tunisie'); }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
+                currentView === 'parcel-transport'
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              <Package size={20} />
+              <span className="hidden lg:inline">Transport colis</span>
+            </button>
+
             <button
               onClick={() => { navigate('/signup'); }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
@@ -41,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               }`}
             >
               <UserPlus size={20} />
-              <span className="hidden sm:inline">Devenir chauffeur</span>
+              <span className="hidden lg:inline">Devenir chauffeur</span>
             </button>
             
             <button
@@ -90,6 +102,14 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
                 <span>Réserver une course</span>
               </button>
               
+              <button
+                onClick={() => { navigate('/transport-colis-europe-tunisie'); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <Package size={20} />
+                <span>Transport colis Europe ↔ Tunisie</span>
+              </button>
+
               <button
                 onClick={() => { navigate('/signup'); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
