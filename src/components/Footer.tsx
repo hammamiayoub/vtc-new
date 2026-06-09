@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Shield, FileText, UserPlus, Car, Mail, MessageCircle, Facebook, Instagram } from 'lucide-react';
+import { Heart, Shield, FileText, UserPlus, Car, Mail, MessageCircle, Facebook, Instagram, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface FooterProps {
@@ -14,16 +14,41 @@ export const Footer: React.FC<FooterProps> = () => {
         <div className="grid md:grid-cols-6 gap-8">
           {/* Logo et description */}
           <div className="md:col-span-2">
-            <h3 className="text-2xl font-bold mb-4">TuniDrive</h3>
+            <p className="text-2xl font-bold mb-4">TuniDrive</p>
             <p className="text-gray-300 mb-4 max-w-md">
               Mobilité et transport en Tunisie : courses VTC avec chauffeurs professionnels
-              et transport de colis <p className="text-gray-300">Europe ↔ Tunisie.</p>
+              et transport international de colis Europe ↔ Tunisie.
             </p>
             <div className="flex items-center gap-2 text-gray-400">
               <span>Fait avec</span>
               <Heart size={16} className="text-red-500" />
               <span>en Tunisie</span>
             </div>
+          </div>
+
+          {/* Services */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Services</h4>
+            <ul className="space-y-2 text-gray-300">
+              <li>
+                <Link
+                  to="/#transport-vtc"
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <Car size={16} />
+                  VTC &amp; chauffeur privé
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/transport-colis-europe-tunisie"
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <Package size={16} />
+                  Transport colis Europe ↔ Tunisie
+                </Link>
+              </li>
+            </ul>
           </div>
 
           {/* Inscription */}

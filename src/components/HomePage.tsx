@@ -1,5 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown, Package, Globe } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Footer } from './Footer';
@@ -36,9 +37,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight tracking-tight max-w-5xl mx-auto">
-            Voyagez, expédiez, transportez
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-4 leading-tight tracking-tight max-w-5xl mx-auto">
+              Voyagez, expédiez, transportez
             </h1>
+            <p className="text-2xl md:text-3xl font-semibold text-gray-700 mb-6 max-w-4xl mx-auto">
+              VTC en Tunisie &amp; transport de colis Europe ↔ Tunisie
+            </p>
             <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
               Réservez vos trajets avec des chauffeurs professionnels, ou faites transporter vos colis
               et grosses marchandises entre l&apos;Europe et la Tunisie en toute simplicité.
@@ -79,7 +83,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
       </section>
 
       {/* Transport de personnes — activité principale */}
-      <section className="py-20 bg-gray-50 border-y border-gray-100">
+      <section id="transport-vtc" className="py-20 bg-gray-50 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             
@@ -157,7 +161,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
       </section>
 
       {/* Transport international de colis */}
-      <section className="py-20 bg-white-50  border-white-100">
+      <section id="transport-colis" className="py-20 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
@@ -172,6 +176,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Vous envoyez ou recevez des colis à l&apos;international ? Déposez une demande de devis :
               les transporteurs qualifiés vous proposent leurs tarifs, vous comparez et validez en ligne.
+              France, Italie, Allemagne, Espagne, Belgique, Luxembourg, Suisse, Pays-Bas ↔ Tunisie.
             </p>
           </div>
 
@@ -218,7 +223,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
               size="lg"
               onClick={onClientLogin}
@@ -227,6 +232,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
               Demander un devis transport de colis
               <ArrowRight size={20} />
             </Button>
+            <Link
+              to="/transport-colis-europe-tunisie"
+              className="text-lg px-8 py-4 text-gray-700 hover:text-gray-900 font-medium underline-offset-4 hover:underline"
+            >
+              En savoir plus sur le transport de colis
+            </Link>
           </div>
         </div>
       </section>
