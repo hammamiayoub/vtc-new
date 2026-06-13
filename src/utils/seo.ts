@@ -43,6 +43,18 @@ export const seoData: Record<string, SEOData> = {
     ogImage: DEFAULT_OG_IMAGE,
     canonical: '/transport-colis-europe-tunisie',
   },
+  blog: {
+    title: 'Blog TuniDrive | VTC, transport colis & mobilité en Tunisie',
+    description:
+      'Articles et guides TuniDrive : chauffeur privé VTC en Tunisie, transport de colis Europe ↔ Tunisie, conseils pratiques et actualités transport.',
+    keywords:
+      'blog VTC Tunisie, transport colis Europe Tunisie, conseils chauffeur privé, envoi colis Tunisie, actualités mobilité Tunisie',
+    ogTitle: 'Blog TuniDrive | VTC & transport colis',
+    ogDescription:
+      'Guides et articles sur le VTC en Tunisie et le transport international de colis Europe ↔ Tunisie.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/blog',
+  },
   signup: {
     title: 'Devenir chauffeur ou transporteur | VTC & colis TuniDrive',
     description:

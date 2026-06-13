@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Shield, FileText, UserPlus, Car, Mail, MessageCircle, Facebook, Instagram, Package } from 'lucide-react';
+import { Heart, Shield, FileText, UserPlus, Car, Mail, MessageCircle, Facebook, Instagram, Package, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface FooterProps {
@@ -46,6 +46,15 @@ export const Footer: React.FC<FooterProps> = () => {
                 >
                   <Package size={16} />
                   Transport colis Europe ↔ Tunisie
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/blog"
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <BookOpen size={16} />
+                  Blog
                 </Link>
               </li>
             </ul>

@@ -1,23 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, LogIn, MapPin, Menu, X, Package } from 'lucide-react';
+import { UserPlus, LogIn, MapPin, Menu, X, Package, BookOpen } from 'lucide-react';
 
 interface HeaderProps {
-  currentView: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'admin';
-  onViewChange: (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'admin') => void;
+  currentView: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'blog' | 'admin';
+  onViewChange: (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'blog' | 'admin') => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
+export const Header: React.FC<HeaderProps> = ({ currentView }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const navigate = useNavigate();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const handleNavigation = (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login') => {
-    onViewChange(view);
-    setIsMobileMenuOpen(false); // Fermer le menu après navigation
   };
 
   return (
@@ -26,12 +21,24 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
         <div className="flex justify-between items-center h-20">
           <div 
             className="flex items-center gap-3 cursor-pointer"
-            onClick={() => handleNavigation('home')}
+            onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }}
           >
             <span className="text-3xl font-bold text-white tracking-tight">TuniDrive</span>
           </div>
           
           <nav className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => { navigate('/blog'); }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
+                currentView === 'blog'
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              <BookOpen size={20} />
+              <span className="hidden lg:inline">Blog</span>
+            </button>
+
             <button
               onClick={() => { navigate('/transport-colis-europe-tunisie'); }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
@@ -102,6 +109,14 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
                 <span>Réserver une course</span>
               </button>
               
+              <button
+                onClick={() => { navigate('/blog'); setIsMobileMenuOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <BookOpen size={20} />
+                <span>Blog</span>
+              </button>
+
               <button
                 onClick={() => { navigate('/transport-colis-europe-tunisie'); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
