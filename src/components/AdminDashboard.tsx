@@ -20,8 +20,18 @@ import {
 import { AdminParcelQuotes } from './AdminParcelQuotes';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
-import { updateVehicle } from '../utils/vehicles';
+import {
+  formatVehicleType,
+  listVehicles,
+  normalizeLegacyVehicleInfo,
+  updateVehicle,
+  vehicleToVehicleInfo,
+} from '../utils/vehicles';
 import { Driver, ClientWithBookings, Vehicle, DriverAvailability } from '../types';
+
+interface AdminDriver extends Driver {
+  vehicles?: Vehicle[];
+}
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -101,13 +111,14 @@ interface AdminBooking {
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
-  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [drivers, setDrivers] = useState<AdminDriver[]>([]);
   const [clients, setClients] = useState<ClientWithBookings[]>([]);
   const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
+  const [vehiclesFetchError, setVehiclesFetchError] = useState<string | null>(null);
   const [subscriptions, setSubscriptions] = useState<DriverSubscription[]>([]);
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<AdminDriver | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientWithBookings | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleWithDriver | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<VehicleWithDriver | null>(null);
@@ -287,33 +298,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             console.error(`Erreur récupération courses pour ${driver.first_name} ${driver.last_name}:`, allBookingsError);
           }
 
-          // Récupérer le véhicule principal (is_primary = true) ou le premier véhicule actif
-          let vehicleInfo = driver.vehicle_info;
-          
-          if (!vehicleInfo) {
-            const { data: vehiclesData, error: vehiclesError } = await supabase
-              .from('vehicles')
-              .select('*')
-              .eq('driver_id', driver.id)
-              .is('deleted_at', null)
-              .order('is_primary', { ascending: false })
-              .limit(1)
-              .maybeSingle();
-
-            if (!vehiclesError && vehiclesData) {
-              // Convertir le format de la table vehicles en format vehicle_info
-              vehicleInfo = {
-                make: vehiclesData.make,
-                model: vehiclesData.model,
-                year: vehiclesData.year,
-                color: vehiclesData.color,
-                licensePlate: vehiclesData.license_plate,
-                seats: vehiclesData.seats,
-                type: vehiclesData.type,
-                photoUrl: vehiclesData.photo_url
-              };
-            }
+          // Priorité à la table vehicles (vehicle_info legacy vaut souvent {} par défaut)
+          let driverVehicles: Vehicle[] = [];
+          try {
+            driverVehicles = await listVehicles(driver.id);
+          } catch (vehiclesError) {
+            console.error(`Erreur récupération véhicules pour ${driver.first_name} ${driver.last_name}:`, vehiclesError);
           }
+
+          const primaryVehicle =
+            driverVehicles.find((vehicle) => vehicle.is_primary) ?? driverVehicles[0];
+          const vehicleInfo = primaryVehicle
+            ? vehicleToVehicleInfo(primaryVehicle)
+            : normalizeLegacyVehicleInfo(driver.vehicle_info);
 
           // Calculer les statistiques détaillées
           const stats = {
@@ -356,7 +353,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
           return {
             ...driver,
-            vehicle_info: vehicleInfo, // Utiliser le véhicule récupéré (legacy ou table vehicles)
+            vehicle_info: vehicleInfo,
+            driverVehicles,
             bookingCount: totalBookings,
             totalEarnings: stats.totalEarnings,
             completedBookings: stats.completedBookings,
@@ -388,6 +386,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         city: driver.city,
         licenseNumber: driver.license_number,
         vehicleInfo: driver.vehicle_info,
+        vehicles: driver.driverVehicles,
         status: driver.status,
         profilePhotoUrl: driver.profile_photo_url,
         createdAt: driver.created_at,
@@ -517,62 +516,62 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
   const fetchVehicles = async () => {
     if (!loading) setRefreshing(true);
-    
+    setVehiclesFetchError(null);
+
     try {
       console.log('🔍 Admin - Récupération des véhicules...');
-      
-      // Récupérer TOUS les véhicules non supprimés (pas seulement les principaux) avec les informations du chauffeur
+
       const { data: vehiclesData, error: vehiclesError } = await supabase
         .from('vehicles')
-        .select(`
-          *,
-          drivers (
-            id,
-            first_name,
-            last_name,
-            email,
-            phone,
-            city,
-            status
-          )
-        `)
+        .select('*')
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (vehiclesError) {
         console.error('Erreur lors de la récupération des véhicules:', vehiclesError);
+        setVehiclesFetchError(vehiclesError.message);
         return;
       }
 
       console.log('📊 Admin - Véhicules récupérés:', vehiclesData?.length || 0);
 
-      // Pour chaque véhicule, récupérer les disponibilités à venir
-      const vehiclesWithAvailability = await Promise.all(
-        (vehiclesData || []).map(async (vehicle: {
+      const driverIds = [
+        ...new Set((vehiclesData || []).map((vehicle) => vehicle.driver_id).filter(Boolean)),
+      ];
+
+      const driverMap = new Map<
+        string,
+        {
           id: string;
-          driver_id: string;
-          make: string;
-          model: string;
-          year?: number;
-          color?: string;
-          license_plate?: string;
-          seats?: number;
-          type?: string;
-          photo_url?: string;
-          is_primary?: boolean;
-          created_at: string;
-          updated_at: string;
-          drivers?: {
-            id: string;
-            first_name: string;
-            last_name: string;
-            email: string;
-            phone?: string;
-            city?: string;
-            status: string;
-          };
-        }) => {
-          // Récupérer les disponibilités futures du chauffeur (30 prochains jours)
+          first_name: string;
+          last_name: string;
+          email: string;
+          phone?: string;
+          city?: string;
+          status: string;
+        }
+      >();
+
+      if (driverIds.length > 0) {
+        const { data: driversData, error: driversError } = await supabase
+          .from('drivers')
+          .select('id, first_name, last_name, email, phone, city, status')
+          .in('id', driverIds);
+
+        if (driversError) {
+          console.error('Erreur récupération chauffeurs pour véhicules:', driversError);
+          setVehiclesFetchError(
+            `Véhicules chargés, mais les chauffeurs associés n'ont pas pu être récupérés : ${driversError.message}`
+          );
+        } else {
+          (driversData || []).forEach((driver) => {
+            driverMap.set(driver.id, driver);
+          });
+        }
+      }
+
+      const vehiclesWithAvailability = await Promise.all(
+        (vehiclesData || []).map(async (vehicle) => {
           const today = new Date().toISOString().split('T')[0];
           const futureDate = new Date();
           futureDate.setDate(futureDate.getDate() + 30);
@@ -592,7 +591,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             console.error(`Erreur récupération disponibilités pour véhicule ${vehicle.id}:`, availError);
           }
 
-          // Compter toutes les disponibilités futures
           const { count: availCount } = await supabase
             .from('driver_availability')
             .select('*', { count: 'exact', head: true })
@@ -600,63 +598,65 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             .eq('is_available', true)
             .gte('date', today);
 
+          const driverRow = driverMap.get(vehicle.driver_id);
+
           return {
             id: vehicle.id,
             driverId: vehicle.driver_id,
             make: vehicle.make,
             model: vehicle.model,
-            year: vehicle.year,
-            color: vehicle.color,
-            licensePlate: vehicle.license_plate,
-            seats: vehicle.seats,
-            type: vehicle.type as 'sedan' | 'pickup' | 'van' | 'minibus' | 'bus' | 'truck' | 'utility' | 'taxi' | undefined,
-            photoUrl: vehicle.photo_url,
-            isVip: (vehicle as { is_vip?: boolean }).is_vip ?? false,
-            is_primary: vehicle.is_primary,
+            year: vehicle.year ?? undefined,
+            color: vehicle.color ?? undefined,
+            licensePlate: vehicle.license_plate ?? undefined,
+            seats: vehicle.seats ?? undefined,
+            type: vehicle.type as Vehicle['type'],
+            photoUrl: vehicle.photo_url ?? undefined,
+            isVip: vehicle.is_vip ?? false,
+            is_primary: vehicle.is_primary ?? undefined,
             createdAt: vehicle.created_at,
             updatedAt: vehicle.updated_at,
-            driver: vehicle.drivers ? {
-              firstName: vehicle.drivers.first_name,
-              lastName: vehicle.drivers.last_name,
-              email: vehicle.drivers.email,
-              phone: vehicle.drivers.phone,
-              city: vehicle.drivers.city,
-              status: vehicle.drivers.status
-            } : undefined,
-            upcomingAvailabilities: availData?.map((a: {
-              id: string;
-              driver_id: string;
-              date: string;
-              start_time: string;
-              end_time: string;
-              is_available: boolean;
-              created_at: string;
-              updated_at: string;
-            }) => ({
-              id: a.id,
-              driverId: a.driver_id,
-              date: a.date,
-              startTime: a.start_time,
-              endTime: a.end_time,
-              isAvailable: a.is_available,
-              createdAt: a.created_at,
-              updatedAt: a.updated_at
-            })) || [],
-            availabilityCount: availCount || 0
+            driver: driverRow
+              ? {
+                  firstName: driverRow.first_name,
+                  lastName: driverRow.last_name,
+                  email: driverRow.email,
+                  phone: driverRow.phone,
+                  city: driverRow.city,
+                  status: driverRow.status,
+                }
+              : undefined,
+            upcomingAvailabilities:
+              availData?.map((a) => ({
+                id: a.id,
+                driverId: a.driver_id,
+                date: a.date,
+                startTime: a.start_time,
+                endTime: a.end_time,
+                isAvailable: a.is_available,
+                createdAt: a.created_at,
+                updatedAt: a.updated_at,
+              })) || [],
+            availabilityCount: availCount || 0,
           };
         })
       );
 
-      // Trier les véhicules par date de création (plus récent en premier)
-      const sortedVehicles = vehiclesWithAvailability.sort((a, b) => {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
+      const sortedVehicles = vehiclesWithAvailability.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
 
-      console.log('📊 Admin - Véhicules triés:', sortedVehicles.length, 'dont', sortedVehicles.filter(v => v.is_primary).length, 'principaux');
+      console.log(
+        '📊 Admin - Véhicules triés:',
+        sortedVehicles.length,
+        'dont',
+        sortedVehicles.filter((v) => v.is_primary).length,
+        'principaux'
+      );
 
       setVehicles(sortedVehicles);
     } catch (error) {
       console.error('Erreur:', error);
+      setVehiclesFetchError(error instanceof Error ? error.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -2432,9 +2432,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               </div>
             </div>
 
+            {vehiclesFetchError && (
+              <div className="mx-4 sm:mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {vehiclesFetchError}
+              </div>
+            )}
+
             {/* Version desktop - Tableau des véhicules */}
-            <div className="hidden lg:block overflow-x-hidden">
-              <table className="w-full table-auto">
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full min-w-[1100px] table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
@@ -2510,16 +2516,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <div className="text-xs">
                           <p className="text-gray-900 truncate">{vehicle.color || 'N/A'}</p>
                           <p className="text-gray-500 text-[10px] truncate">{vehicle.licensePlate || 'N/A'}</p>
-                          <p className="text-gray-500 text-[10px]">{vehicle.seats || 'N/A'} places</p>
-                          <p className="text-gray-500 text-[10px] capitalize truncate">
-                            {vehicle.type === 'sedan' && 'Berline'}
-                            {vehicle.type === 'pickup' && 'Pickup'}
-                            {vehicle.type === 'van' && 'Van'}
-                            {vehicle.type === 'minibus' && 'Minibus'}
-                            {vehicle.type === 'bus' && 'Bus'}
-                            {vehicle.type === 'truck' && 'Camion'}
-                            {vehicle.type === 'utility' && 'Utilitaire'}
-                            {vehicle.type === 'taxi' && 'Taxi'}
+                          <p className="text-gray-500 text-[10px]">{vehicle.seats ?? 'N/A'} places</p>
+                          <p className="text-gray-500 text-[10px] truncate">
+                            {formatVehicleType(vehicle.type)}
                           </p>
                         </div>
                       </td>
@@ -2844,8 +2843,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </button>
                     )}
 
-                    <div className="text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
-                      <p className="text-xs">{vehicle.color} • {vehicle.licensePlate} • {vehicle.seats} places</p>
+                    <div className="text-sm text-gray-600 bg-gray-50 rounded-lg p-2 space-y-1">
+                      <p className="text-xs font-medium text-gray-900">
+                        {vehicle.driver
+                          ? `${vehicle.driver.firstName} ${vehicle.driver.lastName}`
+                          : 'Aucun chauffeur associé'}
+                      </p>
+                      <p className="text-xs">
+                        {vehicle.color || 'Couleur N/A'} • {vehicle.licensePlate || 'Plaque N/A'} •{' '}
+                        {vehicle.seats ?? 'N/A'} places • {formatVehicleType(vehicle.type)}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -3434,7 +3441,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Driver Detail Modal */}
       {selectedDriver && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[100]">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -3490,7 +3497,61 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               </div>
 
               {/* Vehicle Info */}
-              {selectedDriver.vehicleInfo && (
+              {selectedDriver.vehicles && selectedDriver.vehicles.length > 0 ? (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                    Véhicules enregistrés ({selectedDriver.vehicles.length})
+                  </h4>
+                  <div className="space-y-4">
+                    {selectedDriver.vehicles.map((vehicle) => (
+                      <div key={vehicle.id} className="border border-gray-200 rounded-xl p-4">
+                        <div className="flex items-start gap-4 mb-4">
+                          {vehicle.photoUrl ? (
+                            <img
+                              src={vehicle.photoUrl}
+                              alt={`${vehicle.make} ${vehicle.model}`}
+                              className="w-24 h-20 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-24 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <Car size={28} className="text-gray-500" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {vehicle.make} {vehicle.model}
+                              {vehicle.is_primary && (
+                                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                  Principal
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-sm text-gray-500">{vehicle.year || 'Année N/A'}</p>
+                          </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 mb-1">Couleur</p>
+                            <p className="font-medium text-gray-900">{vehicle.color || 'N/A'}</p>
+                          </div>
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 mb-1">Plaque</p>
+                            <p className="font-medium text-gray-900">{vehicle.licensePlate || 'N/A'}</p>
+                          </div>
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 mb-1">Places</p>
+                            <p className="font-medium text-gray-900">{vehicle.seats ?? 'N/A'}</p>
+                          </div>
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 mb-1">Type</p>
+                            <p className="font-medium text-gray-900 capitalize">{vehicle.type || 'N/A'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : selectedDriver.vehicleInfo ? (
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">Informations véhicule</h4>
                   <div className="grid md:grid-cols-2 gap-4">
@@ -3530,6 +3591,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </p>
                     </div>
                   </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-gray-300 p-6 text-center">
+                  <Car size={32} className="text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600">Aucun véhicule enregistré pour ce chauffeur.</p>
                 </div>
               )}
 
@@ -4351,7 +4417,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Vehicle Detail Modal */}
       {selectedVehicle && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[100]">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -4417,14 +4483,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Type</p>
                     <p className="font-semibold text-gray-900 capitalize">
-                      {selectedVehicle.type === 'sedan' && 'Berline'}
-                      {selectedVehicle.type === 'pickup' && 'Pickup'}
-                      {selectedVehicle.type === 'van' && 'Van'}
-                      {selectedVehicle.type === 'minibus' && 'Minibus'}
-                      {selectedVehicle.type === 'bus' && 'Bus'}
-                      {selectedVehicle.type === 'truck' && 'Camion'}
-                      {selectedVehicle.type === 'utility' && 'Utilitaire'}
-                      {selectedVehicle.type === 'taxi' && 'Taxi'}
+                      {formatVehicleType(selectedVehicle.type)}
                     </p>
                   </div>
                   {selectedVehicle.is_primary && (

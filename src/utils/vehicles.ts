@@ -1,5 +1,43 @@
 import { supabase } from '../lib/supabase';
-import { Vehicle } from '../types';
+import { Vehicle, VehicleInfo } from '../types';
+
+export function isLegacyVehicleInfoEmpty(info: unknown): boolean {
+  if (!info || typeof info !== 'object') return true;
+  const v = info as Record<string, unknown>;
+  const make = typeof v.make === 'string' ? v.make.trim() : '';
+  const model = typeof v.model === 'string' ? v.model.trim() : '';
+  return !make || !model;
+}
+
+export function normalizeLegacyVehicleInfo(info: unknown): VehicleInfo | undefined {
+  if (isLegacyVehicleInfoEmpty(info)) return undefined;
+  const v = info as Record<string, unknown>;
+  return {
+    make: String(v.make),
+    model: String(v.model),
+    year: Number(v.year) || 0,
+    color: String(v.color ?? ''),
+    licensePlate: String(v.licensePlate ?? v.license_plate ?? ''),
+    seats: Number(v.seats) || 0,
+    type: (v.type as VehicleInfo['type']) || 'sedan',
+    photoUrl: (v.photoUrl as string | undefined) ?? (v.photo_url as string | undefined),
+    isVip: Boolean(v.isVip ?? v.is_vip),
+  };
+}
+
+export function vehicleToVehicleInfo(vehicle: Vehicle): VehicleInfo {
+  return {
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year ?? 0,
+    color: vehicle.color ?? '',
+    licensePlate: vehicle.licensePlate ?? '',
+    seats: vehicle.seats ?? 0,
+    type: vehicle.type ?? 'sedan',
+    photoUrl: vehicle.photoUrl,
+    isVip: vehicle.isVip,
+  };
+}
 
 export async function listVehicles(driverId: string): Promise<Vehicle[]> {
   const { data, error } = await supabase
@@ -65,7 +103,23 @@ export async function softDeleteVehicle(vehicleId: string): Promise<void> {
   if (error) throw error;
 }
 
-function mapVehicleRowToVehicle(row: any): Vehicle {
+export function formatVehicleType(type?: string | null): string {
+  if (!type) return 'N/A';
+  const labels: Record<string, string> = {
+    sedan: 'Berline',
+    pickup: 'Pickup',
+    van: 'Van',
+    minibus: 'Minibus',
+    bus: 'Bus',
+    truck: 'Camion',
+    utility: 'Utilitaire',
+    taxi: 'Taxi',
+    limousine: 'Limousine',
+  };
+  return labels[type] || type;
+}
+
+export function mapVehicleRowToVehicle(row: any): Vehicle {
   return {
     id: row.id,
     driverId: row.driver_id,
