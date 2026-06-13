@@ -23,8 +23,27 @@ import { initAnalytics, analytics } from './utils/analytics';
 import { updateSEO } from './utils/seo';
 import { ChatWidget } from './components/ChatWidget';
 import { ParcelTransportPage } from './components/ParcelTransportPage';
+import { BlogPage } from './components/BlogPage';
 
-type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password' | 'parcel-transport';
+const PUBLIC_PATHS = new Set([
+  '/',
+  '/signup',
+  '/client-signup',
+  '/login',
+  '/driver-login',
+  '/client-login',
+  '/privacy-policy',
+  '/terms-of-service',
+  '/transport-colis-europe-tunisie',
+  '/reset-password',
+  '/blog',
+]);
+
+function isPublicPath(path: string): boolean {
+  return PUBLIC_PATHS.has(path) || path.startsWith('/blog/');
+}
+
+type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password' | 'parcel-transport' | 'blog';
 
 function AppContent() {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -107,6 +126,10 @@ function AppContent() {
         setCurrentView('parcel-transport');
         viewKey = 'parcel-transport';
         break;
+      case '/blog':
+        setCurrentView('blog');
+        viewKey = 'blog';
+        break;
       case '/privacy-policy':
         setCurrentView('privacy-policy');
         viewKey = 'privacy-policy';
@@ -120,8 +143,13 @@ function AppContent() {
         viewKey = 'home'; // Utiliser les meta de la page d'accueil pour la réinitialisation
         break;
       default:
-        setCurrentView('home');
-        viewKey = 'home';
+        if (path.startsWith('/blog/')) {
+          setCurrentView('blog');
+          viewKey = 'blog';
+        } else {
+          setCurrentView('home');
+          viewKey = 'home';
+        }
         break;
     }
     
@@ -175,7 +203,9 @@ function AppContent() {
           
           if (adminData && adminData.length > 0) {
             setUserType('admin');
-            setCurrentView('admin-dashboard');
+            if (!isPublicPath(location.pathname)) {
+              setCurrentView('admin-dashboard');
+            }
             setIsLoading(false);
             return;
           }
@@ -189,7 +219,9 @@ function AppContent() {
           
           if (driverData && driverData.length > 0) {
             setUserType('driver');
-            setCurrentView('dashboard');
+            if (!isPublicPath(location.pathname)) {
+              setCurrentView('dashboard');
+            }
             setIsLoading(false);
             return;
           }
@@ -203,7 +235,9 @@ function AppContent() {
           
           if (clientData && clientData.length > 0) {
             setUserType('client');
-            setCurrentView('client-dashboard');
+            if (!isPublicPath(location.pathname)) {
+              setCurrentView('client-dashboard');
+            }
             setIsLoading(false);
             return;
           }
@@ -364,6 +398,8 @@ function AppContent() {
         );
       case 'parcel-transport':
         return <ParcelTransportPage />;
+      case 'blog':
+        return <BlogPage />;
       default:
         return (
           <HomePage 
@@ -376,7 +412,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {(currentView === 'home' || currentView === 'admin' || currentView === 'parcel-transport') && (
+      {(currentView === 'home' || currentView === 'admin' || currentView === 'parcel-transport' || currentView === 'blog') && (
         <Header currentView={currentView} onViewChange={setCurrentView} />
       )}
       {renderContent()}
