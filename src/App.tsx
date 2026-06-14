@@ -1,328 +1,243 @@
-import React, { useState } from 'react';
-import { useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Header';
 import { HomePage } from './components/HomePage';
-import { DriverSignup } from './components/DriverSignup';
-import { LoginPage } from './components/LoginPage';
-import { DriverDashboard } from './components/DriverDashboard';
-import { AdminLogin } from './components/AdminLogin';
-import { AdminDashboard } from './components/AdminDashboard';
-import { ClientSignup } from './components/ClientSignup';
-import { LoginSelection } from './components/LoginSelection';
-import { DriverLogin } from './components/DriverLogin';
-import { ClientLogin } from './components/ClientLogin';
-import { ClientDashboard } from './components/ClientDashboard';
-import { PrivacyPolicy } from './components/PrivacyPolicy';
-import { TermsOfService } from './components/TermsOfService';
-import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
-import { TermsOfServicePage } from './components/TermsOfServicePage';
-import { ResetPasswordPage } from './components/ResetPasswordPage';
+import { PageLoader } from './components/ui/PageLoader';
+import { ScrollToTop } from './components/ScrollToTop';
 import { supabase } from './lib/supabase';
-import { initAnalytics, analytics } from './utils/analytics';
+import { initAnalytics } from './utils/analytics';
 import { updateSEO } from './utils/seo';
-import { ChatWidget } from './components/ChatWidget';
-import { ParcelTransportPage } from './components/ParcelTransportPage';
-import { BlogPage } from './components/BlogPage';
+import {
+  isPublicPath,
+  isProtectedPath,
+  resolveUserRole,
+} from './utils/resolveUserRole';
 
-const PUBLIC_PATHS = new Set([
-  '/',
-  '/signup',
-  '/client-signup',
-  '/login',
-  '/driver-login',
-  '/client-login',
-  '/privacy-policy',
-  '/terms-of-service',
-  '/transport-colis-europe-tunisie',
-  '/reset-password',
-  '/blog',
-]);
+const DriverSignup = lazy(() =>
+  import('./components/DriverSignup').then((m) => ({ default: m.DriverSignup }))
+);
+const ClientSignup = lazy(() =>
+  import('./components/ClientSignup').then((m) => ({ default: m.ClientSignup }))
+);
+const LoginSelection = lazy(() =>
+  import('./components/LoginSelection').then((m) => ({ default: m.LoginSelection }))
+);
+const DriverLogin = lazy(() =>
+  import('./components/DriverLogin').then((m) => ({ default: m.DriverLogin }))
+);
+const ClientLogin = lazy(() =>
+  import('./components/ClientLogin').then((m) => ({ default: m.ClientLogin }))
+);
+const DriverDashboard = lazy(() =>
+  import('./components/DriverDashboard').then((m) => ({ default: m.DriverDashboard }))
+);
+const ClientDashboard = lazy(() =>
+  import('./components/ClientDashboard').then((m) => ({ default: m.ClientDashboard }))
+);
+const AdminLogin = lazy(() =>
+  import('./components/AdminLogin').then((m) => ({ default: m.AdminLogin }))
+);
+const AdminDashboard = lazy(() =>
+  import('./components/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
+);
+const PrivacyPolicy = lazy(() =>
+  import('./components/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy }))
+);
+const TermsOfService = lazy(() =>
+  import('./components/TermsOfService').then((m) => ({ default: m.TermsOfService }))
+);
+const ResetPasswordPage = lazy(() =>
+  import('./components/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
+);
+const ParcelTransportPage = lazy(() =>
+  import('./components/ParcelTransportPage').then((m) => ({ default: m.ParcelTransportPage }))
+);
+const BlogPage = lazy(() =>
+  import('./components/BlogPage').then((m) => ({ default: m.BlogPage }))
+);
+const PrivacyPolicyPage = lazy(() =>
+  import('./components/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
+);
+const TermsOfServicePage = lazy(() =>
+  import('./components/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage }))
+);
+const ChatWidget = lazy(() =>
+  import('./components/ChatWidget').then((m) => ({ default: m.ChatWidget }))
+);
 
-function isPublicPath(path: string): boolean {
-  return PUBLIC_PATHS.has(path) || path.startsWith('/blog/');
+type View =
+  | 'home'
+  | 'signup'
+  | 'login'
+  | 'dashboard'
+  | 'admin'
+  | 'admin-dashboard'
+  | 'client-signup'
+  | 'login-selection'
+  | 'driver-login'
+  | 'client-login'
+  | 'client-dashboard'
+  | 'privacy-policy'
+  | 'terms-of-service'
+  | 'reset-password'
+  | 'parcel-transport'
+  | 'blog';
+
+function pathToView(path: string): { view: View; seoKey: string } {
+  switch (path) {
+    case '/':
+      return { view: 'home', seoKey: 'home' };
+    case '/signup':
+      return { view: 'signup', seoKey: 'signup' };
+    case '/client-signup':
+      return { view: 'client-signup', seoKey: 'client-signup' };
+    case '/login':
+      return { view: 'login-selection', seoKey: 'home' };
+    case '/driver-login':
+      return { view: 'driver-login', seoKey: 'driver-login' };
+    case '/client-login':
+      return { view: 'client-login', seoKey: 'client-login' };
+    case '/dashboard':
+      return { view: 'dashboard', seoKey: 'home' };
+    case '/client-dashboard':
+      return { view: 'client-dashboard', seoKey: 'client-dashboard' };
+    case '/admin':
+      return { view: 'admin', seoKey: 'home' };
+    case '/admin-dashboard':
+      return { view: 'admin-dashboard', seoKey: 'home' };
+    case '/transport-colis-europe-tunisie':
+      return { view: 'parcel-transport', seoKey: 'parcel-transport' };
+    case '/blog':
+      return { view: 'blog', seoKey: 'blog' };
+    case '/privacy-policy':
+      return { view: 'privacy-policy', seoKey: 'privacy-policy' };
+    case '/terms-of-service':
+      return { view: 'terms-of-service', seoKey: 'terms-of-service' };
+    case '/reset-password':
+      return { view: 'reset-password', seoKey: 'home' };
+    default:
+      if (path.startsWith('/blog/')) {
+        return { view: 'blog', seoKey: 'blog' };
+      }
+      return { view: 'home', seoKey: 'home' };
+  }
 }
 
-type View = 'home' | 'signup' | 'login' | 'dashboard' | 'admin' | 'admin-dashboard' | 'client-signup' | 'login-selection' | 'driver-login' | 'client-login' | 'client-dashboard' | 'privacy-policy' | 'terms-of-service' | 'reset-password' | 'parcel-transport' | 'blog';
+function RouteFallback() {
+  return <PageLoader />;
+}
 
 function AppContent() {
   const [currentView, setCurrentView] = useState<View>('home');
-  const [isLoading, setIsLoading] = useState(true);
-  const [userType, setUserType] = useState<'driver' | 'client' | 'admin' | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Gérer la navigation basée sur l'URL
   useEffect(() => {
-    const path = location.pathname;
-    let viewKey: string;
-    
-    // Mapper les chemins aux vues
-    switch (path) {
-      case '/':
-        setCurrentView('home');
-        viewKey = 'home';
-        break;
-      case '/signup':
-        setCurrentView('signup');
-        viewKey = 'signup';
-        break;
-      case '/client-signup':
-        setCurrentView('client-signup');
-        viewKey = 'client-signup';
-        break;
-      case '/login':
-        setCurrentView('login-selection');
-        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour la sélection de login
-        break;
-      case '/driver-login':
-        setCurrentView('driver-login');
-        viewKey = 'driver-login';
-        break;
-      case '/client-login':
-        setCurrentView('client-login');
-        viewKey = 'client-login';
-        break;
-      case '/dashboard':
-        setCurrentView('dashboard');
-        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour le dashboard chauffeur
-        break;
-      case '/client-dashboard':
-        setCurrentView('client-dashboard');
-        viewKey = 'client-dashboard';
-        break;
-      case '/admin':
-        setCurrentView('admin');
-        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour l'admin
-        break;
-      case '/admin-dashboard':
-        // Vérifier l'authentification admin avant d'autoriser l'accès
-        const checkAdminAuth = async () => {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session?.user) {
-            navigate('/admin');
-            return;
-          }
-          
-          // Vérifier si l'utilisateur est admin
-          const { data: adminData } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('id', session.user.id)
-            .limit(1);
-          
-          if (!adminData || adminData.length === 0) {
-            navigate('/admin');
-            return;
-          }
-          
-          setCurrentView('admin-dashboard');
-        };
-        
-        checkAdminAuth();
-        viewKey = 'home';
-        break;
-      case '/transport-colis-europe-tunisie':
-        setCurrentView('parcel-transport');
-        viewKey = 'parcel-transport';
-        break;
-      case '/blog':
-        setCurrentView('blog');
-        viewKey = 'blog';
-        break;
-      case '/privacy-policy':
-        setCurrentView('privacy-policy');
-        viewKey = 'privacy-policy';
-        break;
-      case '/terms-of-service':
-        setCurrentView('terms-of-service');
-        viewKey = 'terms-of-service';
-        break;
-      case '/reset-password':
-        setCurrentView('reset-password');
-        viewKey = 'home'; // Utiliser les meta de la page d'accueil pour la réinitialisation
-        break;
-      default:
-        if (path.startsWith('/blog/')) {
-          setCurrentView('blog');
-          viewKey = 'blog';
-        } else {
-          setCurrentView('home');
-          viewKey = 'home';
-        }
-        break;
+    const { view, seoKey } = pathToView(location.pathname);
+    setCurrentView(view);
+    updateSEO(seoKey);
+
+    if (location.pathname !== '/' && view === 'home' && !location.pathname.startsWith('/blog/')) {
+      navigate('/', { replace: true });
     }
-    
-    // Mettre à jour les balises SEO
-    updateSEO(viewKey);
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
-    // Initialiser Google Analytics
     initAnalytics();
-    
-    // Vérifier si on est sur une page de réinitialisation de mot de passe
+
     const urlParams = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
+    const path = window.location.pathname;
 
-    console.log('URL params:', urlParams.get('type'));
-    console.log('Hash:', hash);
-    console.log('Full URL:', window.location.href);
-
-    // Ne déclencher reset-password QUE pour la récupération de mot de passe
     if (hash.includes('type=recovery') || urlParams.get('type') === 'recovery') {
-      console.log('Détection de réinitialisation de mot de passe, redirection vers reset-password');
       setCurrentView('reset-password');
-      setIsLoading(false);
+      setAuthReady(true);
       return;
     }
 
-    // Vérifier la session existante au chargement
-    const checkSession = async () => {
+    let cancelled = false;
+
+    const bootstrapAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
+        if (cancelled) return;
+
         if (error) {
-          console.error('Erreur lors de la vérification de session:', error);
-          setIsLoading(false);
+          console.error('Erreur session:', error.message);
+          setAuthReady(true);
           return;
         }
 
-        if (session?.user) {
-          console.log('Session trouvée:', session.user.id);
-          
-          // Vérifier le type d'utilisateur
-          const userId = session.user.id;
-          
-          // Vérifier si c'est un admin
-          const { data: adminData } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('id', userId)
-            .limit(1);
-          
-          if (adminData && adminData.length > 0) {
-            setUserType('admin');
-            if (!isPublicPath(location.pathname)) {
-              setCurrentView('admin-dashboard');
-            }
-            setIsLoading(false);
-            return;
+        const onPublicPage = isPublicPath(path);
+
+        if (!session?.user) {
+          if (isProtectedPath(path)) {
+            if (path.startsWith('/admin')) navigate('/admin', { replace: true });
+            else if (path.includes('client')) navigate('/client-login', { replace: true });
+            else navigate('/driver-login', { replace: true });
           }
-          
-          // Vérifier si c'est un chauffeur
-          const { data: driverData } = await supabase
-            .from('drivers')
-            .select('*')
-            .eq('id', userId)
-            .limit(1);
-          
-          if (driverData && driverData.length > 0) {
-            setUserType('driver');
-            if (!isPublicPath(location.pathname)) {
-              setCurrentView('dashboard');
-            }
-            setIsLoading(false);
-            return;
-          }
-          
-          // Vérifier si c'est un client
-          const { data: clientData } = await supabase
-            .from('clients')
-            .select('*')
-            .eq('id', userId)
-            .limit(1);
-          
-          if (clientData && clientData.length > 0) {
-            setUserType('client');
-            if (!isPublicPath(location.pathname)) {
-              setCurrentView('client-dashboard');
-            }
-            setIsLoading(false);
-            return;
-          }
-          
-          // Si aucun type trouvé, ne pas casser le flux d'inscription
-          if (location.pathname === '/signup' || location.pathname === '/client-signup') {
-            console.log('Utilisateur non typé mais sur une page signup: on laisse continuer.');
-          } else {
-            console.log('Type d\'utilisateur non trouvé, déconnexion...');
-            await supabase.auth.signOut();
-          }
+          setAuthReady(true);
+          return;
         }
-        
-        setIsLoading(false);
+
+        const role = await resolveUserRole(session.user.id);
+        if (cancelled) return;
+
+        if (path === '/admin-dashboard') {
+          if (role !== 'admin') {
+            navigate('/admin', { replace: true });
+          } else {
+            setCurrentView('admin-dashboard');
+          }
+        } else if (!onPublicPage && role) {
+          if (role === 'admin') setCurrentView('admin-dashboard');
+          else if (role === 'driver') setCurrentView('dashboard');
+          else if (role === 'client') setCurrentView('client-dashboard');
+        } else if (!role && path !== '/signup' && path !== '/client-signup') {
+          await supabase.auth.signOut();
+        }
+
+        setAuthReady(true);
       } catch (error) {
-        console.error('Erreur lors de la vérification de session:', error);
-        setIsLoading(false);
+        console.error('Erreur bootstrap auth:', error);
+        setAuthReady(true);
       }
     };
 
-    checkSession();
+    bootstrapAuth();
 
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Changement d\'auth:', event, session?.user?.id);
-        
-        if (event === 'SIGNED_OUT') {
-          setUserType(null);
-          // Ne pas forcer la vue 'home' pour laisser la navigation par URL fonctionner
-          return;
-        }
-        
-        if (event === 'SIGNED_IN' && session) {
-          // Ne pas rediriger automatiquement lors de la connexion
-          // Laisser les composants de login gérer la redirection
-          console.log('Connexion détectée, laisser le composant de login gérer la redirection');
-        }
-      }
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      // Les écrans de connexion gèrent la redirection après SIGNED_IN
+    });
 
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
     };
+  }, [navigate]);
+
+  useEffect(() => {
+    const delayMs = 1500;
+    const timer = window.setTimeout(() => setShowChat(true), delayMs);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const handleLogout = async () => {
     try {
-      console.log('🚪 Déconnexion en cours...');
-      
-      // Réinitialiser l'état avant la déconnexion
-      setUserType(null);
       setCurrentView('home');
-      
-      // Déconnexion Supabase
       await supabase.auth.signOut();
-      
-      console.log('✅ Déconnexion réussie');
-      
-      // Redirection forcée vers la page d'accueil
       navigate('/', { replace: true });
-      
-      // Double sécurité : forcer le rechargement si la navigation ne fonctionne pas
-      setTimeout(() => {
-        if (window.location.pathname !== '/') {
-          window.location.href = '/';
-        }
-      }, 100);
-      
     } catch (error) {
-      console.error('❌ Erreur lors de la déconnexion:', error);
-      // En cas d'erreur, forcer la redirection quand même
+      console.error('Erreur déconnexion:', error);
       window.location.href = '/';
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement...</p>
-        </div>
-      </div>
-    );
+  if (!authReady && isProtectedPath(location.pathname)) {
+    return <PageLoader fullScreen label="Préparation de votre espace…" />;
   }
 
   const renderContent = () => {
@@ -333,7 +248,7 @@ function AppContent() {
         return <ClientSignup onBack={() => navigate('/')} />;
       case 'login-selection':
         return (
-          <LoginSelection 
+          <LoginSelection
             onBack={() => navigate('/')}
             onDriverLogin={() => navigate('/driver-login')}
             onClientLogin={() => navigate('/client-login')}
@@ -341,29 +256,27 @@ function AppContent() {
         );
       case 'driver-login':
         return (
-          <DriverLogin 
-            onBack={() => navigate('/login')} 
+          <DriverLogin
+            onBack={() => navigate('/login')}
             onSignup={() => navigate('/signup')}
             onLoginSuccess={() => {
-              setUserType('driver');
               navigate('/dashboard');
             }}
           />
         );
       case 'client-login':
         return (
-          <ClientLogin 
-            onBack={() => navigate('/')} 
+          <ClientLogin
+            onBack={() => navigate('/')}
             onSignup={() => navigate('/client-signup')}
             onLoginSuccess={() => {
-              setUserType('client');
               navigate('/client-dashboard');
             }}
           />
         );
       case 'login':
         return (
-          <LoginSelection 
+          <LoginSelection
             onBack={() => navigate('/')}
             onDriverLogin={() => navigate('/driver-login')}
             onClientLogin={() => navigate('/client-login')}
@@ -375,10 +288,9 @@ function AppContent() {
         return <ClientDashboard onLogout={handleLogout} />;
       case 'admin':
         return (
-          <AdminLogin 
-            onBack={() => navigate('/')} 
+          <AdminLogin
+            onBack={() => navigate('/')}
             onLoginSuccess={() => {
-              setUserType('admin');
               navigate('/admin-dashboard');
             }}
           />
@@ -391,10 +303,7 @@ function AppContent() {
         return <TermsOfService onBack={() => navigate('/')} />;
       case 'reset-password':
         return (
-          <ResetPasswordPage 
-            onBack={() => navigate('/')}
-            onSuccess={() => navigate('/')}
-          />
+          <ResetPasswordPage onBack={() => navigate('/')} onSuccess={() => navigate('/')} />
         );
       case 'parcel-transport':
         return <ParcelTransportPage />;
@@ -402,7 +311,7 @@ function AppContent() {
         return <BlogPage />;
       default:
         return (
-          <HomePage 
+          <HomePage
             onGetStarted={() => navigate('/signup')}
             onClientLogin={() => navigate('/client-login')}
           />
@@ -410,13 +319,21 @@ function AppContent() {
     }
   };
 
+  const showHeader =
+    currentView === 'home' ||
+    currentView === 'admin' ||
+    currentView === 'parcel-transport' ||
+    currentView === 'blog';
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {(currentView === 'home' || currentView === 'admin' || currentView === 'parcel-transport' || currentView === 'blog') && (
-        <Header currentView={currentView} onViewChange={setCurrentView} />
+      {showHeader && <Header currentView={currentView} />}
+      <Suspense fallback={<RouteFallback />}>{renderContent()}</Suspense>
+      {showChat && (
+        <Suspense fallback={null}>
+          <ChatWidget />
+        </Suspense>
       )}
-      {renderContent()}
-      <ChatWidget />
     </div>
   );
 }
@@ -424,9 +341,24 @@ function AppContent() {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
-        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+        <Route
+          path="/privacy-policy"
+          element={
+            <Suspense fallback={<PageLoader fullScreen />}>
+              <PrivacyPolicyPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/terms-of-service"
+          element={
+            <Suspense fallback={<PageLoader fullScreen />}>
+              <TermsOfServicePage />
+            </Suspense>
+          }
+        />
         <Route path="/*" element={<AppContent />} />
       </Routes>
     </Router>

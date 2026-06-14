@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, LogIn, MapPin, Menu, X, Package, BookOpen } from 'lucide-react';
+import { prefetchRoute } from '../utils/prefetchRoute';
 
 interface HeaderProps {
   currentView: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'blog' | 'admin';
-  onViewChange: (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'blog' | 'admin') => void;
+  onViewChange?: (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'blog' | 'admin') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentView }) => {
@@ -29,6 +30,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
           <nav className="hidden md:flex items-center gap-2">
             <button
               onClick={() => { navigate('/blog'); }}
+              onMouseEnter={() => prefetchRoute('/blog')}
+              onFocus={() => prefetchRoute('/blog')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'blog'
                   ? 'bg-gray-800 text-white'
@@ -41,6 +44,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
 
             <button
               onClick={() => { navigate('/transport-colis-europe-tunisie'); }}
+              onMouseEnter={() => prefetchRoute('/transport-colis-europe-tunisie')}
+              onFocus={() => prefetchRoute('/transport-colis-europe-tunisie')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'parcel-transport'
                   ? 'bg-gray-800 text-white'
@@ -53,6 +58,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
 
             <button
               onClick={() => { navigate('/signup'); }}
+              onMouseEnter={() => prefetchRoute('/signup')}
+              onFocus={() => prefetchRoute('/signup')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'signup'
                   ? 'bg-gray-800 text-white'
@@ -65,6 +72,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
             
             <button
               onClick={() => { navigate('/client-login'); }}
+              onMouseEnter={() => prefetchRoute('/client-login')}
+              onFocus={() => prefetchRoute('/client-login')}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'client-login' || currentView === 'client-signup'
                   ? 'bg-white text-black'
@@ -77,6 +86,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
             
             <button
               onClick={() => { navigate('/login'); }}
+              onMouseEnter={() => prefetchRoute('/login')}
+              onFocus={() => prefetchRoute('/login')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
                 currentView === 'login'
                   ? 'bg-gray-800 text-white'

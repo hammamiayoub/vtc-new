@@ -218,16 +218,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     fetchSubscriptions();
     fetchBookings();
     
-    // Rafraîchir automatiquement toutes les 30 secondes
-    const interval = setInterval(() => {
+    const refreshAll = () => {
+      if (document.visibilityState !== 'visible') return;
       fetchDrivers();
       fetchClients();
       fetchVehicles();
       fetchSubscriptions();
       fetchBookings();
-    }, 30000);
+    };
 
-    return () => clearInterval(interval);
+    const interval = window.setInterval(refreshAll, 60000);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshAll();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [isAuthenticated]);
 
   // Préparer le formulaire de validation de paiement à l'ouverture d'un abonnement
