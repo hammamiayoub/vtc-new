@@ -28,6 +28,11 @@ import {
   vehicleToVehicleInfo,
 } from '../utils/vehicles';
 import { Driver, ClientWithBookings, Vehicle, DriverAvailability } from '../types';
+import {
+  driverActivityBadgeClasses,
+  driverActivityLabel,
+  driverActivityShortLabel,
+} from '../utils/driverActivity';
 
 interface AdminDriver extends Driver {
   vehicles?: Vehicle[];
@@ -45,6 +50,7 @@ interface VehicleWithDriver extends Vehicle {
     phone?: string;
     city?: string;
     status: string;
+    driverType?: Driver['driverType'];
   };
   upcomingAvailabilities?: DriverAvailability[];
   availabilityCount?: number;
@@ -400,6 +406,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         vehicleInfo: driver.vehicle_info,
         vehicles: driver.driverVehicles,
         status: driver.status,
+        driverType: (driver.driver_type as Driver['driverType']) || 'vtc',
         profilePhotoUrl: driver.profile_photo_url,
         createdAt: driver.created_at,
         updatedAt: driver.updated_at,
@@ -561,13 +568,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           phone?: string;
           city?: string;
           status: string;
+          driver_type?: string;
         }
       >();
 
       if (driverIds.length > 0) {
         const { data: driversData, error: driversError } = await supabase
           .from('drivers')
-          .select('id, first_name, last_name, email, phone, city, status')
+          .select('id, first_name, last_name, email, phone, city, status, driver_type')
           .in('id', driverIds);
 
         if (driversError) {
@@ -635,6 +643,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   phone: driverRow.phone,
                   city: driverRow.city,
                   status: driverRow.status,
+                  driverType: (driverRow.driver_type as Driver['driverType']) || 'vtc',
                 }
               : undefined,
             upcomingAvailabilities:
@@ -1388,6 +1397,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         );
     }
   };
+
+  const getDriverActivityBadge = (driverType?: Driver['driverType']) => (
+    <span className={driverActivityBadgeClasses(driverType || 'vtc')} title={driverActivityLabel(driverType || 'vtc')}>
+      {driverActivityShortLabel(driverType || 'vtc')}
+    </span>
+  );
 
   const getBookingStatusBadge = (status: string) => {
     switch (status) {
@@ -2451,29 +2466,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             )}
 
             {/* Version desktop - Tableau des véhicules */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full min-w-[1100px] table-fixed">
+            <div className="hidden lg:block overflow-x-hidden">
+              <table className="w-full table-auto">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">
                       Véhicule
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[16%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
                       Chauffeur
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[16%]">
                       Détails
                     </th>
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
                       Statut
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">
                       Disponibilités
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
-                      Prochains créneaux
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[6%]">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                       Actions
                     </th>
                   </tr>
@@ -2517,6 +2529,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                               {vehicle.driver.firstName} {vehicle.driver.lastName}
                             </p>
                             <p className="text-gray-500 truncate text-[10px]">{vehicle.driver.email}</p>
+                            <div className="mt-1">{getDriverActivityBadge(vehicle.driver.driverType)}</div>
                           </div>
                         ) : (
                           <p className="text-gray-500 italic text-xs">Aucun chauffeur</p>
@@ -2583,64 +2596,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             </div>
                           )}
                         </div>
-                      </td>
-                      
-                      {/* Prochains créneaux */}
-                      <td className="px-3 py-3">
-                        {vehicle.upcomingAvailabilities && vehicle.upcomingAvailabilities.length > 0 ? (
-                          <div className="space-y-1">
-                            {vehicle.upcomingAvailabilities.slice(0, 3).map((avail, idx) => {
-                              const availDate = new Date(avail.date + 'T00:00:00');
-                              const today = new Date();
-                              today.setHours(0, 0, 0, 0);
-                              const daysDiff = Math.ceil((availDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                              
-                              let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
-                              let badgeText = '';
-                              if (daysDiff === 0) {
-                                badgeColor = 'bg-green-50 text-green-700 border-green-200';
-                                badgeText = "Aujourd'hui";
-                              } else if (daysDiff === 1) {
-                                badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                                badgeText = 'Demain';
-                              } else if (daysDiff <= 7) {
-                                badgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
-                                badgeText = `Dans ${daysDiff}j`;
-                              }
-                              
-                              return (
-                                <div key={idx} className={`flex items-center justify-between p-1.5 rounded border ${badgeColor}`}>
-                                  <div className="flex items-center gap-1.5">
-                                    <Calendar size={10} className="opacity-70" />
-                                    <span className="font-semibold text-[10px]">
-                                      {availDate.toLocaleDateString('fr-FR', { 
-                                    day: '2-digit', 
-                                        month: '2-digit' 
-                                  })}
-                                </span>
-                                    <span className="text-[10px] font-medium">
-                                      {avail.startTime.slice(0, 5)}-{avail.endTime.slice(0, 5)}
-                                </span>
-                              </div>
-                                  {badgeText && (
-                                    <span className="text-[9px] font-medium px-1 py-0.5 rounded">
-                                      {badgeText}
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                            {vehicle.upcomingAvailabilities.length > 3 && (
-                              <p className="text-[10px] text-gray-400 italic text-center pt-1">
-                                +{vehicle.upcomingAvailabilities.length - 3} autre{vehicle.upcomingAvailabilities.length - 3 > 1 ? 's' : ''}
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center py-2">
-                            <p className="text-[10px] text-gray-400 italic">Aucun créneau</p>
-                          </div>
-                        )}
                       </td>
                       
                       {/* Actions */}
@@ -2742,7 +2697,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             <p className="text-sm font-medium text-gray-900">
                               {vehicle.driver.firstName} {vehicle.driver.lastName}
                             </p>
-                            <div className="mt-1">
+                            <div className="mt-1 flex flex-wrap items-center gap-1">
+                            {getDriverActivityBadge(vehicle.driver.driverType)}
                             {getStatusBadge(vehicle.driver.status)}
                             </div>
                           </>
@@ -2902,25 +2858,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <table className="w-full table-auto">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[18%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[16%]">
                     Chauffeur
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                    Activité
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
                     Contact
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[16%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
                     Véhicule
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
                     Performance
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                     Statut
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                     Inscription
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                     Actions
                   </th>
                 </tr>
@@ -2949,6 +2908,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           <p className="text-[10px] text-gray-500 truncate">{driver.email}</p>
                         </div>
                       </div>
+                    </td>
+
+                    {/* Activité VTC / transporteur */}
+                    <td className="px-3 py-3">
+                      {getDriverActivityBadge(driver.driverType)}
                     </td>
                     
                     {/* Contact */}
@@ -3101,6 +3065,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {getDriverActivityBadge(driver.driverType)}
                       {getStatusBadge(driver.status)}
                       <button
                         onClick={() => setSelectedDriver(driver)}
@@ -3504,6 +3469,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <p className="font-semibold text-gray-900">
                       {selectedDriver.licenseNumber || 'Non renseigné'}
                     </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 md:col-span-2">
+                    <p className="text-sm text-gray-600 mb-1">Type d&apos;activité</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {getDriverActivityBadge(selectedDriver.driverType)}
+                      <span className="text-sm text-gray-600">
+                        {driverActivityLabel(selectedDriver.driverType || 'vtc')}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4540,6 +4514,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <div className="bg-gray-50 rounded-lg p-4">
                       <p className="text-sm text-gray-600 mb-1">Statut</p>
                       {getStatusBadge(selectedVehicle.driver.status)}
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Type d&apos;activité</p>
+                      {getDriverActivityBadge(selectedVehicle.driver.driverType)}
                     </div>
                   </div>
                 </div>
