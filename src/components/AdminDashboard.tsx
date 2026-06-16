@@ -2854,39 +2854,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
 
           {/* Version desktop - Tableau complet */}
-          <div className="hidden lg:block overflow-x-hidden">
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full table-auto">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[16%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Chauffeur
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Activité
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Contact
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[14%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Véhicule
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Performance
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Statut
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Inscription
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                  <th className="sticky right-0 z-10 bg-gray-50 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.08)]">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {drivers.map((driver) => (
-                  <tr key={driver.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={driver.id} className="group hover:bg-gray-50 transition-colors">
                     {/* Chauffeur */}
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2">
@@ -2920,7 +2920,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <div className="text-xs">
                         <p className="text-gray-900 truncate">{driver.phone || 'N/A'}</p>
                         <p className="text-gray-500 truncate text-[10px]">{driver.city || 'N/A'}</p>
-                        <p className="text-gray-500 truncate text-[10px]">Permis: {driver.licenseNumber?.slice(0, 8) || 'N/A'}</p>
                       </div>
                     </td>
                     
@@ -2989,8 +2988,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </div>
                     </td>
                     
-                    {/* Actions */}
-                    <td className="px-3 py-3">
+                    {/* Actions — colonne fixée à droite */}
+                    <td className="sticky right-0 z-10 bg-white group-hover:bg-gray-50 px-3 py-3 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.08)]">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setSelectedDriver(driver)}
