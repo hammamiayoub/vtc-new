@@ -28,3 +28,27 @@ export function driverActivityLabel(type?: DriverActivityValue): string {
   const found = DRIVER_ACTIVITY_PROFILE_OPTIONS.find((o) => o.value === type);
   return found?.label ?? 'Transport de personnes';
 }
+
+/** Libellé court pour tableaux admin */
+export function driverActivityShortLabel(type?: DriverActivityValue): string {
+  switch (type) {
+    case 'transporteur':
+      return 'Transporteur';
+    case 'both':
+      return 'VTC + Colis';
+    default:
+      return 'VTC';
+  }
+}
+
+export function driverActivityBadgeClasses(type?: DriverActivityValue): string {
+  const base = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap';
+  switch (type) {
+    case 'transporteur':
+      return `${base} bg-amber-100 text-amber-800`;
+    case 'both':
+      return `${base} bg-indigo-100 text-indigo-800`;
+    default:
+      return `${base} bg-sky-100 text-sky-800`;
+  }
+}
