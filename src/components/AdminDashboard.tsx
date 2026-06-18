@@ -2916,7 +2916,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </td>
                     
                     {/* Contact */}
-                    <td className="px-3 py-3">
+                    <td className="px-1 py-1">
                       <div className="text-xs">
                         <p className="text-gray-900 truncate">{driver.phone || 'N/A'}</p>
                         <p className="text-gray-500 truncate text-[10px]">{driver.city || 'N/A'}</p>
@@ -2924,7 +2924,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </td>
                     
                     {/* Véhicule */}
-                    <td className="px-3 py-3">
+                    <td className="px-1 py-1">
                       <div className="text-xs">
                         {driver.vehicleInfo ? (
                           <div>

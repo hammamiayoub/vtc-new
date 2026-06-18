@@ -7,6 +7,11 @@ import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Client, Booking } from '../types';
 import { getVehicleMultiplier } from '../utils/geolocation';
+import {
+  RIDE_BASE_FARE_TND,
+  RIDE_DISTANCE_TIERS,
+  RIDE_MIN_PRICE_TND,
+} from '../utils/ridePricing';
 import { BookingForm } from './BookingForm';
 import { BookingConfirmation } from './BookingConfirmation';
 import { ProfileModal } from './ProfileModal';
@@ -750,23 +755,23 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               <div className="space-y-3 sm:space-y-4">
                 {/* Tarif de base - Optimisé mobile */}
                 <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Tarif de base : dès 2.0 TND/KM</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
+                    Prise en charge : {RIDE_BASE_FARE_TND.toFixed(2).replace('.', ',')} TND
+                  </h4>
                   <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-                    <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-700 flex-1 pr-2">Distance 0-50 km</span>
-                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">2.0 TND/KM</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-700 flex-1 pr-2">Distance 50-100 km</span>
-                      <span className="font-medium text-gray-900 text-right whitespace-nowrap">1.8 TND/KM</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-700 flex-1 pr-2">Distance 100-250 km</span>
-                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.4 TND/KM (-11%)</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-700 flex-1 pr-2">Distance 250+ km</span>
-                      <span className="font-medium text-green-600 text-right whitespace-nowrap">1.05 TND/KM (-19%)</span>
+                    {RIDE_DISTANCE_TIERS.map((tier) => (
+                      <div key={tier.label} className="flex justify-between items-center py-1">
+                        <span className="text-gray-700 flex-1 pr-2">{tier.label}</span>
+                        <span className="font-medium text-gray-900 text-right whitespace-nowrap">
+                          {tier.rate.toFixed(2).replace('.', ',')} TND/km
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center py-1 pt-2 border-t border-gray-200">
+                      <span className="text-gray-700 flex-1 pr-2 font-medium">Prix minimum</span>
+                      <span className="font-semibold text-gray-900 text-right whitespace-nowrap">
+                        {RIDE_MIN_PRICE_TND.toFixed(2).replace('.', ',')} TND
+                      </span>
                     </div>
                   </div>
                 </div>
