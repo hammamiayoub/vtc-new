@@ -1,4 +1,18 @@
 // Service de calcul de distance et tarification
+import {
+  calculateProgressiveDistancePrice,
+  getIndicativePricePerKm,
+} from './ridePricing';
+
+export {
+  calculateProgressiveDistancePrice,
+  getIndicativePricePerKm,
+  getProgressivePriceBreakdown,
+  RIDE_BASE_FARE_TND,
+  RIDE_DISTANCE_TIERS,
+  RIDE_MIN_PRICE_TND,
+} from './ridePricing';
+
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -57,95 +71,16 @@ export const calculateDrivingDistance = async (
   }
 };
 
-// Fonction pour obtenir le tarif par kilomètre selon la distance
-// NOTE: Cette fonction est conservée pour la compatibilité mais ne devrait plus être utilisée
-// pour le calcul du prix total. Utiliser calculateProgressivePrice à la place.
-export const getPricePerKm = (distanceKm: number): { price: number; discount: string } => {
-  if (distanceKm < 50) {
-    // Distance 0–50 km → 2.0 TND/km
-    return { price: 2.0, discount: '' };
-  }
-
-  if (distanceKm < 100) {
-    // Distance 50–100 km → 1.8 TND/km
-    return { price: 1.8, discount: '' };
-  }
-
-  if (distanceKm < 250) {
-    // Distance 100–250 km → 1.4 TND/km
-    return { price: 1.4, discount: '' };
-  }
-
-  // Distance 250 km+ → 1.05 TND/km
-  return { price: 1.05, discount: '' };
-};
+// Fonction pour obtenir le tarif indicatif par kilomètre selon la distance totale
+export const getPricePerKm = (distanceKm: number): { price: number; discount: string } =>
+  getIndicativePricePerKm(distanceKm);
 
 /**
- * Calcule le prix de manière progressive par tranches pour éviter les discontinuités.
- * 
- * PROBLÈME RÉSOLU:
- * Avec l'ancien système où le tarif était appliqué à l'ensemble du trajet, il y avait
- * des discontinuités importantes aux limites des tranches. Par exemple:
- * - 249 km × 1.4 TND/km = 348.6 TND
- * - 251 km × 1.05 TND/km = 263.55 TND
- * 
- * Cela créait une situation absurde où parcourir 2 km de plus coûtait 85 TND de moins.
- * 
- * SOLUTION:
- * Utilisation d'un système de tarification progressive (comme les impôts progressifs)
- * où chaque tranche est tarifée séparément:
- * - 0-50 km: 2.0 TND/km
- * - 50-100 km: 1.8 TND/km  
- * - 100-250 km: 1.4 TND/km
- * - 250+ km: 1.05 TND/km
- * 
- * Exemple pour 251 km:
- * - 50 km × 2.0 = 100 TND
- * - 50 km × 1.8 = 90 TND
- * - 150 km × 1.4 = 210 TND
- * - 1 km × 1.05 = 1.05 TND
- * Total = 401.05 TND
- * 
- * Exemple pour 249 km:
- * - 50 km × 2.0 = 100 TND
- * - 50 km × 1.8 = 90 TND
- * - 149 km × 1.4 = 208.6 TND
- * Total = 398.6 TND
- * 
- * Le prix augmente maintenant de manière continue et logique avec la distance.
+ * Calcule le prix distance + prise en charge de manière progressive par tranches.
+ * Grille alignée sur l'application mobile (prise en charge 4,80 TND, plancher 9,60 TND).
  */
-export const calculateProgressivePrice = (distanceKm: number): number => {
-  let totalPrice = 0;
-  let remainingDistance = distanceKm;
-
-  // Tranche 1: 0-50 km à 2.0 TND/km
-  if (remainingDistance > 0) {
-    const kmInTier1 = Math.min(remainingDistance, 50);
-    totalPrice += kmInTier1 * 2.0;
-    remainingDistance -= kmInTier1;
-  }
-
-  // Tranche 2: 50-100 km à 1.8 TND/km
-  if (remainingDistance > 0) {
-    const kmInTier2 = Math.min(remainingDistance, 50);
-    totalPrice += kmInTier2 * 1.8;
-    remainingDistance -= kmInTier2;
-  }
-
-  // Tranche 3: 100-250 km à 1.4 TND/km
-  if (remainingDistance > 0) {
-    const kmInTier3 = Math.min(remainingDistance, 150);
-    totalPrice += kmInTier3 * 1.4;
-    remainingDistance -= kmInTier3;
-  }
-
-  // Tranche 4: 250+ km à 1.05 TND/km
-  if (remainingDistance > 0) {
-    totalPrice += remainingDistance * 1.05;
-  }
-
-  return Math.round(totalPrice * 100) / 100; // Arrondir à 2 décimales
-};
+export const calculateProgressivePrice = (distanceKm: number): number =>
+  calculateProgressiveDistancePrice(distanceKm);
 
 /** Distance minimale facturable (aller simple) pour les véhicules autres que taxi. */
 export const MIN_NON_TAXI_ONE_WAY_KM = 20;

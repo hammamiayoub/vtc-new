@@ -28,6 +28,7 @@ import {
   calculatePriceWithSurcharges,
   getVehicleMultiplier,
   getBillableOneWayDistanceKm,
+  getProgressivePriceBreakdown,
   SHORT_TRIP_NON_TAXI_WARNING_KM,
   getCurrentPosition,
   getCityCoordinates,
@@ -1352,32 +1353,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                       const effectiveDistance = watchIsReturnTrip
                         ? oneWayBillable * 2
                         : oneWayBillable;
-                      const remaining = effectiveDistance;
 
-                      const tiers = [
-                        { maxKm: 50, rate: 2.0, label: '0–50 km' },
-                        { maxKm: 50, rate: 1.8, label: '50–100 km' },
-                        { maxKm: 150, rate: 1.4, label: '100–250 km' },
-                        { maxKm: Infinity, rate: 1.05, label: '250+ km' }
-                      ];
-
-                      let distanceLeft = remaining;
-                      const breakdown = tiers
-                        .map(tier => {
-                          if (distanceLeft <= 0) return null;
-                          const km = Math.min(distanceLeft, tier.maxKm);
-                          distanceLeft -= km;
-                          return {
-                            label: tier.label,
-                            km,
-                            rate: tier.rate,
-                            subtotal: km * tier.rate
-                          };
-                        })
-                        .filter(Boolean) as Array<{ label: string; km: number; rate: number; subtotal: number }>;
-
-                      const baseTotal = breakdown.reduce((sum, row) => sum + row.subtotal, 0);
-                      const totalWithMultiplier = Math.round(baseTotal * vehicleMultiplier * vipMultiplier * 100) / 100;
+                      const pricing = getProgressivePriceBreakdown(effectiveDistance);
+                      const totalWithMultiplier =
+                        Math.round(pricing.subtotal * vehicleMultiplier * vipMultiplier * 100) / 100;
 
                       return (
                         <div className="mt-2 space-y-2">
@@ -1392,7 +1371,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             )}
                           </div>
                           <div className="space-y-1">
-                            {breakdown.map((row, index) => (
+                            <div className="grid grid-cols-[72px_1fr] items-start gap-2 text-gray-700">
+                              <span className="whitespace-nowrap text-[11px] sm:text-xs">Prise en charge</span>
+                              <span className="tabular-nums text-[11px] sm:text-xs text-right">
+                                {pricing.baseFare.toFixed(2)} TND
+                              </span>
+                            </div>
+                            {pricing.rows.map((row, index) => (
                               <div key={index} className="grid grid-cols-[72px_1fr] items-start gap-2 text-gray-700">
                                 <span className="whitespace-nowrap text-[11px] sm:text-xs">{row.label}</span>
                                 <span className="tabular-nums text-[11px] sm:text-xs text-right break-words">
@@ -1402,10 +1387,18 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             ))}
                           </div>
                           <div className="border-t border-gray-200 pt-2 space-y-1">
-                            <div className="flex items-center justify-between text-gray-800">
-                              <span>Base</span>
-                              <span className="tabular-nums font-semibold">{baseTotal.toFixed(2)} TND</span>
-                            </div>
+                            {pricing.appliedMinimum && (
+                              <div className="flex items-center justify-between text-amber-700 text-[11px] sm:text-xs">
+                                <span>Prix minimum appliqué</span>
+                                <span className="tabular-nums font-semibold">{pricing.subtotal.toFixed(2)} TND</span>
+                              </div>
+                            )}
+                            {!pricing.appliedMinimum && (
+                              <div className="flex items-center justify-between text-gray-800">
+                                <span>Base</span>
+                                <span className="tabular-nums font-semibold">{pricing.subtotal.toFixed(2)} TND</span>
+                              </div>
+                            )}
                             {vehicleMultiplier > 1 && (
                               <div className="flex items-center justify-between text-blue-600 font-semibold">
                                 <span>Multiplicateur ({vehicleTypeName})</span>

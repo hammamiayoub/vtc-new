@@ -33,7 +33,7 @@ export const faqCategories: FaqCategory[] = [
         id: "c3",
         question: "Quels sont les tarifs des courses ?",
         answer:
-          "Les tarifs varient selon la distance parcourue et le type de véhicule :\n• Voiture standard : tarif de base + prix au km\n• Van collectif (jusqu'à 8 pers.) : tarif groupe\n• Bus (jusqu'à 50 pers.) : tarif longue distance\n• Véhicule de luxe : service premium\n• Utilitaire : transport de marchandises\n\nLe prix estimé vous est affiché avant de confirmer la réservation.",
+          "Les tarifs VTC TuniDrive (identiques sur le site et l'application mobile) comprennent :\n• Prise en charge : 4,80 TND\n• 0–15 km : 1,02 TND/km\n• 15–50 km : 1,32 TND/km\n• 50–100 km : 1,14 TND/km\n• 100–250 km : 0,90 TND/km\n• 250+ km : 0,72 TND/km\n• Prix minimum : 9,60 TND\n\nLe tarif au km est progressif : chaque tranche est facturée séparément. Un multiplicateur peut s'appliquer selon le type de véhicule (van, minibus, etc.). Le prix estimé vous est affiché avant confirmation.",
       },
       {
         id: "c4",
