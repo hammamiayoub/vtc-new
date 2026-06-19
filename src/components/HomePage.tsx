@@ -1,10 +1,11 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown, Package, Globe } from 'lucide-react';
+import { Car, Clock, Shield, Star, ArrowRight, CheckCircle, Users, Truck, Bus, Crown, Package, Globe, Plane } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Footer } from './Footer';
 import { AppDownloadModal } from './AppDownloadModal';
+import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 
 interface HomePageProps {
   onGetStarted: () => void;
@@ -37,19 +38,21 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-4 leading-tight tracking-tight max-w-5xl mx-auto">
-              Voyagez, expédiez, transportez
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-4 leading-tight tracking-tight max-w-5xl mx-auto">
+              Chauffeur privé &amp; transport sur mesure en Tunisie
             </h1>
-            <p className="text-2xl md:text-3xl font-semibold text-gray-700 mb-6 max-w-4xl mx-auto">
-              VTC en Tunisie &amp; transport de colis Europe ↔ Tunisie
+            <p className="text-xl md:text-2xl font-semibold text-gray-700 mb-6 max-w-4xl mx-auto">
+              Réservez un taxi, un transfert aéroport ou un transport collectif · Colis Europe ↔ Tunisie
             </p>
-            <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
-              Réservez vos trajets avec des chauffeurs professionnels, ou faites transporter vos colis
-              et grosses marchandises entre l&apos;Europe et la Tunisie en toute simplicité.
+            <p className="text-lg text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
+              TuniDrive vous permet de <strong>réserver un chauffeur privé en Tunisie</strong> en ligne :
+              trajets urbains, inter-villes, aéroports Tunis-Carthage, Enfidha et Monastir, van et bus pour groupes.
             </p>
-            <p className="text-base text-gray-500 mb-12 max-w-2xl mx-auto">
-              TuniDrive met en relation clients et transporteurs pour des devis personnalisés,
-              rapides et transparents.
+            <p className="text-base text-gray-500 mb-8 max-w-2xl mx-auto">
+              <Link to="/vtc-tunisie" className="text-gray-700 underline underline-offset-2 hover:text-black">
+                Découvrir nos services VTC en Tunisie
+              </Link>
+              {' '}— devis colis personnalisés, rapides et transparents.
             </p>
             <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center max-w-3xl mx-auto">
               <Button 
@@ -88,12 +91,29 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
           <div className="text-center mb-12">
             
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
-              Transport de personnes
+              Transport de personnes &amp; VTC en Tunisie
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Notre service historique : réservez un chauffeur professionnel pour vos déplacements en Tunisie.
-              Berline, van, minibus ou véhicule de luxe — choisissez le véhicule adapté à votre trajet.
+              Réservez un <strong>chauffeur privé</strong> ou un <strong>VTC</strong> pour vos déplacements en Tunisie.
+              Berline, taxi, van, minibus ou véhicule de luxe — choisissez le véhicule adapté à votre trajet.
             </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto mb-10">
+            {[
+              { icon: Plane, label: 'Transfert aéroport Tunisie', href: '/vtc-tunisie#transfert-aeroport-tunisie' },
+              { icon: Car, label: 'Réserver taxi / chauffeur', href: '/client-login' },
+              { icon: Users, label: 'Transport collectif', href: '/vtc-tunisie#faq-vtc' },
+            ].map(({ icon: Icon, label, href }) => (
+              <Link
+                key={label}
+                to={href}
+                className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4 hover:border-gray-400 transition-colors text-sm font-medium text-gray-800"
+              >
+                <Icon size={20} className="text-gray-600 flex-shrink-0" />
+                {label}
+              </Link>
+            ))}
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
@@ -533,6 +553,28 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
                 <ArrowRight size={20} />
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ VTC — contenu indexable */}
+      <section id="faq-vtc-accueil" className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">
+            VTC, chauffeur privé &amp; transfert aéroport
+          </h2>
+          <p className="text-center text-gray-600 mb-8 text-sm">
+            <Link to="/vtc-tunisie" className="underline underline-offset-2 hover:text-gray-900">
+              Voir la page complète VTC Tunisie
+            </Link>
+          </p>
+          <div className="space-y-3">
+            {vtcSeoFaqItems.slice(0, 4).map((item) => (
+              <details key={item.question} className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+                <summary className="font-medium text-gray-900 cursor-pointer text-sm">{item.question}</summary>
+                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{item.answer}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>

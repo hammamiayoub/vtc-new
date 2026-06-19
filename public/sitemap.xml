@@ -9,6 +9,13 @@
    </url>
 
    <url>
+      <loc>https://tunidrive.net/vtc-tunisie</loc>
+      <lastmod>2026-06-02</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.95</priority>
+   </url>
+
+   <url>
       <loc>https://tunidrive.net/transport-colis-europe-tunisie</loc>
       <lastmod>2026-06-02</lastmod>
       <changefreq>weekly</changefreq>

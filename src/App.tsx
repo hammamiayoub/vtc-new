@@ -55,6 +55,9 @@ const ParcelTransportPage = lazy(() =>
 const BlogPage = lazy(() =>
   import('./components/BlogPage').then((m) => ({ default: m.BlogPage }))
 );
+const VtcTunisiePage = lazy(() =>
+  import('./components/VtcTunisiePage').then((m) => ({ default: m.VtcTunisiePage }))
+);
 const PrivacyPolicyPage = lazy(() =>
   import('./components/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
 );
@@ -81,7 +84,8 @@ type View =
   | 'terms-of-service'
   | 'reset-password'
   | 'parcel-transport'
-  | 'blog';
+  | 'blog'
+  | 'vtc-tunisie';
 
 function pathToView(path: string): { view: View; seoKey: string } {
   switch (path) {
@@ -107,6 +111,8 @@ function pathToView(path: string): { view: View; seoKey: string } {
       return { view: 'admin-dashboard', seoKey: 'home' };
     case '/transport-colis-europe-tunisie':
       return { view: 'parcel-transport', seoKey: 'parcel-transport' };
+    case '/vtc-tunisie':
+      return { view: 'vtc-tunisie', seoKey: 'vtc-tunisie' };
     case '/blog':
       return { view: 'blog', seoKey: 'blog' };
     case '/privacy-policy':
@@ -307,6 +313,8 @@ function AppContent() {
         );
       case 'parcel-transport':
         return <ParcelTransportPage />;
+      case 'vtc-tunisie':
+        return <VtcTunisiePage onClientLogin={() => navigate('/client-login')} />;
       case 'blog':
         return <BlogPage />;
       default:
@@ -323,6 +331,7 @@ function AppContent() {
     currentView === 'home' ||
     currentView === 'admin' ||
     currentView === 'parcel-transport' ||
+    currentView === 'vtc-tunisie' ||
     currentView === 'blog';
 
   return (

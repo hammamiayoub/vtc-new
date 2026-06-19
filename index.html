@@ -5,23 +5,26 @@
     <link rel="icon" type="image/png" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TuniDrive — VTC Tunisie &amp; transport de colis Europe ↔ Tunisie</title>
-    <meta name="description" content="TuniDrive : réservez un chauffeur privé VTC en Tunisie et demandez des devis pour le transport international de colis et marchandises entre l'Europe et la Tunisie. Devis gratuits, transporteurs vérifiés." />
-    <meta name="keywords" content="chauffeur privé Tunisie, VTC Tunisie, transport colis Europe Tunisie, envoi colis Tunisie France, transporteur colis international, devis transport colis, transport marchandises Tunisie Europe" />
+    <title>VTC Tunisie | Chauffeur privé, transfert aéroport &amp; taxi — TuniDrive</title>
+    <meta name="description" content="Réservez un VTC, un chauffeur privé ou un taxi en Tunisie avec TuniDrive. Transfert aéroport Tunis-Carthage, Enfidha, Monastir, transport collectif (van, bus), trajets inter-villes. Prix affiché avant confirmation." />
+    <meta name="keywords" content="vtc tunisie, chauffeur privé tunisie, transfert aéroport tunisie, réserver taxi tunisie, réserver chauffeur tunisie, transport collectif tunisie, vtc tunis, taxi aéroport tunis carthage, chauffeur privé sfax, vtc sousse, transport colis europe tunisie" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://tunidrive.net/" />
     <meta property="og:site_name" content="TuniDrive" />
-    <meta property="og:title" content="TuniDrive — VTC &amp; transport de colis Europe ↔ Tunisie" />
-    <meta property="og:description" content="Courses VTC avec chauffeurs professionnels en Tunisie et devis transport de colis Europe ↔ Tunisie. Comparez les offres et réservez en ligne." />
+    <meta property="og:title" content="VTC Tunisie — Chauffeur privé &amp; transfert aéroport | TuniDrive" />
+    <meta property="og:description" content="Réservez votre chauffeur privé VTC en Tunisie : transferts aéroport, taxi en ligne, van et bus pour groupes. Tarif transparent sur tunidrive.net." />
     <meta property="og:image" content="https://tunidrive.net/tunidrive-logo.png" />
+    <meta property="og:locale" content="fr_TN" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://tunidrive.net/" />
-    <meta property="twitter:title" content="TuniDrive — VTC &amp; transport de colis Europe ↔ Tunisie" />
-    <meta property="twitter:description" content="Courses VTC avec chauffeurs professionnels en Tunisie et devis transport de colis Europe ↔ Tunisie. Comparez les offres et réservez en ligne." />
+    <meta property="twitter:title" content="VTC Tunisie — Chauffeur privé &amp; transfert aéroport | TuniDrive" />
+    <meta property="twitter:description" content="Réservez votre chauffeur privé VTC en Tunisie : transferts aéroport, taxi en ligne, van et bus pour groupes." />
     <meta property="twitter:image" content="https://tunidrive.net/tunidrive-logo.png" />
     
     <!-- Canonical URL -->
@@ -123,12 +126,12 @@
             "availableChannel": [
               {
                 "@type": "ServiceChannel",
-                "serviceUrl": "https://tunidrive.net/rechercher",
+                "serviceUrl": "https://tunidrive.net/client-login",
                 "availableLanguage": ["fr", "ar"]
               },
               {
                 "@type": "ServiceChannel",
-                "serviceUrl": "https://tunidrive.net",
+                "serviceUrl": "https://tunidrive.net/vtc-tunisie",
                 "availableLanguage": ["fr", "ar"]
               }
             ],
@@ -155,13 +158,23 @@
             },
             "potentialAction": {
               "@type": "ReserveAction",
-              "name": "Réserver un trajet",
+              "name": "Réserver un VTC en Tunisie",
               "target": {
                 "@type": "EntryPoint",
-                "urlTemplate": "https://tunidrive.net/"
+                "urlTemplate": "https://tunidrive.net/client-login"
               },
               "actionStatus": "https://schema.org/PotentialActionStatus"
             }
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://tunidrive.net/vtc-tunisie#webpage",
+            "url": "https://tunidrive.net/vtc-tunisie",
+            "name": "VTC Tunisie — Chauffeur privé & transfert aéroport",
+            "description": "Réservez un chauffeur privé VTC, un transfert aéroport ou un transport collectif en Tunisie.",
+            "isPartOf": { "@id": "https://tunidrive.net/#website" },
+            "about": { "@id": "https://tunidrive.net/#service" },
+            "inLanguage": "fr"
           },
           {
             "@type": "Service",
@@ -203,16 +216,11 @@
             "name": "TuniDrive",
             "publisher": { "@id": "https://tunidrive.net/#org" },
             "inLanguage": "fr",
-            "potentialAction": [
-              {
-                "@type": "SearchAction",
-                "target": {
-                  "@type": "EntryPoint",
-                  "urlTemplate": "https://tunidrive.net/rechercher?q={search_term_string}"
-                },
-                "query-input": "required name=search_term_string"
-              }
-            ]
+            "potentialAction": {
+              "@type": "ReserveAction",
+              "target": "https://tunidrive.net/client-login",
+              "name": "Réserver un chauffeur VTC"
+            }
           }
         ]
       }

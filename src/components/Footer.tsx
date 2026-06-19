@@ -32,11 +32,20 @@ export const Footer: React.FC<FooterProps> = () => {
             <ul className="space-y-2 text-gray-300">
               <li>
                 <Link
+                  to="/vtc-tunisie"
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <Car size={16} />
+                  VTC Tunisie &amp; transfert aéroport
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/#transport-vtc"
                   className="hover:text-white transition-colors flex items-center gap-2"
                 >
                   <Car size={16} />
-                  VTC &amp; chauffeur privé
+                  Chauffeur privé
                 </Link>
               </li>
               <li>
