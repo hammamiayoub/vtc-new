@@ -29,6 +29,7 @@ export const PUBLIC_PATHS = new Set([
   '/privacy-policy',
   '/terms-of-service',
   '/transport-colis-europe-tunisie',
+  '/vtc-tunisie',
   '/reset-password',
   '/blog',
 ]);

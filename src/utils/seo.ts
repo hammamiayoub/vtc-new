@@ -1,4 +1,6 @@
 // Utilitaire pour gérer les balises meta SEO
+import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
+
 export const SITE_URL = 'https://tunidrive.net';
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/tunidrive-logo.png`;
 
@@ -20,16 +22,28 @@ export interface FaqStructuredItem {
 // Données SEO par page
 export const seoData: Record<string, SEOData> = {
   home: {
-    title: 'TuniDrive — VTC Tunisie & transport de colis Europe ↔ Tunisie',
+    title: 'VTC Tunisie | Chauffeur privé, transfert aéroport & taxi — TuniDrive',
     description:
-      'TuniDrive : réservez un chauffeur privé VTC en Tunisie et demandez des devis pour le transport international de colis et marchandises entre l\'Europe et la Tunisie. Devis gratuits, transporteurs vérifiés.',
+      'Réservez un VTC, un chauffeur privé ou un taxi en Tunisie avec TuniDrive. Transfert aéroport Tunis-Carthage, Enfidha, Monastir, transport collectif (van, bus), trajets inter-villes. Prix affiché avant confirmation.',
     keywords:
-      'chauffeur privé Tunisie, VTC Tunisie, transport colis Europe Tunisie, envoi colis Tunisie France, transporteur colis international, devis transport colis, transport marchandises Tunisie Europe',
-    ogTitle: 'TuniDrive — VTC & transport de colis Europe ↔ Tunisie',
+      'vtc tunisie, chauffeur privé tunisie, transfert aéroport tunisie, réserver taxi tunisie, réserver chauffeur tunisie, transport collectif tunisie, vtc tunis, taxi aéroport tunis carthage, chauffeur privé sfax, vtc sousse, réserver vtc en ligne tunisie',
+    ogTitle: 'VTC Tunisie — Chauffeur privé & transfert aéroport | TuniDrive',
     ogDescription:
-      'Courses VTC avec chauffeurs professionnels en Tunisie et devis transport de colis Europe ↔ Tunisie. Comparez les offres et réservez en ligne.',
+      'Réservez votre chauffeur privé VTC en Tunisie : transferts aéroport, taxi en ligne, van et bus pour groupes. Tarif transparent sur tunidrive.net.',
     ogImage: DEFAULT_OG_IMAGE,
     canonical: '/',
+  },
+  'vtc-tunisie': {
+    title: 'VTC Tunisie — Chauffeur privé, transfert aéroport & transport collectif | TuniDrive',
+    description:
+      'Page dédiée VTC Tunisie : réservez un chauffeur privé, un transfert aéroport (Tunis, Enfidha, Monastir, Djerba), un taxi ou un transport collectif (van, minibus, bus) partout en Tunisie.',
+    keywords:
+      'vtc tunisie, chauffeur privé tunisie, transfert aéroport tunisie, réserver taxi tunisie, réserver chauffeur tunisie, transport collectif tunisie, transfert aéroport tunis carthage, vtc enfidha hammamet, chauffeur privé djerba',
+    ogTitle: 'VTC Tunisie — Réserver un chauffeur privé en ligne | TuniDrive',
+    ogDescription:
+      'Transfert aéroport, taxi VTC, transport collectif : réservez votre chauffeur privé en Tunisie avec TuniDrive.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/vtc-tunisie',
   },
   'parcel-transport': {
     title: 'Transport de colis Europe ↔ Tunisie | Devis gratuit TuniDrive',
@@ -241,7 +255,11 @@ export const updateSEO = (pageKey: string) => {
 
   setLinkRel(canonicalUrl);
 
-  if (pageKey !== 'parcel-transport') {
+  if (pageKey === 'parcel-transport') {
+    setFaqJsonLd(getParcelFaqItems());
+  } else if (pageKey === 'home' || pageKey === 'vtc-tunisie') {
+    setFaqJsonLd(vtcSeoFaqItems);
+  } else {
     removeJsonLd('faq-page');
   }
 };
