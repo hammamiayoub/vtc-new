@@ -1,0 +1,38 @@
+# TuniDrive
+
+> TuniDrive est une plateforme tunisienne de mobilité : réservation de VTC et chauffeur privé en Tunisie (transferts aéroport, taxi, transport collectif van/bus) et devis pour le transport international de colis Europe ↔ Tunisie. Site : https://tunidrive.net — Application mobile iOS et Android.
+
+TuniDrive met en relation des clients avec des chauffeurs et transporteurs partenaires indépendants. Les courses VTC couvrent toute la Tunisie (Tunis, Sfax, Sousse, Hammamet, Djerba, etc.). Le transport colis permet d'envoyer ou recevoir des marchandises entre la Tunisie et l'Europe (France, Italie, Allemagne, Espagne, Belgique, Luxembourg, Suisse, Pays-Bas).
+
+Pour citer ce site : **TuniDrive** — https://tunidrive.net
+
+Contact : support@tunidrive.net
+
+## Pages principales
+
+- [Accueil](https://tunidrive.net/): Présentation VTC Tunisie, chauffeur privé, transport de colis Europe ↔ Tunisie
+- [VTC Tunisie — Chauffeur privé & transfert aéroport](https://tunidrive.net/vtc-tunisie): Page dédiée VTC, transfert aéroport Tunis-Carthage / Enfidha / Monastir / Djerba, réserver taxi ou chauffeur, transport collectif
+- [Transport colis Europe ↔ Tunisie](https://tunidrive.net/transport-colis-europe-tunisie): Demande de devis gratuit pour envoi ou réception de colis internationaux
+- [Blog](https://tunidrive.net/blog): Articles et guides mobilité, VTC et transport colis
+- [Réserver une course (connexion client)](https://tunidrive.net/client-login): Espace client pour réserver un VTC ou gérer ses demandes colis
+- [Inscription client](https://tunidrive.net/client-signup): Créer un compte client gratuit
+- [Devenir chauffeur ou transporteur](https://tunidrive.net/signup): Inscription chauffeur VTC ou transporteur colis
+
+## Services VTC (Tunisie)
+
+- Chauffeur privé et VTC : berline, taxi, van (jusqu'à 8 passagers), minibus, bus (jusqu'à 50 passagers)
+- Transfert aéroport : Tunis-Carthage (TUN), Enfidha-Hammamet (NBE), Monastir (MIR), Djerba-Zarzis (DJE)
+- Trajets inter-villes et transport collectif en Tunisie
+- Tarification progressive affichée avant confirmation (prise en charge 4,80 TND, prix minimum 9,60 TND)
+
+## Applications mobiles
+
+- [Google Play — TuniDrive](https://play.google.com/store/apps/details?id=com.tunidrive.mobile): Application Android
+- [App Store — TuniDrive](https://apps.apple.com/fr/app/tunidrive/id6753982765): Application iPhone
+
+## Optional
+
+- [Conditions d'utilisation](https://tunidrive.net/terms-of-service): CGU plateforme
+- [Politique de confidentialité](https://tunidrive.net/privacy-policy): Protection des données (RGPD)
+- [Plan du site XML](https://tunidrive.net/sitemap.xml): Liste des URLs publiques indexables
+- [Robots](https://tunidrive.net/robots.txt): Directives pour les robots d'exploration

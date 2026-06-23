@@ -2,3 +2,6 @@ User-agent: *
 Allow: /
 
 Sitemap: https://tunidrive.net/sitemap.xml
+
+# Fichier d'aide pour les agents IA (convention llms.txt)
+# https://llmstxt.org/

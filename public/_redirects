@@ -1,6 +1,7 @@
 # Fichiers statiques SEO — doivent être servis tels quels (pas le fallback SPA)
 /robots.txt       /robots.txt       200
 /sitemap.xml      /sitemap.xml      200
+/llms.txt         /llms.txt         200
 /favicon.ico      /favicon.ico      200
 /tunidrive-logo.png  /tunidrive-logo.png  200
 
