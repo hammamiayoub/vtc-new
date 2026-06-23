@@ -12,6 +12,42 @@ interface HomePageProps {
   onClientLogin: () => void;
 }
 
+function VehiclePicture({
+  webp,
+  png,
+  alt,
+  fallback,
+}: {
+  webp: string;
+  png: string;
+  alt: string;
+  fallback: React.ReactNode;
+}) {
+  return (
+    <picture>
+      <source srcSet={webp} type="image/webp" />
+      <img
+        src={png}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        width={800}
+        height={600}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        onError={(e) => {
+          const target = e.currentTarget as HTMLImageElement;
+          target.style.display = 'none';
+          const nextElement = target.nextElementSibling as HTMLElement;
+          if (nextElement) {
+            nextElement.style.display = 'flex';
+          }
+        }}
+      />
+      {fallback}
+    </picture>
+  );
+}
+
 export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin }) => {
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
@@ -34,6 +70,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
   return (
     <div className="min-h-screen bg-white">
       <AppDownloadModal isOpen={isDownloadOpen} onClose={handleCloseDownload} />
+      <main>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -401,22 +438,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             {/* Van de transport collectif */}
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="relative h-48 overflow-hidden">
-                <img 
-                  src="/van.png" 
+                <VehiclePicture
+                  webp="/van.webp"
+                  png="/van.png"
                   alt="Van de transport collectif"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.style.display = 'none';
-                    const nextElement = target.nextElementSibling as HTMLElement;
-                    if (nextElement) {
-                      nextElement.style.display = 'flex';
-                    }
-                  }}
+                  fallback={
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center" style={{ display: 'none' }}>
+                      <Users size={64} className="text-white opacity-90" />
+                    </div>
+                  }
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center" style={{display: 'none'}}>
-                  <Users size={64} className="text-white opacity-90" />
-                </div>
                 <div className="absolute inset-0 bg-black bg-opacity-20"></div>
               </div>
               <div className="p-6">
@@ -435,22 +466,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             {/* Bus */}
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="relative h-48 overflow-hidden">
-                <img 
-                  src="/bus.png" 
+                <VehiclePicture
+                  webp="/bus.webp"
+                  png="/bus.png"
                   alt="Bus de transport"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.style.display = 'none';
-                    const nextElement = target.nextElementSibling as HTMLElement;
-                    if (nextElement) {
-                      nextElement.style.display = 'flex';
-                    }
-                  }}
+                  fallback={
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center" style={{ display: 'none' }}>
+                      <Bus size={64} className="text-white opacity-90" />
+                    </div>
+                  }
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center" style={{display: 'none'}}>
-                  <Bus size={64} className="text-white opacity-90" />
-                </div>
                 <div className="absolute inset-0 bg-black bg-opacity-20"></div>
               </div>
               <div className="p-6">
@@ -469,22 +494,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             {/* Utilitaire */}
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="relative h-48 overflow-hidden">
-                <img 
-                  src="/utilitaire.png" 
+                <VehiclePicture
+                  webp="/utilitaire.webp"
+                  png="/utilitaire.png"
                   alt="Véhicule utilitaire"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.style.display = 'none';
-                    const nextElement = target.nextElementSibling as HTMLElement;
-                    if (nextElement) {
-                      nextElement.style.display = 'flex';
-                    }
-                  }}
+                  fallback={
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center" style={{ display: 'none' }}>
+                      <Truck size={64} className="text-white opacity-90" />
+                    </div>
+                  }
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center" style={{display: 'none'}}>
-                  <Truck size={64} className="text-white opacity-90" />
-                </div>
                 <div className="absolute inset-0 bg-black bg-opacity-20"></div>
               </div>
               <div className="p-6">
@@ -503,22 +522,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
             {/* Taxi */}
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="relative h-48 overflow-hidden">
-                <img 
-                  src="/limousine.png" 
+                <VehiclePicture
+                  webp="/limousine.webp"
+                  png="/limousine.png"
                   alt="Véhicule de luxe"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.style.display = 'none';
-                    const nextElement = target.nextElementSibling as HTMLElement;
-                    if (nextElement) {
-                      nextElement.style.display = 'flex';
-                    }
-                  }}
+                  fallback={
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center" style={{ display: 'none' }}>
+                      <Crown size={64} className="text-white opacity-90" />
+                    </div>
+                  }
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center" style={{display: 'none'}}>
-                  <Crown size={64} className="text-white opacity-90" />
-                </div>
                 <div className="absolute inset-0 bg-black bg-opacity-20"></div>
               </div>
               <div className="p-6">
@@ -612,6 +625,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin 
         </div>
       </section>
 
+      </main>
       {/* Footer */}
       <Footer />
     </div>

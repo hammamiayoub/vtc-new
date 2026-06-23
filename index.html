@@ -2,8 +2,9 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon.ico" />
-    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VTC Tunisie | Chauffeur privé, transfert aéroport &amp; taxi — TuniDrive</title>
     <meta name="description" content="Réservez un VTC, un chauffeur privé ou un taxi en Tunisie avec TuniDrive. Transfert aéroport Tunis-Carthage, Enfidha, Monastir, transport collectif (van, bus), trajets inter-villes. Prix affiché avant confirmation." />
@@ -30,19 +31,35 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://tunidrive.net/" />
     
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17599907390"></script>
+    <!-- Google tag + AdSense (chargés après le contenu principal) -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
 
-      gtag('config', 'AW-17599907390');
+      function loadThirdPartyScripts() {
+        if (window.__tdThirdPartyLoaded) return;
+        window.__tdThirdPartyLoaded = true;
+
+        var gtagScript = document.createElement('script');
+        gtagScript.async = true;
+        gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17599907390';
+        gtagScript.onload = function() {
+          gtag('js', new Date());
+          gtag('config', 'AW-17599907390');
+        };
+        document.head.appendChild(gtagScript);
+
+        var adsScript = document.createElement('script');
+        adsScript.async = true;
+        adsScript.crossOrigin = 'anonymous';
+        adsScript.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3211329240716276';
+        document.head.appendChild(adsScript);
+      }
+
+      window.addEventListener('load', function() {
+        setTimeout(loadThirdPartyScripts, 2000);
+      });
     </script>
-    
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3211329240716276"
-         crossorigin="anonymous"></script>
     
     <script type="application/ld+json">
           {
