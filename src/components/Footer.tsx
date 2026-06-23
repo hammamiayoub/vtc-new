@@ -28,7 +28,7 @@ export const Footer: React.FC<FooterProps> = () => {
 
           {/* Services */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Services</h4>
+            <p className="text-lg font-semibold mb-4">Services</p>
             <ul className="space-y-2 text-gray-300">
               <li>
                 <Link
@@ -71,7 +71,7 @@ export const Footer: React.FC<FooterProps> = () => {
 
           {/* Inscription */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Inscription</h4>
+            <p className="text-lg font-semibold mb-4">Inscription</p>
             <ul className="space-y-2 text-gray-300">
               <li>
                 <Link 
@@ -96,7 +96,7 @@ export const Footer: React.FC<FooterProps> = () => {
 
           {/* Légal */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Légal</h4>
+            <p className="text-lg font-semibold mb-4">Légal</p>
             <ul className="space-y-2 text-gray-300">
               <li>
                 <Link 
@@ -121,7 +121,7 @@ export const Footer: React.FC<FooterProps> = () => {
 
           {/* Application mobile */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Application mobile</h4>
+            <p className="text-lg font-semibold mb-4">Application mobile</p>
             <div className="space-y-3">
               <a 
                 href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
@@ -152,7 +152,7 @@ export const Footer: React.FC<FooterProps> = () => {
 
           {/* Contact */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Contact</h4>
+            <p className="text-lg font-semibold mb-4">Contact</p>
             <ul className="space-y-2 text-gray-300">
               <li>
                 <a
