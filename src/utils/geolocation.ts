@@ -77,7 +77,7 @@ export const getPricePerKm = (distanceKm: number): { price: number; discount: st
 
 /**
  * Calcule le prix distance + prise en charge de manière progressive par tranches.
- * Grille alignée sur l'application mobile (prise en charge 4,80 TND, plancher 9,60 TND).
+ * Grille TuniDrive web (prise en charge 7,20 TND, plancher 14,40 TND).
  */
 export const calculateProgressivePrice = (distanceKm: number): number =>
   calculateProgressiveDistancePrice(distanceKm);

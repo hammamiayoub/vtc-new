@@ -23,7 +23,7 @@ Contact : support@tunidrive.net
 - Chauffeur privé et VTC : berline, taxi, van (jusqu'à 8 passagers), minibus, bus (jusqu'à 50 passagers)
 - Transfert aéroport : Tunis-Carthage (TUN), Enfidha-Hammamet (NBE), Monastir (MIR), Djerba-Zarzis (DJE)
 - Trajets inter-villes et transport collectif en Tunisie
-- Tarification progressive affichée avant confirmation (prise en charge 4,80 TND, prix minimum 9,60 TND)
+- Tarification progressive affichée avant confirmation (prise en charge 7,20 TND, prix minimum 14,40 TND)
 
 ## Applications mobiles
 

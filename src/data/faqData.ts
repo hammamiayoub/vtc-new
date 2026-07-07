@@ -33,7 +33,7 @@ export const faqCategories: FaqCategory[] = [
         id: "c3",
         question: "Quels sont les tarifs des courses ?",
         answer:
-          "Les tarifs VTC TuniDrive (identiques sur le site et l'application mobile) comprennent :\n• Prise en charge : 4,80 TND\n• 0–15 km : 1,02 TND/km\n• 15–50 km : 1,32 TND/km\n• 50–100 km : 1,14 TND/km\n• 100–250 km : 0,90 TND/km\n• 250+ km : 0,72 TND/km\n• Prix minimum : 9,60 TND\n\nLe tarif au km est progressif : chaque tranche est facturée séparément. Un multiplicateur peut s'appliquer selon le type de véhicule (van, minibus, etc.). Le prix estimé vous est affiché avant confirmation.",
+          "Les tarifs VTC TuniDrive comprennent :\n• Prise en charge : 7,20 TND\n• 0–15 km : 1,53 TND/km\n• 15–50 km : 1,98 TND/km\n• 50–100 km : 1,71 TND/km\n• 100–250 km : 1,35 TND/km\n• 250+ km : 1,08 TND/km\n• Prix minimum : 14,40 TND\n\nLe tarif au km est progressif : chaque tranche est facturée séparément. Un multiplicateur peut s'appliquer selon le type de véhicule (van, minibus, etc.). Le prix estimé vous est affiché avant confirmation.",
       },
       {
         id: "c4",
