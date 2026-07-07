@@ -1,7 +1,7 @@
-/** Grille tarifaire VTC alignée sur l'application mobile TuniDrive */
+/** Grille tarifaire VTC TuniDrive (grille mobile majorée de 50 %) */
 
-export const RIDE_BASE_FARE_TND = 4.8;
-export const RIDE_MIN_PRICE_TND = 9.6;
+export const RIDE_BASE_FARE_TND = 7.2;
+export const RIDE_MIN_PRICE_TND = 14.4;
 
 export interface RideDistanceTier {
   maxKm: number;
@@ -11,11 +11,11 @@ export interface RideDistanceTier {
 
 /** Tranches progressives (km facturés dans chaque palier) */
 export const RIDE_DISTANCE_TIERS: RideDistanceTier[] = [
-  { maxKm: 15, rate: 1.02, label: '0–15 km' },
-  { maxKm: 35, rate: 1.32, label: '15–50 km' },
-  { maxKm: 50, rate: 1.14, label: '50–100 km' },
-  { maxKm: 150, rate: 0.9, label: '100–250 km' },
-  { maxKm: Infinity, rate: 0.72, label: '250+ km' },
+  { maxKm: 15, rate: 1.53, label: '0–15 km' },
+  { maxKm: 35, rate: 1.98, label: '15–50 km' },
+  { maxKm: 50, rate: 1.71, label: '50–100 km' },
+  { maxKm: 150, rate: 1.35, label: '100–250 km' },
+  { maxKm: Infinity, rate: 1.08, label: '250+ km' },
 ];
 
 export interface ProgressivePriceBreakdownRow {
@@ -74,9 +74,9 @@ export function calculateProgressiveDistancePrice(distanceKm: number): number {
 
 /** Tarif indicatif au km selon la distance totale (affichage récapitulatif). */
 export function getIndicativePricePerKm(distanceKm: number): { price: number; discount: string } {
-  if (distanceKm < 15) return { price: 1.02, discount: '' };
-  if (distanceKm < 50) return { price: 1.32, discount: '' };
-  if (distanceKm < 100) return { price: 1.14, discount: '' };
-  if (distanceKm < 250) return { price: 0.9, discount: '' };
-  return { price: 0.72, discount: '' };
+  if (distanceKm < 15) return { price: 1.53, discount: '' };
+  if (distanceKm < 50) return { price: 1.98, discount: '' };
+  if (distanceKm < 100) return { price: 1.71, discount: '' };
+  if (distanceKm < 250) return { price: 1.35, discount: '' };
+  return { price: 1.08, discount: '' };
 }
