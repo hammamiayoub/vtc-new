@@ -58,6 +58,9 @@ const BlogPage = lazy(() =>
 const VtcTunisiePage = lazy(() =>
   import('./components/VtcTunisiePage').then((m) => ({ default: m.VtcTunisiePage }))
 );
+const AboutPage = lazy(() =>
+  import('./components/AboutPage').then((m) => ({ default: m.AboutPage }))
+);
 const PrivacyPolicyPage = lazy(() =>
   import('./components/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
 );
@@ -85,7 +88,8 @@ type View =
   | 'reset-password'
   | 'parcel-transport'
   | 'blog'
-  | 'vtc-tunisie';
+  | 'vtc-tunisie'
+  | 'about';
 
 function pathToView(path: string): { view: View; seoKey: string } {
   switch (path) {
@@ -115,6 +119,8 @@ function pathToView(path: string): { view: View; seoKey: string } {
       return { view: 'vtc-tunisie', seoKey: 'vtc-tunisie' };
     case '/blog':
       return { view: 'blog', seoKey: 'blog' };
+    case '/a-propos':
+      return { view: 'about', seoKey: 'about' };
     case '/privacy-policy':
       return { view: 'privacy-policy', seoKey: 'privacy-policy' };
     case '/terms-of-service':
@@ -317,11 +323,19 @@ function AppContent() {
         return <VtcTunisiePage onClientLogin={() => navigate('/client-login')} />;
       case 'blog':
         return <BlogPage />;
+      case 'about':
+        return (
+          <AboutPage
+            onClientLogin={() => navigate('/client-login')}
+            onClientSignup={() => navigate('/client-signup')}
+          />
+        );
       default:
         return (
           <HomePage
             onGetStarted={() => navigate('/signup')}
             onClientLogin={() => navigate('/client-login')}
+            onClientSignup={() => navigate('/client-signup')}
           />
         );
     }
@@ -332,7 +346,8 @@ function AppContent() {
     currentView === 'admin' ||
     currentView === 'parcel-transport' ||
     currentView === 'vtc-tunisie' ||
-    currentView === 'blog';
+    currentView === 'blog' ||
+    currentView === 'about';
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Shield, FileText, UserPlus, Car, Mail, MessageCircle, Facebook, Instagram, Package, BookOpen } from 'lucide-react';
+import { Shield, FileText, UserPlus, Car, Mail, MessageCircle, Facebook, Instagram, Package, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface FooterProps {
@@ -7,142 +7,103 @@ interface FooterProps {
   onTermsClick?: () => void;
 }
 
+const footerLinkClass = 'text-sm text-gray-300 hover:text-white transition-colors';
+const footerHeadingClass = 'text-sm font-semibold text-white mb-4';
+
 export const Footer: React.FC<FooterProps> = () => {
   return (
-    <footer className="bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid md:grid-cols-6 gap-8">
-          {/* Logo et description */}
-          <div className="md:col-span-2">
-            <p className="text-2xl font-bold mb-4">TuniDrive</p>
-            <p className="text-gray-300 mb-4 max-w-md">
+    <footer className="bg-black border-t border-gray-800 text-white">
+      <div className="page-container py-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-8">
+          <div className="lg:col-span-2">
+            <p className="text-xl font-bold text-white mb-4 tracking-tight">TuniDrive</p>
+            <p className="text-sm text-gray-300 mb-4 max-w-md leading-relaxed">
               Mobilité et transport en Tunisie : courses VTC avec chauffeurs professionnels
               et transport international de colis Europe ↔ Tunisie.
             </p>
-            <div className="flex items-center gap-2 text-gray-400">
-              <span>Fait avec</span>
-              <Heart size={16} className="text-red-500" />
-              <span>en Tunisie</span>
-            </div>
           </div>
 
-          {/* Services */}
           <div>
-            <p className="text-lg font-semibold mb-4">Services</p>
-            <ul className="space-y-2 text-gray-300">
+            <p className={footerHeadingClass}>Services</p>
+            <ul className="space-y-3">
               <li>
-                <Link
-                  to="/vtc-tunisie"
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <Car size={16} />
+                <Link to="/vtc-tunisie" className={footerLinkClass}>
                   VTC Tunisie &amp; transfert aéroport
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/#transport-vtc"
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <Car size={16} />
+                <Link to="/#transport-vtc" className={footerLinkClass}>
                   Chauffeur privé
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/transport-colis-europe-tunisie"
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <Package size={16} />
+                <Link to="/transport-colis-europe-tunisie" className={footerLinkClass}>
                   Transport colis Europe ↔ Tunisie
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/blog"
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <BookOpen size={16} />
+                <Link to="/blog" className={footerLinkClass}>
                   Blog
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Inscription */}
           <div>
-            <p className="text-lg font-semibold mb-4">Inscription</p>
-            <ul className="space-y-2 text-gray-300">
+            <p className={footerHeadingClass}>Inscription</p>
+            <ul className="space-y-3">
               <li>
-                <Link 
-                  to="/signup" 
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <Car size={24} />
+                <Link to="/signup" className={footerLinkClass}>
                   Devenir chauffeur ou transporteur
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/client-signup" 
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <UserPlus size={16} />
+                <Link to="/client-signup" className={footerLinkClass}>
                   Inscription client
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Légal */}
           <div>
-            <p className="text-lg font-semibold mb-4">Légal</p>
-            <ul className="space-y-2 text-gray-300">
+            <p className={footerHeadingClass}>Légal</p>
+            <ul className="space-y-3">
               <li>
-                <Link 
-                  to="/terms-of-service" 
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <FileText size={16} />
+                <Link to="/terms-of-service" className={footerLinkClass}>
                   CGU
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/privacy-policy" 
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <Shield size={16} />
+                <Link to="/privacy-policy" className={footerLinkClass}>
                   RGPD
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Application mobile */}
           <div>
-            <p className="text-lg font-semibold mb-4">Application mobile</p>
+            <p className={footerHeadingClass}>Application</p>
             <div className="space-y-3">
-              <a 
+              <a
                 href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block hover:opacity-80 transition-opacity"
               >
-                <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
                   alt="Disponible sur Google Play"
                   className="h-10 w-auto"
                 />
               </a>
-              <a 
+              <a
                 href="https://apps.apple.com/fr/app/tunidrive/id6753982765"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block hover:opacity-80 transition-opacity"
               >
-                <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
                   alt="Télécharger sur l'App Store"
                   className="h-10 w-auto"
                 />
@@ -150,16 +111,15 @@ export const Footer: React.FC<FooterProps> = () => {
             </div>
           </div>
 
-          {/* Contact */}
           <div>
-            <p className="text-lg font-semibold mb-4">Contact</p>
-            <ul className="space-y-2 text-gray-300">
+            <p className={footerHeadingClass}>Contact</p>
+            <ul className="space-y-3">
               <li>
                 <a
                   href="https://wa.me/21628528477"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-white transition-colors flex items-center gap-2"
+                  className={`${footerLinkClass} inline-flex items-center gap-2`}
                 >
                   <MessageCircle size={14} />
                   WhatsApp
@@ -168,7 +128,7 @@ export const Footer: React.FC<FooterProps> = () => {
               <li>
                 <a
                   href="mailto:support@tunidrive.net"
-                  className="hover:text-white transition-colors flex items-center gap-2"
+                  className={`${footerLinkClass} inline-flex items-center gap-2`}
                 >
                   <Mail size={16} />
                   support@tunidrive.net
@@ -176,13 +136,9 @@ export const Footer: React.FC<FooterProps> = () => {
               </li>
             </ul>
           </div>
-
-          {/* Légal */}
-         
         </div>
 
-        {/* Ligne de séparation */}
-        <div className="border-t border-gray-700 mt-8 pt-8">
+        <div className="border-t border-gray-800 mt-10 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm">
               © {new Date().getFullYear()} TuniDrive. Tous droits réservés.
@@ -230,4 +186,3 @@ export const Footer: React.FC<FooterProps> = () => {
     </footer>
   );
 };
-

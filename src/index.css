@@ -2,13 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply font-sans text-gray-900 bg-white;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .page-heading {
+    @apply text-3xl sm:text-4xl font-bold tracking-tight text-gray-900;
+  }
+
+  .page-subheading {
+    @apply text-lg text-gray-600 leading-relaxed;
+  }
+
+  .uber-card {
+    @apply bg-white rounded-xl border border-surface-border transition-shadow duration-200 hover:shadow-card;
+  }
+}
+
 /* Hide scrollbar for mobile tabs */
 @layer utilities {
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
+    display: none;
   }
 }

@@ -4,9 +4,14 @@ import { UserPlus, LogIn, MapPin, Menu, X, Package, BookOpen } from 'lucide-reac
 import { prefetchRoute } from '../utils/prefetchRoute';
 
 interface HeaderProps {
-  currentView: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'blog' | 'admin';
-  onViewChange?: (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'blog' | 'admin') => void;
+  currentView: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'blog' | 'about' | 'admin';
+  onViewChange?: (view: 'home' | 'signup' | 'login' | 'client-signup' | 'client-login' | 'parcel-transport' | 'blog' | 'about' | 'admin') => void;
 }
+
+const navLinkClass = (active: boolean) =>
+  `text-sm font-medium transition-colors ${
+    active ? 'text-white' : 'text-gray-300 hover:text-white'
+  }`;
 
 export const Header: React.FC<HeaderProps> = ({ currentView }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -17,109 +22,100 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
   };
 
   return (
-    <header className="bg-black border-b border-gray-800 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          <div 
+    <header className="bg-black border-b border-gray-800 relative sticky top-0 z-50">
+      <div className="page-container">
+        <div className="flex justify-between items-center h-16">
+          <div
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }}
           >
-            <span className="text-3xl font-bold text-white tracking-tight">TuniDrive</span>
+            <span className="text-2xl font-bold text-white tracking-tight">TuniDrive</span>
           </div>
-          
-          <nav className="hidden md:flex items-center gap-2">
+
+          <nav className="hidden md:flex items-center gap-8">
+            <button
+              onClick={() => { navigate('/a-propos'); }}
+              onMouseEnter={() => prefetchRoute('/a-propos')}
+              onFocus={() => prefetchRoute('/a-propos')}
+              className={navLinkClass(currentView === 'about')}
+            >
+              À propos
+            </button>
+
             <button
               onClick={() => { navigate('/blog'); }}
               onMouseEnter={() => prefetchRoute('/blog')}
               onFocus={() => prefetchRoute('/blog')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
-                currentView === 'blog'
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
-              }`}
+              className={navLinkClass(currentView === 'blog')}
             >
-              <BookOpen size={20} />
-              <span className="hidden lg:inline">Blog</span>
+              Blog
             </button>
 
             <button
               onClick={() => { navigate('/transport-colis-europe-tunisie'); }}
               onMouseEnter={() => prefetchRoute('/transport-colis-europe-tunisie')}
               onFocus={() => prefetchRoute('/transport-colis-europe-tunisie')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
-                currentView === 'parcel-transport'
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
-              }`}
+              className={navLinkClass(currentView === 'parcel-transport')}
             >
-              <Package size={20} />
-              <span className="hidden lg:inline">Transport colis</span>
+              Transport colis
             </button>
 
             <button
               onClick={() => { navigate('/signup'); }}
               onMouseEnter={() => prefetchRoute('/signup')}
               onFocus={() => prefetchRoute('/signup')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
-                currentView === 'signup'
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
-              }`}
+              className={navLinkClass(currentView === 'signup')}
             >
-              <UserPlus size={20} />
-              <span className="hidden lg:inline">Devenir chauffeur</span>
+              Devenir chauffeur
             </button>
-            
-            <button
-              onClick={() => { navigate('/client-login'); }}
-              onMouseEnter={() => prefetchRoute('/client-login')}
-              onFocus={() => prefetchRoute('/client-login')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all duration-200 font-medium ${
-                currentView === 'client-login' || currentView === 'client-signup'
-                  ? 'bg-white text-black'
-                  : 'bg-white text-black hover:bg-gray-200'
-              }`}
-            >
-              <MapPin size={20} />
-              <span className="hidden sm:inline">Réserver une course</span>
-            </button>
-            
+
             <button
               onClick={() => { navigate('/login'); }}
               onMouseEnter={() => prefetchRoute('/login')}
               onFocus={() => prefetchRoute('/login')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium ${
-                currentView === 'login'
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
-              }`}
+              className={navLinkClass(currentView === 'login')}
             >
-              <LogIn size={20} />
-              <span className="hidden sm:inline">Connexion</span>
+              Connexion
+            </button>
+
+            <button
+              onClick={() => { navigate('/client-login'); }}
+              onMouseEnter={() => prefetchRoute('/client-login')}
+              onFocus={() => prefetchRoute('/client-login')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black text-sm font-semibold hover:bg-gray-200 transition-colors"
+            >
+              <MapPin size={18} />
+              <span>Réserver</span>
             </button>
           </nav>
-          
-          {/* Mobile menu button */}
-          <button 
+
+          <button
             onClick={toggleMobileMenu}
             className="md:hidden p-2 text-gray-300 hover:text-white transition-colors"
+            aria-label={isMobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
-        {/* Mobile menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden absolute top-full left-0 right-0 bg-black border-t border-gray-800 shadow-lg z-50">
-            <div className="px-4 py-4 space-y-2">
+            <div className="px-4 py-4 space-y-1">
               <button
-                onClick={() => { navigate('/client-login'); }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left text-white hover:bg-gray-800 rounded-lg transition-colors"
+                onClick={() => { navigate('/client-login'); setIsMobileMenuOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-black bg-white hover:bg-gray-200 rounded-lg transition-colors font-medium"
               >
                 <MapPin size={20} />
                 <span>Réserver une course</span>
               </button>
-              
+
+              <button
+                onClick={() => { navigate('/a-propos'); setIsMobileMenuOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <span>À propos</span>
+              </button>
+
               <button
                 onClick={() => { navigate('/blog'); setIsMobileMenuOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
@@ -129,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
               </button>
 
               <button
-                onClick={() => { navigate('/transport-colis-europe-tunisie'); }}
+                onClick={() => { navigate('/transport-colis-europe-tunisie'); setIsMobileMenuOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <Package size={20} />
@@ -137,46 +133,44 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
               </button>
 
               <button
-                onClick={() => { navigate('/signup'); }}
+                onClick={() => { navigate('/signup'); setIsMobileMenuOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <UserPlus size={20} />
                 <span>Devenir chauffeur</span>
               </button>
-              
+
               <button
-                onClick={() => { navigate('/login'); }}
+                onClick={() => { navigate('/login'); setIsMobileMenuOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <LogIn size={20} />
                 <span>Connexion</span>
               </button>
-              
 
-              {/* Badges des stores mobiles */}
-              <div className="pt-4 border-t border-gray-700">
-                <p className="text-gray-400 text-sm mb-3">Télécharger l'app</p>
-                <div className="flex gap-3">
-                  <a 
+              <div className="pt-4 border-t border-gray-800">
+                <p className="text-gray-400 text-sm mb-3 px-4">Télécharger l'app</p>
+                <div className="flex gap-3 px-4">
+                  <a
                     href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:opacity-80 transition-opacity"
                   >
-                    <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
                       alt="Disponible sur Google Play"
                       className="h-8 w-auto"
                     />
                   </a>
-                  <a 
+                  <a
                     href="https://apps.apple.com/fr/app/tunidrive/id6753982765"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:opacity-80 transition-opacity"
                   >
-                    <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
                       alt="Télécharger sur l'App Store"
                       className="h-8 w-auto"
                     />
