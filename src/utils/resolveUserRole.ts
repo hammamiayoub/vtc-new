@@ -32,6 +32,7 @@ export const PUBLIC_PATHS = new Set([
   '/vtc-tunisie',
   '/reset-password',
   '/blog',
+  '/a-propos',
 ]);
 
 export function isPublicPath(path: string): boolean {

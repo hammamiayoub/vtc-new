@@ -2,6 +2,7 @@ const prefetched = new Set<string>();
 
 const ROUTE_IMPORTS: Record<string, () => Promise<unknown>> = {
   '/blog': () => import('../components/BlogPage'),
+  '/a-propos': () => import('../components/AboutPage'),
   '/vtc-tunisie': () => import('../components/VtcTunisiePage'),
   '/transport-colis-europe-tunisie': () => import('../components/ParcelTransportPage'),
   '/signup': () => import('../components/DriverSignup'),

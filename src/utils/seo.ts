@@ -69,6 +69,18 @@ export const seoData: Record<string, SEOData> = {
     ogImage: DEFAULT_OG_IMAGE,
     canonical: '/blog',
   },
+  about: {
+    title: 'À propos de TuniDrive | Comment ça marche — VTC & colis',
+    description:
+      'Découvrez le fonctionnement de TuniDrive : réservation VTC en Tunisie, transfert aéroport, transport collectif et devis colis Europe ↔ Tunisie. Tarifs transparents, chauffeurs et transporteurs partenaires.',
+    keywords:
+      'à propos TuniDrive, comment fonctionne TuniDrive, plateforme VTC Tunisie, transport colis Europe Tunisie, réserver chauffeur privé',
+    ogTitle: 'À propos de TuniDrive — Comment ça marche',
+    ogDescription:
+      'TuniDrive met en relation clients, chauffeurs VTC et transporteurs de colis. Découvrez comment réserver une course ou demander un devis.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/a-propos',
+  },
   signup: {
     title: 'Devenir chauffeur ou transporteur | VTC & colis TuniDrive',
     description:

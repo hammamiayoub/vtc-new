@@ -20,6 +20,7 @@ interface AddressAutocompleteProps {
    * ex: ['fr','it','de','es','be','nl', ...] ou undefined pour aucun filtre.
    */
   countries?: string | string[] | null;
+  inputClassName?: string;
 }
 
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
@@ -32,6 +33,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   disabled = false,
   inputId,
   countries = 'tn',
+  inputClassName,
 }) => {
   // Clé stable pour déclencher la réinitialisation quand la restriction pays change
   const countriesKey = Array.isArray(countries) ? countries.join(',') : (countries ?? '');
@@ -236,7 +238,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           enterKeyHint="search"
           data-lpignore="true"
           data-form-type="other"
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className={
+            inputClassName ??
+            'w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed'
+          }
         />
       </div>
 
