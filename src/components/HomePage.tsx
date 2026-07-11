@@ -162,9 +162,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
         {/* Services — carrousel de cartes type Uber */}
         <section className="py-16 bg-surface-muted">
           <div className="page-container">
-            <h2 className="page-heading mb-10">
-              Découvrez ce que vous pouvez faire avec TuniDrive
-            </h2>
+            <div className="text-center mb-10 max-w-3xl mx-auto">
+              <h2 className="page-heading">
+                Découvrez ce que vous pouvez faire avec TuniDrive
+              </h2>
+            </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {serviceOffers.map(({ icon: Icon, title, description, href, cta }) => (
                 <Link
@@ -189,32 +191,33 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
         {/* Transport VTC */}
         <section id="transport-vtc" className="py-16 bg-white">
           <div className="page-container">
-            <div className="max-w-3xl mb-12">
-              <h2 className="page-heading mb-4">Transport de personnes &amp; VTC en Tunisie</h2>
-              <p className="page-subheading">
-                Réservez un chauffeur privé ou un VTC pour vos déplacements en Tunisie.
-                Berline, taxi, van, minibus ou véhicule de luxe.
-              </p>
-            </div>
+            <div className="max-w-5xl mx-auto space-y-10">
+              <div className="text-center">
+                <h2 className="page-heading mb-4">Transport de personnes &amp; VTC en Tunisie</h2>
+                <p className="page-subheading max-w-3xl mx-auto">
+                  Réservez un chauffeur privé ou un VTC pour vos déplacements en Tunisie.
+                  Berline, taxi, van, minibus ou véhicule de luxe.
+                </p>
+              </div>
 
-            <div className="grid md:grid-cols-3 gap-4 max-w-5xl mb-10">
-              {[
-                { icon: Plane, label: 'Transfert aéroport Tunisie', href: '/vtc-tunisie#transfert-aeroport-tunisie' },
-                { icon: Car, label: 'Réserver taxi / chauffeur', href: '/client-login' },
-                { icon: Users, label: 'Transport collectif', href: '/vtc-tunisie#faq-vtc' },
-              ].map(({ icon: Icon, label, href }) => (
-                <Link
-                  key={label}
-                  to={href}
-                  className="flex items-center gap-3 uber-card p-4 text-sm font-medium text-gray-800"
-                >
-                  <Icon size={20} className="text-gray-600 flex-shrink-0" />
-                  {label}
-                </Link>
-              ))}
-            </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                {[
+                  { icon: Plane, label: 'Transfert aéroport Tunisie', href: '/vtc-tunisie#transfert-aeroport-tunisie' },
+                  { icon: Car, label: 'Réserver taxi / chauffeur', href: '/client-login' },
+                  { icon: Users, label: 'Transport collectif', href: '/vtc-tunisie#faq-vtc' },
+                ].map(({ icon: Icon, label, href }) => (
+                  <Link
+                    key={label}
+                    to={href}
+                    className="flex items-center gap-3 uber-card p-4 text-sm font-medium text-gray-800"
+                  >
+                    <Icon size={20} className="text-gray-600 flex-shrink-0" />
+                    {label}
+                  </Link>
+                ))}
+              </div>
 
-            <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mb-12">
+              <div className="grid md:grid-cols-2 gap-6">
               {[
                 {
                   icon: Users,
@@ -250,16 +253,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
                   </ul>
                 </div>
               ))}
-            </div>
+              </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button size="lg" onClick={onClientLogin} className="rounded-full">
-                Réserver une course
-                <ArrowRight size={20} className="ml-2" />
-              </Button>
-              <Button size="lg" variant="outline" onClick={onGetStarted} className="rounded-full">
-                Devenir chauffeur partenaire
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" onClick={onClientLogin} className="rounded-full">
+                  Réserver une course
+                  <ArrowRight size={20} className="ml-2" />
+                </Button>
+                <Button size="lg" variant="outline" onClick={onGetStarted} className="rounded-full">
+                  Devenir chauffeur partenaire
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -267,7 +271,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
         {/* Transport colis */}
         <section id="transport-colis" className="py-16 bg-surface-muted">
           <div className="page-container">
-            <div className="max-w-3xl mb-12">
+            <div className="text-center mb-12 max-w-3xl mx-auto">
               <span className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full text-xs font-semibold text-gray-700 border border-surface-border mb-4">
                 <Globe size={14} />
                 Europe ↔ Tunisie
