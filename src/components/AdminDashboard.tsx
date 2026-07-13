@@ -15,6 +15,7 @@ import {
   TrendingUp,
   AlertCircle as AlertCircleIcon,
   Edit,
+  MapPin,
   Package,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
@@ -114,6 +115,19 @@ interface AdminBooking {
     email?: string;
     phone?: string;
   };
+  trackingToken?: string | null;
+}
+
+function buildTrackingUrl(token: string): string {
+  return `${window.location.origin}/track.html?token=${encodeURIComponent(token)}`;
+}
+
+function canShowBookingGpsTracking(booking: AdminBooking): boolean {
+  return (
+    !!booking.trackingToken &&
+    !!booking.driverId &&
+    (booking.status === 'accepted' || booking.status === 'in_progress')
+  );
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
@@ -1219,7 +1233,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         createdAt: booking.created_at,
         updatedAt: booking.updated_at,
         clients: booking.clients,
-        drivers: booking.drivers
+        drivers: booking.drivers,
+        trackingToken: booking.tracking_token ?? null,
       }));
 
       setBookings(formattedBookings);
@@ -2114,6 +2129,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <div className="text-xs text-gray-500">
                           Statut: {booking.status}
                         </div>
+                        {canShowBookingGpsTracking(booking) && (
+                          <Button
+                            onClick={() => window.open(buildTrackingUrl(booking.trackingToken!), '_blank', 'noopener,noreferrer')}
+                            size="sm"
+                            className="bg-black hover:bg-gray-800 text-white flex items-center gap-2 mt-1"
+                          >
+                            <MapPin size={16} />
+                            Voir le suivi GPS
+                          </Button>
+                        )}
                         {['pending', 'accepted', 'in_progress'].includes(booking.status) && (
                           <Button
                             onClick={() => { setCancelBookingError(null); setBookingToCancel(booking); }}
@@ -2127,8 +2152,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </div>
                     </div>
 
-                    {['pending', 'accepted', 'in_progress'].includes(booking.status) && (
-                      <div className="mt-4 flex lg:hidden">
+                    {(canShowBookingGpsTracking(booking) || ['pending', 'accepted', 'in_progress'].includes(booking.status)) && (
+                      <div className="mt-4 flex flex-col sm:flex-row lg:hidden gap-2">
+                        {canShowBookingGpsTracking(booking) && (
+                          <Button
+                            onClick={() => window.open(buildTrackingUrl(booking.trackingToken!), '_blank', 'noopener,noreferrer')}
+                            size="sm"
+                            className="w-full bg-black hover:bg-gray-800 text-white flex items-center justify-center gap-2"
+                          >
+                            <MapPin size={16} />
+                            Voir le suivi GPS
+                          </Button>
+                        )}
+                        {['pending', 'accepted', 'in_progress'].includes(booking.status) && (
                         <Button
                           onClick={() => { setCancelBookingError(null); setBookingToCancel(booking); }}
                           size="sm"
@@ -2137,6 +2173,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           <XCircle size={16} />
                           Annuler la réservation
                         </Button>
+                        )}
                       </div>
                     )}
                   </div>
