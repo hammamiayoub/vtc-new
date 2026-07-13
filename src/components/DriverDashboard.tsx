@@ -113,16 +113,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     }
   }, [driver?.id]);
 
-  const checkSubscriptionStatus = async () => {
-    if (!driver?.id) return;
-    
+  const fetchSubscriptionStatus = async () => {
+    if (!driver?.id) return null;
+
     try {
       const { data, error } = await supabase
         .rpc('get_driver_subscription_status', { p_driver_id: driver.id });
 
       if (error) {
         console.error('Erreur vérification statut abonnement:', error);
-        return;
+        return null;
       }
 
       let lastPaidSubscriptionEnd: string | null = null;
@@ -143,7 +143,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       }
 
       if (data && data.length > 0) {
-        setSubscriptionStatus({
+        return {
           canAcceptMoreBookings: data[0].can_accept_more_bookings,
           hasActiveSubscription: data[0].has_active_subscription,
           subscriptionType: data[0].subscription_type,
@@ -151,10 +151,19 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           remainingFreeBookings: data[0].remaining_free_bookings,
           lastPaidSubscriptionEnd,
           hadPaidSubscription
-        });
+        };
       }
     } catch (error) {
       console.error('Erreur:', error);
+    }
+
+    return null;
+  };
+
+  const checkSubscriptionStatus = async () => {
+    const status = await fetchSubscriptionStatus();
+    if (status) {
+      setSubscriptionStatus(status);
     }
   };
 
@@ -349,9 +358,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       
       // Vérifier le quota si on accepte une nouvelle course
       if (newStatus === 'accepted') {
-        await checkSubscriptionStatus();
-        
-        if (subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings) {
+        const currentSubscriptionStatus = await fetchSubscriptionStatus();
+
+        if (currentSubscriptionStatus && !currentSubscriptionStatus.canAcceptMoreBookings) {
+          setSubscriptionStatus(currentSubscriptionStatus);
           alert(
             '❌ Limite de courses gratuites atteinte\n\n' +
             'Vous avez déjà accepté 3 courses avec votre compte gratuit.\n\n' +
@@ -380,7 +390,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
       if (error) {
         console.error('Erreur lors de la mise à jour:', error);
-        alert('Erreur lors de la mise à jour du statut');
+        if (error.message?.includes('subscription_required')) {
+          alert(
+            '❌ Limite de courses gratuites atteinte\n\n' +
+            'Vous avez déjà accepté 3 courses avec votre compte gratuit.\n\n' +
+            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Premium (35.70 TND/mois).\n\n' +
+            'Rendez-vous dans l\'onglet "Abonnement" pour plus d\'informations.'
+          );
+          await checkSubscriptionStatus();
+        } else {
+          alert('Erreur lors de la mise à jour du statut');
+        }
         return;
       }
 

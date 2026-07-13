@@ -646,8 +646,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           
           if (subscriptionError) {
             console.warn(`⚠️ Erreur vérification abonnement pour ${driver.id}:`, subscriptionError);
-            // En cas d'erreur, on inclut le chauffeur par défaut
-            driversWithValidSubscription.push(driver);
             continue;
           }
           
@@ -669,14 +667,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             } else {
               console.log(`❌ Chauffeur ${driver.first_name} ${driver.last_name} a atteint son quota (${status.monthly_accepted_bookings} courses)`);
             }
-          } else {
-            // Si pas de données, inclure par défaut
-            driversWithValidSubscription.push(driver);
           }
         } catch (error) {
           console.error(`❌ Erreur inattendue pour ${driver.id}:`, error);
-          // En cas d'erreur, on inclut le chauffeur par défaut
-          driversWithValidSubscription.push(driver);
         }
       }
       
