@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { CreditCard, Check, X, AlertCircle, Calendar, TrendingUp, Lock, Unlock, Info, Copy, MessageCircle, Mail } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
+import {
+  getBillingPeriodLabel,
+  getSubscriptionDurationLabel,
+  type SubscriptionBillingPeriod,
+} from '../utils/subscriptionPeriod';
 
 interface DriverSubscriptionProps {
   driverId: string;
@@ -18,7 +23,15 @@ interface SubscriptionStatus {
   subscriptionEndDate?: string;
 }
 
-type BillingPeriod = 'monthly' | 'yearly';
+type BillingPeriod = SubscriptionBillingPeriod;
+
+interface PendingSubscriptionRequest {
+  id: string;
+  startDate: string;
+  endDate: string;
+  billingPeriod: BillingPeriod;
+  totalPriceTnd: number;
+}
 
 export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId }) => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
@@ -27,6 +40,8 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
   const [submittingRequest, setSubmittingRequest] = useState(false);
   const [bankAccountCopied, setBankAccountCopied] = useState(false);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState<PendingSubscriptionRequest | null>(null);
+  const [cancellingRequest, setCancellingRequest] = useState(false);
   const [selectedBillingPeriod, setSelectedBillingPeriod] = useState<BillingPeriod>('monthly');
   const [showExpiredModal, setShowExpiredModal] = useState(false);
 
@@ -69,17 +84,30 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
       // Vérifier s'il existe déjà une demande en attente
       const { data, error } = await supabase
         .from('driver_subscriptions')
-        .select('id, created_at')
+        .select('id, created_at, billing_period, start_date, end_date, total_price_tnd')
         .eq('driver_id', driverId)
         .eq('payment_status', 'pending')
         .eq('status', 'active')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (data && !error) {
+        const billingPeriod: BillingPeriod =
+          data.billing_period === 'yearly' ? 'yearly' : 'monthly';
         setHasPendingRequest(true);
-        setShowPaymentInfo(true); // Afficher automatiquement les infos de paiement
+        setPendingRequest({
+          id: data.id,
+          startDate: data.start_date,
+          endDate: data.end_date,
+          billingPeriod,
+          totalPriceTnd: Number(data.total_price_tnd) || 0,
+        });
+        setSelectedBillingPeriod(billingPeriod);
+        setShowPaymentInfo(true);
       } else {
         setHasPendingRequest(false);
+        setPendingRequest(null);
       }
     } catch (error) {
       console.error('Erreur vérification demande:', error);
@@ -122,6 +150,50 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
       console.error('Erreur:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelPendingRequest = async () => {
+    if (!pendingRequest) return;
+
+    const confirmed = window.confirm(
+      "Annuler votre demande d'abonnement ?\n\nVous pourrez en créer une nouvelle plus tard si vous le souhaitez."
+    );
+    if (!confirmed) return;
+
+    setCancellingRequest(true);
+    try {
+      const { data, error } = await supabase.rpc('cancel_pending_driver_subscription', {
+        p_subscription_id: pendingRequest.id,
+      });
+
+      if (error) {
+        console.error('Erreur annulation demande abonnement:', error);
+        alert("Impossible d'annuler la demande. Veuillez réessayer ou contacter le support.");
+        return;
+      }
+
+      const result = data as { success?: boolean; reason?: string } | null;
+      if (!result?.success) {
+        const message =
+          result?.reason === 'not_cancellable'
+            ? 'Cette demande ne peut plus être annulée (déjà traitée ou payée).'
+            : "Impossible d'annuler la demande.";
+        alert(message);
+        await checkPendingRequest();
+        return;
+      }
+
+      setHasPendingRequest(false);
+      setPendingRequest(null);
+      setShowPaymentInfo(false);
+      alert('Demande d\'abonnement annulée. Vous pouvez en créer une nouvelle quand vous le souhaitez.');
+      fetchSubscriptionStatus();
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue.');
+    } finally {
+      setCancellingRequest(false);
     }
   };
 
@@ -178,9 +250,15 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
         return;
       }
 
-      alert('Demande d\'abonnement créée avec succès ! Veuillez effectuer le paiement et contacter l\'administration avec votre référence de paiement.');
+      alert(
+        `Demande d'abonnement créée avec succès !\n\n` +
+        `Durée : ${getBillingPeriodLabel(selectedBillingPeriod)} (${getSubscriptionDurationLabel(selectedBillingPeriod)})\n\n` +
+        `La période exacte débutera à la validation de votre paiement par l'administration.\n\n` +
+        `Veuillez effectuer le paiement et contacter l'administration avec votre référence de paiement.`
+      );
       setShowPaymentInfo(true);
       setHasPendingRequest(true);
+      await checkPendingRequest();
       fetchSubscriptionStatus();
     } catch (error) {
       console.error('Erreur:', error);
@@ -527,6 +605,20 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                     <p className="text-sm text-amber-800">
                       Vous avez déjà une demande d'abonnement en cours. Effectuez le paiement avec les informations ci-dessous.
                     </p>
+                    {pendingRequest && (
+                      <div className="mt-3 rounded-lg border border-amber-200 bg-white p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-900 mb-1">
+                          Durée souscrite
+                        </p>
+                        <p className="text-sm font-bold text-gray-900">
+                          {getBillingPeriodLabel(pendingRequest.billingPeriod)} — {getSubscriptionDurationLabel(pendingRequest.billingPeriod)} — {pendingRequest.totalPriceTnd.toFixed(2)} TND TTC
+                        </p>
+                        <p className="text-xs text-gray-600 mt-2">
+                          La période exacte débutera à la validation de votre paiement par l&apos;administration
+                          (vous bénéficierez de {getSubscriptionDurationLabel(pendingRequest.billingPeriod)} complets à compter de cette date).
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -536,6 +628,24 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               >
                 <Info size={20} className="mr-2" />
                 {showPaymentInfo ? 'Masquer' : 'Voir'} les informations de paiement
+              </Button>
+              <Button
+                onClick={handleCancelPendingRequest}
+                disabled={cancellingRequest}
+                variant="outline"
+                className="w-full border-red-300 text-red-700 hover:bg-red-50 font-semibold py-4 rounded-lg"
+              >
+                {cancellingRequest ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600 mr-2" />
+                    Annulation...
+                  </>
+                ) : (
+                  <>
+                    <X size={20} className="mr-2" />
+                    Annuler ma demande
+                  </>
+                )}
               </Button>
             </div>
           )}
@@ -549,6 +659,20 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             <Info className="text-blue-600" size={24} />
             Informations de paiement
           </h3>
+
+          {pendingRequest && (
+            <div className="mb-4 rounded-lg border-2 border-purple-200 bg-purple-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-purple-900 mb-1">
+                Durée souscrite (en attente de validation)
+              </p>
+              <p className="text-base font-bold text-gray-900">
+                {getBillingPeriodLabel(pendingRequest.billingPeriod)} — {getSubscriptionDurationLabel(pendingRequest.billingPeriod)}
+              </p>
+              <p className="text-sm text-purple-800 mt-1">
+                Montant : {pendingRequest.totalPriceTnd.toFixed(2)} TND TTC. Les dates exactes seront calculées à la validation de votre paiement.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-4">
             {/* Méthode 1: Virement bancaire */}
