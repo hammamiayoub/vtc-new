@@ -34,6 +34,12 @@ import {
   driverActivityLabel,
   driverActivityShortLabel,
 } from '../utils/driverActivity';
+import {
+  formatSubscriptionPeriodRange,
+  getBillingPeriodLabel,
+  getSubscriptionDurationLabel,
+  computeSubscriptionActivationDates,
+} from '../utils/subscriptionPeriod';
 
 interface AdminDriver extends Driver {
   vehicles?: Vehicle[];
@@ -1018,30 +1024,56 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     setPaymentValidationError(null);
 
     try {
-      const nowIso = new Date().toISOString();
-      const { error } = await supabase
-        .from('driver_subscriptions')
-        .update({
-          payment_status: 'paid',
-          payment_method: paymentForm.method,
-          payment_date: nowIso,
-          payment_reference: paymentForm.reference.trim(),
-          status: 'active'
-        })
-        .eq('id', selectedSubscription.id);
+      const { data, error } = await supabase.rpc('validate_driver_subscription_payment', {
+        p_subscription_id: selectedSubscription.id,
+        p_payment_method: paymentForm.method,
+        p_payment_reference: paymentForm.reference.trim(),
+        p_activation_date: new Date().toISOString().split('T')[0],
+      });
 
       if (error) throw error;
 
+      const result = data as {
+        success?: boolean;
+        reason?: string;
+        start_date?: string;
+        end_date?: string;
+      } | null;
+
+      if (!result?.success) {
+        const reasonMessages: Record<string, string> = {
+          not_authorized: 'Action réservée aux administrateurs.',
+          payment_reference_required: 'La référence de paiement est requise.',
+          not_pending: 'Cet abonnement n\'est plus en attente de paiement.',
+          not_found: 'Abonnement introuvable.',
+        };
+        throw new Error(reasonMessages[result?.reason ?? ''] ?? 'Erreur lors de la validation du paiement.');
+      }
+
+      const nowIso = new Date().toISOString();
       const patch = {
         paymentStatus: 'paid' as const,
         paymentMethod: paymentForm.method,
         paymentDate: nowIso,
         paymentReference: paymentForm.reference.trim(),
-        status: 'active' as const
+        status: 'active' as const,
+        startDate: result.start_date ?? selectedSubscription.startDate,
+        endDate: result.end_date ?? selectedSubscription.endDate,
       };
 
-      setSubscriptions(prev => prev.map(s => (s.id === selectedSubscription.id ? { ...s, ...patch } : s)));
-      setSelectedSubscription(prev => (prev ? { ...prev, ...patch } : prev));
+      const endDate = new Date(patch.endDate);
+      const today = new Date();
+      const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const expirationStatus =
+        daysRemaining < 0 ? 'Expiré'
+        : daysRemaining === 0 ? 'Expire aujourd\'hui'
+        : daysRemaining <= 7 ? `Expire dans ${daysRemaining} jours`
+        : 'Actif';
+
+      const fullPatch = { ...patch, daysRemaining, expirationStatus };
+
+      setSubscriptions(prev => prev.map(s => (s.id === selectedSubscription.id ? { ...s, ...fullPatch } : s)));
+      setSelectedSubscription(prev => (prev ? { ...prev, ...fullPatch } : prev));
     } catch (e) {
       console.error('Erreur lors de la validation du paiement:', e);
       const msg = e instanceof Error ? e.message : 'Erreur lors de la validation du paiement.';
@@ -2210,8 +2242,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                       Type
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">
-                      Période
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[16%]">
+                      Période couverte
                     </th>
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
                       Montant
@@ -2265,15 +2297,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         </div>
                       </td>
                       
-                      {/* Période */}
+                      {/* Période couverte */}
                       <td className="px-3 py-3">
                         <div className="text-xs">
-                          <p className="text-gray-900 font-medium">
-                            {new Date(subscription.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                          <p className="text-gray-900 font-semibold leading-snug">
+                            {formatSubscriptionPeriodRange(subscription.startDate, subscription.endDate, { short: true })}
                           </p>
-                          <p className="text-gray-500 text-[10px]">
-                            → {new Date(subscription.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                          <p className="text-[10px] text-gray-500 mt-0.5">
+                            {getBillingPeriodLabel(subscription.billingPeriod)} ({getSubscriptionDurationLabel(subscription.billingPeriod)})
                           </p>
+                          {subscription.paymentStatus === 'pending' && (
+                            <p className="text-[10px] text-orange-700 font-medium mt-1">
+                              {getSubscriptionDurationLabel(subscription.billingPeriod)} à compter de la validation
+                            </p>
+                          )}
                         </div>
                       </td>
                       
@@ -2453,10 +2490,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </div>
                     </div>
 
-                    <div className="bg-blue-50 rounded-lg p-2.5">
-                      <p className="text-[10px] sm:text-xs text-gray-600">
-                        Du {new Date(subscription.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} au {new Date(subscription.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
-                    </p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                      <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-blue-900 mb-1">
+                        Période couverte
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-900 font-semibold leading-snug">
+                        {formatSubscriptionPeriodRange(subscription.startDate, subscription.endDate, { short: true })}
+                      </p>
+                      <p className="text-[10px] sm:text-xs text-blue-800 mt-1">
+                        {getBillingPeriodLabel(subscription.billingPeriod)} — {getSubscriptionDurationLabel(subscription.billingPeriod)}
+                      </p>
+                      {subscription.paymentStatus === 'pending' && (
+                        <p className="text-[10px] sm:text-xs text-orange-700 font-medium mt-1">
+                          En attente de validation du paiement
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -3786,6 +3834,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
 
             <div className="p-6 space-y-6">
+              {(() => {
+                const isPending = selectedSubscription.paymentStatus === 'pending';
+                const activePaidEnd = isPending
+                  ? subscriptions.find(
+                      (s) =>
+                        s.driverId === selectedSubscription.driverId &&
+                        s.id !== selectedSubscription.id &&
+                        s.paymentStatus === 'paid' &&
+                        s.status === 'active' &&
+                        new Date(s.endDate) >= new Date()
+                    )?.endDate ?? null
+                  : null;
+                const activationPreview = isPending
+                  ? computeSubscriptionActivationDates({
+                      billingPeriod: selectedSubscription.billingPeriod,
+                      plannedStartDate: selectedSubscription.startDate,
+                      activePaidSubscriptionEndDate: activePaidEnd,
+                    })
+                  : null;
+
+                return (
+              <div className={`rounded-xl border-2 p-4 ${
+                isPending
+                  ? 'border-orange-200 bg-orange-50'
+                  : 'border-purple-200 bg-purple-50'
+              }`}>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+                  {isPending ? 'Période effective à l\'activation' : 'Période couverte par l\'abonnement'}
+                </p>
+                <p className="text-lg font-bold text-gray-900">
+                  {isPending && activationPreview
+                    ? formatSubscriptionPeriodRange(activationPreview.startDate, activationPreview.endDate)
+                    : formatSubscriptionPeriodRange(selectedSubscription.startDate, selectedSubscription.endDate)}
+                </p>
+                <p className="text-sm text-gray-700 mt-1">
+                  {getBillingPeriodLabel(selectedSubscription.billingPeriod)} ({getSubscriptionDurationLabel(selectedSubscription.billingPeriod)}) — {selectedSubscription.totalPriceTnd.toFixed(2)} TND TTC
+                </p>
+                {isPending && (
+                  <>
+                    <p className="text-sm text-orange-800 font-medium mt-2">
+                      La période complète ({getSubscriptionDurationLabel(selectedSubscription.billingPeriod)}) démarre à la date de validation du paiement (aujourd&apos;hui), et non à la date de la demande.
+                    </p>
+                    <p className="text-xs text-orange-700 mt-2">
+                      Demande créée le {new Date(selectedSubscription.createdAt).toLocaleDateString('fr-FR')} — dates indicatives initiales :{' '}
+                      {formatSubscriptionPeriodRange(selectedSubscription.startDate, selectedSubscription.endDate, { short: true })}
+                    </p>
+                  </>
+                )}
+              </div>
+                );
+              })()}
+
               {/* Subscription Info */}
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Informations de l'abonnement</h4>
@@ -3995,14 +4095,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               )}
 
               {/* Actions for pending subscriptions */}
-              {selectedSubscription.paymentStatus === 'pending' && (
+              {selectedSubscription.paymentStatus === 'pending' && (() => {
+                const activePaidEnd = subscriptions.find(
+                  (s) =>
+                    s.driverId === selectedSubscription.driverId &&
+                    s.id !== selectedSubscription.id &&
+                    s.paymentStatus === 'paid' &&
+                    s.status === 'active' &&
+                    new Date(s.endDate) >= new Date()
+                )?.endDate ?? null;
+                const activationPreview = computeSubscriptionActivationDates({
+                  billingPeriod: selectedSubscription.billingPeriod,
+                  plannedStartDate: selectedSubscription.startDate,
+                  activePaidSubscriptionEndDate: activePaidEnd,
+                });
+
+                return (
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                   <h4 className="text-sm font-semibold text-orange-900 mb-3">Valider le paiement</h4>
                   <div className="space-y-4">
                     <p className="text-sm text-orange-800">
-                      Ce paiement est en attente. Une fois le virement (ou l'encaissement) reçu, validez l'abonnement
-                      ci-dessous : le statut passera à <span className="font-semibold">Payé</span> et l'abonnement sera activé.
+                      Une fois le paiement reçu, validez l&apos;abonnement : la période sera recalculée automatiquement
+                      à partir d&apos;aujourd&apos;hui pour garantir {getSubscriptionDurationLabel(selectedSubscription.billingPeriod)} complets.
                     </p>
+                    <div className="rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-gray-800">
+                      <span className="font-semibold text-green-900">Période qui sera activée :</span>
+                      <p className="font-bold text-gray-900 mt-1">
+                        {formatSubscriptionPeriodRange(activationPreview.startDate, activationPreview.endDate)}
+                      </p>
+                      <p className="text-xs text-green-800 mt-1">
+                        {getBillingPeriodLabel(selectedSubscription.billingPeriod)} — {selectedSubscription.totalPriceTnd.toFixed(2)} TND TTC
+                      </p>
+                    </div>
 
                     {paymentValidationError && (
                       <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
@@ -4049,7 +4173,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </div>
                   </div>
                 </div>
-              )}
+                );
+              })()}
 
               {/* Timeline */}
               <div className="text-xs text-gray-500 bg-gray-50 p-4 rounded-lg space-y-1">
