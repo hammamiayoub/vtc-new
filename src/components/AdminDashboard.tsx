@@ -17,6 +17,7 @@ import {
   Edit,
   MapPin,
   Package,
+  CalendarPlus,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
 import { Button } from './ui/Button';
@@ -39,6 +40,9 @@ import {
   getBillingPeriodLabel,
   getSubscriptionDurationLabel,
   computeSubscriptionActivationDates,
+  computeExtendedSubscriptionEndDate,
+  getSubscriptionExtensionUnitLabel,
+  type SubscriptionExtensionUnit,
 } from '../utils/subscriptionPeriod';
 
 interface AdminDriver extends Driver {
@@ -190,6 +194,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     method: 'bank_transfer',
     reference: ''
   });
+  const [extendForm, setExtendForm] = useState<{
+    amount: number;
+    unit: SubscriptionExtensionUnit;
+    note: string;
+  }>({ amount: 1, unit: 'months', note: '' });
+  const [extendingSubscription, setExtendingSubscription] = useState(false);
+  const [extendError, setExtendError] = useState<string | null>(null);
   const [vehicleForAvailabilities, setVehicleForAvailabilities] = useState<VehicleWithDriver | null>(null);
   const [allAvailabilities, setAllAvailabilities] = useState<DriverAvailability[]>([]);
   const [loadingAvailabilities, setLoadingAvailabilities] = useState(false);
@@ -278,6 +289,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           selectedSubscription.paymentReference ||
           `ABONNEMENT-${selectedSubscription.id.slice(0, 8).toUpperCase()}`
       });
+      setExtendForm({ amount: 1, unit: 'months', note: '' });
+      setExtendError(null);
     }
   }, [selectedSubscription]);
 
@@ -1013,6 +1026,72 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const notifyDriverSubscriptionEmail = async (payload: {
+    type: 'activated' | 'extended';
+    driver: { email: string; firstName: string; lastName: string };
+    subscription: {
+      billingPeriod?: 'monthly' | 'yearly';
+      startDate?: string;
+      endDate: string;
+      totalPriceTnd?: number;
+      paymentReference?: string;
+      extension?: {
+        amount: number;
+        unit: SubscriptionExtensionUnit;
+        previousEndDate?: string;
+      };
+    };
+  }) => {
+    if (!payload.driver.email) {
+      console.warn('⚠️ Email chauffeur introuvable, notification abonnement non envoyée');
+      return;
+    }
+
+    try {
+      console.log(`📧 Envoi email abonnement (${payload.type}) au chauffeur:`, payload.driver.email);
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-driver-subscription-email`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: payload.type,
+          driver: {
+            email: payload.driver.email,
+            first_name: payload.driver.firstName,
+            last_name: payload.driver.lastName,
+          },
+          subscription: {
+            billing_period: payload.subscription.billingPeriod,
+            start_date: payload.subscription.startDate,
+            end_date: payload.subscription.endDate,
+            total_price_tnd: payload.subscription.totalPriceTnd,
+            payment_reference: payload.subscription.paymentReference,
+            extension: payload.subscription.extension
+              ? {
+                  amount: payload.subscription.extension.amount,
+                  unit: payload.subscription.extension.unit,
+                  previous_end_date: payload.subscription.extension.previousEndDate,
+                }
+              : undefined,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('❌ Erreur envoi email abonnement:', errorData?.error || response.statusText);
+      } else {
+        const result = await response.json();
+        console.log('✅ Email abonnement envoyé:', result);
+      }
+    } catch (emailError) {
+      console.error('❌ Erreur envoi email abonnement:', emailError);
+    }
+  };
+
   const validateSubscriptionPayment = async () => {
     if (!selectedSubscription) return;
     if (!paymentForm.reference.trim()) {
@@ -1074,12 +1153,128 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       setSubscriptions(prev => prev.map(s => (s.id === selectedSubscription.id ? { ...s, ...fullPatch } : s)));
       setSelectedSubscription(prev => (prev ? { ...prev, ...fullPatch } : prev));
+
+      if (selectedSubscription.driver) {
+        await notifyDriverSubscriptionEmail({
+          type: 'activated',
+          driver: {
+            email: selectedSubscription.driver.email,
+            firstName: selectedSubscription.driver.firstName,
+            lastName: selectedSubscription.driver.lastName,
+          },
+          subscription: {
+            billingPeriod: selectedSubscription.billingPeriod,
+            startDate: fullPatch.startDate,
+            endDate: fullPatch.endDate,
+            totalPriceTnd: selectedSubscription.totalPriceTnd,
+            paymentReference: fullPatch.paymentReference,
+          },
+        });
+      }
     } catch (e) {
       console.error('Erreur lors de la validation du paiement:', e);
       const msg = e instanceof Error ? e.message : 'Erreur lors de la validation du paiement.';
       setPaymentValidationError(msg);
     } finally {
       setValidatingPayment(false);
+    }
+  };
+
+  const extendDriverSubscription = async () => {
+    if (!selectedSubscription) return;
+    if (extendForm.amount < 1 || !Number.isInteger(extendForm.amount)) {
+      setExtendError('Indiquez une durée valide (nombre entier ≥ 1).');
+      return;
+    }
+
+    setExtendingSubscription(true);
+    setExtendError(null);
+
+    try {
+      const { data, error } = await supabase.rpc('extend_driver_subscription', {
+        p_subscription_id: selectedSubscription.id,
+        p_amount: extendForm.amount,
+        p_unit: extendForm.unit,
+        p_admin_note: extendForm.note.trim() || null,
+      });
+
+      if (error) throw error;
+
+      const result = data as {
+        success?: boolean;
+        reason?: string;
+        new_end_date?: string;
+        previous_end_date?: string;
+      } | null;
+
+      if (!result?.success) {
+        const reasonMessages: Record<string, string> = {
+          not_authenticated: 'Session expirée. Reconnectez-vous.',
+          not_authorized: 'Action réservée aux administrateurs.',
+          invalid_amount: 'Durée invalide.',
+          invalid_unit: 'Unité invalide.',
+          not_found: 'Abonnement introuvable.',
+          not_paid: 'Seuls les abonnements payés peuvent être prolongés.',
+        };
+        throw new Error(reasonMessages[result?.reason ?? ''] ?? 'Erreur lors de la prolongation.');
+      }
+
+      const newEndDate = result.new_end_date ?? selectedSubscription.endDate;
+      const endDate = new Date(newEndDate);
+      const today = new Date();
+      const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const expirationStatus =
+        daysRemaining < 0 ? 'Expiré'
+        : daysRemaining === 0 ? 'Expire aujourd\'hui'
+        : daysRemaining <= 7 ? `Expire dans ${daysRemaining} jours`
+        : 'Actif';
+
+      const patch = {
+        endDate: newEndDate,
+        status: 'active' as const,
+        daysRemaining,
+        expirationStatus,
+      };
+
+      const { data: refreshed } = await supabase
+        .from('driver_subscriptions')
+        .select('admin_notes')
+        .eq('id', selectedSubscription.id)
+        .single();
+
+      const fullPatch = {
+        ...patch,
+        adminNotes: refreshed?.admin_notes ?? selectedSubscription.adminNotes,
+      };
+
+      setSubscriptions(prev => prev.map(s => (s.id === selectedSubscription.id ? { ...s, ...fullPatch } : s)));
+      setSelectedSubscription(prev => (prev ? { ...prev, ...fullPatch } : prev));
+      setExtendForm(f => ({ ...f, note: '' }));
+
+      if (selectedSubscription.driver) {
+        await notifyDriverSubscriptionEmail({
+          type: 'extended',
+          driver: {
+            email: selectedSubscription.driver.email,
+            firstName: selectedSubscription.driver.firstName,
+            lastName: selectedSubscription.driver.lastName,
+          },
+          subscription: {
+            endDate: newEndDate,
+            extension: {
+              amount: extendForm.amount,
+              unit: extendForm.unit,
+              previousEndDate: result.previous_end_date ?? selectedSubscription.endDate,
+            },
+          },
+        });
+      }
+    } catch (e) {
+      console.error('Erreur lors de la prolongation:', e);
+      const msg = e instanceof Error ? e.message : 'Erreur lors de la prolongation.';
+      setExtendError(msg);
+    } finally {
+      setExtendingSubscription(false);
     }
   };
 
@@ -4169,6 +4364,116 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       >
                         <CheckCircle size={18} />
                         {validatingPayment ? 'Validation...' : 'Valider le paiement'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                );
+              })()}
+
+              {/* Prolongation manuelle (abonnements payés) */}
+              {selectedSubscription.paymentStatus === 'paid' && (() => {
+                const previewEndDate = computeExtendedSubscriptionEndDate(
+                  selectedSubscription.endDate,
+                  extendForm.amount,
+                  extendForm.unit
+                );
+                const currentEnd = new Date(selectedSubscription.endDate);
+                currentEnd.setHours(0, 0, 0, 0);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const baseFromExpired = currentEnd < today;
+
+                return (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-indigo-900 mb-3 flex items-center gap-2">
+                    <CalendarPlus size={16} />
+                    Prolonger l&apos;abonnement
+                  </h4>
+                  <div className="space-y-4">
+                    <p className="text-sm text-indigo-800">
+                      Ajoutez une durée au choix (jours, mois ou années). La prolongation s&apos;ajoute à la date de fin actuelle
+                      {baseFromExpired ? ', ou à partir d\'aujourd\'hui si l\'abonnement est expiré' : ''}.
+                    </p>
+
+                    <div className="rounded-lg border border-indigo-300 bg-white p-3 text-sm text-gray-800">
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <span className="text-gray-600">Fin actuelle :</span>
+                          <p className="font-semibold text-gray-900">
+                            {new Date(selectedSubscription.endDate).toLocaleDateString('fr-FR', {
+                              day: 'numeric', month: 'long', year: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Nouvelle fin :</span>
+                          <p className="font-bold text-indigo-700">
+                            {new Date(previewEndDate).toLocaleDateString('fr-FR', {
+                              day: 'numeric', month: 'long', year: 'numeric',
+                            })}
+                          </p>
+                          <p className="text-xs text-indigo-600 mt-0.5">
+                            +{getSubscriptionExtensionUnitLabel(extendForm.unit, extendForm.amount)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {extendError && (
+                      <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
+                        <span>{extendError}</span>
+                      </div>
+                    )}
+
+                    <div className="grid sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Durée</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={999}
+                          value={extendForm.amount}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setExtendForm(f => ({ ...f, amount: Number.isFinite(val) && val > 0 ? val : 1 }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Unité</label>
+                        <select
+                          value={extendForm.unit}
+                          onChange={(e) => setExtendForm(f => ({ ...f, unit: e.target.value as SubscriptionExtensionUnit }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                          <option value="days">Jours</option>
+                          <option value="months">Mois</option>
+                          <option value="years">Années</option>
+                        </select>
+                      </div>
+                      <div className="sm:col-span-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Note (optionnel)</label>
+                        <input
+                          type="text"
+                          value={extendForm.note}
+                          onChange={(e) => setExtendForm(f => ({ ...f, note: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          placeholder="Ex: geste commercial"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={extendDriverSubscription}
+                        loading={extendingSubscription}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2"
+                      >
+                        <CalendarPlus size={18} />
+                        {extendingSubscription ? 'Prolongation...' : 'Prolonger l\'abonnement'}
                       </Button>
                     </div>
                   </div>

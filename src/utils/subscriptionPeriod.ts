@@ -88,3 +88,41 @@ export function computeSubscriptionActivationDates(params: {
   const end = addBillingPeriod(start, params.billingPeriod);
   return { startDate: toDateString(start), endDate: toDateString(end) };
 }
+
+export type SubscriptionExtensionUnit = 'days' | 'months' | 'years';
+
+export function computeExtendedSubscriptionEndDate(
+  currentEndDate: string,
+  amount: number,
+  unit: SubscriptionExtensionUnit,
+  referenceDate?: Date
+): string {
+  const today = referenceDate ? new Date(referenceDate) : new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const currentEnd = new Date(currentEndDate);
+  currentEnd.setHours(0, 0, 0, 0);
+
+  const base = currentEnd >= today ? currentEnd : today;
+  const extended = new Date(base);
+
+  if (unit === 'days') {
+    extended.setDate(extended.getDate() + amount);
+  } else if (unit === 'months') {
+    extended.setMonth(extended.getMonth() + amount);
+  } else {
+    extended.setFullYear(extended.getFullYear() + amount);
+  }
+
+  return toDateString(extended);
+}
+
+export function getSubscriptionExtensionUnitLabel(unit: SubscriptionExtensionUnit, amount: number): string {
+  const labels: Record<SubscriptionExtensionUnit, [string, string]> = {
+    days: ['jour', 'jours'],
+    months: ['mois', 'mois'],
+    years: ['an', 'ans'],
+  };
+  const [singular, plural] = labels[unit];
+  return `${amount} ${amount > 1 ? plural : singular}`;
+}
