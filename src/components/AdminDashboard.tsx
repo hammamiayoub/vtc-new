@@ -18,6 +18,7 @@ import {
   MapPin,
   Package,
   CalendarPlus,
+  MoreHorizontal,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
 import { Button } from './ui/Button';
@@ -35,6 +36,12 @@ import {
   driverActivityLabel,
   driverActivityShortLabel,
 } from '../utils/driverActivity';
+import {
+  DRIVER_BOOKING_CANCELLATION_REASONS,
+  resolveBookingCancellationReasonText,
+  appendCancellationReasonToNotes,
+  type BookingCancellationReasonId,
+} from '../utils/bookingCancellationReasons';
 import {
   formatSubscriptionPeriodRange,
   getBillingPeriodLabel,
@@ -187,6 +194,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [bookingToCancel, setBookingToCancel] = useState<AdminBooking | null>(null);
   const [cancellingBooking, setCancellingBooking] = useState(false);
   const [cancelBookingError, setCancelBookingError] = useState<string | null>(null);
+  const [cancelReasonId, setCancelReasonId] = useState<BookingCancellationReasonId | ''>('');
+  const [cancelCustomReason, setCancelCustomReason] = useState('');
   const [selectedSubscription, setSelectedSubscription] = useState<DriverSubscription | null>(null);
   const [validatingPayment, setValidatingPayment] = useState(false);
   const [paymentValidationError, setPaymentValidationError] = useState<string | null>(null);
@@ -920,17 +929,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const resetCancelBookingForm = () => {
+    setCancelReasonId('');
+    setCancelCustomReason('');
+    setCancelBookingError(null);
+  };
+
+  const openCancelBookingModal = (booking: AdminBooking) => {
+    resetCancelBookingForm();
+    setBookingToCancel(booking);
+  };
+
+  const closeCancelBookingModal = () => {
+    setBookingToCancel(null);
+    resetCancelBookingForm();
+  };
+
+  const cancelReasonText = resolveBookingCancellationReasonText(cancelReasonId, cancelCustomReason);
+  const isCancelReasonValid = Boolean(cancelReasonText);
+
   const handleCancelBooking = async () => {
     if (!bookingToCancel) return;
+
+    if (!cancelReasonText) {
+      setCancelBookingError('Veuillez sélectionner une raison d\'annulation.');
+      return;
+    }
 
     setCancellingBooking(true);
     setCancelBookingError(null);
 
     try {
-      // 1. Passer la réservation au statut "annulée"
+      const updatedNotes = appendCancellationReasonToNotes(bookingToCancel.notes, cancelReasonText);
+
+      // 1. Passer la réservation au statut "annulée" avec le motif
       const { error } = await supabase
         .from('bookings')
-        .update({ status: 'cancelled' })
+        .update({
+          status: 'cancelled',
+          notes: updatedNotes,
+          cancellation_reason: cancelReasonText,
+        })
         .eq('id', bookingToCancel.id);
 
       if (error) throw error;
@@ -973,7 +1012,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               scheduled_time: bookingToCancel.scheduledTime,
               distance_km: bookingToCancel.distanceKm,
               price_tnd: bookingToCancel.priceTnd,
-              notes: bookingToCancel.notes,
+              notes: updatedNotes,
+              cancellation_reason: cancelReasonText,
               booking_url: window.location.origin + '/client-login'
             },
             clientData: {
@@ -1014,9 +1054,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       }
 
       setBookings(prev =>
-        prev.map(b => (b.id === bookingToCancel.id ? { ...b, status: 'cancelled' } : b))
+        prev.map(b => (b.id === bookingToCancel.id ? { ...b, status: 'cancelled', notes: updatedNotes } : b))
       );
-      setBookingToCancel(null);
+      closeCancelBookingModal();
     } catch (e) {
       console.error("Erreur lors de l'annulation de la réservation:", e);
       const msg = e instanceof Error ? e.message : "Erreur lors de l'annulation de la réservation.";
@@ -2368,7 +2408,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         )}
                         {['pending', 'accepted', 'in_progress'].includes(booking.status) && (
                           <Button
-                            onClick={() => { setCancelBookingError(null); setBookingToCancel(booking); }}
+                            onClick={() => openCancelBookingModal(booking)}
                             size="sm"
                             className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 mt-1"
                           >
@@ -2393,7 +2433,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         )}
                         {['pending', 'accepted', 'in_progress'].includes(booking.status) && (
                         <Button
-                          onClick={() => { setCancelBookingError(null); setBookingToCancel(booking); }}
+                          onClick={() => openCancelBookingModal(booking)}
                           size="sm"
                           className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
                         >
@@ -4497,7 +4537,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       {/* Cancel Booking Confirmation Modal */}
       {bookingToCancel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-md w-full">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -4509,18 +4549,77 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
             <div className="p-6 space-y-4">
               <p className="text-sm text-gray-600">
-                Êtes-vous sûr de vouloir annuler la réservation{' '}
-                <span className="font-semibold text-gray-900">#{bookingToCancel.id.slice(-8)}</span>
+                Réservation <span className="font-semibold text-gray-900">#{bookingToCancel.id.slice(-8)}</span>
                 {bookingToCancel.clients && (
-                  <> de <span className="font-semibold text-gray-900">{bookingToCancel.clients.first_name} {bookingToCancel.clients.last_name}</span></>
+                  <> — <span className="font-semibold text-gray-900">{bookingToCancel.clients.first_name} {bookingToCancel.clients.last_name}</span></>
                 )}
-                {' '}? Cette action passera son statut à « Annulée », libérera le créneau de disponibilité du chauffeur et enverra un email de notification au client{bookingToCancel.drivers ? ' et au chauffeur' : ''}.
               </p>
 
               <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
                 <p className="text-gray-700"><span className="text-gray-500">Trajet :</span> {bookingToCancel.pickupAddress} → {bookingToCancel.destinationAddress}</p>
                 <p className="text-gray-700"><span className="text-gray-500">Date :</span> {new Date(bookingToCancel.scheduledTime).toLocaleString('fr-FR')}</p>
               </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-900 mb-3">
+                  Raison de l&apos;annulation <span className="text-red-600">*</span>
+                </p>
+                <div className="space-y-2">
+                  {DRIVER_BOOKING_CANCELLATION_REASONS.map((reason) => {
+                    const ReasonIcon =
+                      reason.id === 'low_price' ? CreditCard
+                      : reason.id === 'unavailable' ? Calendar
+                      : reason.id === 'too_far' ? MapPin
+                      : reason.id === 'schedule_conflict' ? Clock
+                      : reason.id === 'vehicle_issue' ? Car
+                      : MoreHorizontal;
+                    const selected = cancelReasonId === reason.id;
+
+                    return (
+                      <button
+                        key={reason.id}
+                        type="button"
+                        onClick={() => {
+                          setCancelReasonId(reason.id);
+                          if (reason.id !== 'other') setCancelCustomReason('');
+                          setCancelBookingError(null);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${
+                          selected
+                            ? 'border-red-400 bg-red-50 text-red-900'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <ReasonIcon size={18} className={selected ? 'text-red-600' : 'text-gray-500'} />
+                        <span className="flex-1 text-sm font-medium">{reason.label}</span>
+                        {selected && <CheckCircle size={18} className="text-red-600 flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {cancelReasonId === 'other' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Précisez la raison <span className="text-red-600">*</span>
+                  </label>
+                  <textarea
+                    value={cancelCustomReason}
+                    onChange={(e) => {
+                      setCancelCustomReason(e.target.value);
+                      setCancelBookingError(null);
+                    }}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="Entrez votre raison..."
+                  />
+                </div>
+              )}
+
+              <p className="text-xs text-gray-500">
+                Le client{bookingToCancel.drivers ? ' et le chauffeur' : ''} seront notifiés par email. Le créneau de disponibilité du chauffeur sera libéré.
+              </p>
 
               {cancelBookingError && (
                 <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
@@ -4531,13 +4630,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
 
             <div className="p-6 border-t border-gray-200 flex items-center justify-end gap-3">
-              <Button variant="outline" onClick={() => setBookingToCancel(null)} disabled={cancellingBooking}>
+              <Button variant="outline" onClick={closeCancelBookingModal} disabled={cancellingBooking}>
                 Retour
               </Button>
               <Button
                 onClick={handleCancelBooking}
                 loading={cancellingBooking}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={!isCancelReasonValid}
+                className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cancellingBooking ? 'Annulation...' : 'Confirmer l\'annulation'}
               </Button>

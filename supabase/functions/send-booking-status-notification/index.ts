@@ -111,6 +111,11 @@ serve(async (req) => {
       minute: '2-digit'
     })
 
+    const cancellationReason = bookingData.cancellation_reason?.trim() || null
+    const cancellationReasonBlock = cancellationReason
+      ? `<p style="margin: 8px 0;"><strong>Motif :</strong> ${cancellationReason}</p>`
+      : ''
+
     let emailContent = ''
     let emailSubject = ''
 
@@ -214,6 +219,7 @@ serve(async (req) => {
               <p style="margin: 8px 0;"><strong>Date et heure :</strong> ${formattedDate}</p>
               <p style="margin: 8px 0;"><strong>Distance :</strong> ${bookingData.distance_km} km</p>
               <p style="margin: 8px 0;"><strong>Prix :</strong> ${bookingData.price_tnd} TND</p>
+              ${cancellationReasonBlock}
             </div>
             
             <div style="background-color: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -332,6 +338,7 @@ serve(async (req) => {
                 <p style="margin: 8px 0;"><strong>Date et heure :</strong> ${formattedDate}</p>
                 <p style="margin: 8px 0;"><strong>Distance :</strong> ${bookingData.distance_km} km</p>
                 <p style="margin: 8px 0;"><strong>Prix :</strong> ${bookingData.price_tnd} TND</p>
+                ${cancellationReasonBlock}
               </div>
               
               ${cancelledByDriver ? `

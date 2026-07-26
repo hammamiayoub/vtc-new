@@ -6,9 +6,13 @@ import {
 
 export {
   calculateProgressiveDistancePrice,
+  computeDriverPickupFareTnd,
+  getDriverPickupFareSummaryText,
   getIndicativePricePerKm,
   getProgressivePriceBreakdown,
+  DRIVER_PICKUP_FARE_TIERS,
   RIDE_BASE_FARE_TND,
+  RIDE_DEFAULT_PICKUP_FARE_TND,
   RIDE_DISTANCE_TIERS,
   RIDE_MIN_PRICE_TND,
 } from './ridePricing';
@@ -77,10 +81,12 @@ export const getPricePerKm = (distanceKm: number): { price: number; discount: st
 
 /**
  * Calcule le prix distance + prise en charge de manière progressive par tranches.
- * Grille TuniDrive web (prise en charge 7,20 TND, plancher 14,40 TND).
+ * Prise en charge variable selon la distance chauffeur → départ (10 / 20 / 30 / 50 TND).
  */
-export const calculateProgressivePrice = (distanceKm: number): number =>
-  calculateProgressiveDistancePrice(distanceKm);
+export const calculateProgressivePrice = (
+  distanceKm: number,
+  driverToPickupKm?: number,
+): number => calculateProgressiveDistancePrice(distanceKm, driverToPickupKm);
 
 /** Distance minimale facturable (aller simple) pour les véhicules autres que taxi. */
 export const MIN_NON_TAXI_ONE_WAY_KM = 20;
@@ -183,29 +189,34 @@ export const calculatePrice = (
   distanceKm: number,
   vehicleType?: string,
   isReturnTrip: boolean = false,
-  vipMultiplier: number = 1
+  vipMultiplier: number = 1,
+  driverToPickupKm?: number,
 ): number => {
   const oneWayBillable = getBillableOneWayDistanceKm(distanceKm, vehicleType);
   const effectiveDistance = isReturnTrip ? oneWayBillable * 2 : oneWayBillable;
-  
-  // Utiliser la tarification progressive au lieu du tarif unique
-  const basePrice = calculateProgressivePrice(effectiveDistance);
-  
+
+  const basePrice = calculateProgressivePrice(effectiveDistance, driverToPickupKm);
+
   const vehicleMultiplier = getVehicleMultiplier(vehicleType);
   const totalPrice = basePrice * vehicleMultiplier * vipMultiplier;
-  return Math.round(totalPrice * 100) / 100; // Arrondir à 2 décimales
+  return Math.round(totalPrice * 100) / 100;
 };
 
-// Fonction pour calculer le prix avec les suppléments
 export const calculatePriceWithSurcharges = (
-  distanceKm: number, 
-  vehicleType: string | undefined, 
+  distanceKm: number,
+  vehicleType: string | undefined,
   scheduledTime: string | Date,
   isReturnTrip: boolean = false,
-  vipMultiplier: number = 1
+  vipMultiplier: number = 1,
+  driverToPickupKm?: number,
 ): { basePrice: number; surcharges: PriceSurcharges; finalPrice: number } => {
-  // Calculer le prix de base
-  const basePrice = calculatePrice(distanceKm, vehicleType, isReturnTrip, vipMultiplier);
+  const basePrice = calculatePrice(
+    distanceKm,
+    vehicleType,
+    isReturnTrip,
+    vipMultiplier,
+    driverToPickupKm,
+  );
   
   const surcharges = calculateSurcharges(scheduledTime, basePrice);
   const finalPrice = Math.ceil(basePrice + surcharges.totalSurcharge);

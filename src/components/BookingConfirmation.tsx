@@ -15,7 +15,7 @@ import {
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { Booking, Driver } from '../types';
-import { getPricePerKm, calculateSurcharges, PriceSurcharges, RIDE_BASE_FARE_TND } from '../utils/geolocation';
+import { getPricePerKm, calculateSurcharges, PriceSurcharges, getDriverPickupFareSummaryText } from '../utils/geolocation';
 import { analytics } from '../utils/analytics';
 import { triggerGoogleAdsConversion } from '../utils/googleAdsTrigger';
 
@@ -284,7 +284,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   </span>
                 </div>
                 <p className="text-sm text-purple-700 mt-1">
-                  Prise en charge {RIDE_BASE_FARE_TND.toFixed(2).replace('.', ',')} TND + tarif progressif au km
+                  Prise en charge variable ({getDriverPickupFareSummaryText()}) + tarif progressif au km
                   {(() => {
                     const { price } = getPricePerKm(booking.distance_km);
                     return ` (palier indicatif : ${price.toFixed(2).replace('.', ',')} TND/km)`;

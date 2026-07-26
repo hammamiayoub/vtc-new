@@ -8,7 +8,8 @@ import { supabase } from '../lib/supabase';
 import { Client, Booking } from '../types';
 import { getVehicleMultiplier } from '../utils/geolocation';
 import {
-  RIDE_BASE_FARE_TND,
+  RIDE_DEFAULT_PICKUP_FARE_TND,
+  getDriverPickupFareSummaryText,
   RIDE_DISTANCE_TIERS,
   RIDE_MIN_PRICE_TND,
 } from '../utils/ridePricing';
@@ -756,7 +757,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 {/* Tarif de base - Optimisé mobile */}
                 <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                   <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
-                    Prise en charge : {RIDE_BASE_FARE_TND.toFixed(2).replace('.', ',')} TND
+                    Prise en charge variable
+                  </h4>
+                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm mb-3">
+                    <p className="text-gray-600">{getDriverPickupFareSummaryText()}</p>
+                    <p className="text-gray-500 text-[11px]">
+                      Estimation avant chauffeur : {RIDE_DEFAULT_PICKUP_FARE_TND.toFixed(2).replace('.', ',')} TND
+                    </p>
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
+                    Tarif au kilomètre
                   </h4>
                   <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     {RIDE_DISTANCE_TIERS.map((tier) => (
