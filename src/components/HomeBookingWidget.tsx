@@ -7,7 +7,8 @@ import {
   calculatePrice,
   Coordinates,
   getProgressivePriceBreakdown,
-  RIDE_BASE_FARE_TND,
+  RIDE_DEFAULT_PICKUP_FARE_TND,
+  getDriverPickupFareSummaryText,
 } from '../utils/geolocation';
 
 interface HomeBookingWidgetProps {
@@ -173,17 +174,18 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
       {estimatedPrice !== null && distanceKm !== null && (
         <div className="mt-5 rounded-xl bg-surface-muted border border-surface-border p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-            Estimation berline / taxi
+            Estimation berline / taxi (à partir de)
           </p>
           <p className="text-3xl font-bold text-gray-900 mb-1">{formatTnd(estimatedPrice)}</p>
           <p className="text-sm text-gray-600 mb-3">
             Trajet d&apos;environ <strong>{distanceKm.toFixed(1)} km</strong>
             {breakdown && (
-              <> · prise en charge {formatTnd(RIDE_BASE_FARE_TND)}</>
+              <> · prise en charge dès {formatTnd(RIDE_DEFAULT_PICKUP_FARE_TND)}</>
             )}
           </p>
           <p className="text-xs text-gray-500 mb-4">
-            Tarif indicatif hors suppléments (nuit, week-end) et hors choix de véhicule (van, minibus…).
+            Tarif indicatif hors suppléments (nuit, week-end), hors choix de véhicule (van, minibus…)
+            et hors distance du chauffeur ({getDriverPickupFareSummaryText()}).
           </p>
 
           <div className="rounded-lg bg-white border border-surface-border p-4 mb-4">

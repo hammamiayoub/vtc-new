@@ -1,6 +1,19 @@
-/** Grille tarifaire VTC TuniDrive (grille mobile majorée de 50 %) */
+/** Grille tarifaire VTC TuniDrive (alignée sur l'application mobile). */
 
-export const RIDE_BASE_FARE_TND = 7.2;
+/** Prise en charge selon la distance à vide chauffeur → point de départ. */
+export const DRIVER_PICKUP_FARE_TIERS = [
+  { upToKm: 10, fareTnd: 10, label: '< 10 km' },
+  { upToKm: 30, fareTnd: 20, label: '10–30 km' },
+  { upToKm: 50, fareTnd: 30, label: '30–50 km' },
+  { upToKm: Infinity, fareTnd: 50, label: '50 km+' },
+] as const;
+
+/** Prise en charge par défaut (estimation avant sélection du chauffeur). */
+export const RIDE_DEFAULT_PICKUP_FARE_TND = 10;
+
+/** @deprecated Utiliser RIDE_DEFAULT_PICKUP_FARE_TND ou computeDriverPickupFareTnd. */
+export const RIDE_BASE_FARE_TND = RIDE_DEFAULT_PICKUP_FARE_TND;
+
 export const RIDE_MIN_PRICE_TND = 14.4;
 
 export interface RideDistanceTier {
@@ -32,9 +45,41 @@ export interface ProgressivePriceBreakdown {
   subtotalBeforeMin: number;
   appliedMinimum: boolean;
   subtotal: number;
+  driverToPickupKm?: number;
 }
 
-export function getProgressivePriceBreakdown(distanceKm: number): ProgressivePriceBreakdown {
+/** Prise en charge TND selon la distance chauffeur → point de départ. */
+export function computeDriverPickupFareTnd(driverToPickupKm: number): number {
+  if (driverToPickupKm < 0 || !Number.isFinite(driverToPickupKm)) {
+    return RIDE_DEFAULT_PICKUP_FARE_TND;
+  }
+
+  for (const tier of DRIVER_PICKUP_FARE_TIERS) {
+    if (driverToPickupKm < tier.upToKm) {
+      return tier.fareTnd;
+    }
+  }
+
+  return DRIVER_PICKUP_FARE_TIERS[DRIVER_PICKUP_FARE_TIERS.length - 1].fareTnd;
+}
+
+function resolvePickupFareTnd(driverToPickupKm?: number): number {
+  if (driverToPickupKm != null && Number.isFinite(driverToPickupKm)) {
+    return computeDriverPickupFareTnd(driverToPickupKm);
+  }
+  return RIDE_DEFAULT_PICKUP_FARE_TND;
+}
+
+export function getDriverPickupFareSummaryText(): string {
+  return DRIVER_PICKUP_FARE_TIERS.map(
+    (tier) => `${tier.fareTnd} TND (${tier.label})`,
+  ).join(' • ');
+}
+
+export function getProgressivePriceBreakdown(
+  distanceKm: number,
+  driverToPickupKm?: number,
+): ProgressivePriceBreakdown {
   let remaining = Math.max(0, distanceKm);
   const rows: ProgressivePriceBreakdownRow[] = [];
 
@@ -52,24 +97,29 @@ export function getProgressivePriceBreakdown(distanceKm: number): ProgressivePri
     }
   }
 
+  const pickupFare = resolvePickupFareTnd(driverToPickupKm);
   const distanceSubtotal = Math.round(rows.reduce((sum, row) => sum + row.subtotal, 0) * 100) / 100;
-  const subtotalBeforeMin = Math.round((RIDE_BASE_FARE_TND + distanceSubtotal) * 100) / 100;
+  const subtotalBeforeMin = Math.round((pickupFare + distanceSubtotal) * 100) / 100;
   const appliedMinimum = subtotalBeforeMin < RIDE_MIN_PRICE_TND;
   const subtotal = appliedMinimum ? RIDE_MIN_PRICE_TND : subtotalBeforeMin;
 
   return {
     rows,
-    baseFare: RIDE_BASE_FARE_TND,
+    baseFare: pickupFare,
     distanceSubtotal,
     subtotalBeforeMin,
     appliedMinimum,
     subtotal,
+    driverToPickupKm,
   };
 }
 
 /** Prix distance + prise en charge, avec plancher minimum (hors multiplicateur véhicule). */
-export function calculateProgressiveDistancePrice(distanceKm: number): number {
-  return getProgressivePriceBreakdown(distanceKm).subtotal;
+export function calculateProgressiveDistancePrice(
+  distanceKm: number,
+  driverToPickupKm?: number,
+): number {
+  return getProgressivePriceBreakdown(distanceKm, driverToPickupKm).subtotal;
 }
 
 /** Tarif indicatif au km selon la distance totale (affichage récapitulatif). */

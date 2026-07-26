@@ -30,7 +30,7 @@ export const vtcSeoFaqItems: FaqStructuredItem[] = [
   {
     question: 'Quels sont les tarifs VTC TuniDrive en Tunisie ?',
     answer:
-      'La grille tarifaire comprend une prise en charge de 7,20 TND, un tarif progressif au kilomètre (de 1,53 à 1,08 TND/km selon la distance), un prix minimum de 14,40 TND, et des multiplicateurs selon le type de véhicule. Le montant exact s\'affiche avant confirmation.',
+      'La grille tarifaire comprend une prise en charge variable selon la distance du chauffeur (10 à 50 TND), un tarif progressif au kilomètre (de 1,53 à 1,08 TND/km selon la distance), un prix minimum de 14,40 TND, et des multiplicateurs selon le type de véhicule. Le montant exact s\'affiche avant confirmation.',
   },
 ];
 

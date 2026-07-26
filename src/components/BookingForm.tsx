@@ -142,6 +142,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const watchScheduledTime = watch('scheduledTime');
   const selectedDriverData = availableDrivers.find(driver => driver.id === selectedDriver);
   const vipMultiplier = selectedDriverData?.vehicleInfo?.isVip ? 2.5 : 1;
+  const driverToPickupKm =
+    selectedDriverData?.distanceFromPickup != null &&
+    selectedDriverData.distanceFromPickup !== Infinity &&
+    Number.isFinite(selectedDriverData.distanceFromPickup)
+      ? selectedDriverData.distanceFromPickup
+      : undefined;
 
   /** Trajet trop court pour les véhicules hors taxi : message + pas de réservation tant que distance aller < seuil. */
   const isShortTripBlockedForNonTaxi =
@@ -165,7 +171,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         watchVehicleType,
         watchScheduledTime,
         watchIsReturnTrip,
-        vipMultiplier
+        vipMultiplier,
+        driverToPickupKm,
       );
       
       // Utiliser directement le résultat de calculatePriceWithSurcharges
@@ -180,15 +187,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       const { surcharges, finalPrice } = calculatePriceWithSurcharges(
         baseDistance,
         watchVehicleType,
-        new Date(), // Date actuelle
+        new Date(),
         watchIsReturnTrip,
-        vipMultiplier
+        vipMultiplier,
+        driverToPickupKm,
       );
       
       setEstimatedPrice(finalPrice);
       setPriceSurcharges(surcharges);
     }
-  }, [watchVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime, vipMultiplier]);
+  }, [watchVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime, vipMultiplier, driverToPickupKm]);
 
   // Départ immédiat : verrouiller la date/heure sur maintenant
   useEffect(() => {
@@ -255,9 +263,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           const priceResult = calculatePriceWithSurcharges(
             distance,
             selectedVehicleType,
-            new Date(), // Date actuelle pour les surcharges
+            new Date(),
             watchIsReturnTrip || false,
-            vipMultiplier
+            vipMultiplier,
+            driverToPickupKm,
           );
           
           console.log('💰 Prix calculé:', priceResult);
@@ -292,7 +301,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     };
 
     calculateRoute();
-  }, [pickupCoords, destinationCoords, watchVehicleType, watchIsReturnTrip, vipMultiplier]);
+  }, [pickupCoords, destinationCoords, watchVehicleType, watchIsReturnTrip, vipMultiplier, driverToPickupKm]);
 
 
   const useCurrentLocation = async () => {
@@ -1347,7 +1356,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                         ? oneWayBillable * 2
                         : oneWayBillable;
 
-                      const pricing = getProgressivePriceBreakdown(effectiveDistance);
+                      const pricing = getProgressivePriceBreakdown(effectiveDistance, driverToPickupKm);
                       const totalWithMultiplier =
                         Math.round(pricing.subtotal * vehicleMultiplier * vipMultiplier * 100) / 100;
 
@@ -1368,6 +1377,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                               <span className="whitespace-nowrap text-[11px] sm:text-xs">Prise en charge</span>
                               <span className="tabular-nums text-[11px] sm:text-xs text-right">
                                 {pricing.baseFare.toFixed(2)} TND
+                                {driverToPickupKm != null && (
+                                  <span className="block text-[10px] text-gray-500">
+                                    (chauffeur ~{Math.round(driverToPickupKm)} km)
+                                  </span>
+                                )}
                               </span>
                             </div>
                             {pricing.rows.map((row, index) => (
@@ -1618,6 +1632,24 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                             )}
                           </div>
                         </div>
+                      )}
+
+                      {baseDistance && watchVehicleType && (
+                        <p className="mt-2 text-sm font-bold text-green-700">
+                          ~
+                          {calculatePriceWithSurcharges(
+                            baseDistance,
+                            driver.vehicleInfo?.type || watchVehicleType,
+                            watchScheduledTime || new Date(),
+                            watchIsReturnTrip || false,
+                            driver.vehicleInfo?.isVip ? 2.5 : 1,
+                            driver.distanceFromPickup != null &&
+                              driver.distanceFromPickup !== Infinity
+                              ? driver.distanceFromPickup
+                              : undefined,
+                          ).finalPrice}{' '}
+                          TND
+                        </p>
                       )}
                           
                           {/* Badge de proximité pour le chauffeur le plus proche */}
