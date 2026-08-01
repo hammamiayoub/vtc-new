@@ -37,6 +37,7 @@ import {
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { analytics } from '../utils/analytics';
+import { DRIVER_SEARCH_RADIUS_KM, isDriverWithinSearchRadius } from '../utils/driverSearchDistance';
 
 interface BookingFormProps {
   clientId: string;
@@ -759,10 +760,24 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             };
           })
         );
+
+        const driversWithinRadius = driversWithDistance.filter((d) =>
+          isDriverWithinSearchRadius(d.distanceFromPickup),
+        );
+
+        console.log(
+          `📍 Rayon ${DRIVER_SEARCH_RADIUS_KM} km: ${driversWithinRadius.length}/${driversWithDistance.length} chauffeurs`,
+        );
+
+        if (driversWithinRadius.length === 0) {
+          setAvailableDrivers([]);
+          setShowDrivers(true);
+          return;
+        }
         
         // Récupérer les notes moyennes pour les chauffeurs disponibles
         try {
-          const driverIds = driversWithDistance.map(d => d.id);
+          const driverIds = driversWithinRadius.map(d => d.id);
           if (driverIds.length > 0) {
             const { data: ratingRows, error: ratingErr } = await supabase
               .from('driver_rating_stats')
@@ -779,8 +794,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               });
             });
             // Attacher les notes aux objets chauffeurs
-            for (let i = 0; i < driversWithDistance.length; i++) {
-              const d = driversWithDistance[i];
+            for (let i = 0; i < driversWithinRadius.length; i++) {
+              const d = driversWithinRadius[i];
               const stats = ratingsByDriver.get(d.id);
               if (stats) {
                 (d as any).averageRating = typeof stats.average_rating === 'number' ? stats.average_rating : parseFloat(stats.average_rating);
@@ -788,7 +803,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               }
             }
             // Fallback: récupérer un nombre approximatif de courses depuis bookings si pas fourni par l'abonnement
-            const driversMissingCount = driversWithDistance.filter((d: any) => typeof d.bookingCount !== 'number');
+            const driversMissingCount = driversWithinRadius.filter((d: any) => typeof d.bookingCount !== 'number');
             if (driversMissingCount.length > 0) {
               const driverIds = driversMissingCount.map(d => d.id);
               const { data: bookingCounts, error: bookingErr } = await supabase
@@ -804,8 +819,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 const current = countsByDriver.get(row.driver_id) || 0;
                 countsByDriver.set(row.driver_id, current + 1);
               });
-              for (let i = 0; i < driversWithDistance.length; i++) {
-                const d = driversWithDistance[i] as any;
+              for (let i = 0; i < driversWithinRadius.length; i++) {
+                const d = driversWithinRadius[i] as any;
                 if (typeof d.bookingCount !== 'number') {
                   d.bookingCount = countsByDriver.get(d.id) || 0;
                 }
@@ -817,7 +832,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         }
         
         // Trier par distance croissante (le plus proche en premier)
-        const sortedDrivers = driversWithDistance.sort((a: any, b: any) => {
+        const sortedDrivers = driversWithinRadius.sort((a: any, b: any) => {
           // 1) Priorité aux chauffeurs avec photo de véhicule
           const aPhoto = !!a.vehicleInfo?.photoUrl;
           const bPhoto = !!b.vehicleInfo?.photoUrl;
@@ -1518,7 +1533,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   <Car className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600 mb-2">Aucun chauffeur disponible</p>
                   <p className="text-sm text-gray-500">
-                    Essayez de modifier la date/heure ou les adresses
+                    {pickupCoords
+                      ? `Aucun chauffeur trouvé dans un rayon de ${DRIVER_SEARCH_RADIUS_KM} km autour du point de départ. Essayez une autre date/heure ou modifiez l'adresse.`
+                      : 'Essayez de modifier la date/heure ou les adresses'}
                   </p>
                 </div>
               ) : (
