@@ -37,7 +37,7 @@ import {
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { analytics } from '../utils/analytics';
-import { DRIVER_SEARCH_RADIUS_KM, isDriverWithinSearchRadius } from '../utils/driverSearchDistance';
+import { DRIVER_SEARCH_RADIUS_KM, buildDriverDistanceMap, isDriverWithinSearchRadius, sortDriversByProximity } from '../utils/driverSearchDistance';
 
 interface BookingFormProps {
   clientId: string;
@@ -331,6 +331,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
   const searchAvailableDrivers = async () => {
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
+
+    if (!pickupCoords) {
+      alert('Veuillez sélectionner une adresse de départ valide depuis les suggestions (autocomplétion).');
+      return;
+    }
+
+    const searchPickup = pickupCoords;
 
     if (isShortTripBlockedForNonTaxi) {
       alert(
@@ -717,67 +724,42 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         };
       });
 
-      // Étape 5: Trier les chauffeurs en priorisant la photo véhicule, puis proximité
-      console.log('📍 Étape 5: Tri (photo véhicule d\'abord, puis proximité)...');
-      
-      if (pickupCoords) {
-        console.log('📍 Coordonnées du point de départ:', pickupCoords);
-        
-        // Calculer la distance pour chaque chauffeur
-        const driversWithDistance = await Promise.all(
-          formattedDrivers.map(async (driver) => {
-            let distance = Infinity; // Distance par défaut si on ne peut pas calculer
-            
-            if (driver.city) {
-              try {
-                // Calculer la distance entre la ville du chauffeur et le point de départ
-                // Utiliser des coordonnées approximatives pour les villes
-                const cityCoords = getCityCoordinates(driver.city);
-                if (cityCoords) {
-                  const calculatedDistance = calculateDistance(
-                    cityCoords.latitude,
-                    cityCoords.longitude,
-                    pickupCoords.latitude,
-                    pickupCoords.longitude
-                  );
-                if (calculatedDistance !== null) {
-                  distance = calculatedDistance;
-                  console.log(`📏 Distance ${driver.firstName} ${driver.lastName} (${driver.city}): ${distance} km`);
-                } else {
-                  console.warn(`⚠️ Impossible de calculer la distance pour ${driver.city}`);
-                  }
-                }
-              } catch (error) {
-                console.error(`❌ Erreur calcul distance pour ${driver.city}:`, error);
-              }
-            } else {
-              console.warn(`⚠️ Ville non renseignée pour ${driver.firstName} ${driver.lastName}`);
-            }
-            
-            return {
-              ...driver,
-              distanceFromPickup: distance
-            };
-          })
-        );
+      // Étape 5: Filtrer par rayon (50 km) et trier par proximité
+      console.log(`📍 Étape 5: Filtrage rayon ${DRIVER_SEARCH_RADIUS_KM} km et tri par proximité...`);
+      console.log('📍 Coordonnées du point de départ:', searchPickup);
 
-        const driversWithinRadius = driversWithDistance.filter((d) =>
-          isDriverWithinSearchRadius(d.distanceFromPickup),
-        );
+      const distanceMap = await buildDriverDistanceMap(formattedDrivers, searchPickup);
 
-        console.log(
-          `📍 Rayon ${DRIVER_SEARCH_RADIUS_KM} km: ${driversWithinRadius.length}/${driversWithDistance.length} chauffeurs`,
-        );
+      const driversWithDistance = formattedDrivers
+        .map((driver) => {
+          const info = distanceMap.get(driver.id);
+          if (!info) return null;
+          return {
+            ...driver,
+            distanceFromPickup: info.distanceKm,
+            driverCoords: info.coords,
+            distanceSource: info.source,
+          };
+        })
+        .filter((driver): driver is NonNullable<typeof driver> => driver != null);
 
-        if (driversWithinRadius.length === 0) {
-          setAvailableDrivers([]);
-          setShowDrivers(true);
-          return;
-        }
-        
-        // Récupérer les notes moyennes pour les chauffeurs disponibles
-        try {
-          const driverIds = driversWithinRadius.map(d => d.id);
+      const driversWithinRadius = driversWithDistance.filter((d) =>
+        isDriverWithinSearchRadius(d.distanceFromPickup),
+      );
+
+      console.log(
+        `📍 Rayon ${DRIVER_SEARCH_RADIUS_KM} km: ${driversWithinRadius.length}/${formattedDrivers.length} chauffeurs`,
+      );
+
+      if (driversWithinRadius.length === 0) {
+        setAvailableDrivers([]);
+        setShowDrivers(true);
+        return;
+      }
+
+      // Récupérer les notes moyennes pour les chauffeurs disponibles
+      try {
+        const driverIds = driversWithinRadius.map(d => d.id);
           if (driverIds.length > 0) {
             const { data: ratingRows, error: ratingErr } = await supabase
               .from('driver_rating_stats')
@@ -827,106 +809,22 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               }
             }
           }
-        } catch (err) {
-          console.warn('⚠️ Impossible d\'attacher les notes aux chauffeurs:', err);
-        }
-        
-        // Trier par distance croissante (le plus proche en premier)
-        const sortedDrivers = driversWithinRadius.sort((a: any, b: any) => {
-          // 1) Priorité aux chauffeurs avec photo de véhicule
-          const aPhoto = !!a.vehicleInfo?.photoUrl;
-          const bPhoto = !!b.vehicleInfo?.photoUrl;
-          if (aPhoto !== bPhoto) return aPhoto ? -1 : 1;
-          // 2) Puis meilleure note moyenne
-          const aRating = typeof a.averageRating === 'number' ? a.averageRating : -1;
-          const bRating = typeof b.averageRating === 'number' ? b.averageRating : -1;
-          if (aRating !== bRating) return bRating - aRating;
-          // 3) Enfin, proximité (distance)
-          if (a.distanceFromPickup === Infinity && b.distanceFromPickup !== Infinity) return 1;
-          if (a.distanceFromPickup !== Infinity && b.distanceFromPickup === Infinity) return -1;
-          return a.distanceFromPickup - b.distanceFromPickup;
-        });
-        
-        console.log('📊 Chauffeurs triés par distance:', sortedDrivers.map(d => ({
-          name: `${d.firstName} ${d.lastName}`,
-          city: d.city,
-          distance: d.distanceFromPickup === Infinity ? 'Non calculée' : `${d.distanceFromPickup} km`
-        })));
-        
-        setAvailableDrivers(sortedDrivers);
-      } else {
-        console.log('⚠️ Pas de coordonnées de départ');
-        // Attacher les notes même sans coordonnées pour afficher le badge
-        let driversWithRatings: any[] = [...formattedDrivers];
-        try {
-          const driverIds = driversWithRatings.map(d => d.id);
-          if (driverIds.length > 0) {
-            const { data: ratingRows, error: ratingErr } = await supabase
-              .from('driver_rating_stats')
-              .select('driver_id, average_rating, total_ratings')
-              .in('driver_id', driverIds);
-            if (ratingErr) {
-              console.warn('⚠️ Erreur récupération notes chauffeurs (no pickup):', ratingErr);
-            }
-            const ratingsByDriver = new Map<string, { average_rating: any; total_ratings: number }>();
-            (ratingRows || []).forEach(r => {
-              ratingsByDriver.set(r.driver_id, {
-                average_rating: r.average_rating,
-                total_ratings: r.total_ratings
-              });
-            });
-            driversWithRatings = driversWithRatings.map(d => {
-              const stats = ratingsByDriver.get(d.id);
-              if (!stats) return d;
-              return {
-                ...d,
-                averageRating: typeof stats.average_rating === 'number' ? stats.average_rating : parseFloat(stats.average_rating),
-                totalRatings: stats.total_ratings
-              };
-            });
-            // Fallback: récupérer un nombre approximatif de courses depuis bookings si pas fourni par l'abonnement
-            const missingCountIds = driversWithRatings.filter((d: any) => typeof d.bookingCount !== 'number').map((d: any) => d.id);
-            if (missingCountIds.length > 0) {
-              const { data: bookingCounts, error: bookingErr } = await supabase
-                .from('bookings')
-                .select('driver_id')
-                .in('driver_id', missingCountIds)
-                .in('status', ['accepted','in_progress','completed']);
-              if (bookingErr) {
-                console.warn('⚠️ Erreur récupération compte bookings (no pickup):', bookingErr);
-              }
-              const countsByDriver = new Map<string, number>();
-              (bookingCounts || []).forEach((row: any) => {
-                const current = countsByDriver.get(row.driver_id) || 0;
-                countsByDriver.set(row.driver_id, current + 1);
-              });
-              driversWithRatings = driversWithRatings.map((d: any) => (
-                typeof d.bookingCount === 'number' ? d : { ...d, bookingCount: countsByDriver.get(d.id) || 0 }
-              ));
-            }
-          }
-        } catch (err) {
-          console.warn('⚠️ Impossible d\'attacher les notes (no pickup):', err);
-        }
-
-        // Tri: photo véhicule -> note -> nom
-        console.log('🔢 Tri (photo véhicule d\'abord, puis note, puis nom)');
-        const sortedDrivers = driversWithRatings.sort((a: any, b: any) => {
-          const aPhoto = !!a.vehicleInfo?.photoUrl;
-          const bPhoto = !!b.vehicleInfo?.photoUrl;
-          if (aPhoto !== bPhoto) return aPhoto ? -1 : 1;
-          const aRating = typeof a.averageRating === 'number' ? a.averageRating : -1;
-          const bRating = typeof b.averageRating === 'number' ? b.averageRating : -1;
-          if (aRating !== bRating) return bRating - aRating;
-          const aName = `${a.firstName} ${a.lastName}`;
-          const bName = `${b.firstName} ${b.lastName}`;
-          return aName.localeCompare(bName);
-        });
-        setAvailableDrivers(sortedDrivers);
+      } catch (err) {
+        console.warn('⚠️ Impossible d\'attacher les notes aux chauffeurs:', err);
       }
-      
+
+      const sortedDrivers = sortDriversByProximity(driversWithinRadius);
+
+      console.log('📊 Chauffeurs triés par distance:', sortedDrivers.map(d => ({
+        name: `${d.firstName} ${d.lastName}`,
+        city: d.city,
+        distance: `${d.distanceFromPickup} km`,
+        source: (d as { distanceSource?: string }).distanceSource ?? 'geocode',
+      })));
+
+      setAvailableDrivers(sortedDrivers);
       setShowDrivers(true);
-      console.log('✅ Interface mise à jour avec', formattedDrivers.length, 'chauffeurs triés par proximité');
+      console.log('✅ Interface mise à jour avec', sortedDrivers.length, 'chauffeurs dans le rayon');
       
     } catch (error) {
       console.error('💥 Erreur inattendue:', error);
@@ -1498,7 +1396,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             <Button
               type="button"
               onClick={searchAvailableDrivers}
-              disabled={!isValid || !estimatedPrice || isShortTripBlockedForNonTaxi}
+              disabled={!isValid || !estimatedPrice || !pickupCoords || isShortTripBlockedForNonTaxi}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <User className="w-5 h-5 mr-2" />
@@ -1525,7 +1423,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             <div className="bg-gray-50 rounded-xl p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Car className="w-5 h-5" />
-                Chauffeurs disponibles ({availableDrivers.length})
+                Chauffeurs disponibles ({availableDrivers.length}) — rayon {DRIVER_SEARCH_RADIUS_KM} km
               </h3>
               
               {availableDrivers.length === 0 ? (
