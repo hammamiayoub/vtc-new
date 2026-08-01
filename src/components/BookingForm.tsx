@@ -53,6 +53,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const [baseDistance, setBaseDistance] = useState<number | null>(null);
   const [showDrivers, setShowDrivers] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isSearchingDrivers, setIsSearchingDrivers] = useState(false);
   const [pickupCoords, setPickupCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
@@ -382,6 +383,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     console.log('🕐 Heure sélectionnée:', selectedTimeString);
     console.log('📝 Valeur brute scheduledTime:', scheduledTime);
     console.log('📅 Date complète:', selectedDate);
+
+    setIsSearchingDrivers(true);
+    setShowDrivers(false);
+    setSelectedDriver(null);
+    setAvailableDrivers([]);
     
     try {
       // Debug: Vérifier toutes les disponibilités existantes
@@ -831,6 +837,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       console.error('Stack trace:', error);
       setAvailableDrivers([]);
       setShowDrivers(true);
+    } finally {
+      setIsSearchingDrivers(false);
     }
   };
 
@@ -1396,12 +1404,29 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             <Button
               type="button"
               onClick={searchAvailableDrivers}
-              disabled={!isValid || !estimatedPrice || !pickupCoords || isShortTripBlockedForNonTaxi}
+              loading={isSearchingDrivers}
+              disabled={!isValid || !estimatedPrice || !pickupCoords || isShortTripBlockedForNonTaxi || isSearchingDrivers}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <User className="w-5 h-5 mr-2" />
-              Rechercher des chauffeurs disponibles
+              {!isSearchingDrivers && <User className="w-5 h-5 mr-2" />}
+              {isSearchingDrivers ? 'Recherche des chauffeurs en cours…' : 'Rechercher des chauffeurs disponibles'}
             </Button>
+
+            {isSearchingDrivers && (
+              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <Loader2 size={24} className="text-blue-600 animate-spin flex-shrink-0" />
+                  <div>
+                    <h3 className="text-base sm:text-lg font-semibold text-blue-900">
+                      Recherche des chauffeurs disponibles
+                    </h3>
+                    <p className="text-sm sm:text-base text-blue-700">
+                      Vérification des disponibilités, abonnements et distances dans un rayon de {DRIVER_SEARCH_RADIUS_KM} km…
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {!isValid && (
               <p className="mt-2 text-sm text-amber-600 flex items-center gap-2">
@@ -1419,7 +1444,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           </div>
 
           {/* Liste des chauffeurs disponibles */}
-          {showDrivers && (
+          {showDrivers && !isSearchingDrivers && (
             <div className="bg-gray-50 rounded-xl p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Car className="w-5 h-5" />
