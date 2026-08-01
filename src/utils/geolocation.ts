@@ -118,11 +118,11 @@ export const getVehicleMultiplier = (vehicleType?: string): number => {
     case 'suv':
       return 1.0;
     case 'van':
-      return 1.5;
+      return 1.875;
     case 'minibus':
-      return 2.5;
+      return 3.125;
     case 'bus':
-      return 3.5;
+      return 4.375;
     case 'truck':
       return 1.5;
     case 'utility':
