@@ -59,9 +59,7 @@
         document.head.appendChild(adsScript);
       }
 
-      window.addEventListener('load', function() {
-        setTimeout(loadThirdPartyScripts, 2000);
-      });
+      window.loadThirdPartyScripts = loadThirdPartyScripts;
     </script>
     
     <script type="application/ld+json">
