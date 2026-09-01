@@ -7,6 +7,8 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { supabase } from './lib/supabase';
 import { initAnalytics } from './utils/analytics';
 import { updateSEO } from './utils/seo';
+import { getCookieConsent, type CookieConsentChoice } from './utils/cookieConsent';
+import { CookieConsentBanner } from './components/CookieConsentBanner';
 import {
   isPublicPath,
   isProtectedPath,
@@ -139,7 +141,7 @@ function RouteFallback() {
   return <PageLoader />;
 }
 
-function AppContent() {
+function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | null }) {
   const [currentView, setCurrentView] = useState<View>('home');
   const [authReady, setAuthReady] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -157,8 +159,6 @@ function AppContent() {
   }, [location.pathname, navigate]);
 
   useEffect(() => {
-    initAnalytics();
-
     const urlParams = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
     const path = window.location.pathname;
@@ -232,10 +232,12 @@ function AppContent() {
   }, [navigate]);
 
   useEffect(() => {
+    if (cookieConsent === null) return;
+
     const delayMs = 1500;
     const timer = window.setTimeout(() => setShowChat(true), delayMs);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [cookieConsent]);
 
   const handleLogout = async () => {
     try {
@@ -363,9 +365,23 @@ function AppContent() {
 }
 
 function App() {
+  const [cookieConsent, setCookieConsent] = useState<CookieConsentChoice | null>(() =>
+    getCookieConsent(),
+  );
+
+  useEffect(() => {
+    if (cookieConsent === 'accepted') {
+      window.loadThirdPartyScripts?.();
+      initAnalytics();
+    }
+  }, [cookieConsent]);
+
   return (
     <Router>
       <ScrollToTop />
+      {cookieConsent === null && (
+        <CookieConsentBanner onConsentChange={setCookieConsent} />
+      )}
       <Routes>
         <Route
           path="/privacy-policy"
@@ -383,7 +399,7 @@ function App() {
             </Suspense>
           }
         />
-        <Route path="/*" element={<AppContent />} />
+        <Route path="/*" element={<AppContent cookieConsent={cookieConsent} />} />
       </Routes>
     </Router>
   );
