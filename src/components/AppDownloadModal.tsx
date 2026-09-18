@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Smartphone, X } from 'lucide-react';
 import { AppStoreBadges } from './AppStoreBadges';
 
@@ -8,10 +8,37 @@ interface AppDownloadModalProps {
 }
 
 export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onClose }) => {
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen || !bannerRef.current) {
+      document.documentElement.style.removeProperty('--td-app-download-offset');
+      return;
+    }
+
+    const updateOffset = () => {
+      const height = bannerRef.current?.offsetHeight ?? 0;
+      document.documentElement.style.setProperty(
+        '--td-app-download-offset',
+        `${height + 16}px`,
+      );
+    };
+
+    updateOffset();
+    const observer = new ResizeObserver(updateOffset);
+    observer.observe(bannerRef.current);
+
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--td-app-download-offset');
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <div
+      ref={bannerRef}
       className="fixed left-0 right-0 z-[90] p-4 pointer-events-none"
       style={{ bottom: 'var(--td-bottom-banner-offset, 1rem)' }}
       role="region"

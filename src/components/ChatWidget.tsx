@@ -17,6 +17,12 @@ interface ChatMessage {
 
 const HIGH_CONFIDENCE_SCORE = 55;
 
+/** Au-dessus des bannières cookies + téléchargement app (variables CSS sur :root) */
+const CHAT_FLOAT_BOTTOM =
+  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + 1.5rem)';
+const CHAT_PANEL_BOTTOM =
+  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + 4.5rem)';
+
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [screen, setScreen] = useState<Screen>('categories');
@@ -177,7 +183,7 @@ export const ChatWidget: React.FC = () => {
     <>
       <div
         className="fixed right-4 sm:right-6 z-50 flex flex-col items-end gap-3"
-        style={{ bottom: 'max(1.5rem, var(--td-bottom-banner-offset, 1.5rem))' }}
+        style={{ bottom: CHAT_FLOAT_BOTTOM }}
       >
         {!isOpen && hasUnread && (
           <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2 shadow-lg text-sm text-gray-700 max-w-[200px] text-right animate-bounce">
@@ -199,7 +205,7 @@ export const ChatWidget: React.FC = () => {
       {isOpen && (
         <div
           className="fixed left-4 right-4 sm:left-auto sm:right-6 z-50 sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden h-[min(520px,calc(100dvh-8rem))] max-h-[min(520px,calc(100dvh-8rem))]"
-          style={{ bottom: 'calc(max(1.5rem, var(--td-bottom-banner-offset, 1.5rem)) + 4.5rem)' }}
+          style={{ bottom: CHAT_PANEL_BOTTOM }}
         >
           <div className="bg-black px-4 py-3 flex items-center gap-3 flex-shrink-0">
             <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center flex-shrink-0">
