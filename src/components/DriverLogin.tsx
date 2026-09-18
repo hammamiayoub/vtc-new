@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft, Car } from 'lucide-react';
 import { Button } from './ui/Button';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { supabase } from '../lib/supabase';
+import { TrustSignals } from './TrustSignals';
 
 interface DriverLoginProps {
   onBack: () => void;
@@ -23,11 +24,11 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
-    
+
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
       if (authError) {
@@ -42,15 +43,12 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
       }
 
       if (data.user) {
-        // Configurer la persistance de session selon le choix de l'utilisateur
         if (rememberMe) {
-          // Session persistante (30 jours)
           await supabase.auth.updateUser({
-            data: { remember_me: true }
+            data: { remember_me: true },
           });
         }
 
-        // Vérifier que c'est bien un chauffeur
         const { data: driverData, error: driverError } = await supabase
           .from('drivers')
           .select('*')
@@ -64,9 +62,11 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
           setIsSubmitting(false);
           return;
         }
-        
+
         if (!driverData) {
-          setError('Identifiants incorrects. Ce compte n\'est pas un compte chauffeur. Veuillez utiliser vos identifiants chauffeur ou créer un compte chauffeur.');
+          setError(
+            "Identifiants incorrects. Ce compte n'est pas un compte chauffeur. Veuillez utiliser vos identifiants chauffeur ou créer un compte chauffeur.",
+          );
           await supabase.auth.signOut();
           setIsSubmitting(false);
           return;
@@ -74,38 +74,40 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
 
         onLoginSuccess();
       }
-    } catch (error) {
-      console.error('Erreur lors de la connexion chauffeur:', error);
+    } catch (err) {
+      console.error('Erreur lors de la connexion chauffeur:', err);
       setError('Une erreur est survenue lors de la connexion');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-lg overflow-hidden max-w-md w-full">
-        <div className="p-10">
+    <div className="min-h-[100dvh] bg-gray-50 flex items-start sm:items-center justify-center p-4 sm:p-6 py-6 sm:py-8 overflow-y-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden max-w-md w-full my-auto">
+        <div className="p-5 sm:p-8 lg:p-10">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors group"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 sm:mb-8 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             Retour
           </button>
 
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <Car size={36} className="text-gray-700" />
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <Car size={28} className="sm:hidden text-gray-700" />
+              <Car size={36} className="hidden sm:block text-gray-700" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight">
               Connexion chauffeur
             </h1>
-            <p className="text-gray-600 text-lg">
-              Accédez à votre espace chauffeur
+            <p className="text-gray-600 text-base sm:text-lg">
+              Accédez à votre espace partenaire
             </p>
           </div>
+
+          <TrustSignals variant="compact" className="mb-6 text-left" />
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="relative">
@@ -117,7 +119,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Adresse email"
-                className="block w-full pl-10 pr-3 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
+                className="block w-full pl-10 pr-3 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
                 required
               />
             </div>
@@ -131,13 +133,14 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mot de passe"
-                className="block w-full pl-10 pr-12 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
+                className="block w-full pl-10 pr-12 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5 text-gray-500 hover:text-gray-700" />
@@ -149,23 +152,21 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
 
             <div className="flex items-center justify-between pt-2">
               <label className="flex items-center">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-gray-900 rounded border-gray-300 focus:ring-gray-900" 
+                  className="w-4 h-4 text-gray-900 rounded border-gray-300 focus:ring-gray-900"
                 />
                 <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
               </label>
-              <a href="#" className="text-sm text-gray-900 hover:underline font-medium">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-gray-900 hover:underline font-medium"
-                >
-                  Mot de passe oublié ?
-                </button>
-              </a>
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-gray-900 hover:underline font-medium"
+              >
+                Mot de passe oublié ?
+              </button>
             </div>
 
             {error && (
@@ -183,20 +184,16 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
             </Button>
           </form>
 
-          <div className="mt-10 text-center">
+          <div className="mt-8 sm:mt-10 text-center">
             <p className="text-gray-600">
-              Pas encore chauffeur ?{' '}
-              <button
-                onClick={onSignup}
-                className="text-gray-900 hover:underline font-medium"
-              >
+              Pas encore partenaire ?{' '}
+              <button onClick={onSignup} className="text-gray-900 hover:underline font-medium">
                 Devenir chauffeur
               </button>
             </p>
           </div>
         </div>
 
-        {/* Modal mot de passe oublié */}
         <ForgotPasswordModal
           isOpen={showForgotPassword}
           onClose={() => setShowForgotPassword(false)}

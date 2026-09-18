@@ -10,6 +10,8 @@ import { clientSignupSchema, normalizePhone } from '../utils/validation';
 import { ClientSignupFormData } from '../types';
 import type { SignupCountryCode } from '../utils/signupCountries';
 import { supabase } from '../lib/supabase';
+import { hasPendingQuote } from '../utils/pendingQuote';
+import { TrustSignals } from './TrustSignals';
 
 interface ClientSignupProps {
   onBack: () => void;
@@ -208,13 +210,13 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
   if (submitSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
           <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
             <CheckCircle size={48} className="text-green-600" />
           </div>
           
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">🎉 Inscription réussie !</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">Inscription réussie</h1>
           
           <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-lg">
             <div className="flex items-start">
@@ -223,15 +225,15 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               </div>
               <div className="ml-3 text-left">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                  📧 Vérifiez votre boîte email
+                  Vérifiez votre boîte email
                 </h3>
                 <p className="text-blue-700 mb-4 leading-relaxed">
                   Nous avons envoyé un email de confirmation à votre adresse. 
-                  <strong> Cliquez sur le lien dans l'email pour activer votre compte.</strong>
+                  <strong> Cliquez sur le lien dans l&apos;email pour activer votre compte.</strong>
                 </p>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-yellow-800 text-sm font-medium">
-                    ⚠️ <strong>Important :</strong> Vérifiez aussi votre dossier <strong>Spam</strong> ou <strong>Courrier indésirable</strong> si vous ne recevez pas l'email dans les prochaines minutes.
+                    <strong>Important :</strong> Vérifiez aussi votre dossier Spam ou Courrier indésirable si vous ne recevez pas l&apos;email dans les prochaines minutes.
                   </p>
                 </div>
               </div>
@@ -248,7 +250,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             </ul>
           </div>
 
-          <Button onClick={onBack} className="w-full bg-purple-600 hover:bg-purple-700 text-lg py-3">
+          <Button onClick={onBack} className="w-full bg-black hover:bg-gray-800 text-lg py-3">
             Retour à l'accueil
           </Button>
         </div>
@@ -257,14 +259,41 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full">
+    <div className="min-h-[100dvh] bg-gray-50 flex items-start sm:items-center justify-center p-4 sm:p-6 py-6 sm:py-8 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full my-auto">
         <div className="flex flex-col lg:flex-row">
-          {/* Left side - Form */}
-          <div className="flex-1 p-6 sm:p-8 lg:p-12">
+          {/* Avantages — au-dessus du formulaire sur mobile */}
+          <div className="order-1 lg:order-2 lg:w-96 bg-black p-6 sm:p-8 lg:p-12 text-white">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Avantages client</h2>
+            <div className="space-y-4 sm:space-y-6">
+              {[
+                'Réservation en quelques clics',
+                'Chauffeurs professionnels vérifiés',
+                'Tarifs transparents et compétitifs',
+                'Suivi en temps réel de votre course',
+                'Support client 24/7',
+              ].map((benefit, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <CheckCircle size={20} className="text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-200 text-sm sm:text-base">{benefit}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 sm:mt-12 p-5 sm:p-6 bg-gray-800 rounded-xl">
+              <h3 className="font-semibold text-lg mb-2">Prêt à voyager ?</h3>
+              <p className="text-gray-300 text-sm">
+                Créez votre compte en quelques minutes et réservez votre première
+                course dès maintenant.
+              </p>
+            </div>
+          </div>
+
+          {/* Formulaire */}
+          <div className="order-2 lg:order-1 flex-1 p-6 sm:p-8 lg:p-12">
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-purple-600 mb-6 sm:mb-8 transition-colors group"
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 sm:mb-8 transition-colors group"
             >
               <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
               Retour
@@ -272,8 +301,20 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
             <div className="mb-6 sm:mb-8">
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Créer un compte client</h1>
-              <p className="text-gray-600 text-base sm:text-lg">Rejoignez TuniDrive pour réserver vos courses</p>
+              <p className="text-gray-600 text-base sm:text-lg">
+                {hasPendingQuote()
+                  ? 'Finalisez votre réservation en créant votre compte'
+                  : 'Rejoignez TuniDrive pour réserver vos courses'}
+              </p>
             </div>
+
+            {hasPendingQuote() && (
+              <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                Votre devis depuis l&apos;accueil sera repris après confirmation de l&apos;email et connexion.
+              </div>
+            )}
+
+            <TrustSignals variant="compact" className="mb-6" />
 
             {/* Affichage des erreurs */}
             {error && (
@@ -297,7 +338,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                     type="text"
                     placeholder="Prénom"
                     autoComplete="given-name"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                       errors.firstName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -313,7 +354,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                     type="text"
                     placeholder="Nom"
                     autoComplete="family-name"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                       errors.lastName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -332,7 +373,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   placeholder="Adresse email"
                   autoComplete="email"
                   inputMode="email"
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -344,7 +385,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 errors={errors}
                 setValue={setValue}
                 watch={watch}
-                focusRingClass="focus:ring-2 focus:ring-purple-500"
+                focusRingClass="focus:ring-2 focus:ring-gray-900"
               />
 
               <div>
@@ -371,7 +412,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Mot de passe"
                   autoComplete="new-password"
-                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -401,7 +442,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirmer le mot de passe"
                   autoComplete="new-password"
-                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -422,7 +463,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 type="submit"
                 loading={isSubmitting}
                 disabled={!isValid || isSubmitting}
-                className="w-full py-4 text-lg bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
+                className="w-full py-4 text-lg bg-black hover:bg-gray-800 focus:ring-gray-900"
               >
                 {isSubmitting ? 'Création du compte...' : 'Créer mon compte client'}
               </Button>
@@ -432,7 +473,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 En créant votre compte, vous acceptez nos{' '}
                 <a
                   href="#"
-                  className="text-purple-600 hover:underline"
+                  className="text-gray-900 hover:underline font-medium"
                   onClick={(e) => {
                     e.preventDefault();
                     window.open('/terms-of-service', '_blank');
@@ -443,7 +484,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 et notre{' '}
                 <a
                   href="#"
-                  className="text-purple-600 hover:underline"
+                  className="text-gray-900 hover:underline font-medium"
                   onClick={(e) => {
                     e.preventDefault();
                     window.open('/privacy-policy', '_blank');
@@ -453,33 +494,6 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 </a>.
               </p>
             </form>
-          </div>
-
-          {/* Right side - Benefits */}
-          <div className="lg:w-96 bg-black p-8 lg:p-12 text-white">
-            <h2 className="text-3xl font-bold mb-8">Avantages client</h2>
-            <div className="space-y-6">
-              {[
-                'Réservation en quelques clics',
-                'Chauffeurs professionnels vérifiés',
-                'Tarifs transparents et compétitifs',
-                'Suivi en temps réel de votre course',
-                'Support client 24/7',
-              ].map((benefit, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <CheckCircle size={20} className="text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-200">{benefit}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-12 p-6 bg-gray-800 rounded-xl">
-              <h3 className="font-semibold text-lg mb-2">Prêt à voyager ?</h3>
-              <p className="text-gray-300 text-sm">
-                Créez votre compte en quelques minutes et réservez votre première
-                course dès maintenant.
-              </p>
-            </div>
           </div>
         </div>
       </div>

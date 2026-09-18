@@ -10,6 +10,7 @@ import {
   RIDE_DEFAULT_PICKUP_FARE_TND,
   getDriverPickupFareSummaryText,
 } from '../utils/geolocation';
+import { savePendingQuote } from '../utils/pendingQuote';
 
 interface HomeBookingWidgetProps {
   onClientLogin: () => void;
@@ -32,6 +33,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
+  const [autocompleteHint, setAutocompleteHint] = useState<string | null>(null);
 
   const resetQuote = () => {
     setDistanceKm(null);
@@ -43,12 +45,22 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
     setPickupAddress(value);
     setPickupCoords(null);
     resetQuote();
+    if (value.trim() && !pickupCoords) {
+      setAutocompleteHint('Sélectionnez le lieu de départ dans la liste de suggestions.');
+    } else {
+      setAutocompleteHint(null);
+    }
   };
 
   const handleDestinationChange = (value: string) => {
     setDestinationAddress(value);
     setDestinationCoords(null);
     resetQuote();
+    if (value.trim() && !destinationCoords) {
+      setAutocompleteHint('Sélectionnez la destination dans la liste de suggestions.');
+    } else {
+      setAutocompleteHint(null);
+    }
   };
 
   const handleVoirPrix = async () => {
@@ -85,19 +97,25 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
         return;
       }
 
-      const price = calculatePrice(distance, 'taxi');
+      const price = calculatePrice(distance, 'sedan');
       setDistanceKm(distance);
       setEstimatedPrice(price);
 
-      sessionStorage.setItem(
-        'td_pending_quote',
-        JSON.stringify({
-          pickupAddress: pickupAddress.trim(),
-          destinationAddress: destinationAddress.trim(),
-          distanceKm: distance,
-          estimatedPrice: price,
-        })
-      );
+      savePendingQuote({
+        pickupAddress: pickupAddress.trim(),
+        destinationAddress: destinationAddress.trim(),
+        pickupCoords: {
+          latitude: pickupCoords.latitude,
+          longitude: pickupCoords.longitude,
+        },
+        destinationCoords: {
+          latitude: destinationCoords.latitude,
+          longitude: destinationCoords.longitude,
+        },
+        distanceKm: distance,
+        estimatedPrice: price,
+        vehicleType: 'sedan',
+      });
     } catch {
       setError('Une erreur est survenue lors du calcul du tarif. Réessayez.');
     } finally {
@@ -122,6 +140,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
               latitude: place.geometry.location.lat(),
               longitude: place.geometry.location.lng(),
             });
+            setAutocompleteHint(null);
             resetQuote();
           }}
           placeholder="Lieu de prise en charge"
@@ -139,6 +158,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
               latitude: place.geometry.location.lat(),
               longitude: place.geometry.location.lng(),
             });
+            setAutocompleteHint(null);
             resetQuote();
           }}
           placeholder="Destination"
@@ -146,6 +166,12 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
           inputClassName="w-full pl-10 pr-4 py-3.5 rounded-lg bg-surface-muted border border-surface-border focus:ring-2 focus:ring-gray-900 focus:border-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
         />
       </div>
+
+      {autocompleteHint && !error && (
+        <p className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2" role="status">
+          {autocompleteHint}
+        </p>
+      )}
 
       {error && (
         <p className="mt-3 text-sm text-red-600" role="alert">
@@ -190,17 +216,17 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
 
           <div className="rounded-lg bg-white border border-surface-border p-4 mb-4">
             <p className="text-sm font-semibold text-gray-900 mb-2">
-              Pour confirmer votre réservation
+              Continuer votre réservation
             </p>
             <p className="text-sm text-gray-600 mb-4">
-              Créez un compte client gratuit pour finaliser la commande et choisir votre chauffeur.
+              Créez un compte gratuit ou connectez-vous pour choisir votre chauffeur et confirmer.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button size="md" onClick={onClientSignup} className="rounded-full flex-1">
-                Créer un compte
+              <Button size="md" onClick={onClientSignup} className="rounded-full flex-1 order-1">
+                Continuer ma réservation
               </Button>
-              <Button size="md" variant="outline" onClick={onClientLogin} className="rounded-full flex-1">
-                Se connecter
+              <Button size="md" variant="outline" onClick={onClientLogin} className="rounded-full flex-1 order-2">
+                J&apos;ai déjà un compte
               </Button>
             </div>
           </div>

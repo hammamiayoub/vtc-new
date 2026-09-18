@@ -20,12 +20,15 @@ import { Button } from './ui/Button';
 import { Footer } from './Footer';
 import { AppDownloadModal } from './AppDownloadModal';
 import { HomeBookingWidget } from './HomeBookingWidget';
+import { TrustSignals } from './TrustSignals';
+import { ReviewsCarousel } from './ReviewsCarousel';
 import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 
 interface HomePageProps {
   onGetStarted: () => void;
   onClientLogin: () => void;
   onClientSignup: () => void;
+  onDriverLogin: () => void;
 }
 
 function VehiclePicture({
@@ -95,8 +98,17 @@ const serviceOffers = [
   },
 ];
 
-export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin, onClientSignup }) => {
+export const HomePage: React.FC<HomePageProps> = ({
+  onGetStarted,
+  onClientLogin,
+  onClientSignup,
+  onDriverLogin,
+}) => {
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+
+  const scrollToBooking = () => {
+    document.getElementById('reserver')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -126,33 +138,44 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
                   Réservez un <strong>chauffeur privé</strong>, un <strong>taxi</strong> ou un{' '}
                   <strong>transfert aéroport</strong> en Tunisie. Van, bus et transport de colis Europe ↔ Tunisie.
                 </p>
+                <TrustSignals variant="bar" className="mb-6 justify-start" />
                 <p className="text-base text-gray-500 mb-6">
                   <Link to="/vtc-tunisie" className="underline underline-offset-2 hover:text-gray-900">
                     Découvrir nos services VTC en Tunisie
                   </Link>
                 </p>
-                <div className="hidden lg:flex flex-wrap gap-3">
-                  <Button size="lg" onClick={onClientLogin} className="rounded-full">
-                    Réserver une course
-                    <ArrowRight size={20} className="ml-2" />
-                  </Button>
-                  <Button size="lg" variant="outline" onClick={onGetStarted} className="rounded-full">
-                    Devenir chauffeur
-                  </Button>
+                <div className="hidden lg:flex flex-col items-start gap-3">
+                  <div className="flex flex-wrap gap-3">
+                    <Button size="lg" onClick={scrollToBooking} className="rounded-full">
+                      Réserver une course
+                      <ArrowRight size={20} className="ml-2" />
+                    </Button>
+                    <Button size="lg" variant="outline" onClick={onGetStarted} className="rounded-full">
+                      Devenir chauffeur
+                    </Button>
+                    <Button size="lg" variant="outline" onClick={onDriverLogin} className="rounded-full">
+                      Connexion chauffeur
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              <HomeBookingWidget
-                onClientLogin={onClientLogin}
-                onClientSignup={onClientSignup}
-              />
+              <div id="reserver" className="scroll-mt-24">
+                <HomeBookingWidget
+                  onClientLogin={onClientLogin}
+                  onClientSignup={onClientSignup}
+                />
+              </div>
 
               <div className="flex lg:hidden flex-col sm:flex-row flex-wrap gap-3 mt-8">
-                <Button size="lg" onClick={onClientLogin} className="rounded-full flex-1 sm:flex-none">
+                <Button size="lg" onClick={scrollToBooking} className="rounded-full flex-1 sm:flex-none">
                   Réserver une course
                 </Button>
                 <Button size="lg" variant="outline" onClick={onGetStarted} className="rounded-full flex-1 sm:flex-none">
                   Devenir chauffeur
+                </Button>
+                <Button size="lg" variant="outline" onClick={onDriverLogin} className="rounded-full flex-1 sm:flex-none">
+                  Connexion chauffeur
                 </Button>
               </div>
             </div>
@@ -365,6 +388,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
           </div>
         </section>
 
+        <ReviewsCarousel />
+
         {/* Véhicules */}
         <section className="py-16 bg-surface-muted">
           <div className="page-container">
@@ -489,13 +514,23 @@ export const HomePage: React.FC<HomePageProps> = ({ onGetStarted, onClientLogin,
                   </span>
                 ))}
               </div>
-              <Button
-                size="lg"
-                onClick={onGetStarted}
-                className="rounded-full bg-white text-gray-900 hover:bg-gray-100"
-              >
-                Commencer maintenant
-              </Button>
+              <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3">
+                <Button
+                  size="lg"
+                  onClick={onGetStarted}
+                  className="rounded-full bg-white text-gray-900 hover:bg-gray-100"
+                >
+                  Commencer maintenant
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={onDriverLogin}
+                  className="rounded-full border-white text-white hover:bg-white/10"
+                >
+                  Connexion chauffeur
+                </Button>
+              </div>
             </div>
           </div>
         </section>

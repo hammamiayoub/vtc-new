@@ -11,6 +11,7 @@ import { DriverSignupFormData } from '../types';
 import { DRIVER_ACTIVITY_SIGNUP_OPTIONS } from '../utils/driverActivity';
 import type { SignupCountryCode } from '../utils/signupCountries';
 import { supabase } from '../lib/supabase';
+import { TrustSignals } from './TrustSignals';
 
 interface DriverSignupProps {
   onBack: () => void;
@@ -235,30 +236,30 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
   if (submitSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
-          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-            <CheckCircle size={48} className="text-green-600" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-lg w-full text-center">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={40} className="text-green-600" />
           </div>
-          
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">🎉 Inscription réussie !</h1>
-          
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-lg">
+
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Inscription réussie</h1>
+
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-lg text-left">
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <Mail className="h-6 w-6 text-blue-600 mt-1" />
               </div>
-              <div className="ml-3 text-left">
+              <div className="ml-3">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                  📧 Vérifiez votre boîte email
+                  Vérifiez votre boîte email
                 </h3>
                 <p className="text-blue-700 mb-4 leading-relaxed">
-                  Nous avons envoyé un email de confirmation à votre adresse. 
-                  <strong> Cliquez sur le lien dans l'email pour activer votre compte chauffeur.</strong>
+                  Nous avons envoyé un email de confirmation à votre adresse.
+                  <strong> Cliquez sur le lien pour activer votre compte partenaire.</strong>
                 </p>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-yellow-800 text-sm font-medium">
-                    ⚠️ <strong>Important :</strong> Vérifiez aussi votre dossier <strong>Spam</strong> ou <strong>Courrier indésirable</strong> si vous ne recevez pas l'email dans les prochaines minutes.
+                    <strong>Important :</strong> Vérifiez aussi votre dossier Spam ou Courrier indésirable si vous ne recevez pas l&apos;email dans les prochaines minutes.
                   </p>
                 </div>
               </div>
@@ -275,9 +276,9 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             </ul>
           </div>
 
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
-            <h4 className="font-semibold text-green-800 mb-2">🚗 Bienvenue dans l'équipe TuniDrive !</h4>
-            <p className="text-green-700 text-sm">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8 text-left">
+            <h4 className="font-semibold text-gray-900 mb-2">Bienvenue dans l&apos;équipe TuniDrive</h4>
+            <p className="text-gray-700 text-sm">
               Une fois votre compte activé, complétez votre profil pour recevoir des{' '}
               {registeredActivityType === 'transporteur'
                 ? 'demandes de transport de colis'
@@ -286,8 +287,8 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             </p>
           </div>
 
-          <Button onClick={onBack} className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3">
-            Retour à l'accueil
+          <Button onClick={onBack} className="w-full bg-black hover:bg-gray-800 text-lg py-3">
+            Retour à l&apos;accueil
           </Button>
         </div>
       </div>
@@ -295,29 +296,59 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full">
+    <div className="min-h-[100dvh] bg-gray-50 flex items-start sm:items-center justify-center p-4 sm:p-6 py-6 sm:py-8 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full my-auto">
         <div className="flex flex-col lg:flex-row">
-          {/* Left side - Form */}
-          <div className="flex-1 p-8 lg:p-12">
+          {/* Avantages — au-dessus du formulaire sur mobile */}
+          <div className="order-1 lg:order-2 lg:w-96 bg-black p-6 sm:p-8 lg:p-12 text-white">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Avantages partenaire</h2>
+            <div className="space-y-4 sm:space-y-6">
+              {[
+                watchActivityType === 'transporteur'
+                  ? 'Demandes de colis Europe ↔ Tunisie'
+                  : 'Courses de personnes sur demande',
+                'Revenus attractifs et transparents',
+                'Flexibilité totale des horaires',
+                'Support 7j/7 dédié aux partenaires',
+              ].map((benefit, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <CheckCircle size={20} className="text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-200 text-sm sm:text-base">{benefit}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 sm:mt-12 p-5 sm:p-6 bg-gray-800 rounded-xl">
+              <h3 className="font-semibold text-lg mb-2">Prêt à commencer ?</h3>
+              <p className="text-gray-300 text-sm">
+                L&apos;inscription ne prend que quelques minutes. Commencez à recevoir vos
+                premières demandes après validation de votre profil.
+              </p>
+            </div>
+          </div>
+
+          {/* Formulaire */}
+          <div className="order-2 lg:order-1 flex-1 p-6 sm:p-8 lg:p-12">
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-8 transition-colors group"
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 sm:mb-8 transition-colors group"
             >
               <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
               Retour
             </button>
 
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-3">
+            <div className="mb-6 sm:mb-8">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">
                 Devenez partenaire TuniDrive
               </h1>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-base sm:text-lg">
                 Transport de personnes ou de colis — choisissez votre activité
               </p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <TrustSignals variant="compact" className="mb-6" />
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <p className="text-red-800 text-sm">{error}</p>
@@ -337,9 +368,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                         key={option.value}
                         className={`relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-all ${
                           selected
-                            ? option.value === 'vtc'
-                              ? 'border-black bg-gray-50 ring-1 ring-black'
-                              : 'border-blue-600 bg-blue-50 ring-1 ring-blue-600'
+                            ? 'border-black bg-gray-50 ring-1 ring-black'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
@@ -351,15 +380,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                         />
                         <Icon
                           size={28}
-                          className={
-                            option.value === 'vtc'
-                              ? selected
-                                ? 'text-gray-900'
-                                : 'text-gray-500'
-                              : selected
-                              ? 'text-blue-600'
-                              : 'text-gray-500'
-                          }
+                          className={selected ? 'text-gray-900' : 'text-gray-500'}
                         />
                         <span className="font-semibold text-gray-900 mt-2 text-sm">
                           {option.label}
@@ -385,7 +406,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                     {...register('firstName')}
                     type="text"
                     placeholder="Prénom"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                       errors.firstName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -402,7 +423,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                     {...register('lastName')}
                     type="text"
                     placeholder="Nom"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                       errors.lastName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -420,7 +441,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   {...register('email')}
                   type="email"
                   placeholder="Adresse email"
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -434,7 +455,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 errors={errors}
                 setValue={setValue}
                 watch={watch}
-                focusRingClass="focus:ring-2 focus:ring-blue-500"
+                focusRingClass="focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
               />
 
               <div>
@@ -459,7 +480,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Mot de passe"
-                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -494,7 +515,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   {...register('confirmPassword')}
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirmer le mot de passe"
-                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -539,7 +560,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 type="submit"
                 loading={isSubmitting}
                 disabled={!isValid || isSubmitting}
-                className="w-full py-4 text-lg"
+                className="w-full py-4 text-lg bg-black hover:bg-gray-800 focus:ring-gray-900"
               >
                 {isSubmitting ? 'Création du compte...' : 'Créer mon compte partenaire'}
               </Button>
@@ -549,7 +570,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 En créant votre compte, vous acceptez nos{' '}
                 <a 
                   href="#" 
-                  className="text-blue-600 hover:underline"
+                  className="text-gray-900 hover:underline font-medium"
                   onClick={(e) => {
                     e.preventDefault();
                     window.open('/terms-of-service', '_blank');
@@ -560,7 +581,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 et notre{' '}
                 <a 
                   href="#" 
-                  className="text-blue-600 hover:underline"
+                  className="text-gray-900 hover:underline font-medium"
                   onClick={(e) => {
                     e.preventDefault();
                     window.open('/privacy-policy', '_blank');
@@ -570,34 +591,6 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 </a>.
               </p>
             </form>
-          </div>
-
-          {/* Right side - Benefits */}
-          <div className="lg:w-96 bg-black p-8 lg:p-12 text-white">
-            <h2 className="text-3xl font-bold mb-8">Avantages partenaire</h2>
-            <div className="space-y-6">
-              {[
-                watchActivityType === 'transporteur'
-                  ? 'Demandes de colis Europe ↔ Tunisie'
-                  : 'Courses de personnes sur demande',
-                'Revenus attractifs et transparents',
-                'Flexibilité totale des horaires',
-                'Support 24/7 dédié aux partenaires',
-              ].map((benefit, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <CheckCircle size={20} className="text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-200">{benefit}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-12 p-6 bg-gray-800 rounded-xl">
-              <h3 className="font-semibold text-lg mb-2">Prêt à commencer ?</h3>
-              <p className="text-gray-300 text-sm">
-                L'inscription ne prend que quelques minutes. Commencez à recevoir 
-                vos premières courses dès aujourd'hui.
-              </p>
-            </div>
           </div>
         </div>
       </div>

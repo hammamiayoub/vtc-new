@@ -173,7 +173,7 @@ export const faqCategories: FaqCategory[] = [
         id: "d6",
         question: "Combien de courses gratuites ai-je sans abonnement ?",
         answer:
-          "Sans abonnement premium, vous pouvez accepter un nombre limité de courses par mois à titre d'essai. Une fois ce quota atteint, vous devrez souscrire à l'abonnement pour continuer à recevoir des courses.",
+          "Chaque nouveau chauffeur bénéficie de 3 courses gratuites à vie (offre valable une seule fois, sans reset mensuel).\n\nUne fois ces 3 courses utilisées, l'abonnement Premium est nécessaire pour continuer à accepter de nouvelles courses.",
       },
       {
         id: "d7",
@@ -222,7 +222,7 @@ export const faqCategories: FaqCategory[] = [
         id: "g4",
         question: "Comment contacter le support ?",
         answer:
-          "Notre équipe support est disponible par email. Rendez-vous en bas de page pour trouver nos coordonnées. Nous répondons généralement sous 24h.",
+          "Notre équipe support est joignable :\n• WhatsApp : +216 28 528 477\n• Email : support@tunidrive.net\n\nNous répondons généralement sous 24 h ouvrées.",
       },
       {
         id: "g5",

@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
-import { AppDownloadSection } from './AppDownloadSection';
+import React from 'react';
+import { Smartphone, X } from 'lucide-react';
+import { AppStoreBadges } from './AppStoreBadges';
 
 interface AppDownloadModalProps {
   isOpen: boolean;
@@ -8,64 +8,48 @@ interface AppDownloadModalProps {
 }
 
 export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onClose }) => {
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const onEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.addEventListener('keydown', onEsc);
-
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      document.removeEventListener('keydown', onEsc);
-    };
-  }, [isOpen, onClose]);
-
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="app-download-modal-title"
+      className="fixed left-0 right-0 z-[90] p-4 pointer-events-none"
+      style={{ bottom: 'var(--td-bottom-banner-offset, 1rem)' }}
+      role="region"
+      aria-labelledby="app-download-banner-title"
     >
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
+      <div className="page-container pointer-events-auto">
+        <div className="bg-black text-white rounded-2xl shadow-xl border border-gray-800 overflow-hidden">
+          <div className="px-4 py-4 sm:px-5 sm:py-5 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0 flex-1">
+                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center">
+                  <Smartphone size={22} aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <h2
+                    id="app-download-banner-title"
+                    className="text-base sm:text-lg font-bold leading-snug pr-2"
+                  >
+                    Téléchargez l&apos;application TuniDrive
+                  </h2>
+                  <p className="text-sm text-gray-300 mt-1">
+                    Réservation et suivi en temps réel sur mobile.
+                  </p>
+                </div>
+              </div>
 
-      <div className="relative bg-white w-full sm:max-w-md md:max-w-lg max-h-[90dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-xl">
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 bg-black border-b border-gray-800 px-5 py-4 sm:px-6 rounded-t-2xl sm:rounded-t-2xl">
-          <div className="min-w-0 pr-2">
-            <h2 id="app-download-modal-title" className="text-lg sm:text-xl font-bold text-white leading-snug">
-              Téléchargez l&apos;application TuniDrive
-            </h2>
-            <p className="text-sm text-gray-300 mt-1">
-              Réservation et suivi en temps réel sur mobile.
-            </p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-gray-600 text-sm font-semibold text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+              >
+                <X size={16} aria-hidden="true" />
+                <span className="hidden sm:inline">Fermer</span>
+              </button>
+            </div>
+
+            <AppStoreBadges layout="row" imageClassName="h-10 w-[135px]" />
           </div>
-          <button
-            type="button"
-            aria-label="Fermer"
-            className="flex-shrink-0 p-2 -mr-1 rounded-full text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-white"
-            onClick={onClose}
-          >
-            <X size={22} />
-          </button>
-        </div>
-
-        <AppDownloadSection compact />
-
-        <div className="px-5 pb-5 sm:px-6 sm:pb-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            Continuer sur le site web
-          </button>
         </div>
       </div>
     </div>
