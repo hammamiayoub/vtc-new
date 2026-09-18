@@ -1,4 +1,6 @@
 /** Illustrations génériques par type (public/) quand le chauffeur n'a pas de photo véhicule. */
+export const SEDAN_PLACEHOLDER_IMAGE = '/vehicles/sedan-template.svg';
+
 export function getVehiclePlaceholderImage(
   vehicleType?: string | null,
 ): string {
@@ -12,10 +14,11 @@ export function getVehiclePlaceholderImage(
     case 'truck':
     case 'pickup':
       return '/utilitaire.webp';
+    case 'limousine':
+      return '/limousine.webp';
     case 'sedan':
     case 'taxi':
-    case 'limousine':
     default:
-      return '/limousine.webp';
+      return SEDAN_PLACEHOLDER_IMAGE;
   }
 }

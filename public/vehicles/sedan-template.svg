@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Berline">
+  <defs>
+    <linearGradient id="sedanBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f4d4d"/>
+      <stop offset="55%" stop-color="#003333"/>
+      <stop offset="100%" stop-color="#002626"/>
+    </linearGradient>
+    <linearGradient id="sedanGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#93c5fd"/>
+    </linearGradient>
+    <linearGradient id="sedanWheel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="320" cy="292" rx="230" ry="20" fill="#000" opacity="0.08"/>
+
+  <path
+    d="M88 238h464c8 0 14-6 14-14v-8c0-22-10-42-28-56l-38-34c-12-11-28-17-45-17H170c-20 0-38 8-51 22l-44 48c-14 15-22 35-22 56v3c0 8 6 14 14 14z"
+    fill="url(#sedanBody)"
+  />
+  <path
+    d="M176 119h194c16 0 31 8 40 22l28 44H148l28-44c9-14 24-22 40-22z"
+    fill="url(#sedanGlass)"
+    opacity="0.95"
+  />
+  <path
+    d="M148 185h344"
+    stroke="#003333"
+    stroke-width="3"
+    stroke-linecap="round"
+    opacity="0.35"
+  />
+  <path
+    d="M118 238h404"
+    stroke="#ffffff"
+    stroke-width="2"
+    stroke-linecap="round"
+    opacity="0.12"
+  />
+
+  <circle cx="196" cy="238" r="34" fill="url(#sedanWheel)"/>
+  <circle cx="196" cy="238" r="18" fill="#d1d5db"/>
+  <circle cx="196" cy="238" r="8" fill="#6b7280"/>
+
+  <circle cx="444" cy="238" r="34" fill="url(#sedanWheel)"/>
+  <circle cx="444" cy="238" r="18" fill="#d1d5db"/>
+  <circle cx="444" cy="238" r="8" fill="#6b7280"/>
+
+  <path
+    d="M500 176h18c6 0 10 4 10 10v18c0 4-3 7-7 7h-21"
+    fill="#fde68a"
+    opacity="0.95"
+  />
+  <path
+    d="M122 176H104c-6 0-10 4-10 10v18c0 4 3 7 7 7h21"
+    fill="#fecaca"
+    opacity="0.9"
+  />
+</svg>
