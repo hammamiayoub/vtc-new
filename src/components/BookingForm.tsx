@@ -9,7 +9,6 @@ import {
   MessageSquare,
   CheckCircle,
   User,
-  Star,
   Loader2,
   AlertCircle,
   Target,
@@ -43,6 +42,7 @@ import { enrichDriversWithMetadata } from '../utils/booking/enrichDriverSearchRe
 import { fetchRefusedDriverIds } from '../utils/booking/fetchRefusedDriverIds';
 import { mapSearchEntryToDriver } from '../utils/booking/mapSearchDriverToClient';
 import { DriverSearchFetchError, searchDriversForBooking } from '../utils/booking/searchDriversForBooking';
+import { DriverSearchResultCard } from './DriverSearchResultCard';
 import type { PendingQuote } from '../utils/pendingQuote';
 
 interface BookingFormProps {
@@ -1088,149 +1088,33 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                   {availableDrivers.map((driver) => {
                     const entryKey = getDriverEntryKey(driver);
-                    return (
-                    <div
-                      key={entryKey}
-                      className={`border-2 rounded-lg p-3 sm:p-4 cursor-pointer transition-all ${
-                        selectedDriver === entryKey
-                          ? 'border-gray-900 bg-gray-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => setSelectedDriver(entryKey)}
-                    >
-                      {/* Photo du véhicule en grand */}
-                      {driver.vehicleInfo?.photoUrl && (
-                        <div className="w-full h-36 sm:h-40 bg-gray-100 rounded-lg overflow-hidden mb-3">
-                          <img
-                            src={driver.vehicleInfo.photoUrl}
-                            alt={`${driver.vehicleInfo.make} ${driver.vehicleInfo.model}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Informations chauffeur */}
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                          {driver.profilePhotoUrl ? (
-                            <img
-                              src={driver.profilePhotoUrl}
-                              alt={`${driver.firstName} ${driver.lastName}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <User className="w-6 h-6 text-gray-500" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1 flex-wrap">
-                                <h4 className="font-medium text-gray-900 text-sm sm:text-base flex-shrink-0">
-                                {driver.firstName} {driver.lastName}
-                              </h4>
-                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold flex-shrink-0 ${
-                                  typeof (driver as any).averageRating === 'number' && (driver as any).totalRatings > 0
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : 'bg-gray-100 text-gray-600'
-                                }`}>
-                                  <Star size={10} className={
-                                    typeof (driver as any).averageRating === 'number' && (driver as any).totalRatings > 0
-                                      ? 'text-yellow-500'
-                                      : 'text-gray-400'
-                                  } />
-                                  {typeof (driver as any).averageRating === 'number' && (driver as any).totalRatings > 0
-                                    ? (driver as any).averageRating.toFixed(1)
-                                    : 'Nouveau'}
-                                </span>
-                                {typeof driver.bookingCount === 'number' && driver.bookingCount > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-800 text-[9px] sm:text-[10px] font-semibold flex-shrink-0">
-                                    ~{Math.max(1, Math.round(driver.bookingCount / 5) * 5)} courses
-                                  </span>
-                                )}
-                              </div>
-                              {driver.city && (
-                                <p className="text-xs sm:text-sm text-gray-600 flex items-center gap-1 flex-wrap">
-                                  <MapPin size={12} className="flex-shrink-0" />
-                                  <span>{driver.city}</span>
-                                  {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup > 0 && driver.distanceFromPickup !== Infinity && (
-                                    <span className="text-gray-900 font-medium">
-                                      • {driver.distanceFromPickup} km
-                                    </span>
-                                  )}
-                                </p>
-                              )}
-                            </div>
-                            {selectedDriver === entryKey && (
-                              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900 flex-shrink-0" />
-                            )}
-                          </div>
-                          
-                      {/* Informations véhicule */}
-                      {driver.vehicleInfo && (
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-2">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Car size={12} className="text-gray-900 flex-shrink-0" />
-                            <p className="text-xs font-semibold text-gray-900 truncate">
-                              {driver.vehicleInfo.make} {driver.vehicleInfo.model}
-                            </p>
-                            {driver.vehicleInfo.isVip && (
-                              <span className="ml-auto inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold bg-gray-100 text-gray-800">
-                                VIP
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-xs text-gray-700">
-                            <span className="bg-gray-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.color}</span>
-                            <span className="bg-gray-100 px-1.5 py-0.5 rounded">
-                              {driver.vehicleInfo.type === 'sedan' && 'Berline'}
-                              {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
-                              {driver.vehicleInfo.type === 'van' && 'Van'}
-                              {driver.vehicleInfo.type === 'minibus' && 'Minibus'}
-                              {driver.vehicleInfo.type === 'bus' && 'Bus'}
-                              {driver.vehicleInfo.type === 'truck' && 'Camion'}
-                              {driver.vehicleInfo.type === 'utility' && 'Utilitaire'}
-                              {driver.vehicleInfo.type === 'taxi' && 'Taxi'}
-                            </span>
-                            {driver.vehicleInfo.seats && (
-                              <span className="bg-gray-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.seats} places</span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {baseDistance && watchVehicleType && (
-                        <p className="mt-2 text-sm font-bold text-green-700">
-                          ~
-                          {calculatePriceWithSurcharges(
+                    const estimatedDriverPrice =
+                      baseDistance && watchVehicleType
+                        ? calculatePriceWithSurcharges(
                             baseDistance,
                             driver.vehicleInfo?.type || watchVehicleType,
                             watchScheduledTime || new Date(),
                             watchIsReturnTrip || false,
                             driver.vehicleInfo?.isVip ? 2.5 : 1,
-                            driver.distanceFromPickup != null &&
-                              driver.distanceFromPickup !== Infinity
+                            driver.distanceFromPickup != null
+                              && driver.distanceFromPickup !== Infinity
                               ? driver.distanceFromPickup
                               : undefined,
-                          ).finalPrice}{' '}
-                          TND
-                        </p>
-                      )}
-                          
-                          {/* Badge de proximité pour le chauffeur le plus proche */}
-                          {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup !== Infinity && driver.distanceFromPickup > 0 && driver.distanceFromPickup <= 10 && (
-                            <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                              <MapPin size={12} />
-                              Chauffeur proche
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
+                          ).finalPrice
+                        : null;
+
+                    return (
+                      <DriverSearchResultCard
+                        key={entryKey}
+                        driver={driver}
+                        selected={selectedDriver === entryKey}
+                        estimatedPrice={estimatedDriverPrice}
+                        onSelect={() => setSelectedDriver(entryKey)}
+                      />
+                    );
                   })}
                 </div>
               )}
