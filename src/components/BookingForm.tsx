@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
@@ -37,7 +37,12 @@ import {
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { analytics } from '../utils/analytics';
-import { DRIVER_SEARCH_RADIUS_KM, buildDriverDistanceMap, isDriverWithinSearchRadius, sortDriversByProximity } from '../utils/driverSearchDistance';
+import { DRIVER_SEARCH_RADIUS_KM } from '../utils/driverSearchDistance';
+import { MAX_DRIVERS_TO_SHOW } from '../utils/booking/bookingSearchConstants';
+import { enrichDriversWithMetadata } from '../utils/booking/enrichDriverSearchResults';
+import { fetchRefusedDriverIds } from '../utils/booking/fetchRefusedDriverIds';
+import { mapSearchEntryToDriver } from '../utils/booking/mapSearchDriverToClient';
+import { DriverSearchFetchError, searchDriversForBooking } from '../utils/booking/searchDriversForBooking';
 import type { PendingQuote } from '../utils/pendingQuote';
 
 interface BookingFormProps {
@@ -60,6 +65,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   const [showDrivers, setShowDrivers] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isSearchingDrivers, setIsSearchingDrivers] = useState(false);
+  const [driversSearchRefusalsExcluded, setDriversSearchRefusalsExcluded] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [pickupCoords, setPickupCoords] = useState<Coordinates | null>(
     initialQuote?.pickupCoords ?? null,
@@ -179,7 +185,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   const watchVehicleType = watch('vehicleType');
   const watchIsReturnTrip = watch('isReturnTrip');
   const watchScheduledTime = watch('scheduledTime');
-  const selectedDriverData = availableDrivers.find(driver => driver.id === selectedDriver);
+  const getDriverEntryKey = (driver: Driver) => driver.driverVehicleId ?? driver.id;
+  const selectedDriverData = availableDrivers.find(
+    (driver) => getDriverEntryKey(driver) === selectedDriver,
+  );
   const vipMultiplier = selectedDriverData?.vehicleInfo?.isVip ? 2.5 : 1;
   const driverToPickupKm =
     selectedDriverData?.distanceFromPickup != null &&
@@ -368,14 +377,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   };
 
   const searchAvailableDrivers = async () => {
-    console.log('🔍 Début de la recherche des chauffeurs disponibles...');
-
     if (!pickupCoords) {
       setFormError('Veuillez sélectionner une adresse de départ valide depuis les suggestions (autocomplétion).');
       return;
     }
-
-    const searchPickup = pickupCoords;
 
     if (isShortTripBlockedForNonTaxi) {
       setFormError(
@@ -384,496 +389,55 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       return;
     }
 
-    setFormError(null);
-    
-    // Debug: Vérifier l'utilisateur connecté
-    const { data: { user } } = await supabase.auth.getUser();
-    console.log('👤 Utilisateur connecté:', user?.id);
-    console.log('👤 Email utilisateur:', user?.email);
-    
-    if (!user) {
-      console.error('❌ Aucun utilisateur connecté');
-      setFormError('Vous devez être connecté pour rechercher des chauffeurs');
-      return;
-    }
-    
-    // Vérifier si c'est un client
-    const { data: clientData, error: clientError } = await supabase
-      .from('clients')
-      .select('id, first_name, last_name')
-      .eq('id', user.id)
-      .maybeSingle();
-    
-    console.log('🧑‍💼 Données client:', clientData);
-    console.log('🧑‍💼 Erreur client:', clientError);
-    
-    // Vérifier qu'une date est sélectionnée
     const scheduledTime = watch('scheduledTime');
     if (!scheduledTime) {
       setFormError('Veuillez d\'abord sélectionner une date et heure de départ');
       return;
     }
-    
-    const selectedDate = new Date(scheduledTime);
-    const selectedDateString = selectedDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
-    const selectedTimeString = selectedDate.toTimeString().slice(0, 5); // Format HH:MM
-    
-    console.log('📅 Date sélectionnée:', selectedDateString);
-    console.log('🕐 Heure sélectionnée:', selectedTimeString);
-    console.log('📝 Valeur brute scheduledTime:', scheduledTime);
-    console.log('📅 Date complète:', selectedDate);
 
+    const selectedVehicleType = watch('vehicleType');
+    if (!selectedVehicleType) {
+      setFormError('Veuillez sélectionner un type de véhicule');
+      return;
+    }
+
+    setFormError(null);
     setIsSearchingDrivers(true);
     setShowDrivers(false);
     setSelectedDriver(null);
     setAvailableDrivers([]);
-    
+    setDriversSearchRefusalsExcluded(false);
+
     try {
-      // Debug: Vérifier toutes les disponibilités existantes
-      console.log('🔍 Debug: Récupération de TOUTES les disponibilités...');
-      
-      // Test 1: Requête simple sans filtre
-      const { data: allAvailabilities, error: allError } = await supabase
-        .from('driver_availability')
-        .select('*');
-      
-      if (allError) {
-        console.error('❌ Erreur récupération toutes disponibilités:', allError);
-        console.error('❌ Code erreur:', allError.code);
-        console.error('❌ Message:', allError.message);
-        console.error('❌ Détails:', allError.details);
-        console.error('❌ Hint:', allError.hint);
-      } else {
-        console.log('📊 Toutes les disponibilités dans la DB:', allAvailabilities?.length || 0);
-      }
-
-      // Test 2: Vérifier les permissions avec une requête spécifique
-      console.log('🔍 Test permissions sur driver_availability...');
-      const { data: permissionTest, error: permissionError } = await supabase
-        .from('driver_availability')
-        .select('id, driver_id, date, start_time, end_time, is_available')
-        .limit(5);
-      
-      if (permissionError) {
-        console.error('❌ Erreur de permissions:', permissionError);
-        console.error('❌ Code:', permissionError.code);
-        console.error('❌ Message:', permissionError.message);
-        console.error('❌ Détails:', permissionError.details);
-        console.error('❌ Hint:', permissionError.hint);
-        
-        // Vérifier si c'est un problème RLS
-        if (permissionError.code === 'PGRST116' || permissionError.message.includes('row-level security')) {
-          console.error('🚨 PROBLÈME RLS DÉTECTÉ: Le client n\'a pas les permissions pour voir les disponibilités');
-          setFormError('Erreur de permissions : impossible de voir les disponibilités des chauffeurs');
-          return;
-        }
-      } else {
-        console.log('✅ Permissions OK - Disponibilités récupérées:', permissionTest?.length || 0);
-        if (permissionTest && permissionTest.length > 0) {
-          console.log('📋 Exemples de disponibilités:', permissionTest.slice(0, 2));
-        } else {
-          console.log('🔍 Aucune disponibilité trouvée - Vérifions le contenu complet de la table...');
-          
-          // Test avec une requête très large pour voir toutes les données
-          const { data: allData, error: allError } = await supabase
-            .from('driver_availability')
-            .select('*')
-            .limit(10);
-          
-          console.log('📊 Toutes les données de driver_availability (10 premières):', allData);
-          if (allError) {
-            console.error('❌ Erreur récupération toutes données:', allError);
-          }
-          
-          // Test avec différents formats de date
-          const testDates = [
-            selectedDateString, // 2025-09-12
-            selectedDate.toISOString().split('T')[0], // Au cas où
-            selectedDate.toLocaleDateString('en-CA'), // Format YYYY-MM-DD
-            selectedDate.toLocaleDateString('fr-FR').split('/').reverse().join('-') // DD/MM/YYYY -> YYYY-MM-DD
-          ];
-          
-          console.log('🔍 Test avec différents formats de date:', testDates);
-          
-          for (const testDate of testDates) {
-            const { data: testData } = await supabase
-              .from('driver_availability')
-              .select('*')
-              .eq('date', testDate)
-              .limit(5);
-            
-            console.log(`📅 Test date "${testDate}":`, testData?.length || 0, 'résultats');
-            if (testData && testData.length > 0) {
-              console.log('📋 Données trouvées:', testData);
-            }
-          }
-        }
-      }
-      
-      // Test 3: Recherche par date si les permissions sont OK
-      if (!permissionError && permissionTest) {
-        console.log('🔍 Test recherche par date:', selectedDateString);
-        const { data: dateTest, error: dateError } = await supabase
-          .from('driver_availability')
-          .select('*')
-          .eq('date', selectedDateString);
-        
-        console.log('📊 Résultats pour la date:', dateTest?.length || 0);
-        if (dateError) {
-          console.error('❌ Erreur recherche par date:', dateError);
-        }
-      }
-
-      // Si on arrive ici et qu'il n'y a pas de disponibilités, c'est probablement normal
-      if (!permissionError) {
-        console.log('✅ Pas de problème de permissions - Continuons la recherche normale...');
-      }
-
-      // Étape 1: Récupération des disponibilités pour la date sélectionnée
-      console.log('📅 Étape 1: Récupération des disponibilités pour le', selectedDateString);
-      
-      const { data: dateAvailabilities, error: availabilityError } = await supabase
-        .from('driver_availability')
-        .select('driver_id, start_time, end_time, is_available')
-        .eq('date', selectedDateString)
-        .eq('is_available', true);
-      
-      if (availabilityError) {
-        console.error('❌ Erreur lors de la récupération des disponibilités:', availabilityError);
-        console.error('Détails de l\'erreur:', availabilityError);
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
-      
-      console.log('📊 Disponibilités pour cette date:', dateAvailabilities?.length || 0);
-      console.log('📋 Détail des disponibilités pour cette date:', dateAvailabilities);
-      
-      if (!dateAvailabilities || dateAvailabilities.length === 0) {
-        console.warn('⚠️ Aucune disponibilité trouvée pour cette date');
-        console.log('🔍 Vérification: recherche avec date exacte:', selectedDateString);
-        
-        // Test avec une requête plus large pour debug
-        const { data: debugAvailabilities } = await supabase
-          .from('driver_availability')
-          .select('*')
-          .gte('date', selectedDateString)
-          .lte('date', selectedDateString);
-        
-        console.log('🔍 Debug - Requête avec gte/lte:', debugAvailabilities?.length || 0);
-        console.log('🔍 Debug - Données:', debugAvailabilities);
-        
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
-      
-      // Étape 2: Filtrer par heure (vérifier que l'heure demandée est dans les créneaux)
-      console.log('🕐 Étape 2: Filtrage par heure...');
-      const availableDriverIds = new Set();
-      
-      dateAvailabilities.forEach(availability => {
-        const startTime = availability.start_time; // Format HH:MM
-        const endTime = availability.end_time;     // Format HH:MM
-        
-        console.log(`🔍 Chauffeur ${availability.driver_id}: ${startTime} - ${endTime} vs ${selectedTimeString}`);
-        
-        // Vérifier si l'heure demandée est dans le créneau
-        if (selectedTimeString >= startTime && selectedTimeString <= endTime) {
-          availableDriverIds.add(availability.driver_id);
-          console.log(`✅ Chauffeur ${availability.driver_id} disponible à ${selectedTimeString}`);
-        } else {
-          console.log(`❌ Chauffeur ${availability.driver_id} non disponible à ${selectedTimeString}`);
-        }
-      });
-      
-      console.log('👥 Chauffeurs disponibles à cette heure:', availableDriverIds.size);
-      
-      if (availableDriverIds.size === 0) {
-        console.warn('⚠️ Aucun chauffeur disponible à cette heure');
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
-      
-      // Étape 3: Récupérer les données des chauffeurs disponibles
-      console.log('📡 Étape 3: Récupération des données des chauffeurs disponibles...');
-      
-      // Récupérer le type de véhicule sélectionné
-      const selectedVehicleType = watch('vehicleType');
-      console.log('🚗 Type de véhicule sélectionné:', selectedVehicleType);
-      
-      const { data: activeDrivers, error: driversError } = await supabase
-        .from('drivers')
-        .select('id, first_name, last_name, email, phone, city, license_number, vehicle_info, status, profile_photo_url, created_at, updated_at')
-        .eq('status', 'active')
-        .in('id', Array.from(availableDriverIds));
-      
-      if (driversError) {
-        console.error('❌ Erreur lors de la récupération des chauffeurs:', driversError);
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
-      
-      console.log('📊 Chauffeurs actifs récupérés:', activeDrivers?.length || 0);
-      
-      if (!activeDrivers || activeDrivers.length === 0) {
-        console.warn('⚠️ Aucun chauffeur actif trouvé parmi les disponibles');
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
-      
-      // Étape 4: Formater les données des chauffeurs et filtrer par type de véhicule
-      let availableDriversData = activeDrivers.filter(driver => 
-        availableDriverIds.has(driver.id)
-      );
-
-      // Filtrer par type de véhicule si spécifié
-      if (selectedVehicleType) {
-        console.log('🔍 Filtrage par type de véhicule (compat JSON + table vehicles):', selectedVehicleType);
-        
-        // 1) Filtrer via l'ancien JSON vehicle_info si présent
-        const matchViaVehicleInfo = new Set(
-          availableDriversData
-            .filter(driver => driver.vehicle_info && driver.vehicle_info.type === selectedVehicleType)
-            .map(d => d.id)
-        );
-
-        // 2) Rechercher dans la table vehicles pour TOUS les chauffeurs disponibles
-        const allDriverIds = availableDriversData.map(d => d.id);
-        const vehiclesByDriver = new Map();
-        
-        if (allDriverIds.length > 0) {
-          const { data: vehiclesRows, error: vehiclesErr } = await supabase
-            .from('vehicles')
-            .select('driver_id, make, model, year, color, license_plate, seats, type, photo_url, is_vip')
-            .in('driver_id', allDriverIds)
-            .eq('type', selectedVehicleType)
-            .is('deleted_at', null);
-          
-          if (vehiclesErr) {
-            console.warn('⚠️ Erreur lookup vehicles:', vehiclesErr);
-          } else if (vehiclesRows && vehiclesRows.length > 0) {
-            // Stocker le premier véhicule correspondant pour chaque chauffeur
-            vehiclesRows.forEach(v => {
-              if (!vehiclesByDriver.has(v.driver_id)) {
-                vehiclesByDriver.set(v.driver_id, {
-                  make: v.make,
-                  model: v.model,
-                  year: v.year,
-                  color: v.color,
-                  licensePlate: v.license_plate,
-                  seats: v.seats,
-                  type: v.type,
-                  photoUrl: v.photo_url,
-                  isVip: v.is_vip ?? false
-                });
-              }
-              matchViaVehicleInfo.add(v.driver_id);
-            });
-            console.log('✅ Chauffeurs avec véhicule de type', selectedVehicleType, 'dans la table vehicles:', vehiclesRows.length);
-          }
-        }
-
-        // 3) Filtrer pour ne garder que les chauffeurs qui ont au moins un véhicule du type demandé
-        availableDriversData = availableDriversData.filter(d => matchViaVehicleInfo.has(d.id));
-        
-        // 4) Remplacer vehicle_info par le véhicule correspondant si disponible dans la table vehicles
-        availableDriversData = availableDriversData.map(driver => {
-          const matchingVehicle = vehiclesByDriver.get(driver.id);
-          if (matchingVehicle) {
-            // Si on a trouvé un véhicule correspondant dans la table vehicles, l'utiliser
-            return { ...driver, vehicle_info: matchingVehicle };
-          } else if (driver.vehicle_info && driver.vehicle_info.type === selectedVehicleType) {
-            // Sinon, garder le vehicle_info si son type correspond
-            return driver;
-          }
-          return driver;
-        });
-        
-        console.log('📊 Chauffeurs après filtrage par type:', availableDriversData.length);
-      }
-      
-      // Étape 4.5: Vérifier le quota d'abonnement de chaque chauffeur
-      console.log('🔍 Étape 4.5: Vérification des quotas d\'abonnement...');
-      const driversWithValidSubscription = [];
-      const lifetimeByDriver = new Map<string, number>();
-      
-      for (const driver of availableDriversData) {
-        try {
-          const { data: subscriptionData, error: subscriptionError } = await supabase
-            .rpc('get_driver_subscription_status', { p_driver_id: driver.id });
-          
-          if (subscriptionError) {
-            console.warn(`⚠️ Erreur vérification abonnement pour ${driver.id}:`, subscriptionError);
-            continue;
-          }
-          
-          if (subscriptionData && subscriptionData.length > 0) {
-            const status = subscriptionData[0];
-            console.log(`📊 Chauffeur ${driver.first_name} ${driver.last_name}:`, {
-              type: status.subscription_type,
-              courses: status.monthly_accepted_bookings,
-              canAccept: status.can_accept_more_bookings
-            });
-            if (typeof status.lifetime_accepted_bookings === 'number') {
-              lifetimeByDriver.set(driver.id, status.lifetime_accepted_bookings);
-            }
-            
-            // Inclure uniquement si le chauffeur peut accepter plus de courses
-            if (status.can_accept_more_bookings) {
-              driversWithValidSubscription.push(driver);
-              console.log(`✅ Chauffeur ${driver.first_name} ${driver.last_name} peut accepter des courses`);
-            } else {
-              console.log(`❌ Chauffeur ${driver.first_name} ${driver.last_name} a atteint son quota (${status.monthly_accepted_bookings} courses)`);
-            }
-          }
-        } catch (error) {
-          console.error(`❌ Erreur inattendue pour ${driver.id}:`, error);
-        }
-      }
-      
-      console.log('✅ Chauffeurs avec quota valide:', driversWithValidSubscription.length);
-      
-      if (driversWithValidSubscription.length === 0) {
-        console.warn('⚠️ Aucun chauffeur disponible (tous ont atteint leur quota)');
-        setAvailableDrivers([]);
-        setShowDrivers(true);
-        return;
-      }
-
-      const formattedDrivers = driversWithValidSubscription.map(driver => {
-        const legacyVehicleInfo = driver.vehicle_info as any;
-        const normalizedVehicleInfo = legacyVehicleInfo
-          ? {
-              ...legacyVehicleInfo,
-              isVip: legacyVehicleInfo.isVip ?? legacyVehicleInfo.is_vip ?? false
-            }
-          : undefined;
-        return {
-          id: driver.id,
-          firstName: driver.first_name,
-          lastName: driver.last_name,
-          email: driver.email,
-          phone: driver.phone,
-          city: driver.city,
-          licenseNumber: driver.license_number,
-          vehicleInfo: normalizedVehicleInfo,
-          status: driver.status,
-          profilePhotoUrl: driver.profile_photo_url,
-          createdAt: driver.created_at,
-          updatedAt: driver.updated_at,
-          bookingCount: lifetimeByDriver.get(driver.id)
-        };
+      const refusedDriverIds = await fetchRefusedDriverIds(clientId);
+      const { drivers, hasRefusalsExcluded, sortedDriverIds } = await searchDriversForBooking({
+        scheduledTimeIso: scheduledTime,
+        pickupCoords,
+        vehicleType: selectedVehicleType,
+        refusedDriverIds,
       });
 
-      // Étape 5: Filtrer par rayon (50 km) et trier par proximité
-      console.log(`📍 Étape 5: Filtrage rayon ${DRIVER_SEARCH_RADIUS_KM} km et tri par proximité...`);
-      console.log('📍 Coordonnées du point de départ:', searchPickup);
-
-      const distanceMap = await buildDriverDistanceMap(formattedDrivers, searchPickup);
-
-      const driversWithDistance = formattedDrivers
-        .map((driver) => {
-          const info = distanceMap.get(driver.id);
-          if (!info) return null;
-          return {
-            ...driver,
-            distanceFromPickup: info.distanceKm,
-            driverCoords: info.coords,
-            distanceSource: info.source,
-          };
-        })
-        .filter((driver): driver is NonNullable<typeof driver> => driver != null);
-
-      const driversWithinRadius = driversWithDistance.filter((d) =>
-        isDriverWithinSearchRadius(d.distanceFromPickup),
-      );
-
-      console.log(
-        `📍 Rayon ${DRIVER_SEARCH_RADIUS_KM} km: ${driversWithinRadius.length}/${formattedDrivers.length} chauffeurs`,
-      );
-
-      if (driversWithinRadius.length === 0) {
+      if (drivers.length === 0) {
+        setDriversSearchRefusalsExcluded(hasRefusalsExcluded);
         setAvailableDrivers([]);
         setShowDrivers(true);
         return;
       }
 
-      // Récupérer les notes moyennes pour les chauffeurs disponibles
-      try {
-        const driverIds = driversWithinRadius.map(d => d.id);
-          if (driverIds.length > 0) {
-            const { data: ratingRows, error: ratingErr } = await supabase
-              .from('driver_rating_stats')
-              .select('driver_id, average_rating, total_ratings')
-              .in('driver_id', driverIds);
-            if (ratingErr) {
-              console.warn('⚠️ Erreur récupération notes chauffeurs:', ratingErr);
-            }
-            const ratingsByDriver = new Map<string, { average_rating: any; total_ratings: number }>();
-            (ratingRows || []).forEach(r => {
-              ratingsByDriver.set(r.driver_id, {
-                average_rating: r.average_rating,
-                total_ratings: r.total_ratings
-              });
-            });
-            // Attacher les notes aux objets chauffeurs
-            for (let i = 0; i < driversWithinRadius.length; i++) {
-              const d = driversWithinRadius[i];
-              const stats = ratingsByDriver.get(d.id);
-              if (stats) {
-                (d as any).averageRating = typeof stats.average_rating === 'number' ? stats.average_rating : parseFloat(stats.average_rating);
-                (d as any).totalRatings = stats.total_ratings;
-              }
-            }
-            // Fallback: récupérer un nombre approximatif de courses depuis bookings si pas fourni par l'abonnement
-            const driversMissingCount = driversWithinRadius.filter((d: any) => typeof d.bookingCount !== 'number');
-            if (driversMissingCount.length > 0) {
-              const driverIds = driversMissingCount.map(d => d.id);
-              const { data: bookingCounts, error: bookingErr } = await supabase
-                .from('bookings')
-                .select('driver_id')
-                .in('driver_id', driverIds)
-                .in('status', ['accepted','in_progress','completed']);
-              if (bookingErr) {
-                console.warn('⚠️ Erreur récupération compte bookings:', bookingErr);
-              }
-              const countsByDriver = new Map<string, number>();
-              (bookingCounts || []).forEach((row: any) => {
-                const current = countsByDriver.get(row.driver_id) || 0;
-                countsByDriver.set(row.driver_id, current + 1);
-              });
-              for (let i = 0; i < driversWithinRadius.length; i++) {
-                const d = driversWithinRadius[i] as any;
-                if (typeof d.bookingCount !== 'number') {
-                  d.bookingCount = countsByDriver.get(d.id) || 0;
-                }
-              }
-            }
-          }
-      } catch (err) {
-        console.warn('⚠️ Impossible d\'attacher les notes aux chauffeurs:', err);
-      }
+      const mappedDrivers = drivers
+        .slice(0, MAX_DRIVERS_TO_SHOW)
+        .map(mapSearchEntryToDriver);
+      const enrichedDrivers = await enrichDriversWithMetadata(mappedDrivers, sortedDriverIds);
 
-      const sortedDrivers = sortDriversByProximity(driversWithinRadius);
-
-      console.log('📊 Chauffeurs triés par distance:', sortedDrivers.map(d => ({
-        name: `${d.firstName} ${d.lastName}`,
-        city: d.city,
-        distance: `${d.distanceFromPickup} km`,
-        source: (d as { distanceSource?: string }).distanceSource ?? 'geocode',
-      })));
-
-      setAvailableDrivers(sortedDrivers);
+      setAvailableDrivers(enrichedDrivers);
       setShowDrivers(true);
-      console.log('✅ Interface mise à jour avec', sortedDrivers.length, 'chauffeurs dans le rayon');
-      
     } catch (error) {
-      console.error('💥 Erreur inattendue:', error);
-      console.error('Stack trace:', error);
+      console.error('Erreur recherche chauffeurs:', error);
+      setFormError(
+        error instanceof DriverSearchFetchError
+          ? error.userMessage
+          : 'Une erreur est survenue lors de la recherche des chauffeurs',
+      );
       setAvailableDrivers([]);
       setShowDrivers(true);
     } finally {
@@ -898,13 +462,23 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       setFormError('Veuillez sélectionner un chauffeur');
       return;
     }
+
+    const selectedEntry = availableDrivers.find(
+      (driver) => getDriverEntryKey(driver) === selectedDriver,
+    );
+    if (!selectedEntry) {
+      setFormError('Chauffeur sélectionné introuvable, relancez la recherche');
+      return;
+    }
+
     setFormError(null);
     setIsSubmitting(true);
     
     try {
       const bookingData = {
         client_id: clientId,
-        driver_id: selectedDriver,
+        driver_id: selectedEntry.id,
+        vehicle_id: selectedEntry.vehicleId ?? null,
         pickup_address: data.pickupAddress,
         pickup_latitude: pickupCoords.latitude,
         pickup_longitude: pickupCoords.longitude,
@@ -920,7 +494,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       };
 
       console.log('📝 Données de réservation à insérer:', bookingData);
-      console.log('👤 Chauffeur sélectionné ID:', selectedDriver);
+      console.log('👤 Chauffeur sélectionné ID:', selectedEntry.id);
       console.log('🧑‍💼 Client ID:', clientId);
       const { data: booking, error } = await supabase
         .from('bookings')
@@ -965,7 +539,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       const { data: driverData, error: driverError } = await supabase
         .from('drivers')
         .select('first_name, last_name, email, phone, vehicle_info')
-        .eq('id', selectedDriver)
+        .eq('id', selectedEntry.id)
         .single();
 
       if (driverError) {
@@ -1017,7 +591,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
 
       // Envoyer notification push au chauffeur assigné
       try {
-        const driverData = availableDrivers.find(d => d.id === selectedDriver);
+        const driverData = selectedEntry;
         if (driverData) {
           await pushNotificationService.notifyDriverAssigned(
             driverData.firstName + ' ' + driverData.lastName,
@@ -1506,22 +1080,26 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                   <Car className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600 mb-2">Aucun chauffeur disponible</p>
                   <p className="text-sm text-gray-500">
-                    {pickupCoords
-                      ? `Aucun chauffeur trouvé dans un rayon de ${DRIVER_SEARCH_RADIUS_KM} km autour du point de départ. Essayez une autre date/heure ou modifiez l'adresse.`
-                      : 'Essayez de modifier la date/heure ou les adresses'}
+                    {driversSearchRefusalsExcluded
+                      ? `Aucun chauffeur disponible dans un rayon de ${DRIVER_SEARCH_RADIUS_KM} km. Des chauffeurs précédemment sollicités ont refusé et sont temporairement exclus.`
+                      : pickupCoords
+                        ? `Aucun chauffeur trouvé dans un rayon de ${DRIVER_SEARCH_RADIUS_KM} km autour du point de départ. Essayez une autre date/heure ou modifiez l'adresse.`
+                        : 'Essayez de modifier la date/heure ou les adresses'}
                   </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {availableDrivers.map((driver) => (
+                  {availableDrivers.map((driver) => {
+                    const entryKey = getDriverEntryKey(driver);
+                    return (
                     <div
-                      key={driver.id}
+                      key={entryKey}
                       className={`border-2 rounded-lg p-3 sm:p-4 cursor-pointer transition-all ${
-                        selectedDriver === driver.id
+                        selectedDriver === entryKey
                           ? 'border-gray-900 bg-gray-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
-                      onClick={() => setSelectedDriver(driver.id)}
+                      onClick={() => setSelectedDriver(entryKey)}
                     >
                       {/* Photo du véhicule en grand */}
                       {driver.vehicleInfo?.photoUrl && (
@@ -1586,7 +1164,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                                 </p>
                               )}
                             </div>
-                            {selectedDriver === driver.id && (
+                            {selectedDriver === entryKey && (
                               <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900 flex-shrink-0" />
                             )}
                           </div>
@@ -1652,7 +1230,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                         </div>
                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               )}
             </div>

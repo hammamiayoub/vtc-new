@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 
 /** Rayon max de recherche de chauffeurs autour du point de départ (web). */
 export const DRIVER_SEARCH_RADIUS_KM = 50;
+/** Berline : inclure aussi les vans si le chauffeur est dans le rayon de recherche. */
+export const SEDAN_VAN_EXTRA_RADIUS_KM = DRIVER_SEARCH_RADIUS_KM;
 
 /** Position GPS considérée fraîche (driver_locations). */
 export const DRIVER_LOCATION_MAX_AGE_MS = 30 * 60 * 1000;
@@ -167,6 +169,63 @@ export async function buildDriverDistanceMap(
   }
 
   return distanceMap;
+}
+
+export function getDriverDistanceKm(
+  driverId: string,
+  distanceMap: Map<string, DriverDistanceInfo>,
+): number | null {
+  return distanceMap.get(driverId)?.distanceKm ?? null;
+}
+
+/** Affinage routier pour les N chauffeurs les plus proches (tri final). */
+export async function refineTopDriverDistancesWithMatrix<T extends {
+  calculatedDistance?: number;
+  driverCoords?: Coordinates;
+  distanceSource?: string;
+}>(
+  drivers: T[],
+  pickup: Coordinates,
+  maxCount: number,
+): Promise<T[]> {
+  if (drivers.length === 0 || maxCount <= 0) return drivers;
+
+  const top = drivers.slice(0, maxCount);
+  const rest = drivers.slice(maxCount);
+
+  try {
+    const { calculateDrivingDistance } = await import('./geolocation');
+
+    const refinedTop = await Promise.all(
+      top.map(async (driver) => {
+        const coords = driver.driverCoords;
+        if (!coords) return driver;
+
+        const drivingKm = await calculateDrivingDistance(
+          pickup.latitude,
+          pickup.longitude,
+          coords.latitude,
+          coords.longitude,
+        );
+
+        if (drivingKm == null) return driver;
+
+        return {
+          ...driver,
+          calculatedDistance: Math.max(drivingKm, 0.1),
+          distanceSource: 'matrix',
+        };
+      }),
+    );
+
+    refinedTop.sort(
+      (a, b) => (a.calculatedDistance ?? Infinity) - (b.calculatedDistance ?? Infinity),
+    );
+    return [...refinedTop, ...rest];
+  } catch (error) {
+    console.warn('Affinage distance routière ignoré:', error);
+    return drivers;
+  }
 }
 
 export function sortDriversByProximity<T extends { distanceFromPickup?: number }>(drivers: T[]): T[] {

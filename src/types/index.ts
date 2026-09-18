@@ -14,6 +14,10 @@ export interface Driver {
   createdAt: string;
   updatedAt: string;
   distanceFromPickup?: number; // Distance calculée depuis le point de départ
+  /** Clé unique chauffeur + véhicule (aligné app mobile). */
+  driverVehicleId?: string;
+  /** ID du véhicule proposé pour cette entrée de recherche. */
+  vehicleId?: string;
   bookingCount?: number; // Nombre de courses effectuées
   totalEarnings?: number; // Montant total gagné en TND
   // Statistiques détaillées des courses
