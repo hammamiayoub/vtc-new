@@ -23,16 +23,25 @@ import { NotificationPermission, NotificationStatus } from './NotificationPermis
 import { useClientNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { AppDownloadModal } from './AppDownloadModal';
+import {
+  clearPendingQuote,
+  getPendingQuote,
+  type PendingQuote,
+} from '../utils/pendingQuote';
 
 interface ClientDashboardProps {
   onLogout: () => void;
 }
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) => {
+  const initialPendingQuote = getPendingQuote();
   const [client, setClient] = useState<Client | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'new-booking' | 'bookings' | 'confirmation' | 'new-parcel' | 'parcel-requests'>('dashboard');
-  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    'dashboard' | 'new-booking' | 'bookings' | 'confirmation' | 'new-parcel' | 'parcel-requests'
+  >(initialPendingQuote ? 'new-booking' : 'dashboard');
+  const [showBookingForm, setShowBookingForm] = useState(!!initialPendingQuote);
+  const [pendingQuote, setPendingQuote] = useState<PendingQuote | null>(initialPendingQuote);
   const [selectedParcelRequestId, setSelectedParcelRequestId] = useState<string | null>(null);
   const [parcelRefreshKey, setParcelRefreshKey] = useState(0);
   const [confirmationBookingId, setConfirmationBookingId] = useState<string | null>(null);
@@ -169,6 +178,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   };
 
   const handleBookingSuccess = (bookingId: string) => {
+    clearPendingQuote();
+    setPendingQuote(null);
     setShowBookingForm(false);
     setConfirmationBookingId(bookingId);
     setActiveTab('confirmation');
@@ -634,9 +645,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
         {/* Formulaire de réservation */}
         {showBookingForm && client && activeTab !== 'confirmation' && activeTab !== 'new-parcel' && activeTab !== 'parcel-requests' && (
-          <BookingForm 
-            clientId={client.id} 
+          <BookingForm
+            clientId={client.id}
             onBookingSuccess={handleBookingSuccess}
+            initialQuote={pendingQuote}
           />
         )}
 

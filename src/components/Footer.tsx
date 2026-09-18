@@ -1,6 +1,8 @@
 import React from 'react';
-import { Shield, FileText, UserPlus, Car, Mail, MessageCircle, Facebook, Instagram, Package, BookOpen } from 'lucide-react';
+import { Mail, MessageCircle, Facebook, Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { AppStoreBadges } from './AppStoreBadges';
+import { Button } from './ui/Button';
 
 interface FooterProps {
   onPrivacyPolicyClick?: () => void;
@@ -14,8 +16,8 @@ export const Footer: React.FC<FooterProps> = () => {
   return (
     <footer className="bg-black border-t border-gray-800 text-white">
       <div className="page-container py-12">
-        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-8">
-          <div className="lg:col-span-2">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-8">
+          <div className="sm:col-span-2 lg:col-span-2">
             <p className="text-xl font-bold text-white mb-4 tracking-tight">TuniDrive</p>
             <p className="text-sm text-gray-300 mb-4 max-w-md leading-relaxed">
               Mobilité et transport en Tunisie : courses VTC avec chauffeurs professionnels
@@ -83,32 +85,7 @@ export const Footer: React.FC<FooterProps> = () => {
 
           <div>
             <p className={footerHeadingClass}>Application</p>
-            <div className="space-y-3">
-              <a
-                href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block hover:opacity-80 transition-opacity"
-              >
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-                  alt="Disponible sur Google Play"
-                  className="h-10 w-auto"
-                />
-              </a>
-              <a
-                href="https://apps.apple.com/fr/app/tunidrive/id6753982765"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block hover:opacity-80 transition-opacity"
-              >
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
-                  alt="Télécharger sur l'App Store"
-                  className="h-10 w-auto"
-                />
-              </a>
-            </div>
+            <AppStoreBadges layout="column" />
           </div>
 
           <div>
@@ -136,6 +113,18 @@ export const Footer: React.FC<FooterProps> = () => {
               </li>
             </ul>
           </div>
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-gray-800 bg-gray-900/50 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-lg font-semibold text-white mb-1">Prêt à réserver ?</p>
+            <p className="text-sm text-gray-400">Obtenez un tarif en quelques secondes, sans engagement.</p>
+          </div>
+          <Link to="/#reserver" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto rounded-full bg-white text-black hover:bg-gray-200">
+              Réserver une course
+            </Button>
+          </Link>
         </div>
 
         <div className="border-t border-gray-800 mt-10 pt-8">

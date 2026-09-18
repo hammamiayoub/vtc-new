@@ -38,13 +38,19 @@ import {
 import { pushNotificationService } from '../utils/pushNotifications';
 import { analytics } from '../utils/analytics';
 import { DRIVER_SEARCH_RADIUS_KM, buildDriverDistanceMap, isDriverWithinSearchRadius, sortDriversByProximity } from '../utils/driverSearchDistance';
+import type { PendingQuote } from '../utils/pendingQuote';
 
 interface BookingFormProps {
   clientId: string;
   onBookingSuccess: (bookingId: string) => void;
+  initialQuote?: PendingQuote | null;
 }
 
-export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuccess }) => {
+export const BookingForm: React.FC<BookingFormProps> = ({
+  clientId,
+  onBookingSuccess,
+  initialQuote = null,
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableDrivers, setAvailableDrivers] = useState<Driver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
@@ -54,13 +60,21 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
   const [showDrivers, setShowDrivers] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isSearchingDrivers, setIsSearchingDrivers] = useState(false);
-  const [pickupCoords, setPickupCoords] = useState<Coordinates | null>(null);
-  const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [pickupCoords, setPickupCoords] = useState<Coordinates | null>(
+    initialQuote?.pickupCoords ?? null,
+  );
+  const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(
+    initialQuote?.destinationCoords ?? null,
+  );
   const [gettingLocation, setGettingLocation] = useState(false);
   
   // États locaux pour les valeurs des champs d'adresse
-  const [pickupAddressValue, setPickupAddressValue] = useState('');
-  const [destinationAddressValue, setDestinationAddressValue] = useState('');
+  const [pickupAddressValue, setPickupAddressValue] = useState(initialQuote?.pickupAddress ?? '');
+  const [destinationAddressValue, setDestinationAddressValue] = useState(
+    initialQuote?.destinationAddress ?? '',
+  );
+  const [restoredFromQuote, setRestoredFromQuote] = useState(!!initialQuote);
 
   // Gestion de la sélection des lieux
   const handlePickupPlaceSelect = (place: google.maps.places.PlaceResult) => {
@@ -134,8 +148,31 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     formState: { errors, isValid }
   } = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
-    mode: 'onChange'
+    mode: 'onChange',
+    defaultValues: initialQuote
+      ? {
+          pickupAddress: initialQuote.pickupAddress,
+          destinationAddress: initialQuote.destinationAddress,
+          vehicleType: initialQuote.vehicleType ?? 'sedan',
+        }
+      : undefined,
   });
+
+  useEffect(() => {
+    if (!initialQuote) return;
+
+    setPickupAddressValue(initialQuote.pickupAddress);
+    setDestinationAddressValue(initialQuote.destinationAddress);
+    setPickupCoords(initialQuote.pickupCoords ?? null);
+    setDestinationCoords(initialQuote.destinationCoords ?? null);
+    setValue('pickupAddress', initialQuote.pickupAddress, { shouldValidate: true });
+    setValue('destinationAddress', initialQuote.destinationAddress, { shouldValidate: true });
+    setValue('vehicleType', initialQuote.vehicleType ?? 'sedan', { shouldValidate: true });
+    setBaseDistance(initialQuote.distanceKm);
+    setEstimatedDistance(initialQuote.distanceKm);
+    setEstimatedPrice(initialQuote.estimatedPrice);
+    setRestoredFromQuote(true);
+  }, [initialQuote, setValue]);
 
   const watchPickup = watch('pickupAddress');
   const watchDestination = watch('destinationAddress');
@@ -324,7 +361,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       }
     } catch (error) {
       console.error('Erreur lors de la géolocalisation:', error);
-      alert('Impossible d\'obtenir votre position. Veuillez saisir l\'adresse manuellement.');
+      setFormError('Impossible d\'obtenir votre position. Veuillez saisir l\'adresse manuellement.');
     } finally {
       setGettingLocation(false);
     }
@@ -334,18 +371,20 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     console.log('🔍 Début de la recherche des chauffeurs disponibles...');
 
     if (!pickupCoords) {
-      alert('Veuillez sélectionner une adresse de départ valide depuis les suggestions (autocomplétion).');
+      setFormError('Veuillez sélectionner une adresse de départ valide depuis les suggestions (autocomplétion).');
       return;
     }
 
     const searchPickup = pickupCoords;
 
     if (isShortTripBlockedForNonTaxi) {
-      alert(
-        `Pour une distance aller inférieure à ${SHORT_TRIP_NON_TAXI_WARNING_KM} km avec ce type de véhicule, augmentez la distance du trajet ou choisissez le type « Taxi » pour les courses courtes.`
+      setFormError(
+        `Pour une distance aller inférieure à ${SHORT_TRIP_NON_TAXI_WARNING_KM} km avec ce type de véhicule, augmentez la distance du trajet ou choisissez le type « Taxi » pour les courses courtes.`,
       );
       return;
     }
+
+    setFormError(null);
     
     // Debug: Vérifier l'utilisateur connecté
     const { data: { user } } = await supabase.auth.getUser();
@@ -354,7 +393,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     
     if (!user) {
       console.error('❌ Aucun utilisateur connecté');
-      alert('Vous devez être connecté pour rechercher des chauffeurs');
+      setFormError('Vous devez être connecté pour rechercher des chauffeurs');
       return;
     }
     
@@ -371,7 +410,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
     // Vérifier qu'une date est sélectionnée
     const scheduledTime = watch('scheduledTime');
     if (!scheduledTime) {
-      alert('Veuillez d\'abord sélectionner une date et heure de départ');
+      setFormError('Veuillez d\'abord sélectionner une date et heure de départ');
       return;
     }
     
@@ -425,7 +464,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
         // Vérifier si c'est un problème RLS
         if (permissionError.code === 'PGRST116' || permissionError.message.includes('row-level security')) {
           console.error('🚨 PROBLÈME RLS DÉTECTÉ: Le client n\'a pas les permissions pour voir les disponibilités');
-          alert('Erreur de permissions: impossible de voir les disponibilités des chauffeurs');
+          setFormError('Erreur de permissions : impossible de voir les disponibilités des chauffeurs');
           return;
         }
       } else {
@@ -844,21 +883,22 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
   const onSubmit = async (data: BookingFormData) => {
     if (!estimatedDistance || !estimatedPrice || !pickupCoords || !destinationCoords) {
-      alert('Veuillez saisir des adresses valides pour calculer le prix');
+      setFormError('Veuillez saisir des adresses valides pour calculer le prix');
       return;
     }
 
     if (isShortTripBlockedForNonTaxi) {
-      alert(
-        `Pour une distance aller inférieure à ${SHORT_TRIP_NON_TAXI_WARNING_KM} km avec ce type de véhicule, augmentez la distance du trajet ou choisissez le type « Taxi » pour les courses courtes.`
+      setFormError(
+        `Pour une distance aller inférieure à ${SHORT_TRIP_NON_TAXI_WARNING_KM} km avec ce type de véhicule, augmentez la distance du trajet ou choisissez le type « Taxi » pour les courses courtes.`,
       );
       return;
     }
 
     if (!selectedDriver) {
-      alert('Veuillez sélectionner un chauffeur');
+      setFormError('Veuillez sélectionner un chauffeur');
       return;
     }
+    setFormError(null);
     setIsSubmitting(true);
     
     try {
@@ -891,7 +931,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       if (error) {
         console.error('Erreur lors de la création de la réservation:', error);
         console.error('Détails de l\'erreur:', error.message, error.code, error.details);
-        alert('Erreur lors de la création de la réservation');
+        setFormError('Erreur lors de la création de la réservation');
         return;
       }
 
@@ -1009,7 +1049,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
       
     } catch (error) {
       console.error('Erreur lors de la réservation:', error);
-      alert('Une erreur est survenue lors de la réservation');
+      setFormError('Une erreur est survenue lors de la réservation');
     } finally {
       setIsSubmitting(false);
     }
@@ -1036,7 +1076,27 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           <p className="text-sm sm:text-base text-gray-600">
             Renseignez les détails de votre trajet en Tunisie
           </p>
+
+          {restoredFromQuote && initialQuote && (
+            <div className="mt-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start gap-2">
+              <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <p>
+                Votre estimation depuis l&apos;accueil a été reprise (
+                <strong>{initialQuote.distanceKm.toFixed(1)} km</strong>
+                {' · '}
+                <strong>{initialQuote.estimatedPrice.toFixed(2)} TND</strong>
+                ). Choisissez la date et recherchez un chauffeur pour confirmer.
+              </p>
+            </div>
+          )}
         </div>
+
+        {formError && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <p>{formError}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {/* Adresses avec géolocalisation */}
@@ -1049,7 +1109,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   type="button"
                   onClick={useCurrentLocation}
                   disabled={gettingLocation}
-                  className="absolute ml-2 margin-right-10 text-blue-600 hover:text-blue-700 disabled:opacity-50 z-10  bg-transparent"
+                  className="absolute ml-2 margin-right-10 text-gray-900 hover:text-gray-700 disabled:opacity-50 z-10  bg-transparent"
                   title="Utiliser ma position actuelle"
                 >
                   {gettingLocation ? (
@@ -1113,7 +1173,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             </label>
             <select
               {...register('vehicleType')}
-              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all appearance-none ${
+              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all appearance-none ${
                 errors.vehicleType ? 'border-red-500' : 'border-gray-300'
               }`}
             >
@@ -1139,7 +1199,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   setValue('scheduledTime', '', { shouldValidate: true });
                 }
               }}
-              className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+              className="w-5 h-5 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
             />
             Départ immédiat
           </label>
@@ -1153,7 +1213,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               type="datetime-local"
               min={getMinDateTime()}
               disabled={isImmediateDeparture}
-              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                 errors.scheduledTime ? 'border-red-500' : 'border-gray-300'
               }`}
             />
@@ -1168,7 +1228,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               <input
                 {...register('isReturnTrip')}
                 type="checkbox"
-                className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                className="w-5 h-5 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
               />
               <div>
                 <span className="text-sm font-medium text-gray-700">
@@ -1183,14 +1243,14 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
 
           {/* Calcul en cours */}
           {isCalculating && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <Loader2 size={24} className="text-blue-600 animate-spin" />
+                <Loader2 size={24} className="text-gray-900 animate-spin" />
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-blue-900">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                     Calcul du trajet en cours...
                   </h3>
-                  <p className="text-sm sm:text-base text-blue-700">
+                  <p className="text-sm sm:text-base text-gray-600">
                     Géolocalisation des adresses et calcul de la distance
                   </p>
                 </div>
@@ -1198,22 +1258,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
             </div>
           )}
 
-          {/* Debug: Affichage des valeurs */}
-          {console.log('🔍 Debug section calcul:', {
-            estimatedDistance,
-            estimatedPrice,
-            isCalculating,
-            pickupCoords,
-            destinationCoords,
-            watchVehicleType
-          })}
-
           {/* Estimation de prix */}
           {estimatedDistance && estimatedPrice && !isCalculating && (
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <Route className="w-6 h-6 text-purple-600" />
-                <h3 className="text-base sm:text-lg font-semibold text-purple-900">
+                <Route className="w-6 h-6 text-gray-900" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                   Estimation du trajet
                   {watchIsReturnTrip && (
                     <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
@@ -1223,7 +1273,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                 </h3>
               </div>
               {vipMultiplier > 1 && (
-                <div className="mb-4 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-800">
+                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                   Ce véhicule est marqué <strong>VIP</strong> : le prix est plus élevé qu’un véhicule classique.
                 </div>
               )}
@@ -1237,8 +1287,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg p-4 text-center">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Route size={24} className="text-blue-600" />
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Route size={24} className="text-gray-900" />
                   </div>
                   <p className="text-sm text-gray-600 mb-1">
                     Distance {watchIsReturnTrip && '(aller-retour)'}
@@ -1248,13 +1298,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-4 text-center">
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Calculator size={24} className="text-purple-600" />
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Calculator size={24} className="text-gray-900" />
                   </div>
                   <p className="text-sm text-gray-600 mb-1">
                     Prix total {watchIsReturnTrip && '(avec retour)'}
                   </p>
-                  <p className="text-xl sm:text-2xl font-bold text-purple-600">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     {estimatedPrice} TND
                   </p>
                 </div>
@@ -1328,13 +1378,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                               </div>
                             )}
                             {vehicleMultiplier > 1 && (
-                              <div className="flex items-center justify-between text-blue-600 font-semibold">
+                              <div className="flex items-center justify-between text-gray-900 font-semibold">
                                 <span>Multiplicateur ({vehicleTypeName})</span>
                                 <span className="tabular-nums">×{vehicleMultiplier}</span>
                               </div>
                             )}
                             {vipMultiplier > 1 && (
-                              <div className="flex items-center justify-between text-purple-700 font-semibold">
+                              <div className="flex items-center justify-between text-gray-900 font-semibold">
                                 <span>VIP</span>
                                 <span className="tabular-nums">×{vipMultiplier}</span>
                               </div>
@@ -1406,21 +1456,21 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               onClick={searchAvailableDrivers}
               loading={isSearchingDrivers}
               disabled={!isValid || !estimatedPrice || !pickupCoords || isShortTripBlockedForNonTaxi || isSearchingDrivers}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-full font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {!isSearchingDrivers && <User className="w-5 h-5 mr-2" />}
               {isSearchingDrivers ? 'Recherche des chauffeurs en cours…' : 'Rechercher des chauffeurs disponibles'}
             </Button>
 
             {isSearchingDrivers && (
-              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-6">
+              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                  <Loader2 size={24} className="text-blue-600 animate-spin flex-shrink-0" />
+                  <Loader2 size={24} className="text-gray-900 animate-spin flex-shrink-0" />
                   <div>
-                    <h3 className="text-base sm:text-lg font-semibold text-blue-900">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                       Recherche des chauffeurs disponibles
                     </h3>
-                    <p className="text-sm sm:text-base text-blue-700">
+                    <p className="text-sm sm:text-base text-gray-600">
                       Vérification des disponibilités, abonnements et distances dans un rayon de {DRIVER_SEARCH_RADIUS_KM} km…
                     </p>
                   </div>
@@ -1468,7 +1518,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                       key={driver.id}
                       className={`border-2 rounded-lg p-3 sm:p-4 cursor-pointer transition-all ${
                         selectedDriver === driver.id
-                          ? 'border-purple-500 bg-purple-50'
+                          ? 'border-gray-900 bg-gray-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => setSelectedDriver(driver.id)}
@@ -1519,7 +1569,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                                     : 'Nouveau'}
                                 </span>
                                 {typeof driver.bookingCount === 'number' && driver.bookingCount > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[9px] sm:text-[10px] font-semibold flex-shrink-0">
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-800 text-[9px] sm:text-[10px] font-semibold flex-shrink-0">
                                     ~{Math.max(1, Math.round(driver.bookingCount / 5) * 5)} courses
                                   </span>
                                 )}
@@ -1529,7 +1579,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                                   <MapPin size={12} className="flex-shrink-0" />
                                   <span>{driver.city}</span>
                                   {typeof driver.distanceFromPickup === 'number' && driver.distanceFromPickup > 0 && driver.distanceFromPickup !== Infinity && (
-                                    <span className="text-blue-600 font-medium">
+                                    <span className="text-gray-900 font-medium">
                                       • {driver.distanceFromPickup} km
                                     </span>
                                   )}
@@ -1537,27 +1587,27 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                               )}
                             </div>
                             {selectedDriver === driver.id && (
-                              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 flex-shrink-0" />
+                              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900 flex-shrink-0" />
                             )}
                           </div>
                           
                       {/* Informations véhicule */}
                       {driver.vehicleInfo && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-2">
                           <div className="flex items-center gap-2 mb-1">
-                            <Car size={12} className="text-blue-600 flex-shrink-0" />
-                            <p className="text-xs font-semibold text-blue-900 truncate">
+                            <Car size={12} className="text-gray-900 flex-shrink-0" />
+                            <p className="text-xs font-semibold text-gray-900 truncate">
                               {driver.vehicleInfo.make} {driver.vehicleInfo.model}
                             </p>
                             {driver.vehicleInfo.isVip && (
-                              <span className="ml-auto inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold bg-purple-100 text-purple-700">
+                              <span className="ml-auto inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold bg-gray-100 text-gray-800">
                                 VIP
                               </span>
                             )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-xs text-blue-700">
-                            <span className="bg-blue-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.color}</span>
-                            <span className="bg-blue-100 px-1.5 py-0.5 rounded">
+                          <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-xs text-gray-700">
+                            <span className="bg-gray-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.color}</span>
+                            <span className="bg-gray-100 px-1.5 py-0.5 rounded">
                               {driver.vehicleInfo.type === 'sedan' && 'Berline'}
                               {driver.vehicleInfo.type === 'pickup' && 'Pickup'}
                               {driver.vehicleInfo.type === 'van' && 'Van'}
@@ -1568,7 +1618,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
                               {driver.vehicleInfo.type === 'taxi' && 'Taxi'}
                             </span>
                             {driver.vehicleInfo.seats && (
-                              <span className="bg-blue-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.seats} places</span>
+                              <span className="bg-gray-100 px-1.5 py-0.5 rounded">{driver.vehicleInfo.seats} places</span>
                             )}
                           </div>
                         </div>
@@ -1618,7 +1668,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
               {...register('notes')}
               rows={3}
               placeholder="Instructions spéciales, numéro de vol, etc."
-              className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
             />
           </div>
 
@@ -1626,7 +1676,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ clientId, onBookingSuc
           <Button
             type="submit"
             disabled={isSubmitting || !selectedDriver || !estimatedPrice || isShortTripBlockedForNonTaxi}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-4 px-6 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-black hover:bg-gray-800 text-white py-4 px-6 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>

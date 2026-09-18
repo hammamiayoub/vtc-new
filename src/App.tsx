@@ -338,6 +338,7 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
             onGetStarted={() => navigate('/signup')}
             onClientLogin={() => navigate('/client-login')}
             onClientSignup={() => navigate('/client-signup')}
+            onDriverLogin={() => navigate('/driver-login')}
           />
         );
     }

@@ -166,7 +166,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Votre adresse email"
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all"
                     required
                   />
                 </div>
@@ -180,7 +180,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <Button
                   type="submit"
                   loading={isSubmitting}
-                  className="w-full py-3 bg-purple-600 hover:bg-purple-700"
+                  className="w-full py-3"
                 >
                   {isSubmitting ? (
                     <>
