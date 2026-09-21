@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Users, 
   Car, 
@@ -19,18 +19,34 @@ import {
   Package,
   CalendarPlus,
   MoreHorizontal,
+  Search,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import {
   formatVehicleType,
-  listVehicles,
-  normalizeLegacyVehicleInfo,
   updateVehicle,
-  vehicleToVehicleInfo,
 } from '../utils/vehicles';
 import { Driver, ClientWithBookings, Vehicle, DriverAvailability } from '../types';
+import {
+  aggregateParcelStats,
+  assembleAdminClients,
+  assembleAdminDrivers,
+  assembleAdminVehicles,
+  fetchAdminBookingRows,
+  fetchAdminBookingStats,
+  fetchAdminClientRows,
+  fetchAdminDriverRows,
+  fetchAdminParcelStatuses,
+  fetchAdminSubscriptionRows,
+  fetchAdminVehicleRows,
+  fetchClientBookingHistory,
+  fetchUpcomingAvailabilities,
+  mapClientHistoryBookings,
+  type AdminSubscriptionRow,
+  type BookingTotals,
+} from '../utils/adminDashboardData';
 import {
   driverActivityBadgeClasses,
   driverActivityLabel,
@@ -59,6 +75,8 @@ interface AdminDriver extends Driver {
 interface AdminDashboardProps {
   onLogout: () => void;
 }
+
+type AdminTabId = 'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings' | 'parcels';
 
 interface VehicleWithDriver extends Vehicle {
   driver?: {
@@ -154,6 +172,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [vehiclesFetchError, setVehiclesFetchError] = useState<string | null>(null);
   const [subscriptions, setSubscriptions] = useState<DriverSubscription[]>([]);
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingsLoaded, setBookingsLoaded] = useState(false);
+  const [bookingTotals, setBookingTotals] = useState<BookingTotals>({
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    completed: 0,
+    revenue: 0,
+  });
+  const [clientBookingsLoading, setClientBookingsLoading] = useState(false);
+  const refreshInFlight = useRef(false);
+  const bookingsInFlight = useRef(false);
   const [loading, setLoading] = useState(true);
   const [selectedDriver, setSelectedDriver] = useState<AdminDriver | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientWithBookings | null>(null);
@@ -215,9 +245,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [loadingAvailabilities, setLoadingAvailabilities] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings' | 'parcels'>('drivers');
+  const [activeTab, setActiveTab] = useState<AdminTabId>('drivers');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [driverSearch, setDriverSearch] = useState('');
+  const [driverStatusFilter, setDriverStatusFilter] = useState<'all' | 'pending' | 'active' | 'rejected'>('all');
+  const [bookingSearch, setBookingSearch] = useState('');
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<'all' | 'ongoing' | AdminBooking['status']>('all');
+  const [statusConfirm, setStatusConfirm] = useState<{ driver: AdminDriver; newStatus: string } | null>(null);
+  const [parcelRefreshKey, setParcelRefreshKey] = useState(0);
+  const [parcelStats, setParcelStats] = useState({
+    total: 0,
+    pending: 0,
+    quoted: 0,
+    accepted: 0,
+  });
 
   // Vérifier l'authentification admin
   useEffect(() => {
@@ -234,7 +276,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         // Vérifier si l'utilisateur est admin
         const { data: adminData } = await supabase
           .from('admin_users')
-          .select('*')
+          .select('id')
           .eq('id', session.user.id)
           .limit(1);
         
@@ -258,19 +300,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   useEffect(() => {
     if (!isAuthenticated) return;
     
-    fetchDrivers();
-    fetchClients();
-    fetchVehicles();
-    fetchSubscriptions();
-    fetchBookings();
+    refreshAllData();
     
     const refreshAll = () => {
       if (document.visibilityState !== 'visible') return;
-      fetchDrivers();
-      fetchClients();
-      fetchVehicles();
-      fetchSubscriptions();
-      fetchBookings();
+      refreshAllData();
     };
 
     const interval = window.setInterval(refreshAll, 60000);
@@ -303,426 +337,64 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   }, [selectedSubscription]);
 
-  const fetchDrivers = async () => {
-    if (!loading) setRefreshing(true);
-    
-    try {
-      console.log('🔍 Admin - Récupération des chauffeurs...');
-      
-      // Vérifier l'utilisateur connecté
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('👤 Admin - Utilisateur connecté:', user?.id);
-      
-      if (!user) {
-        console.error('Aucun utilisateur connecté');
-        return;
-      }
-      
-      // Vérifier les permissions admin
-      const { data: adminData } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      console.log('🛡️ Admin - Permissions vérifiées:', !!adminData);
-      
-      const { data, error } = await supabase
-        .from('drivers')
-        .select('*')
-        .neq('status', 'deleted') // Exclure les comptes supprimés
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Erreur lors de la récupération des chauffeurs:', error);
-        console.error('Détails de l\'erreur:', error.message, error.code, error.details);
-        return;
-      }
-
-      console.log('📊 Admin - Chauffeurs récupérés:', data?.length || 0);
-      console.log('📋 Admin - Statuts des chauffeurs:', data?.map(d => ({ 
-        name: `${d.first_name} ${d.last_name}`, 
-        status: d.status 
-      })));
-
-      // Récupérer les statistiques détaillées des courses pour chaque chauffeur
-      const driversWithStats = await Promise.all(
-        data.map(async (driver) => {
-          // Récupérer toutes les courses du chauffeur avec leurs statuts
-          const { data: allBookings, error: allBookingsError } = await supabase
-            .from('bookings')
-            .select('status, price_tnd')
-            .eq('driver_id', driver.id);
-
-          if (allBookingsError) {
-            console.error(`Erreur récupération courses pour ${driver.first_name} ${driver.last_name}:`, allBookingsError);
-          }
-
-          // Priorité à la table vehicles (vehicle_info legacy vaut souvent {} par défaut)
-          let driverVehicles: Vehicle[] = [];
-          try {
-            driverVehicles = await listVehicles(driver.id);
-          } catch (vehiclesError) {
-            console.error(`Erreur récupération véhicules pour ${driver.first_name} ${driver.last_name}:`, vehiclesError);
-          }
-
-          const primaryVehicle =
-            driverVehicles.find((vehicle) => vehicle.is_primary) ?? driverVehicles[0];
-          const vehicleInfo = primaryVehicle
-            ? vehicleToVehicleInfo(primaryVehicle)
-            : normalizeLegacyVehicleInfo(driver.vehicle_info);
-
-          // Calculer les statistiques détaillées
-          const stats = {
-            completedBookings: 0,
-            cancelledByDriver: 0,
-            cancelledByClient: 0,
-            pendingBookings: 0,
-            inProgressBookings: 0,
-            totalEarnings: 0
-          };
-
-          if (allBookings) {
-            allBookings.forEach((booking: { status: string; price_tnd?: number }) => {
-              switch (booking.status) {
-                case 'completed':
-                  stats.completedBookings++;
-                  stats.totalEarnings += booking.price_tnd || 0;
-                  break;
-                case 'cancelled':
-                  // Pour déterminer qui a annulé, on pourrait ajouter un champ cancelled_by
-                  // Pour l'instant, on considère toutes les annulations comme "par le client"
-                  stats.cancelledByClient++;
-                  break;
-                case 'pending':
-                  stats.pendingBookings++;
-                  break;
-                case 'in_progress':
-                  stats.inProgressBookings++;
-                  break;
-                case 'accepted':
-                  // Les courses acceptées sont comptées dans inProgressBookings
-                  stats.inProgressBookings++;
-                  break;
-              }
-            });
-          }
-
-          // Calculer le nombre total de courses (toutes sauf pending)
-          const totalBookings = stats.completedBookings + stats.cancelledByDriver + stats.cancelledByClient + stats.inProgressBookings;
-
-          return {
-            ...driver,
-            vehicle_info: vehicleInfo,
-            driverVehicles,
-            bookingCount: totalBookings,
-            totalEarnings: stats.totalEarnings,
-            completedBookings: stats.completedBookings,
-            cancelledByDriver: stats.cancelledByDriver,
-            cancelledByClient: stats.cancelledByClient,
-            pendingBookings: stats.pendingBookings,
-            inProgressBookings: stats.inProgressBookings
-          };
-        })
-      );
-
-      console.log('📊 Admin - Statistiques détaillées par chauffeur:', driversWithStats.map(d => ({ 
-        name: `${d.first_name} ${d.last_name}`, 
-        bookingCount: d.bookingCount,
-        totalEarnings: d.totalEarnings,
-        completed: d.completedBookings,
-        cancelledByDriver: d.cancelledByDriver,
-        cancelledByClient: d.cancelledByClient,
-        pending: d.pendingBookings,
-        inProgress: d.inProgressBookings
-      })));
-
-      const formattedDrivers = driversWithStats.map(driver => ({
-        id: driver.id,
-        firstName: driver.first_name,
-        lastName: driver.last_name,
-        email: driver.email,
-        phone: driver.phone,
-        city: driver.city,
-        licenseNumber: driver.license_number,
-        vehicleInfo: driver.vehicle_info,
-        vehicles: driver.driverVehicles,
-        status: driver.status,
-        driverType: (driver.driver_type as Driver['driverType']) || 'vtc',
-        profilePhotoUrl: driver.profile_photo_url,
-        createdAt: driver.created_at,
-        updatedAt: driver.updated_at,
-        bookingCount: driver.bookingCount,
-        totalEarnings: driver.totalEarnings,
-        completedBookings: driver.completedBookings,
-        cancelledByDriver: driver.cancelledByDriver,
-        cancelledByClient: driver.cancelledByClient,
-        pendingBookings: driver.pendingBookings,
-        inProgressBookings: driver.inProgressBookings
-      }));
-
-      setDrivers(formattedDrivers);
-    } catch (error) {
-      console.error('Erreur:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  const availabilityWindow = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 30);
+    return { today, future: futureDate.toISOString().split('T')[0] };
   };
 
-  const fetchClients = async () => {
-    try {
-      console.log('🔍 Admin - Récupération des clients...');
-      
-      // Récupérer tous les clients
-      const { data: clientsData, error: clientsError } = await supabase
-        .from('clients')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (clientsError) {
-        console.error('Erreur lors de la récupération des clients:', clientsError);
-        return;
-      }
-
-      console.log('📊 Admin - Clients récupérés:', clientsData?.length || 0);
-
-      // Pour chaque client, récupérer ses courses avec les détails
-      const clientsWithBookings = await Promise.all(
-        clientsData.map(async (client) => {
-          // Récupérer toutes les courses du client
-          const { data: bookingsData, error: bookingsError } = await supabase
-            .from('bookings')
-            .select(`
-              *,
-              drivers (
-                first_name,
-                last_name,
-                phone
-              )
-            `)
-            .eq('client_id', client.id)
-            .order('created_at', { ascending: false });
-
-          if (bookingsError) {
-            console.error(`Erreur récupération courses pour ${client.first_name} ${client.last_name}:`, bookingsError);
-          }
-
-          // Calculer les statistiques
-          const stats = {
-            totalBookings: 0,
-            completedBookings: 0,
-            cancelledBookings: 0,
-            pendingBookings: 0,
-            totalSpent: 0
-          };
-
-          if (bookingsData) {
-            stats.totalBookings = bookingsData.length;
-            
-            bookingsData.forEach((booking: { status: string; price_tnd?: number }) => {
-              switch (booking.status) {
-                case 'completed':
-                  stats.completedBookings++;
-                  stats.totalSpent += booking.price_tnd || 0;
-                  break;
-                case 'cancelled':
-                  stats.cancelledBookings++;
-                  break;
-                case 'pending':
-                  stats.pendingBookings++;
-                  break;
-                case 'accepted':
-                case 'in_progress':
-                  // Ces statuts ne sont pas comptés dans les statistiques finales
-                  break;
-              }
-            });
-          }
-
-          return {
-            id: client.id,
-            firstName: client.first_name,
-            lastName: client.last_name,
-            email: client.email,
-            phone: client.phone,
-            city: client.city,
-            status: client.status,
-            profilePhotoUrl: client.profile_photo_url,
-            createdAt: client.created_at,
-            updatedAt: client.updated_at,
-            bookings: bookingsData || [],
-            totalBookings: stats.totalBookings,
-            completedBookings: stats.completedBookings,
-            cancelledBookings: stats.cancelledBookings,
-            pendingBookings: stats.pendingBookings,
-            totalSpent: stats.totalSpent
-          };
-        })
-      );
-
-      console.log('📊 Admin - Clients avec statistiques:', clientsWithBookings.map(c => ({
-        name: `${c.firstName} ${c.lastName}`,
-        totalBookings: c.totalBookings,
-        completedBookings: c.completedBookings,
-        cancelledBookings: c.cancelledBookings,
-        totalSpent: c.totalSpent
-      })));
-
-      setClients(clientsWithBookings);
-    } catch (error) {
-      console.error('Erreur lors de la récupération des clients:', error);
-    }
-  };
-
-  const fetchVehicles = async () => {
-    if (!loading) setRefreshing(true);
+  const loadCoreLists = async () => {
     setVehiclesFetchError(null);
+    const { today, future } = availabilityWindow();
+    const [driverRows, clientRows, vehicleRows, stats, availabilityRows] = await Promise.all([
+      fetchAdminDriverRows().catch((error) => {
+        console.error('Erreur chauffeurs:', error);
+        return [];
+      }),
+      fetchAdminClientRows().catch((error) => {
+        console.error('Erreur clients:', error);
+        return [];
+      }),
+      fetchAdminVehicleRows().catch((error) => {
+        console.error('Erreur véhicules:', error);
+        setVehiclesFetchError(error instanceof Error ? error.message : 'Erreur inconnue');
+        return [];
+      }),
+      fetchAdminBookingStats().catch((error) => {
+        console.error('Erreur stats courses:', error);
+        return {
+          byDriver: new Map(),
+          byClient: new Map(),
+          totals: { total: 0, pending: 0, inProgress: 0, completed: 0, revenue: 0 },
+        };
+      }),
+      fetchUpcomingAvailabilities(today, future).catch((error) => {
+        console.error('Erreur disponibilités:', error);
+        return [];
+      }),
+    ]);
 
+    setBookingTotals(stats.totals);
+    setDrivers(assembleAdminDrivers(driverRows, vehicleRows, stats));
+    setClients(assembleAdminClients(clientRows, stats));
+    setVehicles(assembleAdminVehicles<VehicleWithDriver>(vehicleRows, driverRows, availabilityRows));
+  };
+
+  const fetchDrivers = async () => {
     try {
-      console.log('🔍 Admin - Récupération des véhicules...');
-
-      const { data: vehiclesData, error: vehiclesError } = await supabase
-        .from('vehicles')
-        .select('*')
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (vehiclesError) {
-        console.error('Erreur lors de la récupération des véhicules:', vehiclesError);
-        setVehiclesFetchError(vehiclesError.message);
-        return;
-      }
-
-      console.log('📊 Admin - Véhicules récupérés:', vehiclesData?.length || 0);
-
-      const driverIds = [
-        ...new Set((vehiclesData || []).map((vehicle) => vehicle.driver_id).filter(Boolean)),
-      ];
-
-      const driverMap = new Map<
-        string,
-        {
-          id: string;
-          first_name: string;
-          last_name: string;
-          email: string;
-          phone?: string;
-          city?: string;
-          status: string;
-          driver_type?: string;
-        }
-      >();
-
-      if (driverIds.length > 0) {
-        const { data: driversData, error: driversError } = await supabase
-          .from('drivers')
-          .select('id, first_name, last_name, email, phone, city, status, driver_type')
-          .in('id', driverIds);
-
-        if (driversError) {
-          console.error('Erreur récupération chauffeurs pour véhicules:', driversError);
-          setVehiclesFetchError(
-            `Véhicules chargés, mais les chauffeurs associés n'ont pas pu être récupérés : ${driversError.message}`
-          );
-        } else {
-          (driversData || []).forEach((driver) => {
-            driverMap.set(driver.id, driver);
-          });
-        }
-      }
-
-      const vehiclesWithAvailability = await Promise.all(
-        (vehiclesData || []).map(async (vehicle) => {
-          const today = new Date().toISOString().split('T')[0];
-          const futureDate = new Date();
-          futureDate.setDate(futureDate.getDate() + 30);
-          const future = futureDate.toISOString().split('T')[0];
-
-          const { data: availData, error: availError } = await supabase
-            .from('driver_availability')
-            .select('*')
-            .eq('driver_id', vehicle.driver_id)
-            .eq('is_available', true)
-            .gte('date', today)
-            .lte('date', future)
-            .order('date', { ascending: true })
-            .limit(5);
-
-          if (availError) {
-            console.error(`Erreur récupération disponibilités pour véhicule ${vehicle.id}:`, availError);
-          }
-
-          const { count: availCount } = await supabase
-            .from('driver_availability')
-            .select('*', { count: 'exact', head: true })
-            .eq('driver_id', vehicle.driver_id)
-            .eq('is_available', true)
-            .gte('date', today);
-
-          const driverRow = driverMap.get(vehicle.driver_id);
-
-          return {
-            id: vehicle.id,
-            driverId: vehicle.driver_id,
-            make: vehicle.make,
-            model: vehicle.model,
-            year: vehicle.year ?? undefined,
-            color: vehicle.color ?? undefined,
-            licensePlate: vehicle.license_plate ?? undefined,
-            seats: vehicle.seats ?? undefined,
-            type: vehicle.type as Vehicle['type'],
-            photoUrl: vehicle.photo_url ?? undefined,
-            isVip: vehicle.is_vip ?? false,
-            is_primary: vehicle.is_primary ?? undefined,
-            createdAt: vehicle.created_at,
-            updatedAt: vehicle.updated_at,
-            driver: driverRow
-              ? {
-                  firstName: driverRow.first_name,
-                  lastName: driverRow.last_name,
-                  email: driverRow.email,
-                  phone: driverRow.phone,
-                  city: driverRow.city,
-                  status: driverRow.status,
-                  driverType: (driverRow.driver_type as Driver['driverType']) || 'vtc',
-                }
-              : undefined,
-            upcomingAvailabilities:
-              availData?.map((a) => ({
-                id: a.id,
-                driverId: a.driver_id,
-                date: a.date,
-                startTime: a.start_time,
-                endTime: a.end_time,
-                isAvailable: a.is_available,
-                createdAt: a.created_at,
-                updatedAt: a.updated_at,
-              })) || [],
-            availabilityCount: availCount || 0,
-          };
-        })
-      );
-
-      const sortedVehicles = vehiclesWithAvailability.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
-      console.log(
-        '📊 Admin - Véhicules triés:',
-        sortedVehicles.length,
-        'dont',
-        sortedVehicles.filter((v) => v.is_primary).length,
-        'principaux'
-      );
-
-      setVehicles(sortedVehicles);
+      const { today, future } = availabilityWindow();
+      const [driverRows, vehicleRows, stats, availabilityRows] = await Promise.all([
+        fetchAdminDriverRows(),
+        fetchAdminVehicleRows(),
+        fetchAdminBookingStats(),
+        fetchUpcomingAvailabilities(today, future),
+      ]);
+      setBookingTotals(stats.totals);
+      setDrivers(assembleAdminDrivers(driverRows, vehicleRows, stats));
+      setVehicles(assembleAdminVehicles<VehicleWithDriver>(vehicleRows, driverRows, availabilityRows));
     } catch (error) {
-      console.error('Erreur:', error);
-      setVehiclesFetchError(error instanceof Error ? error.message : 'Erreur inconnue');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      console.error('Erreur lors de la récupération des chauffeurs:', error);
     }
   };
 
@@ -992,8 +664,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
           if (availError) {
             console.error('⚠️ Erreur lors de la libération du créneau de disponibilité:', availError);
-          } else {
-            console.log('✅ Créneau de disponibilité libéré pour le chauffeur', bookingToCancel.driverId);
           }
         } catch (availException) {
           console.error('⚠️ Exception lors de la libération du créneau:', availException);
@@ -1041,9 +711,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           });
 
           const emailResult = await emailResponse.json().catch(() => null);
-          if (emailResponse.ok && emailResult?.success) {
-            console.log("✅ Emails d'annulation envoyés:", emailResult.message);
-          } else {
+          if (!emailResponse.ok || !emailResult?.success) {
             console.error("❌ Erreur envoi emails d'annulation:", emailResult?.error || emailResponse.statusText);
           }
         } else {
@@ -1088,8 +756,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
 
     try {
-      console.log(`📧 Envoi email abonnement (${payload.type}) au chauffeur:`, payload.driver.email);
-
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-driver-subscription-email`, {
         method: 'POST',
         headers: {
@@ -1124,8 +790,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         const errorData = await response.json().catch(() => null);
         console.error('❌ Erreur envoi email abonnement:', errorData?.error || response.statusText);
       } else {
-        const result = await response.json();
-        console.log('✅ Email abonnement envoyé:', result);
+        await response.json();
       }
     } catch (emailError) {
       console.error('❌ Erreur envoi email abonnement:', emailError);
@@ -1318,199 +983,175 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const fetchSubscriptions = async () => {
-    if (!loading) setRefreshing(true);
-    
-    try {
-      console.log('🔍 Admin - Récupération des abonnements...');
-      
-      // Récupérer tous les abonnements avec les informations du chauffeur
-      const { data: subscriptionsData, error: subscriptionsError } = await supabase
-        .from('driver_subscriptions')
-        .select(`
-          *,
-          drivers (
-            id,
-            first_name,
-            last_name,
-            email,
-            phone,
-            city,
-            lifetime_accepted_bookings
-          )
-        `)
-        .order('created_at', { ascending: false });
+  const formatSubscriptionRow = (sub: AdminSubscriptionRow): DriverSubscription => {
+    const endDate = new Date(sub.end_date);
+    const today = new Date();
+    const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-      if (subscriptionsError) {
-        console.error('Erreur lors de la récupération des abonnements:', subscriptionsError);
-        return;
-      }
+    let expirationStatus = '';
+    if (daysRemaining < 0) {
+      expirationStatus = 'Expiré';
+    } else if (daysRemaining === 0) {
+      expirationStatus = "Expire aujourd'hui";
+    } else if (daysRemaining <= 1) {
+      expirationStatus = 'Expire demain';
+    } else if (daysRemaining <= 7) {
+      expirationStatus = `Expire dans ${daysRemaining} jours`;
+    } else if (daysRemaining <= 30) {
+      expirationStatus = `Expire dans ${daysRemaining} jours`;
+    } else {
+      expirationStatus = 'Actif';
+    }
 
-      console.log('📊 Admin - Abonnements récupérés:', subscriptionsData?.length || 0);
-      
-      // Log pour déboguer les revenus
-      const paidSubscriptions = (subscriptionsData || []).filter((s: any) => s.payment_status === 'paid');
-      const totalRevenue = paidSubscriptions.reduce((sum: number, s: any) => {
-        const price = Number(s.total_price_tnd) || 0;
-        return sum + price;
-      }, 0);
-      console.log('💰 Revenus totaux calculés:', {
-        totalPaid: paidSubscriptions.length,
-        totalRevenue,
-        subscriptions: paidSubscriptions.map((s: any) => ({
-          id: s.id,
-          payment_status: s.payment_status,
-          total_price_tnd: s.total_price_tnd,
-          converted: Number(s.total_price_tnd) || 0
-        }))
-      });
-
-      // Formater les données
-      const formattedSubscriptions = (subscriptionsData || []).map((sub: {
-        id: string;
-        driver_id: string;
-        start_date: string;
-        end_date: string;
-        subscription_type: string;
-        billing_period: 'monthly' | 'yearly';
-        price_tnd: number;
-        vat_percentage: number;
-        total_price_tnd: number;
-        payment_status: string;
-        payment_method?: string;
-        payment_date?: string;
-        payment_reference?: string;
-        status: string;
-        admin_notes?: string;
-        created_at: string;
-        updated_at: string;
-        drivers?: {
-          id: string;
-          first_name: string;
-          last_name: string;
-          email: string;
-          phone?: string;
-          city?: string;
-          lifetime_accepted_bookings?: number;
-        };
-      }) => {
-        const endDate = new Date(sub.end_date);
-        const today = new Date();
-        const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        let expirationStatus = '';
-        if (daysRemaining < 0) {
-          expirationStatus = 'Expiré';
-        } else if (daysRemaining === 0) {
-          expirationStatus = 'Expire aujourd\'hui';
-        } else if (daysRemaining <= 1) {
-          expirationStatus = 'Expire demain';
-        } else if (daysRemaining <= 7) {
-          expirationStatus = `Expire dans ${daysRemaining} jours`;
-        } else if (daysRemaining <= 30) {
-          expirationStatus = `Expire dans ${daysRemaining} jours`;
-        } else {
-          expirationStatus = 'Actif';
-        }
-
-        return {
-          id: sub.id,
-          driverId: sub.driver_id,
-          startDate: sub.start_date,
-          endDate: sub.end_date,
-          subscriptionType: sub.subscription_type,
-          billingPeriod: sub.billing_period,
-          priceTnd: Number(sub.price_tnd) || 0,
-          vatPercentage: Number(sub.vat_percentage) || 0,
-          totalPriceTnd: Number(sub.total_price_tnd) || 0,
-          paymentStatus: sub.payment_status as 'pending' | 'paid' | 'failed' | 'refunded',
-          paymentMethod: sub.payment_method,
-          paymentDate: sub.payment_date,
-          paymentReference: sub.payment_reference,
-          status: sub.status as 'active' | 'expired' | 'cancelled',
-          adminNotes: sub.admin_notes,
-          createdAt: sub.created_at,
-          updatedAt: sub.updated_at,
-          driver: sub.drivers ? {
+    return {
+      id: sub.id,
+      driverId: sub.driver_id,
+      startDate: sub.start_date,
+      endDate: sub.end_date,
+      subscriptionType: sub.subscription_type,
+      billingPeriod: sub.billing_period,
+      priceTnd: Number(sub.price_tnd) || 0,
+      vatPercentage: Number(sub.vat_percentage) || 0,
+      totalPriceTnd: Number(sub.total_price_tnd) || 0,
+      paymentStatus: sub.payment_status as 'pending' | 'paid' | 'failed' | 'refunded',
+      paymentMethod: sub.payment_method ?? undefined,
+      paymentDate: sub.payment_date ?? undefined,
+      paymentReference: sub.payment_reference ?? undefined,
+      status: sub.status as 'active' | 'expired' | 'cancelled',
+      adminNotes: sub.admin_notes ?? undefined,
+      createdAt: sub.created_at,
+      updatedAt: sub.updated_at,
+      driver: sub.drivers
+        ? {
             firstName: sub.drivers.first_name,
             lastName: sub.drivers.last_name,
             email: sub.drivers.email,
-            phone: sub.drivers.phone,
-            city: sub.drivers.city,
-            lifetimeAcceptedBookings: sub.drivers.lifetime_accepted_bookings
-          } : undefined,
-          daysRemaining,
-          expirationStatus
-        };
-      });
+            phone: sub.drivers.phone ?? undefined,
+            city: sub.drivers.city ?? undefined,
+            lifetimeAcceptedBookings: sub.drivers.lifetime_accepted_bookings ?? undefined,
+          }
+        : undefined,
+      daysRemaining,
+      expirationStatus,
+    };
+  };
 
-      setSubscriptions(formattedSubscriptions);
+  const fetchSubscriptions = async () => {
+    try {
+      const rows = await fetchAdminSubscriptionRows();
+      setSubscriptions(rows.map(formatSubscriptionRow));
     } catch (error) {
-      console.error('Erreur:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      console.error('Erreur lors de la récupération des abonnements:', error);
     }
   };
 
   const fetchBookings = async () => {
+    if (bookingsInFlight.current) return;
+    bookingsInFlight.current = true;
+    setBookingsLoading(true);
+    try {
+      const rows = await fetchAdminBookingRows();
+      setBookings(
+        rows.map((booking) => ({
+          id: booking.id,
+          clientId: booking.client_id,
+          driverId: booking.driver_id ?? undefined,
+          pickupAddress: booking.pickup_address,
+          destinationAddress: booking.destination_address,
+          distanceKm: booking.distance_km,
+          priceTnd: booking.price_tnd,
+          status: booking.status as AdminBooking['status'],
+          scheduledTime: booking.scheduled_time,
+          pickupTime: booking.pickup_time ?? undefined,
+          completionTime: booking.completion_time ?? undefined,
+          isReturnTrip: Boolean(booking.is_return_trip),
+          notes: booking.notes ?? undefined,
+          createdAt: booking.created_at,
+          updatedAt: booking.updated_at,
+          clients: booking.clients
+            ? {
+                first_name: booking.clients.first_name,
+                last_name: booking.clients.last_name,
+                email: booking.clients.email ?? undefined,
+                phone: booking.clients.phone ?? undefined,
+              }
+            : undefined,
+          drivers: booking.drivers
+            ? {
+                first_name: booking.drivers.first_name,
+                last_name: booking.drivers.last_name,
+                email: booking.drivers.email ?? undefined,
+                phone: booking.drivers.phone ?? undefined,
+              }
+            : undefined,
+          trackingToken: booking.tracking_token ?? null,
+        }))
+      );
+      setBookingsLoaded(true);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des réservations:', error);
+    } finally {
+      setBookingsLoading(false);
+      bookingsInFlight.current = false;
+    }
+  };
+
+  const fetchParcelStats = async () => {
+    try {
+      const rows = await fetchAdminParcelStatuses();
+      setParcelStats(aggregateParcelStats(rows));
+    } catch (error) {
+      console.error('Erreur stats colis:', error);
+    }
+  };
+
+  const refreshAllData = async () => {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
     if (!loading) setRefreshing(true);
 
     try {
-      console.log('🔍 Admin - Récupération des réservations...');
-
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          clients (
-            first_name,
-            last_name,
-            email,
-            phone
-          ),
-          drivers (
-            first_name,
-            last_name,
-            email,
-            phone
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Erreur lors de la récupération des réservations:', error);
-        return;
-      }
-
-      const formattedBookings = (data || []).map((booking: any) => ({
-        id: booking.id,
-        clientId: booking.client_id,
-        driverId: booking.driver_id,
-        pickupAddress: booking.pickup_address,
-        destinationAddress: booking.destination_address,
-        distanceKm: booking.distance_km,
-        priceTnd: booking.price_tnd,
-        status: booking.status,
-        scheduledTime: booking.scheduled_time,
-        pickupTime: booking.pickup_time,
-        completionTime: booking.completion_time,
-        isReturnTrip: booking.is_return_trip,
-        notes: booking.notes,
-        createdAt: booking.created_at,
-        updatedAt: booking.updated_at,
-        clients: booking.clients,
-        drivers: booking.drivers,
-        trackingToken: booking.tracking_token ?? null,
-      }));
-
-      setBookings(formattedBookings);
+      await Promise.all([loadCoreLists(), fetchSubscriptions(), fetchParcelStats()]);
+      void fetchBookings();
+      setParcelRefreshKey((key) => key + 1);
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Erreur lors du chargement du dashboard admin:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      refreshInFlight.current = false;
     }
+  };
+
+  const openClientDetails = async (client: ClientWithBookings) => {
+    setSelectedClient(client);
+    if (client.bookings.length > 0 || client.totalBookings === 0) return;
+
+    setClientBookingsLoading(true);
+    try {
+      const rows = await fetchClientBookingHistory(client.id);
+      const bookingsHistory = mapClientHistoryBookings(rows);
+      setSelectedClient((prev) =>
+        prev && prev.id === client.id ? { ...prev, bookings: bookingsHistory } : prev
+      );
+      setClients((prev) =>
+        prev.map((item) => (item.id === client.id ? { ...item, bookings: bookingsHistory } : item))
+      );
+    } catch (error) {
+      console.error('Erreur historique courses client:', error);
+    } finally {
+      setClientBookingsLoading(false);
+    }
+  };
+
+  const requestDriverStatusChange = (driver: AdminDriver, newStatus: string) => {
+    const needsConfirm =
+      newStatus === 'rejected' || (newStatus === 'pending' && driver.status === 'active');
+    if (needsConfirm) {
+      setStatusConfirm({ driver, newStatus });
+      return;
+    }
+    updateDriverStatus(driver.id, newStatus);
   };
 
   const updateDriverStatus = async (driverId: string, newStatus: string) => {
@@ -1537,8 +1178,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       // Envoyer l'email de validation si le chauffeur est approuvé
       if (newStatus === 'active') {
         try {
-          console.log('📧 Envoi email de validation au chauffeur:', driver.email);
-          
           const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-driver-validation-email`, {
             method: 'POST',
             headers: {
@@ -1564,8 +1203,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             console.error('❌ Erreur lors de l\'envoi de l\'email de validation:', errorData);
             // Ne pas bloquer le processus si l'email échoue
           } else {
-            const result = await response.json();
-            console.log('✅ Email de validation envoyé avec succès:', result);
+            await response.json();
           }
         } catch (emailError) {
           console.error('❌ Erreur lors de l\'envoi de l\'email de validation:', emailError);
@@ -1744,36 +1382,87 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const cancelledBookings = clients.reduce((sum, client) => sum + client.cancelledBookings, 0);
   const totalRevenue = clients.reduce((sum, client) => sum + client.totalSpent, 0);
 
-  // Statistiques des réservations
-  const bookingTotalCount = bookings.length;
-  const bookingPendingCount = bookings.filter(b => b.status === 'pending').length;
-  const bookingInProgressCount = bookings.filter(b => b.status === 'in_progress' || b.status === 'accepted').length;
-  const bookingCompletedCount = bookings.filter(b => b.status === 'completed').length;
-  const bookingRevenue = bookings
-    .filter(b => b.status === 'completed')
-    .reduce((sum, b) => sum + (b.priceTnd || 0), 0);
+  // Statistiques des réservations (totaux agrégés avant le chargement de la liste)
+  const bookingTotalCount = bookingsLoaded ? bookings.length : bookingTotals.total;
+  const bookingPendingCount = bookingsLoaded
+    ? bookings.filter(b => b.status === 'pending').length
+    : bookingTotals.pending;
+  const bookingInProgressCount = bookingsLoaded
+    ? bookings.filter(b => b.status === 'in_progress' || b.status === 'accepted').length
+    : bookingTotals.inProgress;
+  const bookingCompletedCount = bookingsLoaded
+    ? bookings.filter(b => b.status === 'completed').length
+    : bookingTotals.completed;
+  const bookingRevenue = bookingsLoaded
+    ? bookings.filter(b => b.status === 'completed').reduce((sum, b) => sum + (b.priceTnd || 0), 0)
+    : bookingTotals.revenue;
 
-  console.log('Statistiques:', {
-    total: drivers.length,
-    pending: pendingDrivers.length,
-    active: activeDrivers.length,
-    rejected: rejectedDrivers.length
-  });
+  const filteredDrivers = useMemo(() => {
+    const query = driverSearch.trim().toLowerCase();
+    return drivers.filter((driver) => {
+      const matchesStatus = driverStatusFilter === 'all' || driver.status === driverStatusFilter;
+      if (!matchesStatus) return false;
+      if (!query) return true;
+      return [
+        driver.firstName,
+        driver.lastName,
+        driver.email,
+        driver.phone,
+        driver.city,
+        driver.licenseNumber,
+      ].some((value) => (value || '').toLowerCase().includes(query));
+    });
+  }, [drivers, driverSearch, driverStatusFilter]);
 
-  console.log('Statistiques clients:', {
-    totalClients,
-    totalBookings,
-    completedBookings,
-    cancelledBookings,
-    totalRevenue
-  });
+  const filteredBookings = useMemo(() => {
+    const query = bookingSearch.trim().toLowerCase();
+    return bookings.filter((booking) => {
+      const matchesStatus =
+        bookingStatusFilter === 'all' ||
+        (bookingStatusFilter === 'ongoing'
+          ? booking.status === 'accepted' || booking.status === 'in_progress'
+          : booking.status === bookingStatusFilter);
+      if (!matchesStatus) return false;
+      if (!query) return true;
+      return [
+        booking.id,
+        booking.pickupAddress,
+        booking.destinationAddress,
+        booking.clients?.first_name,
+        booking.clients?.last_name,
+        booking.clients?.email,
+        booking.clients?.phone,
+        booking.drivers?.first_name,
+        booking.drivers?.last_name,
+        booking.drivers?.phone,
+      ].some((value) => (value || '').toLowerCase().includes(query));
+    });
+  }, [bookings, bookingSearch, bookingStatusFilter]);
+
+  const pendingSubscriptions = subscriptions.filter((s) => s.paymentStatus === 'pending').length;
+
+  const adminTabs: {
+    id: AdminTabId;
+    label: string;
+    shortLabel: string;
+    icon: typeof Users;
+    count: number;
+    attention?: number;
+  }[] = [
+    { id: 'drivers', label: 'Chauffeurs', shortLabel: 'Chauffeurs', icon: Users, count: drivers.length, attention: pendingDrivers.length },
+    { id: 'clients', label: 'Clients', shortLabel: 'Clients', icon: User, count: clients.length },
+    { id: 'vehicles', label: 'Véhicules', shortLabel: 'Véhicules', icon: Car, count: vehicles.length },
+    { id: 'bookings', label: 'Réservations', shortLabel: 'Réservations', icon: Calendar, count: bookings.length, attention: bookingPendingCount },
+    { id: 'subscriptions', label: 'Abonnements', shortLabel: 'Abonnements', icon: CreditCard, count: subscriptions.length, attention: pendingSubscriptions },
+    { id: 'parcels', label: 'Colis international', shortLabel: 'Colis', icon: Package, count: parcelStats.total, attention: parcelStats.pending },
+  ];
 
   // Afficher un écran de chargement pendant la vérification d'authentification
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
           <p className="text-gray-600">Vérification des droits d'accès...</p>
         </div>
       </div>
@@ -1788,7 +1477,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }
@@ -1796,21 +1485,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-40">
+      <header className="bg-black border-b border-gray-800 sticky top-0 z-40">
         <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">Administration</h1>
-                <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">TuniDrive</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight truncate">TuniDrive</h1>
+                <p className="text-xs sm:text-sm text-gray-300 hidden sm:block">Administration</p>
               </div>
             </div>
             
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               <button
-                onClick={fetchDrivers}
+                onClick={refreshAllData}
                 disabled={refreshing}
-                className="p-1.5 sm:p-2 text-gray-600 hover:text-black rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                className="p-1.5 sm:p-2 text-gray-300 hover:text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
                 title="Actualiser"
               >
                 <div className={refreshing ? 'animate-spin' : ''}>
@@ -1820,9 +1509,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
               </button>
               <Button 
-                variant="outline" 
                 onClick={handleLogout} 
-                className="flex items-center gap-1 sm:gap-2 border-gray-300 text-gray-700 hover:bg-gray-50 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
+                className="flex items-center gap-1 sm:gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
               >
                 <LogOut size={14} className="sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Déconnexion</span>
@@ -1833,197 +1521,67 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </div>
       </header>
 
+      <div className="sticky top-14 sm:top-16 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-2 sm:py-2.5">
+          <nav
+            role="tablist"
+            aria-label="Sections administration"
+            className="flex gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide"
+          >
+            {adminTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              const hasAttention = (tab.attention || 0) > 0;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setActiveTab(tab.id)}
+                  title={hasAttention ? `${tab.label} — ${tab.attention} en attente` : tab.label}
+                  className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap flex-shrink-0 transition-colors ${
+                    isActive
+                      ? 'bg-brand text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon size={16} className="flex-shrink-0" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.shortLabel}</span>
+                  <span
+                    className={`min-w-[1.25rem] px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold leading-none text-center ${
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : hasAttention
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                  {hasAttention && !isActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" aria-hidden />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-8">
-        {/* Tabs */}
-        <div className="mb-4 sm:mb-8">
-          <div className="border-b border-gray-200">
-            {/* Desktop Tabs */}
-            <nav className="hidden md:flex -mb-px space-x-8">
-              <button
-                onClick={() => setActiveTab('drivers')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'drivers'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Users size={16} />
-                  Chauffeurs ({drivers.length})
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('clients')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'clients'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <User size={16} />
-                  Clients ({clients.length})
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('vehicles')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'vehicles'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Car size={16} />
-                  Véhicules ({vehicles.length})
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('bookings')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'bookings'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Calendar size={16} />
-                  Réservations ({bookings.length})
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('subscriptions')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'subscriptions'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <CreditCard size={16} />
-                  Abonnements ({subscriptions.length})
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('parcels')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'parcels'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Package size={16} />
-                  Colis international
-                </div>
-              </button>
-            </nav>
-            
-            {/* Mobile Tabs - Scrollable */}
-            <nav className="md:hidden -mb-px flex space-x-4 overflow-x-auto scrollbar-hide pb-2">
-              <button
-                onClick={() => setActiveTab('drivers')}
-                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
-                  activeTab === 'drivers'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Users size={14} />
-                  <span>Chauffeurs</span>
-                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                    {drivers.length}
-                  </span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('clients')}
-                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
-                  activeTab === 'clients'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <User size={14} />
-                  <span>Clients</span>
-                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                    {clients.length}
-                  </span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('vehicles')}
-                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
-                  activeTab === 'vehicles'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Car size={14} />
-                  <span>Véhicules</span>
-                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                    {vehicles.length}
-                  </span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('bookings')}
-                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
-                  activeTab === 'bookings'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Calendar size={14} />
-                  <span>Réservations</span>
-                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                    {bookings.length}
-                  </span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('subscriptions')}
-                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
-                  activeTab === 'subscriptions'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <CreditCard size={14} />
-                  <span>Abonnements</span>
-                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                    {subscriptions.length}
-                  </span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('parcels')}
-                className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex-shrink-0 ${
-                  activeTab === 'parcels'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Package size={14} />
-                  <span>Colis</span>
-                </div>
-              </button>
-            </nav>
-          </div>
-        </div>
-
         {/* Stats Cards */}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
           {activeTab === 'bookings' ? (
             <>
-              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+              <button
+                type="button"
+                onClick={() => setBookingStatusFilter('all')}
+                className={`bg-white rounded-xl shadow-sm p-3 sm:p-6 text-left transition-shadow hover:shadow-md ${bookingStatusFilter === 'all' ? 'ring-2 ring-brand/30' : ''}`}
+              >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Calendar size={20} className="sm:w-6 sm:h-6 text-gray-700" />
@@ -2033,9 +1591,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <p className="text-xl sm:text-2xl font-bold text-gray-900">{bookingTotalCount}</p>
                   </div>
                 </div>
-              </div>
+              </button>
 
-              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+              <button
+                type="button"
+                onClick={() => setBookingStatusFilter('pending')}
+                className={`bg-white rounded-xl shadow-sm p-3 sm:p-6 text-left transition-shadow hover:shadow-md ${bookingStatusFilter === 'pending' ? 'ring-2 ring-brand/30' : ''}`}
+              >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Clock size={20} className="sm:w-6 sm:h-6 text-orange-600" />
@@ -2045,21 +1607,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <p className="text-xl sm:text-2xl font-bold text-gray-900">{bookingPendingCount}</p>
                   </div>
                 </div>
-              </div>
+              </button>
 
-              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+              <button
+                type="button"
+                onClick={() => setBookingStatusFilter('ongoing')}
+                className={`bg-white rounded-xl shadow-sm p-3 sm:p-6 text-left transition-shadow hover:shadow-md ${bookingStatusFilter === 'ongoing' ? 'ring-2 ring-brand/30' : ''}`}
+              >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-blue-600" />
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-brand" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En cours</h3>
                     <p className="text-xl sm:text-2xl font-bold text-gray-900">{bookingInProgressCount}</p>
                   </div>
                 </div>
-              </div>
+              </button>
 
-              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+              <button
+                type="button"
+                onClick={() => setBookingStatusFilter('completed')}
+                className={`bg-white rounded-xl shadow-sm p-3 sm:p-6 text-left transition-shadow hover:shadow-md ${bookingStatusFilter === 'completed' ? 'ring-2 ring-brand/30' : ''}`}
+              >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <TrendingUp size={20} className="sm:w-6 sm:h-6 text-green-600" />
@@ -2069,7 +1639,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{bookingRevenue.toFixed(0)} TND</p>
                   </div>
                 </div>
-              </div>
+              </button>
             </>
           ) : activeTab === 'subscriptions' ? (
             <>
@@ -2188,7 +1758,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </>
           ) : activeTab === 'drivers' ? (
             <>
-              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+              <button
+                type="button"
+                onClick={() => setDriverStatusFilter('all')}
+                className={`bg-white rounded-xl shadow-sm p-3 sm:p-6 text-left transition-shadow hover:shadow-md ${driverStatusFilter === 'all' ? 'ring-2 ring-brand/30' : ''}`}
+              >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Users size={20} className="sm:w-6 sm:h-6 text-gray-700" />
@@ -2196,6 +1770,68 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Total chauffeurs</h3>
                     <p className="text-xl sm:text-2xl font-bold text-gray-900">{drivers.length}</p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDriverStatusFilter('pending')}
+                className={`bg-white rounded-xl shadow-sm p-3 sm:p-6 text-left transition-shadow hover:shadow-md ${driverStatusFilter === 'pending' ? 'ring-2 ring-brand/30' : ''}`}
+              >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock size={20} className="sm:w-6 sm:h-6 text-orange-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En attente</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{pendingDrivers.length}</p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDriverStatusFilter('active')}
+                className={`bg-white rounded-xl shadow-sm p-3 sm:p-6 text-left transition-shadow hover:shadow-md ${driverStatusFilter === 'active' ? 'ring-2 ring-brand/30' : ''}`}
+              >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Actifs</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{activeDrivers.length}</p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDriverStatusFilter('rejected')}
+                className={`bg-white rounded-xl shadow-sm p-3 sm:p-6 text-left transition-shadow hover:shadow-md ${driverStatusFilter === 'rejected' ? 'ring-2 ring-brand/30' : ''}`}
+              >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <XCircle size={20} className="sm:w-6 sm:h-6 text-red-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Rejetés</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{rejectedDrivers.length}</p>
+                  </div>
+                </div>
+              </button>
+            </>
+          ) : activeTab === 'parcels' ? (
+            <>
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Package size={20} className="sm:w-6 sm:h-6 text-gray-700" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Demandes colis</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{parcelStats.total}</p>
                   </div>
                 </div>
               </div>
@@ -2207,7 +1843,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En attente</h3>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{pendingDrivers.length}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{parcelStats.pending}</p>
                   </div>
                 </div>
               </div>
@@ -2215,11 +1851,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-brand" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Actifs</h3>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{activeDrivers.length}</p>
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Propositions reçues</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{parcelStats.quoted}</p>
                   </div>
                 </div>
               </div>
@@ -2227,11 +1863,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <XCircle size={20} className="sm:w-6 sm:h-6 text-red-600" />
+                    <Package size={20} className="sm:w-6 sm:h-6 text-green-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Rejetés</h3>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{rejectedDrivers.length}</p>
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Acceptées / livrées</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{parcelStats.accepted}</p>
                   </div>
                 </div>
               </div>
@@ -2294,7 +1930,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         {/* Content based on active tab */}
         {activeTab === 'bookings' ? (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Réservations</h2>
@@ -2302,22 +1938,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
                 {refreshing && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-brand"></div>
                     <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
               </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="search"
+                    value={bookingSearch}
+                    onChange={(e) => setBookingSearch(e.target.value)}
+                    placeholder="Client, chauffeur, adresse, n° réservation..."
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                  />
+                </div>
+                <select
+                  value={bookingStatusFilter}
+                  onChange={(e) => setBookingStatusFilter(e.target.value as typeof bookingStatusFilter)}
+                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="pending">En attente</option>
+                  <option value="ongoing">En cours</option>
+                  <option value="accepted">Acceptée</option>
+                  <option value="in_progress">En route</option>
+                  <option value="completed">Terminée</option>
+                  <option value="cancelled">Annulée</option>
+                </select>
+              </div>
             </div>
 
-            {bookings.length === 0 ? (
+            {bookingsLoading && !bookingsLoaded ? (
+              <div className="text-center py-12 bg-gray-50">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-4"></div>
+                <p className="text-gray-500">Chargement des réservations...</p>
+              </div>
+            ) : bookings.length === 0 ? (
               <div className="text-center py-12 bg-gray-50">
                 <Calendar size={48} className="text-gray-400 mx-auto mb-4" />
                 <h5 className="text-lg font-medium text-gray-900 mb-2">Aucune réservation</h5>
                 <p className="text-gray-500">Aucune réservation n'a encore été créée.</p>
               </div>
+            ) : filteredBookings.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50">
+                <Search size={48} className="text-gray-400 mx-auto mb-4" />
+                <h5 className="text-lg font-medium text-gray-900 mb-2">Aucun résultat</h5>
+                <p className="text-gray-500">Aucune réservation ne correspond à votre recherche.</p>
+              </div>
             ) : (
               <div className="divide-y divide-gray-200">
-                {bookings.map((booking) => (
+                {filteredBookings.map((booking) => (
                   <div key={booking.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -2459,7 +2131,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
                 {refreshing && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-brand"></div>
                     <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
@@ -2759,7 +2431,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
               Demandes de transport international de colis
             </h2>
-            <AdminParcelQuotes />
+            <AdminParcelQuotes refreshKey={parcelRefreshKey} />
           </div>
         ) : activeTab === 'vehicles' ? (
           /* Vehicles List */
@@ -2772,7 +2444,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
                 {refreshing && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-brand"></div>
                     <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
@@ -3158,7 +2830,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         ) : activeTab === 'drivers' ? (
           /* Drivers List - Version améliorée */
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Gestion des chauffeurs</h2>
@@ -3166,13 +2838,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
                 {refreshing && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-brand"></div>
                     <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
               </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="search"
+                    value={driverSearch}
+                    onChange={(e) => setDriverSearch(e.target.value)}
+                    placeholder="Nom, email, téléphone, ville..."
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                  />
+                </div>
+                <select
+                  value={driverStatusFilter}
+                  onChange={(e) => setDriverStatusFilter(e.target.value as typeof driverStatusFilter)}
+                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="pending">En attente</option>
+                  <option value="active">Actifs</option>
+                  <option value="rejected">Rejetés</option>
+                </select>
+              </div>
             </div>
 
+          {filteredDrivers.length > 0 && (
+          <>
           {/* Version desktop - Tableau complet */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full table-auto">
@@ -3205,7 +2901,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {drivers.map((driver) => (
+                {filteredDrivers.map((driver) => (
                   <tr key={driver.id} className="group hover:bg-gray-50 transition-colors">
                     {/* Chauffeur */}
                     <td className="px-3 py-3">
@@ -3330,7 +3026,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                               <UserCheck size={14} />
                             </button>
                             <button
-                              onClick={() => updateDriverStatus(driver.id, 'rejected')}
+                              onClick={() => requestDriverStatusChange(driver, 'rejected')}
                               disabled={actionLoading === driver.id}
                               className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
                               title="Rejeter"
@@ -3342,7 +3038,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         
                         {driver.status === 'active' && (
                           <button
-                            onClick={() => updateDriverStatus(driver.id, 'pending')}
+                            onClick={() => requestDriverStatusChange(driver, 'pending')}
                             disabled={actionLoading === driver.id}
                             className="p-1.5 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors disabled:opacity-50"
                             title="Suspendre"
@@ -3361,7 +3057,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           {/* Version mobile/tablet - Cards */}
           <div className="lg:hidden">
             <div className="divide-y divide-gray-200">
-              {drivers.map((driver) => (
+              {filteredDrivers.map((driver) => (
                 <div key={driver.id} className="p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -3455,7 +3151,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             Approuver
                           </button>
                           <button
-                            onClick={() => updateDriverStatus(driver.id, 'rejected')}
+                            onClick={() => requestDriverStatusChange(driver, 'rejected')}
                             disabled={actionLoading === driver.id}
                             className="px-3 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
                           >
@@ -3466,7 +3162,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       
                       {driver.status === 'active' && (
                         <button
-                          onClick={() => updateDriverStatus(driver.id, 'pending')}
+                          onClick={() => requestDriverStatusChange(driver, 'pending')}
                           disabled={actionLoading === driver.id}
                           className="px-3 py-1 text-xs bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
                         >
@@ -3479,20 +3175,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               ))}
             </div>
           </div>
+          </>
+          )}
 
-          {drivers.length === 0 && (
+          {drivers.length === 0 ? (
             <div className="text-center py-12">
               <Car size={48} className="text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun chauffeur inscrit</h3>
               <p className="text-gray-500">Les nouveaux chauffeurs apparaîtront ici une fois inscrits.</p>
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg text-left">
-                <p className="text-sm text-gray-600 mb-2">Debug info:</p>
-                <p className="text-xs text-gray-500">Total drivers: {drivers.length}</p>
-                <p className="text-xs text-gray-500">Loading: {loading.toString()}</p>
-                <p className="text-xs text-gray-500">Refreshing: {refreshing.toString()}</p>
-              </div>
             </div>
-          )}
+          ) : filteredDrivers.length === 0 ? (
+            <div className="text-center py-12">
+              <Search size={48} className="text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun résultat</h3>
+              <p className="text-gray-500">Aucun chauffeur ne correspond à votre recherche.</p>
+            </div>
+          ) : null}
         </div>
         ) : (
           /* Clients List */
@@ -3505,7 +3203,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
                 {refreshing && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-brand"></div>
                     <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
@@ -3632,7 +3330,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => setSelectedClient(client)}
+                            onClick={() => openClientDetails(client)}
                             className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                             title="Voir les détails"
                           >
@@ -3672,7 +3370,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         </div>
                       </div>
                       <button
-                        onClick={() => setSelectedClient(client)}
+                        onClick={() => openClientDetails(client)}
                         className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                         title="Voir les détails"
                       >
@@ -4003,7 +3701,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           Approuver
                         </Button>
                         <Button
-                          onClick={() => updateDriverStatus(selectedDriver.id, 'rejected')}
+                          onClick={() => requestDriverStatusChange(selectedDriver, 'rejected')}
                           loading={actionLoading === selectedDriver.id}
                           className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
                           size="sm"
@@ -4016,7 +3714,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     
                     {selectedDriver.status === 'active' && (
                       <Button
-                        onClick={() => updateDriverStatus(selectedDriver.id, 'pending')}
+                        onClick={() => requestDriverStatusChange(selectedDriver, 'pending')}
                         loading={actionLoading === selectedDriver.id}
                         className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2"
                         size="sm"
@@ -4528,6 +4226,63 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 {selectedSubscription.paymentDate && (
                   <p><strong>Payé le:</strong> {new Date(selectedSubscription.paymentDate).toLocaleString('fr-FR')}</p>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {statusConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  statusConfirm.newStatus === 'rejected' ? 'bg-red-100' : 'bg-orange-100'
+                }`}>
+                  <AlertTriangle
+                    size={20}
+                    className={statusConfirm.newStatus === 'rejected' ? 'text-red-600' : 'text-orange-600'}
+                  />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">
+                  {statusConfirm.newStatus === 'rejected' ? 'Rejeter le chauffeur' : 'Suspendre le chauffeur'}
+                </h3>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">
+                {statusConfirm.newStatus === 'rejected'
+                  ? 'Le chauffeur sera rejeté et ne pourra plus recevoir de courses tant qu\'il n\'est pas remis en attente.'
+                  : 'Le chauffeur sera remis en attente et ne sera plus visible pour les nouvelles réservations.'}
+              </p>
+              <p className="text-sm font-semibold text-gray-900">
+                {statusConfirm.driver.firstName} {statusConfirm.driver.lastName}
+                <span className="block font-normal text-gray-500">{statusConfirm.driver.email}</span>
+              </p>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setStatusConfirm(null)}
+                  className="text-sm"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={() => {
+                    const { driver, newStatus } = statusConfirm;
+                    setStatusConfirm(null);
+                    updateDriverStatus(driver.id, newStatus);
+                  }}
+                  loading={actionLoading === statusConfirm.driver.id}
+                  className={`text-sm text-white ${
+                    statusConfirm.newStatus === 'rejected'
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-orange-600 hover:bg-orange-700'
+                  }`}
+                >
+                  {statusConfirm.newStatus === 'rejected' ? 'Confirmer le rejet' : 'Confirmer la suspension'}
+                </Button>
               </div>
             </div>
           </div>
@@ -5270,7 +5025,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               {loadingAvailabilities ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-brand mx-auto mb-4"></div>
                     <p className="text-sm sm:text-base text-gray-600">Chargement des disponibilités...</p>
                   </div>
                 </div>
@@ -5551,7 +5306,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               {/* Bookings List */}
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Historique des courses</h4>
-                {selectedClient.bookings.length > 0 ? (
+                {clientBookingsLoading && selectedClient.bookings.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-4"></div>
+                    <p className="text-gray-500">Chargement de l'historique...</p>
+                  </div>
+                ) : selectedClient.bookings.length > 0 ? (
                   <div className="space-y-4">
                     {selectedClient.bookings.map((booking) => (
                       <div key={booking.id} className="bg-gray-50 rounded-lg p-4">

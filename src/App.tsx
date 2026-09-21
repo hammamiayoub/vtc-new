@@ -356,7 +356,7 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
     <div className="min-h-screen bg-gray-50">
       {showHeader && <Header currentView={currentView} />}
       <Suspense fallback={<RouteFallback />}>{renderContent()}</Suspense>
-      {showChat && (
+      {showChat && currentView !== 'admin' && currentView !== 'admin-dashboard' && (
         <Suspense fallback={null}>
           <ChatWidget />
         </Suspense>
