@@ -4,7 +4,11 @@ import { supabase } from '../lib/supabase';
 import { directionLabel, statusLabel, expireOldParcelRequests } from '../utils/parcelService';
 import type { ParcelQuoteRequest } from '../types';
 
-export const AdminParcelQuotes: React.FC = () => {
+interface AdminParcelQuotesProps {
+  refreshKey?: number;
+}
+
+export const AdminParcelQuotes: React.FC<AdminParcelQuotesProps> = ({ refreshKey = 0 }) => {
   const [requests, setRequests] = useState<ParcelQuoteRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +53,7 @@ export const AdminParcelQuotes: React.FC = () => {
       }
     };
     load();
-  }, []);
+  }, [refreshKey]);
 
   if (loading) {
     return (

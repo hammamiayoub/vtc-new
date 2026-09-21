@@ -7,6 +7,11 @@ export default {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       colors: {
+        brand: {
+          DEFAULT: '#003333',
+          hover: '#004d4d',
+          muted: '#e6f0f0',
+        },
         surface: {
           DEFAULT: '#ffffff',
           muted: '#f6f6f6',
