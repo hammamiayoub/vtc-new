@@ -1,5 +1,5 @@
 /** Illustrations génériques par type (public/) quand le chauffeur n'a pas de photo véhicule. */
-export const SEDAN_PLACEHOLDER_IMAGE = '/vehicles/sedan-template.svg';
+export const SEDAN_PLACEHOLDER_IMAGE = '/vehicles/sedan-default.png';
 
 export function getVehiclePlaceholderImage(
   vehicleType?: string | null,

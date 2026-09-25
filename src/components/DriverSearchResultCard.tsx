@@ -1,7 +1,7 @@
 import { Car, CheckCircle, MapPin, Star, User } from 'lucide-react';
 import type { Driver } from '../types';
 import { formatVehicleType } from '../utils/vehicles';
-import { getVehiclePlaceholderImage } from '../utils/vehiclePlaceholderImage';
+import { getVehiclePlaceholderImage, SEDAN_PLACEHOLDER_IMAGE } from '../utils/vehiclePlaceholderImage';
 
 interface DriverSearchResultCardProps {
   driver: Driver;
@@ -21,6 +21,7 @@ export function DriverSearchResultCard({
   const vehicleVisualSrc = hasPhoto
     ? vehicle!.photoUrl!
     : getVehiclePlaceholderImage(vehicle?.type);
+  const usesSedanPlaceholder = !hasPhoto && vehicleVisualSrc === SEDAN_PLACEHOLDER_IMAGE;
   const vehicleVisualAlt = hasPhoto
     ? `${vehicle!.make} ${vehicle!.model}`
     : formatVehicleType(vehicle?.type);
@@ -53,12 +54,18 @@ export function DriverSearchResultCard({
           : 'border-gray-200 hover:border-gray-300 bg-white'
       }`}
     >
-      <div className="relative w-full h-32 sm:h-36 bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className={`relative w-full h-32 sm:h-36 ${
+        usesSedanPlaceholder ? 'bg-white' : 'bg-gradient-to-br from-gray-100 to-gray-200'
+      }`}>
         <img
           src={vehicleVisualSrc}
           alt={vehicleVisualAlt}
           className={`w-full h-full ${
-            hasPhoto ? 'object-cover' : 'object-contain p-3 sm:p-4 opacity-95'
+            hasPhoto
+              ? 'object-cover'
+              : usesSedanPlaceholder
+                ? 'object-contain'
+                : 'object-contain p-3 sm:p-4 opacity-95'
           }`}
           loading="lazy"
         />
