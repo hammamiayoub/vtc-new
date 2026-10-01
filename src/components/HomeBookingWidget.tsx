@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import AddressAutocomplete from './AddressAutocomplete';
@@ -11,6 +11,11 @@ import {
   getDriverPickupFareSummaryText,
 } from '../utils/geolocation';
 import { savePendingQuote } from '../utils/pendingQuote';
+import {
+  FOCUS_HOME_BOOKING_EVENT,
+  focusHomeBookingForm,
+  focusHomePickupInput,
+} from '../utils/focusHomeBooking';
 
 interface HomeBookingWidgetProps {
   onClientLogin: () => void;
@@ -34,6 +39,50 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
   const [autocompleteHint, setAutocompleteHint] = useState<string | null>(null);
+  const [pickupHighlighted, setPickupHighlighted] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let retryTimer = 0;
+    let highlightTimer = 0;
+
+    const highlightAndFocus = () => {
+      window.clearTimeout(highlightTimer);
+      setPickupHighlighted(true);
+      highlightTimer = window.setTimeout(() => {
+        if (!cancelled) setPickupHighlighted(false);
+      }, 2600);
+
+      const tryFocus = (attempt: number) => {
+        if (cancelled) return;
+        if (focusHomePickupInput()) return;
+        if (attempt < 40) {
+          retryTimer = window.setTimeout(() => tryFocus(attempt + 1), 150);
+        }
+      };
+      tryFocus(0);
+    };
+
+    const onHash = () => {
+      if (window.location.hash !== '#reserver') return;
+      focusHomeBookingForm();
+    };
+
+    window.addEventListener(FOCUS_HOME_BOOKING_EVENT, highlightAndFocus);
+    window.addEventListener('hashchange', onHash);
+    if (window.location.hash === '#reserver') {
+      highlightAndFocus();
+      document.getElementById('reserver')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(retryTimer);
+      window.clearTimeout(highlightTimer);
+      window.removeEventListener(FOCUS_HOME_BOOKING_EVENT, highlightAndFocus);
+      window.removeEventListener('hashchange', onHash);
+    };
+  }, []);
 
   const resetQuote = () => {
     setDistanceKm(null);
@@ -127,10 +176,20 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
 
   return (
     <div className="uber-card shadow-card p-6 sm:p-8">
-      <p className="text-sm font-semibold text-gray-900 mb-4">Réserver maintenant</p>
+      <p className="text-sm font-semibold text-gray-900 mb-1">Réserver maintenant</p>
+      {pickupHighlighted && (
+        <p className="text-sm text-gray-600 mb-3" role="status">
+          Indiquez le lieu de prise en charge pour commencer.
+        </p>
+      )}
 
-      <div className="space-y-3">
+      <div className={pickupHighlighted ? 'space-y-3 mt-3' : 'space-y-3 mt-4'}>
         <AddressAutocomplete
+          className={
+            pickupHighlighted
+              ? 'rounded-lg ring-2 ring-black ring-offset-2 transition-shadow'
+              : 'rounded-lg transition-shadow'
+          }
           inputId="home-pickup-address"
           value={pickupAddress}
           onChange={handlePickupChange}
