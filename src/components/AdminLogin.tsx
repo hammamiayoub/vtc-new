@@ -88,11 +88,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
           </button>
 
           <div className="text-center mb-8">
-            <img
-              src="/tunidrive-logo.png"
-              alt="TuniDrive"
-              className="h-12 w-auto mx-auto mb-6"
-            />
+           
             <div className="w-16 h-16 bg-brand-muted rounded-2xl flex items-center justify-center mx-auto mb-5">
               <Shield size={28} className="text-brand" />
             </div>
