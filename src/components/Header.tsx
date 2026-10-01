@@ -10,6 +10,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { prefetchRoute } from '../utils/prefetchRoute';
+import { focusHomeBookingForm } from '../utils/focusHomeBooking';
 
 interface HeaderProps {
   currentView:
@@ -43,12 +44,12 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
   const navigate = useNavigate();
 
   const goToBooking = () => {
-    if (window.location.pathname === '/') {
-      document.getElementById('reserver')?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      navigate('/#reserver');
-    }
     setIsMobileMenuOpen(false);
+    if (window.location.pathname === '/') {
+      focusHomeBookingForm();
+      return;
+    }
+    navigate('/#reserver');
   };
 
   useEffect(() => {
