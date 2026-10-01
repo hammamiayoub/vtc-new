@@ -524,9 +524,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </Button>
                 <Button
                   size="lg"
-                  variant="outline"
+                  //variant="outline"
                   onClick={onDriverLogin}
-                  className="rounded-full border-white text-white hover:bg-white/10"
+                  className="rounded-full bg-white text-gray-900 hover:bg-gray-100"
                 >
                   Connexion chauffeur
                 </Button>
