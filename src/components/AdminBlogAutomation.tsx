@@ -11,7 +11,7 @@ import {
 
 interface PublishedPost {
   audience: BlogAudience;
-  status: 'published' | 'skipped';
+  status: 'published' | 'skipped' | 'illustrated';
   title: string;
   slug: string;
 }
@@ -77,6 +77,7 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
       const posts = (data.posts ?? []) as PublishedPost[];
       const lines = posts.map((post) => {
         const label = audienceLabel[post.audience];
+        if (post.status === 'illustrated') return `${label} : image ajoutée à « ${post.title} ».`;
         return post.status === 'published'
           ? `${label} : « ${post.title} » est en ligne.`
           : `${label} : déjà publié aujourd’hui.`;
