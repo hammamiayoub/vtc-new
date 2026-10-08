@@ -20,8 +20,10 @@ import {
   CalendarPlus,
   MoreHorizontal,
   Search,
+  FileText,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
+import { AdminBlogPosts } from './AdminBlogPosts';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import {
@@ -76,7 +78,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminTabId = 'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings' | 'parcels';
+type AdminTabId = 'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings' | 'parcels' | 'blog';
 
 interface VehicleWithDriver extends Vehicle {
   driver?: {
@@ -1446,7 +1448,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     label: string;
     shortLabel: string;
     icon: typeof Users;
-    count: number;
+    count?: number;
     attention?: number;
   }[] = [
     { id: 'drivers', label: 'Chauffeurs', shortLabel: 'Chauffeurs', icon: Users, count: drivers.length, attention: pendingDrivers.length },
@@ -1455,6 +1457,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     { id: 'bookings', label: 'Réservations', shortLabel: 'Réservations', icon: Calendar, count: bookings.length, attention: bookingPendingCount },
     { id: 'subscriptions', label: 'Abonnements', shortLabel: 'Abonnements', icon: CreditCard, count: subscriptions.length, attention: pendingSubscriptions },
     { id: 'parcels', label: 'Colis international', shortLabel: 'Colis', icon: Package, count: parcelStats.total, attention: parcelStats.pending },
+    { id: 'blog', label: 'Blog', shortLabel: 'Blog', icon: FileText },
   ];
 
   // Afficher un écran de chargement pendant la vérification d'authentification
@@ -1549,6 +1552,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <Icon size={16} className="flex-shrink-0" />
                   <span className="hidden sm:inline">{tab.label}</span>
                   <span className="sm:hidden">{tab.shortLabel}</span>
+                  {tab.count !== undefined && (
                   <span
                     className={`min-w-[1.25rem] px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold leading-none text-center ${
                       isActive
@@ -1560,6 +1564,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   >
                     {tab.count}
                   </span>
+                  )}
                   {hasAttention && !isActive && (
                     <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" aria-hidden />
                   )}
@@ -1574,6 +1579,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       <main className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-8">
         {/* Stats Cards */}
 
+        {activeTab !== 'blog' && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
           {activeTab === 'bookings' ? (
             <>
@@ -1926,9 +1932,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </>
           )}
         </div>
+        )}
 
         {/* Content based on active tab */}
-        {activeTab === 'bookings' ? (
+        {activeTab === 'blog' ? (
+          <AdminBlogPosts />
+        ) : activeTab === 'bookings' ? (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 space-y-3">
               <div className="flex items-center justify-between">
