@@ -17,9 +17,14 @@ interface ArticleDraft {
 
 interface PublishResult {
   audience: Audience
-  status: 'published' | 'skipped'
+  status: 'published' | 'skipped' | 'illustrated'
   title: string
   slug: string
+}
+
+interface StoredImage {
+  url: string
+  path: string
 }
 
 function json(body: unknown, status = 200) {
@@ -184,6 +189,87 @@ Sujets déjà utilisés, à ne pas répéter : ${input.avoid.length ? input.avoi
   throw new Error(lastError)
 }
 
+function decodeBase64(value: string): Uint8Array {
+  const binary = atob(value)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return bytes
+}
+
+async function requestIllustration(apiKey: string, model: string, prompt: string): Promise<Uint8Array> {
+  const body: Record<string, unknown> = {
+    model,
+    prompt,
+    n: 1,
+  }
+  if (model === 'dall-e-3') {
+    body.size = '1792x1024'
+    body.quality = 'standard'
+    body.response_format = 'b64_json'
+  } else {
+    body.size = '1536x1024'
+    body.quality = 'medium'
+  }
+
+  const response = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const detail = await response.text()
+    throw new Error(`OpenAI image ${model} ${response.status}: ${detail.slice(0, 280)}`)
+  }
+
+  const payload = await response.json()
+  const encoded = payload?.data?.[0]?.b64_json
+  if (typeof encoded !== 'string' || !encoded) throw new Error(`Image ${model} vide.`)
+  const bytes = decodeBase64(encoded)
+  if (bytes.byteLength > 5 * 1024 * 1024) throw new Error('Image trop lourde pour le blog.')
+  return bytes
+}
+
+async function uploadIllustration(admin: SupabaseClient, subject: string): Promise<StoredImage> {
+  const apiKey = Deno.env.get('OPENAI_API_KEY')
+  if (!apiKey) throw new Error('OPENAI_API_KEY manquante dans les secrets de la fonction.')
+
+  const prompt = [
+    'Photorealistic editorial photograph in Tunisia, natural daylight.',
+    'No text, no letters, no logo, no watermark, no readable license plate.',
+    'A private transfer scene: a clean dark sedan or passenger van, a driver seen from a distance, airport or city street.',
+    `Subject to illustrate: ${subject}.`,
+  ].join(' ')
+
+  let bytes: Uint8Array | null = null
+  let lastError = 'Illustration impossible.'
+  for (const model of ['dall-e-3', 'gpt-image-1']) {
+    try {
+      bytes = await requestIllustration(apiKey, model, prompt.slice(0, 3900))
+      break
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : lastError
+      console.error(lastError)
+    }
+  }
+  if (!bytes) throw new Error(lastError)
+
+  const path = `auto-${crypto.randomUUID()}.png`
+  const { error } = await admin.storage.from('blog-images').upload(path, bytes, {
+    contentType: 'image/png',
+    upsert: false,
+    cacheControl: '86400',
+  })
+  if (error) throw new Error(`Envoi de l’image impossible : ${error.message}`)
+
+  const { data } = admin.storage.from('blog-images').getPublicUrl(path)
+  if (!data.publicUrl) throw new Error('Adresse publique de l’image indisponible.')
+  return { url: data.publicUrl, path }
+}
+
 async function uniqueSlug(admin: SupabaseClient, title: string): Promise<string> {
   const base = slugify(title)
   for (let i = 0; i < 6; i++) {
@@ -201,15 +287,28 @@ async function publishAudience(
 ): Promise<PublishResult> {
   const { data: existing, error: existingError } = await admin
     .from('blog_posts')
-    .select('title, slug')
+    .select('id, title, slug, keyword, image_url')
     .eq('source', 'auto')
     .eq('audience', audience)
     .eq('published_day', day)
     .maybeSingle()
 
   if (existingError) throw existingError
-  if (existing) {
+  if (existing?.image_url) {
     return { audience, status: 'skipped', title: existing.title, slug: existing.slug }
+  }
+  if (existing) {
+    const image = await uploadIllustration(admin, existing.keyword || existing.title)
+    const { error: imageError } = await admin
+      .from('blog_posts')
+      .update({
+        image_url: image.url,
+        image_path: image.path,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id)
+    if (imageError) throw imageError
+    return { audience, status: 'illustrated', title: existing.title, slug: existing.slug }
   }
 
   const { data: topic, error: topicError } = await admin
@@ -240,12 +339,15 @@ async function publishAudience(
 
   const now = new Date().toISOString()
   const slug = await uniqueSlug(admin, draft.title)
+  const image = await uploadIllustration(admin, topic?.keyword ?? draft.keyword)
   const { data: post, error: insertError } = await admin
     .from('blog_posts')
     .insert({
       title: draft.title,
       slug,
       content: draft.content,
+      image_url: image.url,
+      image_path: image.path,
       published: true,
       published_at: now,
       updated_at: now,
