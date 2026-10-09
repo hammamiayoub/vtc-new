@@ -23,6 +23,7 @@ import {
   vtcServiceHighlightsEn,
 } from '../data/vtcSeoFaq.en';
 import { useLocale } from '../i18n/locale';
+import { RevealSection } from './ui/RevealSection';
 
 interface VtcTunisiePageProps {
   onClientLogin: () => void;
@@ -90,7 +91,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
       </section>
 
       {/* Services ciblés SEO */}
-      <section className="py-16 md:py-20">
+      <RevealSection className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 text-center">
             {en ? 'Private driver services in Tunisia' : 'Nos services VTC en Tunisie'}
@@ -122,10 +123,10 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
             ))}
           </div>
         </div>
-      </section>
+      </RevealSection>
 
       {/* Transfert aéroport */}
-      <section id="transfert-aeroport-tunisie" className="py-16 md:py-20 bg-gray-50 border-y border-gray-100">
+      <RevealSection id="transfert-aeroport-tunisie" className="py-16 md:py-20 bg-gray-50 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 justify-center mb-4">
             <Plane className="text-gray-700" size={28} />
@@ -168,10 +169,10 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
             </Button>
           </div>
         </div>
-      </section>
+      </RevealSection>
 
       {/* Transport collectif + confiance */}
-      <section className="py-16 md:py-20">
+      <RevealSection className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div>
@@ -253,10 +254,10 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
             </div>
           </div>
         </div>
-      </section>
+      </RevealSection>
 
       {/* FAQ visible (rich snippets) */}
-      <section id="faq-vtc" className="py-16 md:py-20 bg-gray-50 border-t border-gray-100">
+      <RevealSection id="faq-vtc" className="py-16 md:py-20 bg-gray-50 border-t border-gray-100">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             {en ? 'Frequently asked questions — private driver' : 'Questions fréquentes — VTC & chauffeur privé'}
@@ -280,10 +281,10 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
             ))}
           </div>
         </div>
-      </section>
+      </RevealSection>
 
       {/* CTA */}
-      <section className="py-16 bg-black text-white">
+      <RevealSection className="py-16 bg-black text-white">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
             {en ? 'Book your private driver now' : 'Réservez votre VTC ou votre chauffeur privé maintenant'}
@@ -303,7 +304,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
             {en ? 'Start my booking' : 'Commencer ma réservation'}
           </Button>
         </div>
-      </section>
+      </RevealSection>
 
       <Footer />
     </div>

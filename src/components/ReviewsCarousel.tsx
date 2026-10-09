@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Quote, Star } from 'lucide-react';
 import { fetchPublicReviews, type PublicReview } from '../utils/publicReviews';
 import { useLocale } from '../i18n/locale';
+import { RevealSection } from './ui/RevealSection';
 
 function formatReviewDate(iso: string, locale: 'fr' | 'en'): string {
   try {
@@ -77,7 +78,7 @@ export const ReviewsCarousel: React.FC = () => {
   ].filter(Boolean) as PublicReview[];
 
   return (
-    <section
+    <RevealSection
       className="py-16 bg-white"
       aria-labelledby="reviews-carousel-heading"
       onMouseEnter={() => setIsPaused(true)}
@@ -160,6 +161,6 @@ export const ReviewsCarousel: React.FC = () => {
           </div>
         )}
       </div>
-    </section>
+    </RevealSection>
   );
 };

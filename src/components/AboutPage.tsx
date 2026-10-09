@@ -12,6 +12,7 @@ import {
 import { Button } from './ui/Button';
 import { Footer } from './Footer';
 import { useLocale } from '../i18n/locale';
+import { RevealSection } from './ui/RevealSection';
 
 interface AboutPageProps {
   onClientLogin: () => void;
@@ -107,7 +108,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onClientLogin, onClientSig
           </div>
         </section>
 
-        <section className="py-16">
+        <RevealSection className="py-16">
           <div className="page-container">
             <div className="max-w-3xl mb-10">
               <h2 className="page-heading mb-4">{en ? 'Our mission' : 'Notre mission'}</h2>
@@ -146,9 +147,9 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onClientLogin, onClientSig
               ))}
             </div>
           </div>
-        </section>
+        </RevealSection>
 
-        <section className="py-16 bg-surface-muted">
+        <RevealSection className="py-16 bg-surface-muted">
           <div className="page-container">
             <h2 className="page-heading mb-4">{en ? 'Book a private ride (riders)' : 'Réserver une course VTC (clients)'}</h2>
             <p className="page-subheading max-w-3xl mb-10">
@@ -174,9 +175,9 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onClientLogin, onClientSig
               </Button>
             </div>
           </div>
-        </section>
+        </RevealSection>
 
-        <section className="py-16">
+        <RevealSection className="py-16">
           <div className="page-container">
             <h2 className="page-heading mb-4">{en ? 'Parcel transport Europe ↔ Tunisia' : 'Transport de colis Europe ↔ Tunisie'}</h2>
             <p className="page-subheading max-w-3xl mb-10">
@@ -214,9 +215,9 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onClientLogin, onClientSig
               <ArrowRight size={16} />
             </Link>
           </div>
-        </section>
+        </RevealSection>
 
-        <section className="py-16 bg-surface-muted">
+        <RevealSection className="py-16 bg-surface-muted">
           <div className="page-container">
             <div className="grid md:grid-cols-2 gap-10 items-start">
               <div>
@@ -262,9 +263,9 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onClientLogin, onClientSig
               </div>
             </div>
           </div>
-        </section>
+        </RevealSection>
 
-        <section className="py-16">
+        <RevealSection className="py-16">
           <div className="page-container">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="page-heading mb-4">{en ? 'Ready to start?' : 'Prêt à commencer ?'}</h2>
@@ -285,7 +286,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onClientLogin, onClientSig
               </div>
             </div>
           </div>
-        </section>
+        </RevealSection>
       </main>
       <Footer />
     </div>

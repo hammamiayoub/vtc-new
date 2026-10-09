@@ -14,6 +14,7 @@ import { faqCategories } from '../data/faqData';
 import { faqCategoriesEn } from '../data/faqData.en';
 import { getParcelFaqItems, setFaqJsonLd } from '../utils/seo';
 import { useLocale } from '../i18n/locale';
+import { RevealSection } from './ui/RevealSection';
 
 const EUROPE_CORRIDORS = [
   'France',
@@ -131,7 +132,7 @@ export const ParcelTransportPage: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-16 md:py-20" aria-labelledby="parcel-corridors-heading">
+      <RevealSection className="py-16 md:py-20" aria-labelledby="parcel-corridors-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 id="parcel-corridors-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -156,9 +157,9 @@ export const ParcelTransportPage: React.FC = () => {
             ))}
           </ul>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="py-16 md:py-20 bg-gray-50" aria-labelledby="parcel-how-heading">
+      <RevealSection className="py-16 md:py-20 bg-gray-50" aria-labelledby="parcel-how-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 id="parcel-how-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -185,9 +186,9 @@ export const ParcelTransportPage: React.FC = () => {
             ))}
           </ol>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="py-16 md:py-20" aria-labelledby="parcel-audience-heading">
+      <RevealSection className="py-16 md:py-20" aria-labelledby="parcel-audience-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             <article className="rounded-2xl p-8 border border-gray-200">
@@ -237,9 +238,9 @@ export const ParcelTransportPage: React.FC = () => {
             </article>
           </div>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="py-16 md:py-20 bg-gray-50" aria-labelledby="parcel-faq-heading">
+      <RevealSection className="py-16 md:py-20 bg-gray-50" aria-labelledby="parcel-faq-heading">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 id="parcel-faq-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -277,9 +278,9 @@ export const ParcelTransportPage: React.FC = () => {
             })}
           </div>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="py-16 bg-black text-white">
+      <RevealSection className="py-16 bg-black text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             {en ? 'Ready to ship your parcels?' : 'Prêt à expédier vos colis ?'}
@@ -298,7 +299,7 @@ export const ParcelTransportPage: React.FC = () => {
             <ArrowRight size={20} aria-hidden="true" />
           </Button>
         </div>
-      </section>
+      </RevealSection>
 
       <Footer />
     </div>

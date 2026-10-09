@@ -26,6 +26,7 @@ import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
 import { focusHomeBookingForm } from '../utils/focusHomeBooking';
 import { useLocale } from '../i18n/locale';
+import { RevealSection } from './ui/RevealSection';
 
 interface HomePageProps {
   onGetStarted: () => void;
@@ -214,7 +215,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </section>
 
         {/* Services — carrousel de cartes type Uber */}
-        <section className="py-16 bg-surface-muted">
+        <RevealSection className="py-16 bg-surface-muted">
           <div className="page-container">
             <div className="text-center mb-10 max-w-3xl mx-auto">
               <h2 className="page-heading">
@@ -240,10 +241,10 @@ export const HomePage: React.FC<HomePageProps> = ({
               ))}
             </div>
           </div>
-        </section>
+        </RevealSection>
 
         {/* Transport VTC */}
-        <section id="transport-vtc" className="py-16 bg-white">
+        <RevealSection id="transport-vtc" className="py-16 bg-white">
           <div className="page-container">
             <div className="max-w-5xl mx-auto space-y-10">
               <div className="text-center">
@@ -319,10 +320,10 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
           </div>
-        </section>
+        </RevealSection>
 
         {/* Transport colis */}
-        <section id="transport-colis" className="py-16 bg-surface-muted">
+        <RevealSection id="transport-colis" className="py-16 bg-surface-muted">
           <div className="page-container">
             <div className="text-center mb-12 max-w-3xl mx-auto">
               <span className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full text-xs font-semibold text-gray-700 border border-surface-border mb-4">
@@ -384,10 +385,10 @@ export const HomePage: React.FC<HomePageProps> = ({
               </Link>
             </div>
           </div>
-        </section>
+        </RevealSection>
 
         {/* Pourquoi TuniDrive */}
-        <section className="py-16 bg-white">
+        <RevealSection className="py-16 bg-white">
           <div className="page-container">
             <div className="text-center mb-12 max-w-2xl mx-auto">
               <h2 className="page-heading mb-4">{en ? 'Why choose TuniDrive?' : 'Pourquoi choisir TuniDrive ?'}</h2>
@@ -415,12 +416,12 @@ export const HomePage: React.FC<HomePageProps> = ({
               ))}
             </div>
           </div>
-        </section>
+        </RevealSection>
 
         <ReviewsCarousel />
 
         {/* Véhicules */}
-        <section className="py-16 bg-surface-muted">
+        <RevealSection className="py-16 bg-surface-muted">
           <div className="page-container">
             <div className="text-center mb-12 max-w-3xl mx-auto">
               <h2 className="page-heading mb-4">{en ? 'Our transport services' : 'Nos services de transport'}</h2>
@@ -467,10 +468,10 @@ export const HomePage: React.FC<HomePageProps> = ({
               </Button>
             </div>
           </div>
-        </section>
+        </RevealSection>
 
         {/* App mobile */}
-        <section className="py-16 bg-white">
+        <RevealSection className="py-16 bg-white">
           <div className="page-container">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="page-heading mb-4">{en ? 'It is easier in the app' : "C'est plus simple dans l'application"}</h2>
@@ -507,10 +508,10 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
           </div>
-        </section>
+        </RevealSection>
 
         {/* FAQ */}
-        <section id="faq-vtc-accueil" className="py-16 bg-surface-muted">
+        <RevealSection id="faq-vtc-accueil" className="py-16 bg-surface-muted">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="page-heading mb-2 text-center">
               {en ? 'Private driver & airport transfer' : 'VTC, chauffeur privé & transfert aéroport'}
@@ -529,10 +530,10 @@ export const HomePage: React.FC<HomePageProps> = ({
               ))}
             </div>
           </div>
-        </section>
+        </RevealSection>
 
         {/* CTA chauffeurs */}
-        <section className="py-16 bg-white">
+        <RevealSection className="py-16 bg-white">
           <div className="page-container">
             <div className="max-w-6xl mx-auto bg-black rounded-2xl p-10 sm:p-14 text-center text-white border border-gray-800">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
@@ -570,7 +571,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
           </div>
-        </section>
+        </RevealSection>
       </main>
       <Footer />
     </div>
