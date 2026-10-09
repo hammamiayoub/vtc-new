@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, FileText, ZoomIn, Maximize2 } from 'lucide-react';
 import type { ParcelPhoto } from '../../types';
+import { useLocale } from '../../i18n/locale';
 
 interface ParcelAttachmentsGalleryProps {
   photos: ParcelPhoto[];
@@ -16,6 +17,8 @@ export const ParcelAttachmentsGallery: React.FC<ParcelAttachmentsGalleryProps> =
   photos,
   thumbClassName = 'w-20 h-20 sm:w-24 sm:h-24',
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const [lightbox, setLightbox] = useState<ParcelPhoto | null>(null);
 
   useEffect(() => {
@@ -51,7 +54,7 @@ export const ParcelAttachmentsGallery: React.FC<ParcelAttachmentsGalleryProps> =
         {isPdf ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-2 text-gray-600">
             <FileText size={28} className="text-red-600 mb-1" />
-            <span className="text-[10px] font-medium text-center leading-tight">Facture PDF</span>
+            <span className="text-[10px] font-medium text-center leading-tight">{en ? 'Invoice PDF' : 'Facture PDF'}</span>
           </div>
         ) : (
           <img src={p.photoUrl} alt="" className="w-full h-full object-cover" />
@@ -71,13 +74,13 @@ export const ParcelAttachmentsGallery: React.FC<ParcelAttachmentsGalleryProps> =
       <div className="space-y-3">
         {merchandisePhotos.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-2">Photos de la marchandise</p>
+            <p className="text-xs font-medium text-gray-500 mb-2">{en ? 'Goods photos' : 'Photos de la marchandise'}</p>
             <div className="flex flex-wrap gap-2">{merchandisePhotos.map(renderThumb)}</div>
           </div>
         )}
         {invoices.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-2">Factures</p>
+            <p className="text-xs font-medium text-gray-500 mb-2">{en ? 'Invoices' : 'Factures'}</p>
             <div className="flex flex-wrap gap-2">{invoices.map(renderThumb)}</div>
           </div>
         )}
@@ -106,13 +109,13 @@ export const ParcelAttachmentsGallery: React.FC<ParcelAttachmentsGalleryProps> =
           >
             <p className="text-white text-sm mb-3 flex items-center gap-2">
               <Maximize2 size={16} />
-              {lightbox.documentType === 'invoice' ? 'Facture' : 'Photo de la marchandise'}
+              {lightbox.documentType === 'invoice' ? (en ? 'Invoice' : 'Facture') : (en ? 'Goods photo' : 'Photo de la marchandise')}
             </p>
 
             {lightbox.documentType === 'invoice' && isPdfUrl(lightbox.photoUrl) ? (
               <iframe
                 src={lightbox.photoUrl}
-                title="Facture"
+                title={en ? 'Invoice' : 'Facture'}
                 className="w-[min(90vw,800px)] h-[min(80vh,600px)] bg-white rounded-lg border-0"
               />
             ) : (

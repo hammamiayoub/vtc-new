@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle2, Circle } from 'lucide-react';
 import { validatePassword } from '../utils/validation';
+import { useLocale } from '../i18n/locale';
 
 interface PasswordStrengthIndicatorProps {
   password: string;
@@ -11,7 +12,12 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
   password,
   className = ''
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const requirements = validatePassword(password);
+  const requirementLabels = en
+    ? ['At least 8 characters', 'One lowercase letter', 'One uppercase letter', 'One number', 'One special character']
+    : null;
   const strength = requirements.filter(req => req.met).length;
   
   const getStrengthColor = () => {
@@ -21,15 +27,15 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
   };
 
   const getStrengthText = () => {
-    if (strength <= 2) return 'Faible';
-    if (strength <= 4) return 'Moyen';
-    return 'Fort';
+    if (strength <= 2) return en ? 'Weak' : 'Faible';
+    if (strength <= 4) return en ? 'Fair' : 'Moyen';
+    return en ? 'Strong' : 'Fort';
   };
 
   return (
     <div className={`space-y-3 ${className}`}>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700">Force du mot de passe</span>
+        <span className="text-sm font-medium text-gray-700">{en ? 'Password strength' : 'Force du mot de passe'}</span>
         <span className={`text-sm font-bold ${getStrengthColor()}`}>
           {getStrengthText()}
         </span>
@@ -55,7 +61,7 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
               <Circle size={16} className="text-gray-300" />
             )}
             <span className={`text-sm ${req.met ? 'text-green-600' : 'text-gray-500'}`}>
-              {req.message}
+              {requirementLabels ? requirementLabels[index] : req.message}
             </span>
           </div>
         ))}

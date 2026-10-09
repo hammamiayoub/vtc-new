@@ -4,6 +4,8 @@ import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { RatingFormData, Booking } from '../types';
 import { ratingSchema } from '../utils/validation';
+import { useLocale } from '../i18n/locale';
+import { translateSignupMessage } from '../i18n/signupErrors';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -18,6 +20,9 @@ export const RatingModal: React.FC<RatingModalProps> = ({
   booking,
   onRatingSubmitted
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
+  const dateLocale = en ? 'en-GB' : 'fr-FR';
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -42,7 +47,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
     e.preventDefault();
     
     if (rating === 0) {
-      alert('Veuillez sélectionner une note');
+      alert(en ? 'Please select a rating' : 'Veuillez sélectionner une note');
       return;
     }
 
@@ -55,7 +60,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
       
       ratingSchema.parse(formData);
     } catch (error: any) {
-      alert(error.errors?.[0]?.message || 'Données invalides');
+      alert(translateSignupMessage(error.errors?.[0]?.message, locale) || (en ? 'Invalid data' : 'Données invalides'));
       return;
     }
 
@@ -74,7 +79,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
 
       if (error) {
         console.error('Erreur lors de l\'enregistrement de la note:', error);
-        alert('Erreur lors de l\'enregistrement de la note');
+        alert(en ? 'Could not save the rating' : "Erreur lors de l'enregistrement de la note");
         return;
       }
 
@@ -88,7 +93,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
 
     } catch (error) {
       console.error('Erreur:', error);
-      alert('Une erreur est survenue');
+      alert(en ? 'Something went wrong' : 'Une erreur est survenue');
     } finally {
       setIsSubmitting(false);
     }
@@ -115,10 +120,12 @@ export const RatingModal: React.FC<RatingModalProps> = ({
             <CheckCircle size={32} className="text-green-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Merci pour votre avis !
+            {en ? 'Thank you for your review!' : 'Merci pour votre avis !'}
           </h2>
           <p className="text-gray-600 mb-6">
-            Votre note a été enregistrée avec succès. Elle aidera d'autres clients à choisir le bon chauffeur.
+            {en
+              ? 'Your rating was saved. It helps other riders choose the right driver.'
+              : "Votre note a été enregistrée avec succès. Elle aidera d'autres clients à choisir le bon chauffeur."}
           </p>
           <div className="flex items-center justify-center gap-2 text-yellow-500 mb-6">
             {[...Array(5)].map((_, i) => (
@@ -133,7 +140,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
             onClick={handleClose}
             className="bg-green-600 hover:bg-green-700 text-white"
           >
-            Fermer
+            {en ? 'Close' : 'Fermer'}
           </Button>
         </div>
       </div>
@@ -151,8 +158,8 @@ export const RatingModal: React.FC<RatingModalProps> = ({
                 <Star className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Noter votre chauffeur</h2>
-                <p className="text-gray-600">Partagez votre expérience</p>
+                <h2 className="text-2xl font-bold text-gray-900">{en ? 'Rate your driver' : 'Noter votre chauffeur'}</h2>
+                <p className="text-gray-600">{en ? 'Share your experience' : 'Partagez votre expérience'}</p>
               </div>
             </div>
             <button
@@ -170,13 +177,13 @@ export const RatingModal: React.FC<RatingModalProps> = ({
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-3 mb-3">
               <Car className="w-5 h-5 text-gray-600" />
-              <h3 className="font-semibold text-gray-900">Détails de la course</h3>
+              <h3 className="font-semibold text-gray-900">{en ? 'Ride details' : 'Détails de la course'}</h3>
             </div>
             <div className="space-y-2 text-sm text-gray-600">
-              <p><strong>Départ:</strong> {booking.pickup_address || 'Non spécifié'}</p>
-              <p><strong>Arrivée:</strong> {booking.destination_address || 'Non spécifié'}</p>
-              <p><strong>Date:</strong> {booking.scheduled_time ? new Date(booking.scheduled_time).toLocaleDateString('fr-FR') : 'Non spécifiée'}</p>
-              <p><strong>Prix:</strong> {booking.price_tnd ? `${booking.price_tnd} TND` : 'Non spécifié'}</p>
+              <p><strong>{en ? 'Pickup:' : 'Départ:'}</strong> {booking.pickup_address || (en ? 'Not specified' : 'Non spécifié')}</p>
+              <p><strong>{en ? 'Destination:' : 'Arrivée:'}</strong> {booking.destination_address || (en ? 'Not specified' : 'Non spécifié')}</p>
+              <p><strong>{en ? 'Date:' : 'Date:'}</strong> {booking.scheduled_time ? new Date(booking.scheduled_time).toLocaleDateString(dateLocale) : (en ? 'Not specified' : 'Non spécifiée')}</p>
+              <p><strong>{en ? 'Fare:' : 'Prix:'}</strong> {booking.price_tnd ? `${booking.price_tnd} TND` : (en ? 'Not specified' : 'Non spécifié')}</p>
             </div>
           </div>
 
@@ -185,7 +192,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
             {/* Note avec étoiles */}
             <div>
               <label className="block text-lg font-semibold text-gray-900 mb-4">
-                Comment évaluez-vous ce chauffeur ?
+                {en ? 'How would you rate this driver?' : 'Comment évaluez-vous ce chauffeur ?'}
               </label>
               <div className="flex items-center gap-2 mb-2">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -209,12 +216,12 @@ export const RatingModal: React.FC<RatingModalProps> = ({
                 ))}
               </div>
               <div className="text-sm text-gray-600">
-                {rating === 0 && "Sélectionnez une note"}
-                {rating === 1 && "⭐ Très décevant"}
-                {rating === 2 && "⭐⭐ Décevant"}
-                {rating === 3 && "⭐⭐⭐ Correct"}
-                {rating === 4 && "⭐⭐⭐⭐ Bien"}
-                {rating === 5 && "⭐⭐⭐⭐⭐ Excellent"}
+                {rating === 0 && (en ? 'Select a rating' : 'Sélectionnez une note')}
+                {rating === 1 && (en ? 'Very disappointing' : 'Très décevant')}
+                {rating === 2 && (en ? 'Disappointing' : 'Décevant')}
+                {rating === 3 && (en ? 'Okay' : 'Correct')}
+                {rating === 4 && (en ? 'Good' : 'Bien')}
+                {rating === 5 && (en ? 'Excellent' : 'Excellent')}
               </div>
             </div>
 
@@ -222,18 +229,18 @@ export const RatingModal: React.FC<RatingModalProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <MessageSquare className="inline w-4 h-4 mr-2" />
-                Commentaire (optionnel)
+                {en ? 'Comment (optional)' : 'Commentaire (optionnel)'}
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={4}
-                placeholder="Partagez votre expérience avec ce chauffeur..."
+                placeholder={en ? 'Share your experience with this driver...' : 'Partagez votre expérience avec ce chauffeur...'}
                 className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                 maxLength={500}
               />
               <div className="text-xs text-gray-500 mt-1">
-                {comment.length}/500 caractères
+                {comment.length}/500 {en ? 'characters' : 'caractères'}
               </div>
             </div>
 
@@ -247,12 +254,12 @@ export const RatingModal: React.FC<RatingModalProps> = ({
                 {isSubmitting ? (
                   <>
                     <Loader2 size={16} className="animate-spin mr-2" />
-                    Enregistrement...
+                    {en ? 'Saving...' : 'Enregistrement...'}
                   </>
                 ) : (
                   <>
                     <Star size={16} className="mr-2" />
-                    Enregistrer la note
+                    {en ? 'Save rating' : 'Enregistrer la note'}
                   </>
                 )}
               </Button>
@@ -262,7 +269,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
                 variant="outline"
                 className="flex-1"
               >
-                Annuler
+                {en ? 'Cancel' : 'Annuler'}
               </Button>
             </div>
           </form>

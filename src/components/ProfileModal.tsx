@@ -17,6 +17,7 @@ import { supabase } from '../lib/supabase';
 import { Driver, Client } from '../types';
 import { DRIVER_ACTIVITY_PROFILE_OPTIONS, driverActivityLabel } from '../utils/driverActivity';
 import { uploadProfileImage, deleteProfileImage } from '../utils/imageUpload';
+import { useLocale } from '../i18n/locale';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -35,6 +36,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onProfileDeleted,
   onProfileUpdated
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
+  const dateLocale = en ? 'en-GB' : 'fr-FR';
+  const emptyValue = en ? 'Not provided' : 'Non renseigné';
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -229,7 +234,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 {currentPhotoUrl ? (
                   <img
                     src={currentPhotoUrl}
-                    alt="Photo de profil"
+                    alt={en ? 'Profile photo' : 'Photo de profil'}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (
@@ -239,9 +244,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 )}
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Mon profil</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{en ? 'My profile' : 'Mon profil'}</h2>
                 <p className="text-gray-600">
-                  {userType === 'driver' ? 'Compte chauffeur' : 'Compte client'}
+                  {userType === 'driver'
+                    ? (en ? 'Driver account' : 'Compte chauffeur')
+                    : (en ? 'Rider account' : 'Compte client')}
                 </p>
               </div>
             </div>
@@ -250,7 +257,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <button
                   onClick={() => setIsEditing(true)}
                   className="p-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                  title="Modifier le profil"
+                  title={en ? 'Edit profile' : 'Modifier le profil'}
                 >
                   <Edit3 size={20} />
                 </button>
@@ -271,7 +278,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Camera className="w-5 h-5 text-purple-600" />
-              Photo de profil
+              {en ? 'Profile photo' : 'Photo de profil'}
             </h3>
             <ImageUpload
               currentImageUrl={currentPhotoUrl}
@@ -285,11 +292,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <User className="w-5 h-5 text-blue-600" />
-              Informations personnelles
+              {en ? 'Personal details' : 'Informations personnelles'}
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-lg p-4">
-                <label className="block text-sm text-gray-600 mb-1">Prénom</label>
+                <label className="block text-sm text-gray-600 mb-1">{en ? 'First name' : 'Prénom'}</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -302,7 +309,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 )}
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <label className="block text-sm text-gray-600 mb-1">Nom</label>
+                <label className="block text-sm text-gray-600 mb-1">{en ? 'Last name' : 'Nom'}</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -318,11 +325,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <label className="block text-sm text-gray-600 mb-1">Email</label>
                 <p className="font-semibold text-gray-900">{user.email}</p>
                 {isEditing && (
-                  <p className="text-xs text-gray-500 mt-1">Pour modifier l'adresse email, contactez le support.</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {en ? 'To change your email, contact support.' : "Pour modifier l'adresse email, contactez le support."}
+                  </p>
                 )}
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <label className="block text-sm text-gray-600 mb-1">Téléphone</label>
+                <label className="block text-sm text-gray-600 mb-1">{en ? 'Phone' : 'Téléphone'}</label>
                 {isEditing ? (
                   <input
                     type="tel"
@@ -332,22 +341,22 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   />
                 ) : (
                   <p className="font-semibold text-gray-900">
-                    {'phone' in user ? user.phone || 'Non renseigné' : 'Non renseigné'}
+                    {'phone' in user ? user.phone || emptyValue : emptyValue}
                   </p>
                 )}
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <label className="block text-sm text-gray-600 mb-1">Ville de résidence</label>
+                <label className="block text-sm text-gray-600 mb-1">{en ? 'City' : 'Ville de résidence'}</label>
                 {isEditing ? (
                   <CityInput
                     value={editData.city}
                     onChange={(value) => setEditData({ ...editData, city: value })}
-                    placeholder="Ville de résidence"
+                    placeholder={en ? 'City' : 'Ville de résidence'}
                     className="w-full"
                   />
                 ) : (
                   <p className="font-semibold text-gray-900">
-                    {'city' in user ? user.city || 'Non renseigné' : 'Non renseigné'}
+                    {'city' in user ? user.city || emptyValue : emptyValue}
                   </p>
                 )}
               </div>
@@ -415,13 +424,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-gray-600" />
-              Informations du compte
+              {en ? 'Account details' : 'Informations du compte'}
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-lg p-4">
-                <label className="block text-sm text-gray-600 mb-1">Membre depuis</label>
+                <label className="block text-sm text-gray-600 mb-1">{en ? 'Member since' : 'Membre depuis'}</label>
                 <p className="font-semibold text-gray-900">
-                  {new Date(user.createdAt).toLocaleDateString('fr-FR', {
+                  {new Date(user.createdAt).toLocaleDateString(dateLocale, {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
@@ -429,9 +438,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <label className="block text-sm text-gray-600 mb-1">Dernière mise à jour</label>
+                <label className="block text-sm text-gray-600 mb-1">{en ? 'Last update' : 'Dernière mise à jour'}</label>
                 <p className="font-semibold text-gray-900">
-                  {new Date(user.updatedAt).toLocaleDateString('fr-FR', {
+                  {new Date(user.updatedAt).toLocaleDateString(dateLocale, {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
@@ -452,7 +461,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
               >
                 <Save size={16} />
-                {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+                {isSaving ? (en ? 'Saving...' : 'Enregistrement...') : (en ? 'Save' : 'Enregistrer')}
               </Button>
               <Button
                 onClick={() => {
@@ -467,7 +476,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 }}
                 variant="outline"
               >
-                Annuler
+                {en ? 'Cancel' : 'Annuler'}
               </Button>
             </div>
           ) : (
@@ -478,7 +487,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 className="flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50"
               >
                 <Trash2 size={16} />
-                Supprimer mon compte
+                {en ? 'Delete my account' : 'Supprimer mon compte'}
               </Button>
             </div>
           )}
@@ -493,26 +502,27 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   <AlertTriangle size={24} className="text-red-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Supprimer le compte</h3>
-                  <p className="text-gray-600">Cette action est irréversible</p>
+                  <h3 className="text-lg font-bold text-gray-900">{en ? 'Delete account' : 'Supprimer le compte'}</h3>
+                  <p className="text-gray-600">{en ? 'This cannot be undone' : 'Cette action est irréversible'}</p>
                 </div>
               </div>
               
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                 <p className="text-red-800 text-sm">
-                  <strong>Attention :</strong> La suppression de votre compte entraînera :
+                  <strong>{en ? 'Warning:' : 'Attention :'}</strong>{' '}
+                  {en ? 'Deleting your account will:' : 'La suppression de votre compte entraînera :'}
                 </p>
                 <ul className="text-red-700 text-sm mt-2 space-y-1">
-                  <li>• Suppression définitive de toutes vos données</li>
+                  <li>• {en ? 'Permanently delete all your data' : 'Suppression définitive de toutes vos données'}</li>
                   {userType === 'driver' ? (
                     <>
-                      <li>• Annulation de vos disponibilités</li>
-                      <li>• Désassignation de vos courses en cours</li>
+                      <li>• {en ? 'Cancel your availability' : 'Annulation de vos disponibilités'}</li>
+                      <li>• {en ? 'Unassign your current rides' : 'Désassignation de vos courses en cours'}</li>
                     </>
                   ) : (
-                    <li>• Annulation de toutes vos réservations</li>
+                    <li>• {en ? 'Cancel all your bookings' : 'Annulation de toutes vos réservations'}</li>
                   )}
-                  <li>• Impossibilité de récupérer votre compte</li>
+                  <li>• {en ? 'Make the account impossible to recover' : 'Impossibilité de récupérer votre compte'}</li>
                 </ul>
               </div>
 
@@ -522,14 +532,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   loading={isDeleting}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                 >
-                  {isDeleting ? 'Suppression...' : 'Confirmer la suppression'}
+                  {isDeleting ? (en ? 'Deleting...' : 'Suppression...') : (en ? 'Confirm deletion' : 'Confirmer la suppression')}
                 </Button>
                 <Button
                   onClick={() => setShowDeleteConfirm(false)}
                   variant="outline"
                   className="flex-1"
                 >
-                  Annuler
+                  {en ? 'Cancel' : 'Annuler'}
                 </Button>
               </div>
             </div>

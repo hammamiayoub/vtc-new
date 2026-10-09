@@ -16,20 +16,25 @@ import {
   focusHomeBookingForm,
   focusHomePickupInput,
 } from '../utils/focusHomeBooking';
+import { useLocale } from '../i18n/locale';
 
 interface HomeBookingWidgetProps {
   onClientLogin: () => void;
   onClientSignup: () => void;
 }
 
-function formatTnd(amount: number): string {
-  return `${amount.toFixed(2).replace('.', ',')} TND`;
+function formatTnd(amount: number, locale: 'fr' | 'en'): string {
+  const value = amount.toFixed(2);
+  return `${locale === 'en' ? value : value.replace('.', ',')} TND`;
 }
 
 export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
   onClientLogin,
   onClientSignup,
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
+  const money = (amount: number) => formatTnd(amount, locale);
   const [pickupAddress, setPickupAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
   const [pickupCoords, setPickupCoords] = useState<Coordinates | null>(null);
@@ -95,7 +100,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
     setPickupCoords(null);
     resetQuote();
     if (value.trim() && !pickupCoords) {
-      setAutocompleteHint('Sélectionnez le lieu de départ dans la liste de suggestions.');
+      setAutocompleteHint(en ? 'Select the pickup place from the suggestions.' : 'Sélectionnez le lieu de départ dans la liste de suggestions.');
     } else {
       setAutocompleteHint(null);
     }
@@ -106,7 +111,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
     setDestinationCoords(null);
     resetQuote();
     if (value.trim() && !destinationCoords) {
-      setAutocompleteHint('Sélectionnez la destination dans la liste de suggestions.');
+      setAutocompleteHint(en ? 'Select the destination from the suggestions.' : 'Sélectionnez la destination dans la liste de suggestions.');
     } else {
       setAutocompleteHint(null);
     }
@@ -116,17 +121,17 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
     setError(null);
 
     if (!pickupAddress.trim() || !destinationAddress.trim()) {
-      setError('Veuillez renseigner le lieu de prise en charge et la destination.');
+      setError(en ? 'Enter a pickup place and a destination.' : 'Veuillez renseigner le lieu de prise en charge et la destination.');
       return;
     }
 
     if (!pickupCoords || !destinationCoords) {
-      setError('Sélectionnez chaque adresse dans la liste de suggestions pour calculer le tarif.');
+      setError(en ? 'Select each address from the suggestions to calculate the fare.' : 'Sélectionnez chaque adresse dans la liste de suggestions pour calculer le tarif.');
       return;
     }
 
     if (pickupAddress.trim().toLowerCase() === destinationAddress.trim().toLowerCase()) {
-      setError('La destination doit être différente du lieu de prise en charge.');
+      setError(en ? 'The destination must be different from the pickup place.' : 'La destination doit être différente du lieu de prise en charge.');
       return;
     }
 
@@ -142,7 +147,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
       );
 
       if (distance === null || distance <= 0) {
-        setError('Impossible de calculer la distance pour ce trajet.');
+        setError(en ? 'We could not calculate the distance for this trip.' : 'Impossible de calculer la distance pour ce trajet.');
         return;
       }
 
@@ -166,7 +171,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
         vehicleType: 'sedan',
       });
     } catch {
-      setError('Une erreur est survenue lors du calcul du tarif. Réessayez.');
+      setError(en ? 'Something went wrong while calculating the fare. Please try again.' : 'Une erreur est survenue lors du calcul du tarif. Réessayez.');
     } finally {
       setIsCalculating(false);
     }
@@ -176,10 +181,10 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
 
   return (
     <div className="uber-card shadow-card p-6 sm:p-8">
-      <p className="text-sm font-semibold text-gray-900 mb-1">Réserver maintenant</p>
+      <p className="text-sm font-semibold text-gray-900 mb-1">{en ? 'Book now' : 'Réserver maintenant'}</p>
       {pickupHighlighted && (
         <p className="text-sm text-gray-600 mb-3" role="status">
-          Indiquez le lieu de prise en charge pour commencer.
+          {en ? 'Enter the pickup place to start.' : 'Indiquez le lieu de prise en charge pour commencer.'}
         </p>
       )}
 
@@ -202,7 +207,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
             setAutocompleteHint(null);
             resetQuote();
           }}
-          placeholder="Lieu de prise en charge"
+          placeholder={en ? 'Pickup location' : 'Lieu de prise en charge'}
           countries="tn"
           inputClassName="w-full pl-10 pr-4 py-3.5 rounded-lg bg-surface-muted border border-surface-border focus:ring-2 focus:ring-gray-900 focus:border-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
         />
@@ -220,7 +225,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
             setAutocompleteHint(null);
             resetQuote();
           }}
-          placeholder="Destination"
+          placeholder={en ? 'Destination' : 'Destination'}
           countries="tn"
           inputClassName="w-full pl-10 pr-4 py-3.5 rounded-lg bg-surface-muted border border-surface-border focus:ring-2 focus:ring-gray-900 focus:border-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
         />
@@ -248,10 +253,10 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
           {isCalculating ? (
             <>
               <Loader2 size={20} className="animate-spin mr-2" />
-              Calcul en cours…
+              {en ? 'Calculating…' : 'Calcul en cours…'}
             </>
           ) : (
-            'Voir les prix'
+            en ? 'See prices' : 'Voir les prix'
           )}
         </Button>
       )}
@@ -259,33 +264,36 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
       {estimatedPrice !== null && distanceKm !== null && (
         <div className="mt-5 rounded-xl bg-surface-muted border border-surface-border p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-            Estimation berline / taxi (à partir de)
+            {en ? 'Sedan / taxi estimate (from)' : 'Estimation berline / taxi (à partir de)'}
           </p>
-          <p className="text-3xl font-bold text-gray-900 mb-1">{formatTnd(estimatedPrice)}</p>
+          <p className="text-3xl font-bold text-gray-900 mb-1">{money(estimatedPrice)}</p>
           <p className="text-sm text-gray-600 mb-3">
-            Trajet d&apos;environ <strong>{distanceKm.toFixed(1)} km</strong>
+            {en ? 'About' : "Trajet d'environ"} <strong>{distanceKm.toFixed(1)} km</strong>
             {breakdown && (
-              <> · prise en charge dès {formatTnd(RIDE_DEFAULT_PICKUP_FARE_TND)}</>
+              <> · {en ? 'pickup from' : 'prise en charge dès'} {money(RIDE_DEFAULT_PICKUP_FARE_TND)}</>
             )}
           </p>
           <p className="text-xs text-gray-500 mb-4">
-            Tarif indicatif hors suppléments (nuit, week-end), hors choix de véhicule (van, minibus…)
-            et hors distance du chauffeur ({getDriverPickupFareSummaryText()}).
+            {en
+              ? `Indicative fare, excluding extras (night, weekend), vehicle choice (van, minibus…) and the driver’s distance to pickup (${getDriverPickupFareSummaryText()}).`
+              : `Tarif indicatif hors suppléments (nuit, week-end), hors choix de véhicule (van, minibus…) et hors distance du chauffeur (${getDriverPickupFareSummaryText()}).`}
           </p>
 
           <div className="rounded-lg bg-white border border-surface-border p-4 mb-4">
             <p className="text-sm font-semibold text-gray-900 mb-2">
-              Continuer votre réservation
+              {en ? 'Continue your booking' : 'Continuer votre réservation'}
             </p>
             <p className="text-sm text-gray-600 mb-4">
-              Créez un compte gratuit ou connectez-vous pour choisir votre chauffeur et confirmer.
+              {en
+                ? 'Create a free account or sign in to choose your driver and confirm.'
+                : 'Créez un compte gratuit ou connectez-vous pour choisir votre chauffeur et confirmer.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button size="md" onClick={onClientSignup} className="rounded-full flex-1 order-1">
-                Continuer ma réservation
+                {en ? 'Continue my booking' : 'Continuer ma réservation'}
               </Button>
               <Button size="md" variant="outline" onClick={onClientLogin} className="rounded-full flex-1 order-2">
-                J&apos;ai déjà un compte
+                {en ? 'I already have an account' : "J'ai déjà un compte"}
               </Button>
             </div>
           </div>
@@ -295,7 +303,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
             onClick={resetQuote}
             className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
           >
-            Modifier le trajet
+            {en ? 'Change the trip' : 'Modifier le trajet'}
           </button>
         </div>
       )}
@@ -306,7 +314,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
           onClick={onClientLogin}
           className="w-full mt-3 text-sm text-gray-600 hover:text-gray-900 transition-colors"
         >
-          Connectez-vous pour consulter votre activité récente
+          {en ? 'Sign in to see your recent activity' : 'Connectez-vous pour consulter votre activité récente'}
         </button>
       )}
     </div>

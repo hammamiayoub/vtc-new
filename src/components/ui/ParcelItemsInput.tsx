@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from './Button';
 import type { ParcelItem } from '../../types';
+import { useLocale } from '../../i18n/locale';
 
 interface ParcelItemsInputProps {
   items: Omit<ParcelItem, 'id' | 'requestId' | 'createdAt'>[];
@@ -17,6 +18,8 @@ const emptyItem = (): Omit<ParcelItem, 'id' | 'requestId' | 'createdAt'> => ({
 });
 
 export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onChange, errors }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const updateItem = (index: number, field: keyof Omit<ParcelItem, 'id' | 'requestId' | 'createdAt'>, value: string | number) => {
     const next = [...items];
     next[index] = { ...next[index], [field]: value };
@@ -33,23 +36,23 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-900">Description des objets</h3>
+        <h3 className="text-sm font-medium text-gray-900">{en ? 'Items' : 'Description des objets'}</h3>
         <Button type="button" variant="outline" size="sm" onClick={addItem} className="flex items-center gap-1">
           <Plus size={14} />
-          Ajouter un objet
+          {en ? 'Add an item' : 'Ajouter un objet'}
         </Button>
       </div>
 
       {items.map((item, index) => (
         <div key={index} className="p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Objet {index + 1}</span>
+            <span className="text-sm font-medium text-gray-700">{en ? 'Item' : 'Objet'} {index + 1}</span>
             {items.length > 1 && (
               <button
                 type="button"
                 onClick={() => removeItem(index)}
                 className="text-red-500 hover:text-red-700 p-1"
-                aria-label="Supprimer l'objet"
+                aria-label={en ? 'Remove item' : "Supprimer l'objet"}
               >
                 <Trash2 size={16} />
               </button>
@@ -58,17 +61,17 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Nom de l'objet *</label>
+              <label className="block text-xs text-gray-600 mb-1">{en ? 'Item name *' : "Nom de l'objet *"}</label>
               <input
                 type="text"
                 value={item.name}
                 onChange={(e) => updateItem(index, 'name', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ex: Cartons, meubles…"
+                placeholder={en ? 'e.g. boxes, furniture…' : 'Ex: Cartons, meubles…'}
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Nombre de colis *</label>
+              <label className="block text-xs text-gray-600 mb-1">{en ? 'Number of parcels *' : 'Nombre de colis *'}</label>
               <input
                 type="number"
                 min={1}
@@ -78,7 +81,7 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Poids estimé (kg)</label>
+              <label className="block text-xs text-gray-600 mb-1">{en ? 'Estimated weight (kg)' : 'Poids estimé (kg)'}</label>
               <input
                 type="number"
                 min={0}
@@ -88,11 +91,11 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
                   updateItem(index, 'weightKg', e.target.value ? parseFloat(e.target.value) : undefined as unknown as number)
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Optionnel"
+                placeholder={en ? 'Optional' : 'Optionnel'}
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Volume estimé (m³)</label>
+              <label className="block text-xs text-gray-600 mb-1">{en ? 'Estimated volume (m³)' : 'Volume estimé (m³)'}</label>
               <input
                 type="number"
                 min={0}
@@ -102,7 +105,7 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
                   updateItem(index, 'volumeM3', e.target.value ? parseFloat(e.target.value) : undefined as unknown as number)
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Optionnel"
+                placeholder={en ? 'Optional' : 'Optionnel'}
               />
             </div>
           </div>

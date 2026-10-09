@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Header';
 import { HomePage } from './components/HomePage';
 import { PageLoader } from './components/ui/PageLoader';
@@ -14,6 +14,7 @@ import {
   isProtectedPath,
   resolveUserRole,
 } from './utils/resolveUserRole';
+import { LanguageSwitch, LocaleProvider, localizePath, splitLocalePath, useLocale } from './i18n/locale';
 
 const DriverSignup = lazy(() =>
   import('./components/DriverSignup').then((m) => ({ default: m.DriverSignup }))
@@ -146,22 +147,24 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
   const [authReady, setAuthReady] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
+  const { locale, logicalPath, href } = useLocale();
 
   useEffect(() => {
-    const { view, seoKey } = pathToView(location.pathname);
+    const { view, seoKey } = pathToView(logicalPath);
     setCurrentView(view);
-    updateSEO(seoKey);
+    updateSEO(seoKey, locale, logicalPath === '/__unknown__' ? '/' : logicalPath);
 
-    if (location.pathname !== '/' && view === 'home' && !location.pathname.startsWith('/blog/')) {
-      navigate('/', { replace: true });
+    if (logicalPath !== '/' && view === 'home' && !logicalPath.startsWith('/blog/')) {
+      navigate(href('/'), { replace: true });
     }
-  }, [location.pathname, navigate]);
+  }, [logicalPath, locale, navigate, href]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
     const path = window.location.pathname;
+    const { locale: pathLocale, logicalPath: authPath } = splitLocalePath(path);
+    const go = (logical: string) => navigate(localizePath(logical, pathLocale), { replace: true });
 
     if (hash.includes('type=recovery') || urlParams.get('type') === 'recovery') {
       setCurrentView('reset-password');
@@ -183,13 +186,13 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
           return;
         }
 
-        const onPublicPage = isPublicPath(path);
+        const onPublicPage = isPublicPath(authPath);
 
         if (!session?.user) {
-          if (isProtectedPath(path)) {
-            if (path.startsWith('/admin')) navigate('/admin', { replace: true });
-            else if (path.includes('client')) navigate('/client-login', { replace: true });
-            else navigate('/driver-login', { replace: true });
+          if (isProtectedPath(authPath)) {
+            if (authPath.startsWith('/admin')) navigate('/admin', { replace: true });
+            else if (authPath.includes('client')) go('/client-login');
+            else go('/driver-login');
           }
           setAuthReady(true);
           return;
@@ -198,7 +201,7 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
         const role = await resolveUserRole(session.user.id);
         if (cancelled) return;
 
-        if (path === '/admin-dashboard') {
+        if (authPath === '/admin-dashboard') {
           if (role !== 'admin') {
             navigate('/admin', { replace: true });
           } else {
@@ -208,7 +211,7 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
           if (role === 'admin') setCurrentView('admin-dashboard');
           else if (role === 'driver') setCurrentView('dashboard');
           else if (role === 'client') setCurrentView('client-dashboard');
-        } else if (!role && path !== '/signup' && path !== '/client-signup') {
+        } else if (!role && authPath !== '/signup' && authPath !== '/client-signup') {
           await supabase.auth.signOut();
         }
 
@@ -243,36 +246,41 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
     try {
       setCurrentView('home');
       await supabase.auth.signOut();
-      navigate('/', { replace: true });
+      navigate(href('/'), { replace: true });
     } catch (error) {
       console.error('Erreur déconnexion:', error);
-      window.location.href = '/';
+      window.location.href = href('/');
     }
   };
 
-  if (!authReady && isProtectedPath(location.pathname)) {
-    return <PageLoader fullScreen label="Préparation de votre espace…" />;
+  if (!authReady && isProtectedPath(logicalPath)) {
+    return (
+      <PageLoader
+        fullScreen
+        label={locale === 'en' ? 'Opening your account…' : 'Préparation de votre espace…'}
+      />
+    );
   }
 
   const renderContent = () => {
     switch (currentView) {
       case 'signup':
-        return <DriverSignup onBack={() => navigate('/')} />;
+        return <DriverSignup onBack={() => navigate(href('/'))} />;
       case 'client-signup':
-        return <ClientSignup onBack={() => navigate('/')} />;
+        return <ClientSignup onBack={() => navigate(href('/'))} />;
       case 'login-selection':
         return (
           <LoginSelection
-            onBack={() => navigate('/')}
-            onDriverLogin={() => navigate('/driver-login')}
-            onClientLogin={() => navigate('/client-login')}
+            onBack={() => navigate(href('/'))}
+            onDriverLogin={() => navigate(href('/driver-login'))}
+            onClientLogin={() => navigate(href('/client-login'))}
           />
         );
       case 'driver-login':
         return (
           <DriverLogin
-            onBack={() => navigate('/login')}
-            onSignup={() => navigate('/signup')}
+            onBack={() => navigate(href('/login'))}
+            onSignup={() => navigate(href('/signup'))}
             onLoginSuccess={() => {
               navigate('/dashboard');
             }}
@@ -281,19 +289,19 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
       case 'client-login':
         return (
           <ClientLogin
-            onBack={() => navigate('/')}
-            onSignup={() => navigate('/client-signup')}
+            onBack={() => navigate(href('/'))}
+            onSignup={() => navigate(href('/client-signup'))}
             onLoginSuccess={() => {
-              navigate('/client-dashboard');
+              navigate(href('/client-dashboard'));
             }}
           />
         );
       case 'login':
         return (
           <LoginSelection
-            onBack={() => navigate('/')}
-            onDriverLogin={() => navigate('/driver-login')}
-            onClientLogin={() => navigate('/client-login')}
+            onBack={() => navigate(href('/'))}
+            onDriverLogin={() => navigate(href('/driver-login'))}
+            onClientLogin={() => navigate(href('/client-login'))}
           />
         );
       case 'dashboard':
@@ -312,33 +320,33 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
       case 'admin-dashboard':
         return <AdminDashboard onLogout={handleLogout} />;
       case 'privacy-policy':
-        return <PrivacyPolicy onBack={() => navigate('/')} />;
+        return <PrivacyPolicy onBack={() => navigate(href('/'))} />;
       case 'terms-of-service':
-        return <TermsOfService onBack={() => navigate('/')} />;
+        return <TermsOfService onBack={() => navigate(href('/'))} />;
       case 'reset-password':
         return (
-          <ResetPasswordPage onBack={() => navigate('/')} onSuccess={() => navigate('/')} />
+          <ResetPasswordPage onBack={() => navigate(href('/'))} onSuccess={() => navigate(href('/'))} />
         );
       case 'parcel-transport':
         return <ParcelTransportPage />;
       case 'vtc-tunisie':
-        return <VtcTunisiePage onClientLogin={() => navigate('/client-login')} />;
+        return <VtcTunisiePage onClientLogin={() => navigate(href('/client-login'))} />;
       case 'blog':
         return <BlogPage />;
       case 'about':
         return (
           <AboutPage
-            onClientLogin={() => navigate('/client-login')}
-            onClientSignup={() => navigate('/client-signup')}
+            onClientLogin={() => navigate(href('/client-login'))}
+            onClientSignup={() => navigate(href('/client-signup'))}
           />
         );
       default:
         return (
           <HomePage
-            onGetStarted={() => navigate('/signup')}
-            onClientLogin={() => navigate('/client-login')}
-            onClientSignup={() => navigate('/client-signup')}
-            onDriverLogin={() => navigate('/driver-login')}
+            onGetStarted={() => navigate(href('/signup'))}
+            onClientLogin={() => navigate(href('/client-login'))}
+            onClientSignup={() => navigate(href('/client-signup'))}
+            onDriverLogin={() => navigate(href('/driver-login'))}
           />
         );
     }
@@ -352,8 +360,22 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
     currentView === 'blog' ||
     currentView === 'about';
 
+  const showLanguageOnAuth =
+    currentView === 'signup' ||
+    currentView === 'client-signup' ||
+    currentView === 'login' ||
+    currentView === 'login-selection' ||
+    currentView === 'driver-login' ||
+    currentView === 'client-login' ||
+    currentView === 'reset-password';
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {showLanguageOnAuth && (
+        <div className="fixed top-4 right-4 z-50">
+          <LanguageSwitch tone="light" />
+        </div>
+      )}
       {showHeader && <Header currentView={currentView} />}
       <Suspense fallback={<RouteFallback />}>{renderContent()}</Suspense>
       {showChat && currentView !== 'admin' && currentView !== 'admin-dashboard' && (
@@ -379,6 +401,7 @@ function App() {
 
   return (
     <Router>
+      <LocaleProvider>
       <ScrollToTop />
       {cookieConsent === null && (
         <CookieConsentBanner onConsentChange={setCookieConsent} />
@@ -393,7 +416,23 @@ function App() {
           }
         />
         <Route
+          path="/en/privacy-policy"
+          element={
+            <Suspense fallback={<PageLoader fullScreen />}>
+              <PrivacyPolicyPage />
+            </Suspense>
+          }
+        />
+        <Route
           path="/terms-of-service"
+          element={
+            <Suspense fallback={<PageLoader fullScreen />}>
+              <TermsOfServicePage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/en/terms-of-service"
           element={
             <Suspense fallback={<PageLoader fullScreen />}>
               <TermsOfServicePage />
@@ -402,6 +441,7 @@ function App() {
         />
         <Route path="/*" element={<AppContent cookieConsent={cookieConsent} />} />
       </Routes>
+      </LocaleProvider>
     </Router>
   );
 }

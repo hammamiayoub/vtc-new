@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, X, ChevronLeft, ChevronRight, Send, Search } from 'lucide-react';
 import { faqCategories, FaqCategory, FaqItem } from '../data/faqData';
+import { faqCategoriesEn } from '../data/faqData.en';
+import { useLocale } from '../i18n/locale';
 import {
   searchAssistantKnowledge,
   getQuickSuggestions,
@@ -24,6 +26,9 @@ const CHAT_PANEL_BOTTOM =
   'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + 4.5rem)';
 
 export const ChatWidget: React.FC = () => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
+  const categories = en ? faqCategoriesEn : faqCategories;
   const [isOpen, setIsOpen] = useState(false);
   const [screen, setScreen] = useState<Screen>('categories');
   const [selectedCategory, setSelectedCategory] = useState<FaqCategory | null>(null);
@@ -34,10 +39,26 @@ export const ChatWidget: React.FC = () => {
     {
       type: 'bot',
       text:
-        'Bonjour ! Je suis l\'assistant TuniDrive.\n\nPosez votre question ci-dessous (tarifs, aéroport, colis, chauffeur…) ou choisissez une catégorie.',
+        en
+          ? 'Hello, I am the TuniDrive assistant.\n\nAsk a question below (fares, airport, parcels, driver…) or choose a category.'
+          : 'Bonjour ! Je suis l\'assistant TuniDrive.\n\nPosez votre question ci-dessous (tarifs, aéroport, colis, chauffeur…) ou choisissez une catégorie.',
     },
   ]);
   const [hasUnread, setHasUnread] = useState(true);
+
+  useEffect(() => {
+    setMessages([
+      {
+        type: 'bot',
+        text: en
+          ? 'Hello, I am the TuniDrive assistant.\n\nAsk a question below (fares, airport, parcels, driver…) or choose a category.'
+          : 'Bonjour ! Je suis l\'assistant TuniDrive.\n\nPosez votre question ci-dessous (tarifs, aéroport, colis, chauffeur…) ou choisissez une catégorie.',
+      },
+    ]);
+    setScreen('categories');
+    setSelectedCategory(null);
+    setSearchResults([]);
+  }, [en]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -67,12 +88,14 @@ export const ChatWidget: React.FC = () => {
         pushBotMessage(item.answer);
         setTimeout(() => {
           pushBotMessage(
-            'Est-ce que cela répond à votre question ? Vous pouvez poser une autre question ou revenir aux catégories.',
+            en
+              ? 'Does that answer your question? You can ask another one or go back to the categories.'
+              : 'Est-ce que cela répond à votre question ? Vous pouvez poser une autre question ou revenir aux catégories.',
           );
         }, 400);
       }, 300);
     },
-    [pushBotMessage, pushUserMessage],
+    [en, pushBotMessage, pushUserMessage],
   );
 
   const handleOpen = () => {
@@ -89,7 +112,11 @@ export const ChatWidget: React.FC = () => {
     setScreen('questions');
     setSearchResults([]);
     pushUserMessage(category.label);
-    pushBotMessage(`Voici les questions fréquentes pour « ${category.label.replace('Je suis ', '')} ». Laquelle vous intéresse ?`);
+    pushBotMessage(
+      en
+        ? `Here are the frequent questions for “${category.label.replace('I am a ', '')}”. Which one interests you?`
+        : `Voici les questions fréquentes pour « ${category.label.replace('Je suis ', '')} ». Laquelle vous intéresse ?`,
+    );
   };
 
   const handleSelectQuestion = (item: FaqItem) => {
@@ -112,10 +139,10 @@ export const ChatWidget: React.FC = () => {
       setSearchResults([]);
       pushUserMessage(query);
 
-      const results = searchAssistantKnowledge(query, 4);
+      const results = searchAssistantKnowledge(query, 4, locale);
 
       if (results.length === 0) {
-        pushBotMessage(formatAssistantFallback());
+        pushBotMessage(formatAssistantFallback(locale));
         return;
       }
 
@@ -136,11 +163,13 @@ export const ChatWidget: React.FC = () => {
       setSearchResults(results.map((r) => r.entry));
       pushBotMessage(
         results.length === 1
-          ? 'J\'ai trouvé une réponse possible. Cliquez dessus pour l\'afficher :'
-          : `J\'ai trouvé ${results.length} réponses possibles. Laquelle correspond à votre question ?`,
+          ? (en ? 'I found one possible answer. Click it to open it:' : 'J\'ai trouvé une réponse possible. Cliquez dessus pour l\'afficher :')
+          : (en
+            ? `I found ${results.length} possible answers. Which one matches your question?`
+            : `J\'ai trouvé ${results.length} réponses possibles. Laquelle correspond à votre question ?`),
       );
     },
-    [pushBotMessage, pushUserMessage, showAnswer],
+    [en, locale, pushBotMessage, pushUserMessage, showAnswer],
   );
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -154,7 +183,7 @@ export const ChatWidget: React.FC = () => {
     setSelectedItem(null);
     setSearchResults([]);
     setSearchQuery('');
-    pushBotMessage('Choisissez une catégorie ou posez une nouvelle question.');
+    pushBotMessage(en ? 'Choose a category or ask a new question.' : 'Choisissez une catégorie ou posez une nouvelle question.');
   };
 
   const handleBackToQuestions = () => {
@@ -165,7 +194,7 @@ export const ChatWidget: React.FC = () => {
       return;
     }
     setScreen('questions');
-    pushBotMessage('Voici les autres questions disponibles. Laquelle vous intéresse ?');
+    pushBotMessage(en ? 'Here are the other available questions. Which one interests you?' : 'Voici les autres questions disponibles. Laquelle vous intéresse ?');
   };
 
   const formatAnswer = (text: string) => {
@@ -177,7 +206,7 @@ export const ChatWidget: React.FC = () => {
     ));
   };
 
-  const quickSuggestions = getQuickSuggestions();
+  const quickSuggestions = getQuickSuggestions(locale);
 
   return (
     <>
@@ -187,13 +216,13 @@ export const ChatWidget: React.FC = () => {
       >
         {!isOpen && hasUnread && (
           <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2 shadow-lg text-sm text-gray-700 max-w-[200px] text-right animate-bounce">
-            Besoin d&apos;aide ? 💬
+            {en ? 'Need help?' : "Besoin d'aide ?"} 💬
           </div>
         )}
         <button
           onClick={isOpen ? handleClose : handleOpen}
           className="relative w-14 h-14 bg-black text-white rounded-full shadow-xl flex items-center justify-center hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700"
-          aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat'}
+          aria-label={isOpen ? (en ? 'Close chat' : 'Fermer le chat') : (en ? 'Open chat' : 'Ouvrir le chat')}
         >
           {isOpen ? <X size={22} /> : <MessageCircle size={22} />}
           {!isOpen && hasUnread && (
@@ -212,13 +241,13 @@ export const ChatWidget: React.FC = () => {
               <MessageCircle size={18} className="text-black" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-semibold text-sm leading-tight">Assistant TuniDrive</p>
-              <p className="text-gray-400 text-xs">FAQ intelligente · réponses vérifiées</p>
+              <p className="text-white font-semibold text-sm leading-tight">{en ? 'TuniDrive assistant' : 'Assistant TuniDrive'}</p>
+              <p className="text-gray-400 text-xs">{en ? 'Smart FAQ · verified answers' : 'FAQ intelligente · réponses vérifiées'}</p>
             </div>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-white transition-colors p-1"
-              aria-label="Fermer"
+              aria-label={en ? 'Close' : 'Fermer'}
             >
               <X size={18} />
             </button>
@@ -260,16 +289,16 @@ export const ChatWidget: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Ex : tarif aéroport Tunis, devis colis…"
+                placeholder={en ? 'e.g. Tunis airport fare, parcel quote…' : 'Ex : tarif aéroport Tunis, devis colis…'}
                 className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400"
-                aria-label="Posez votre question"
+                aria-label={en ? 'Ask your question' : 'Posez votre question'}
               />
             </div>
             <button
               type="submit"
               disabled={searchQuery.trim().length < 2}
               className="flex-shrink-0 w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="Envoyer la question"
+              aria-label={en ? 'Send question' : 'Envoyer la question'}
             >
               <Send size={16} />
             </button>
@@ -294,7 +323,7 @@ export const ChatWidget: React.FC = () => {
                   onClick={handleBackToCategories}
                   className="w-full text-center text-xs text-gray-500 hover:text-gray-800 py-2"
                 >
-                  Voir toutes les catégories
+                  {en ? 'See all categories' : 'Voir toutes les catégories'}
                 </button>
               </div>
             )}
@@ -302,7 +331,7 @@ export const ChatWidget: React.FC = () => {
             {screen === 'categories' && (
               <div className="p-3 space-y-2">
                 <p className="text-xs text-gray-400 font-medium uppercase tracking-wide px-1">
-                  Questions fréquentes
+                  {en ? 'Frequent questions' : 'Questions fréquentes'}
                 </p>
                 <div className="flex flex-wrap gap-1.5 px-1 pb-1">
                   {quickSuggestions.map((entry) => (
@@ -317,9 +346,9 @@ export const ChatWidget: React.FC = () => {
                   ))}
                 </div>
                 <p className="text-xs text-gray-400 font-medium uppercase tracking-wide px-1 pt-1">
-                  Catégories
+                  {en ? 'Categories' : 'Catégories'}
                 </p>
-                {faqCategories.map((cat) => (
+                {categories.map((cat) => (
                   <button
                     key={cat.id}
                     type="button"
@@ -343,7 +372,7 @@ export const ChatWidget: React.FC = () => {
                     className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 transition-colors"
                   >
                     <ChevronLeft size={14} />
-                    Retour
+                    {en ? 'Back' : 'Retour'}
                   </button>
                   <span className="text-xs text-gray-400">|</span>
                   <span className="text-xs text-gray-500 font-medium">
@@ -375,14 +404,14 @@ export const ChatWidget: React.FC = () => {
                   className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40"
                 >
                   <ChevronLeft size={14} />
-                  Autre question
+                  {en ? 'Another question' : 'Autre question'}
                 </button>
                 <button
                   type="button"
                   onClick={handleBackToCategories}
                   className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-black text-white text-sm hover:bg-gray-800 transition-colors"
                 >
-                  Catégories
+                  {en ? 'Categories' : 'Catégories'}
                 </button>
               </div>
             )}
@@ -394,7 +423,7 @@ export const ChatWidget: React.FC = () => {
                   onClick={handleBackToCategories}
                   className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  Parcourir les catégories
+                  {en ? 'Browse categories' : 'Parcourir les catégories'}
                 </button>
               </div>
             )}

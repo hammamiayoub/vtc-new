@@ -10,6 +10,8 @@ import { countriesForPoint, extractPlaceDetails, geolocateCurrentPosition } from
 import { createParcelRequest, notifyTransporteursForRequest } from '../utils/parcelService';
 import { uploadParcelAttachment } from '../utils/imageUpload';
 import type { ParcelDirection, ParcelDocumentType, ParcelItem, ParcelQuoteFormData } from '../types';
+import { useLocale } from '../i18n/locale';
+import { translateSignupMessage } from '../i18n/signupErrors';
 
 interface PendingAttachment {
   file: File;
@@ -32,6 +34,9 @@ interface PlaceState {
 }
 
 export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSuccess }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
+  const tx = (message?: string) => translateSignupMessage(message, locale);
   const [items, setItems] = useState<Omit<ParcelItem, 'id' | 'requestId' | 'createdAt'>[]>([
     { name: '', quantity: 1 },
   ]);
@@ -70,7 +75,11 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
       setValue('departureAddress', place.address, { shouldValidate: true });
     } catch (err) {
       console.error(err);
-      alert("Impossible d'obtenir votre position. Vérifiez les autorisations de géolocalisation.");
+      alert(
+        en
+          ? 'Could not get your location. Check location permissions.'
+          : "Impossible d'obtenir votre position. Vérifiez les autorisations de géolocalisation.",
+      );
     } finally {
       setIsGeolocating(false);
     }
@@ -89,8 +98,8 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
     if (valid.length !== files.length) {
       alert(
         documentType === 'photo'
-          ? 'Photos : images uniquement (JPG, PNG…), max 5 Mo chacune.'
-          : 'Factures : image ou PDF, max 5 Mo chacun.'
+          ? (en ? 'Photos: images only (JPG, PNG…), 5 MB each.' : 'Photos : images uniquement (JPG, PNG…), max 5 Mo chacune.')
+          : (en ? 'Invoices: image or PDF, 5 MB each.' : 'Factures : image ou PDF, max 5 Mo chacun.')
       );
     }
     setAttachments((prev) => {
@@ -172,26 +181,30 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
           <Package className="text-blue-600" size={20} />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Transport international de colis</h2>
-          <p className="text-sm text-gray-600">Demandez un devis pour un transport Europe ↔ Tunisie</p>
+          <h2 className="text-xl font-bold text-gray-900">
+            {en ? 'International parcel transport' : 'Transport international de colis'}
+          </h2>
+          <p className="text-sm text-gray-600">
+            {en ? 'Request a quote for Europe ↔ Tunisia' : 'Demandez un devis pour un transport Europe ↔ Tunisie'}
+          </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Direction du transport *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{en ? 'Direction *' : 'Direction du transport *'}</label>
           <select
             {...register('direction')}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="europe_to_tunisia">Europe → Tunisie (devise : EUR)</option>
-            <option value="tunisia_to_europe">Tunisie → Europe (devise : TND)</option>
+            <option value="europe_to_tunisia">{en ? 'Europe → Tunisia (currency: EUR)' : 'Europe → Tunisie (devise : EUR)'}</option>
+            <option value="tunisia_to_europe">{en ? 'Tunisia → Europe (currency: TND)' : 'Tunisie → Europe (devise : TND)'}</option>
           </select>
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-700">Adresse de départ *</label>
+            <label className="block text-sm font-medium text-gray-700">{en ? 'Pickup address *' : 'Adresse de départ *'}</label>
             <button
               type="button"
               onClick={handleGeolocateDeparture}
@@ -199,7 +212,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
               className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
             >
               {isGeolocating ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />}
-              Ma position actuelle
+              {en ? 'My current location' : 'Ma position actuelle'}
             </button>
           </div>
           <AddressAutocomplete
@@ -216,7 +229,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
               setValue('departureAddress', details.address, { shouldValidate: true });
             }}
             countries={countriesForPoint(direction, 'departure')}
-            placeholder="Adresse de départ…"
+            placeholder={en ? 'Pickup address…' : 'Adresse de départ…'}
           />
           {departure.country && (
             <p className="text-xs text-gray-500 flex items-center gap-1">
@@ -224,14 +237,14 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
             </p>
           )}
           {errors.departureAddress && (
-            <p className="text-sm text-red-600">{errors.departureAddress.message}</p>
+            <p className="text-sm text-red-600">{tx(errors.departureAddress.message)}</p>
           )}
         </div>
 
         <div>
           <AddressAutocomplete
             inputId="parcel-arrival-address"
-            label="Adresse d'arrivée *"
+            label={en ? 'Destination address *' : "Adresse d'arrivée *"}
             value={arrival.address}
             onChange={(v) => {
               setArrival((prev) => ({ ...prev, address: v }));
@@ -243,7 +256,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
               setValue('arrivalAddress', details.address, { shouldValidate: true });
             }}
             countries={countriesForPoint(direction, 'arrival')}
-            placeholder="Adresse d'arrivée…"
+            placeholder={en ? 'Destination address…' : "Adresse d'arrivée…"}
           />
           {arrival.country && (
             <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
@@ -251,12 +264,12 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
             </p>
           )}
           {errors.arrivalAddress && (
-            <p className="text-sm text-red-600">{errors.arrivalAddress.message}</p>
+            <p className="text-sm text-red-600">{tx(errors.arrivalAddress.message)}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Date souhaitée *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{en ? 'Preferred date *' : 'Date souhaitée *'}</label>
           <input
             type="date"
             min={minDate}
@@ -264,7 +277,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           {errors.desiredDate && (
-            <p className="text-sm text-red-600">{errors.desiredDate.message}</p>
+            <p className="text-sm text-red-600">{tx(errors.desiredDate.message)}</p>
           )}
         </div>
 
@@ -274,16 +287,17 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
             setItems(next);
             setValue('items', next, { shouldValidate: true });
           }}
-          errors={errors.items?.message}
+          errors={tx(errors.items?.message)}
         />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Photos et factures
+            {en ? 'Photos and invoices' : 'Photos et factures'}
           </label>
           <p className="text-xs text-gray-500 mb-3">
-            Ajoutez des photos de la marchandise et/ou vos factures (image ou PDF) pour aider le transporteur à
-            estimer le transport.
+            {en
+              ? 'Add photos of the goods and/or invoices (image or PDF) so the carrier can estimate the shipment.'
+              : 'Ajoutez des photos de la marchandise et/ou vos factures (image ou PDF) pour aider le transporteur à estimer le transport.'}
           </p>
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-3 mb-3">
@@ -305,7 +319,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
                       att.documentType === 'invoice' ? 'bg-amber-600' : 'bg-blue-600'
                     }`}
                   >
-                    {att.documentType === 'invoice' ? 'Facture' : 'Photo'}
+                    {att.documentType === 'invoice' ? (en ? 'Invoice' : 'Facture') : (en ? 'Photo' : 'Photo')}
                   </span>
                   <button
                     type="button"
@@ -321,7 +335,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
           <div className="flex flex-wrap gap-2">
             <label className="inline-flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 text-sm text-gray-600">
               <Image size={16} />
-              Photos marchandise
+              {en ? 'Goods photos' : 'Photos marchandise'}
               <input
                 type="file"
                 accept="image/*"
@@ -332,7 +346,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
             </label>
             <label className="inline-flex items-center gap-2 px-4 py-2 border border-dashed border-amber-300 rounded-lg cursor-pointer hover:border-amber-500 text-sm text-gray-600">
               <FileText size={16} />
-              Factures
+              {en ? 'Invoices' : 'Factures'}
               <input
                 type="file"
                 accept="image/*,application/pdf"
@@ -345,27 +359,27 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Notes complémentaires</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{en ? 'Additional notes' : 'Notes complémentaires'}</label>
           <textarea
             {...register('notes')}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Informations utiles pour les transporteurs…"
+            placeholder={en ? 'Useful details for carriers…' : 'Informations utiles pour les transporteurs…'}
           />
         </div>
 
         {submitError && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{submitError}</div>
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{tx(submitError)}</div>
         )}
 
         <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
           {isSubmitting ? (
             <>
               <Loader2 size={16} className="animate-spin mr-2" />
-              Envoi en cours…
+              {en ? 'Sending…' : 'Envoi en cours…'}
             </>
           ) : (
-            'Valider ma demande de devis'
+            en ? 'Submit quote request' : 'Valider ma demande de devis'
           )}
         </Button>
       </form>

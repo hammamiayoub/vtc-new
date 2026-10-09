@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, User, X, Camera, Loader2 } from 'lucide-react';
 import { Button } from './Button';
+import { useLocale } from '../../i18n/locale';
 
 interface ImageUploadProps {
   currentImageUrl?: string;
@@ -15,18 +16,20 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   loading = false,
   className = ''
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const [dragOver, setDragOver] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert('Veuillez sélectionner un fichier image');
+      alert(en ? 'Please select an image file' : 'Veuillez sélectionner un fichier image');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB max
-      alert('La taille du fichier ne doit pas dépasser 5MB');
+      alert(en ? 'The file must be 5 MB or smaller' : 'La taille du fichier ne doit pas dépasser 5MB');
       return;
     }
 
@@ -83,7 +86,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         {currentImage ? (
           <img
             src={currentImage}
-            alt="Photo de profil"
+            alt={en ? 'Profile photo' : 'Photo de profil'}
             className="w-full h-full rounded-full object-cover"
           />
         ) : (
@@ -104,7 +107,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           onClick={() => fileInputRef.current?.click()}
           disabled={loading}
           className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg transition-colors disabled:opacity-50"
-          title="Changer la photo"
+          title={en ? 'Change photo' : 'Changer la photo'}
         >
           <Camera size={16} />
         </button>
@@ -115,7 +118,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         <div className="absolute inset-0 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center border-2 border-dashed border-blue-500">
           <div className="text-center">
             <Upload size={24} className="text-blue-600 mx-auto mb-2" />
-            <p className="text-sm text-blue-600 font-medium">Déposer l'image</p>
+            <p className="text-sm text-blue-600 font-medium">{en ? 'Drop the image' : "Déposer l'image"}</p>
           </div>
         </div>
       )}

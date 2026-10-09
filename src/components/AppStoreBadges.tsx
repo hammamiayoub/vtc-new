@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocale } from '../i18n/locale';
 
 interface AppStoreBadgesProps {
   className?: string;
@@ -38,13 +39,13 @@ function BadgeFrame() {
 const APPLE_LOGO_PATH =
   'M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.5 107.2 125.2 25-.8 42-17.1 75.8-17.1 33.2 0 41.9 17.1 75.2 16.6 30.7-.5 51.4-59.8 86.2-101.9-4.7-2.6-69.2-38.1-69.9-113.1zM256.9 87.5c31.1-37.5 27.2-71.5 26.3-83.7-28.6 1.6-61.9 19.2-82 42.5-18.9 21.2-32.6 49.3-30.1 78.3 31.5 2.4 63.7-16.9 85.8-37.1z';
 
-function GooglePlayBadge({ className }: { className?: string }) {
+function GooglePlayBadge({ className, en }: { className?: string; en: boolean }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox={`0 0 ${BADGE_WIDTH} ${BADGE_HEIGHT}`}
       role="img"
-      aria-label="Disponible sur Google Play"
+      aria-label={en ? 'Get it on Google Play' : 'Disponible sur Google Play'}
       className={className}
       overflow="visible"
     >
@@ -62,7 +63,7 @@ function GooglePlayBadge({ className }: { className?: string }) {
         fontFamily="system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
         fontSize="7"
       >
-        DISPONIBLE SUR
+        {en ? 'GET IT ON' : 'DISPONIBLE SUR'}
       </text>
       <text
         x={TEXT_X}
@@ -81,9 +82,11 @@ function GooglePlayBadge({ className }: { className?: string }) {
 function AppStoreBadge({
   className,
   completeBottomBorder = false,
+  en,
 }: {
   className?: string;
   completeBottomBorder?: boolean;
+  en: boolean;
 }) {
   const appleWidth = ICON_SIZE * (384 / 512);
   const appleX = ICON_X + (ICON_SIZE - appleWidth) / 2;
@@ -94,7 +97,7 @@ function AppStoreBadge({
       xmlns="http://www.w3.org/2000/svg"
       viewBox={`0 0 ${BADGE_WIDTH} ${BADGE_HEIGHT}`}
       role="img"
-      aria-label="Télécharger dans l'App Store"
+      aria-label={en ? 'Download on the App Store' : "Télécharger dans l'App Store"}
       className={className}
       overflow="visible"
     >
@@ -122,7 +125,7 @@ function AppStoreBadge({
         fontFamily="system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
         fontSize="7"
       >
-        {"Télécharger dans l'"}
+        {en ? 'Download on the' : "Télécharger dans l'"}
       </text>
       <text
         x={TEXT_X}
@@ -143,6 +146,8 @@ export const AppStoreBadges: React.FC<AppStoreBadgesProps> = ({
   imageClassName,
   layout = 'row',
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const isColumn = layout === 'column';
   const badgeClass =
     imageClassName ?? (isColumn ? 'block h-10 w-full' : 'block h-10 w-auto');
@@ -165,7 +170,7 @@ export const AppStoreBadges: React.FC<AppStoreBadgesProps> = ({
         rel="noopener noreferrer"
         className={linkClass}
       >
-        <GooglePlayBadge className={badgeClass} />
+        <GooglePlayBadge className={badgeClass} en={en} />
       </a>
       <a
         href={APP_STORE_URL}
@@ -173,7 +178,7 @@ export const AppStoreBadges: React.FC<AppStoreBadgesProps> = ({
         rel="noopener noreferrer"
         className={linkClass}
       >
-        <AppStoreBadge className={badgeClass} completeBottomBorder={isColumn} />
+        <AppStoreBadge className={badgeClass} completeBottomBorder={isColumn} en={en} />
         {isColumn && (
           <span
             className="pointer-events-none absolute inset-x-[5px] bottom-0 z-10 h-px bg-[#A6A6A6]"

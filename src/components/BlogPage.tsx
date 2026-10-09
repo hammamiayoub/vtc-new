@@ -9,6 +9,7 @@ import {
   fetchPublishedBlogPosts,
   type BlogPost,
 } from '../utils/blogPosts';
+import { useLocale } from '../i18n/locale';
 
 /** Balise embed fournie par Soro AI */
 const SORO_EMBED_SRC =
@@ -23,9 +24,9 @@ function loadSoroEmbed() {
   document.body.appendChild(script);
 }
 
-function formatPostDate(value: string | null): string {
+function formatPostDate(value: string | null, locale: 'fr' | 'en'): string {
   if (!value) return '';
-  return new Date(value).toLocaleDateString('fr-FR', {
+  return new Date(value).toLocaleDateString(locale === 'en' ? 'en-GB' : 'fr-FR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -40,7 +41,9 @@ function blogSlugFromPath(pathname: string): string | null {
 
 export const BlogPage: React.FC = () => {
   const location = useLocation();
-  const slug = blogSlugFromPath(location.pathname);
+  const { locale, logicalPath, href } = useLocale();
+  const en = locale === 'en';
+  const slug = blogSlugFromPath(logicalPath);
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [article, setArticle] = useState<BlogPost | null>(null);
   const [articleResolved, setArticleResolved] = useState(!slug);
@@ -98,11 +101,7 @@ export const BlogPage: React.FC = () => {
 
   useEffect(() => {
     if (!article) return;
-    const previous = document.title;
     document.title = `${article.title} | Blog TuniDrive`;
-    return () => {
-      document.title = previous;
-    };
   }, [article]);
 
   return (
@@ -112,11 +111,11 @@ export const BlogPage: React.FC = () => {
           {article ? (
             <article>
               <Link
-                to="/blog"
+                to={href('/blog')}
                 className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-6"
               >
                 <ArrowLeft size={16} />
-                Retour au blog
+                {en ? 'Back to the blog' : 'Retour au blog'}
               </Link>
               {article.image_url && (
                 <img
@@ -131,13 +130,16 @@ export const BlogPage: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3 mb-8">
                 {article.audience && (
                   <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                    {article.audience === 'driver' ? 'Chauffeurs' : 'Voyageurs'}
+                    {article.audience === 'driver' ? (en ? 'Drivers' : 'Chauffeurs') : (en ? 'Riders' : 'Voyageurs')}
                   </span>
                 )}
                 {article.published_at && (
-                  <p className="text-sm text-gray-500">{formatPostDate(article.published_at)}</p>
+                  <p className="text-sm text-gray-500">{formatPostDate(article.published_at, locale)}</p>
                 )}
               </div>
+              {en && (
+                <p className="text-sm text-gray-500 mb-6">This article is written in French.</p>
+              )}
               <div className="text-gray-800 leading-relaxed whitespace-pre-wrap text-base md:text-lg">
                 {article.content}
               </div>
@@ -149,17 +151,19 @@ export const BlogPage: React.FC = () => {
                   Blog TuniDrive
                 </h1>
                 <p className="text-gray-600 max-w-2xl mx-auto">
-                  Conseils VTC, transport de colis Europe ↔ Tunisie et actualités mobilité en Tunisie.
+                  {en
+                    ? 'Guides on private hire, Europe ↔ Tunisia parcels and mobility in Tunisia. Articles are published in French.'
+                    : 'Conseils VTC, transport de colis Europe ↔ Tunisie et actualités mobilité en Tunisie.'}
                 </p>
               </header>
 
               {posts.length > 0 && (
-                <section className="mb-12" aria-label="Articles TuniDrive">
+                <section className="mb-12" aria-label={en ? 'TuniDrive articles' : 'Articles TuniDrive'}>
                   <div className="grid gap-6">
                     {posts.map((post) => (
                       <Link
                         key={post.id}
-                        to={`/blog/${post.slug}`}
+                        to={href(`/blog/${post.slug}`)}
                         className="group uber-card overflow-hidden hover:shadow-md transition-shadow"
                       >
                         {post.image_url && (
@@ -173,11 +177,11 @@ export const BlogPage: React.FC = () => {
                           <div className="flex flex-wrap items-center gap-2 mb-2">
                             {post.audience && (
                               <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                                {post.audience === 'driver' ? 'Chauffeurs' : 'Voyageurs'}
+                                {post.audience === 'driver' ? (en ? 'Drivers' : 'Chauffeurs') : (en ? 'Riders' : 'Voyageurs')}
                               </span>
                             )}
                             {post.published_at && (
-                              <p className="text-xs text-gray-500">{formatPostDate(post.published_at)}</p>
+                              <p className="text-xs text-gray-500">{formatPostDate(post.published_at, locale)}</p>
                             )}
                           </div>
                           <h2 className="text-xl font-semibold text-gray-900 group-hover:underline underline-offset-2">
@@ -187,7 +191,7 @@ export const BlogPage: React.FC = () => {
                             {excerptFromContent(post.content)}
                           </p>
                           <span className="inline-block mt-4 text-sm font-semibold text-gray-900">
-                            Lire l’article
+                            {en ? 'Read the article' : 'Lire l’article'}
                           </span>
                         </div>
                       </Link>

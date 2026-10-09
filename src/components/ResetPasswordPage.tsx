@@ -3,6 +3,8 @@ import { Lock, Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Button } from './ui/Button';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { supabase } from '../lib/supabase';
+import { useLocale } from '../i18n/locale';
+import { translateSignupMessage } from '../i18n/signupErrors';
 
 interface ResetPasswordPageProps {
   onBack: () => void;
@@ -13,6 +15,8 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
   onBack, 
   onSuccess 
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -122,11 +126,12 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
             <CheckCircle size={40} className="text-green-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Mot de passe mis à jour !
+            {en ? 'Password updated' : 'Mot de passe mis à jour !'}
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Votre nouveau mot de passe a été enregistré avec succès. 
-            Vous allez être redirigé vers la page de connexion.
+            {en
+              ? 'Your new password has been saved. You will be redirected to the login page.'
+              : 'Votre nouveau mot de passe a été enregistré avec succès. Vous allez être redirigé vers la page de connexion.'}
           </p>
         </div>
       </div>
@@ -142,7 +147,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-            Retour
+            {en ? 'Back' : 'Retour'}
           </button>
 
           <div className="text-center mb-8">
@@ -150,10 +155,12 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
               <Lock size={36} className="text-purple-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
-              Nouveau mot de passe
+              {en ? 'New password' : 'Nouveau mot de passe'}
             </h1>
             <p className="text-gray-600">
-              Créez un nouveau mot de passe sécurisé pour votre compte {userType === 'client' ? 'client' : 'chauffeur'}
+              {en
+                ? `Create a secure new password for your ${userType === 'client' ? 'rider' : 'driver'} account`
+                : `Créez un nouveau mot de passe sécurisé pour votre compte ${userType === 'client' ? 'client' : 'chauffeur'}`}
             </p>
           </div>
 
@@ -166,7 +173,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Nouveau mot de passe"
+                placeholder={en ? 'New password' : 'Nouveau mot de passe'}
                 className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                 required
               />
@@ -198,7 +205,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirmer le nouveau mot de passe"
+                placeholder={en ? 'Confirm the new password' : 'Confirmer le nouveau mot de passe'}
                 className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                 required
               />
@@ -217,7 +224,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
 
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm text-red-600">{error}</p>
+                <p className="text-sm text-red-600">{translateSignupMessage(error, locale)}</p>
               </div>
             )}
 
@@ -227,7 +234,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
               disabled={!password || !confirmPassword || password !== confirmPassword}
               className="w-full py-3 bg-purple-600 hover:bg-purple-700"
             >
-              Mettre à jour le mot de passe
+              {en ? 'Update password' : 'Mettre à jour le mot de passe'}
             </Button>
           </form>
         </div>

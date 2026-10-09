@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Package, ChevronRight, Loader2 } from 'lucide-react';
 import { fetchClientParcelRequests, directionLabel, statusLabel } from '../utils/parcelService';
 import type { ParcelQuoteRequest } from '../types';
+import { useLocale } from '../i18n/locale';
 
 interface ParcelQuoteListProps {
   clientId: string;
@@ -23,6 +24,9 @@ export const ParcelQuoteList: React.FC<ParcelQuoteListProps> = ({
   onSelectRequest,
   refreshKey = 0,
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
+  const dateLocale = en ? 'en-GB' : 'fr-FR';
   const [requests, setRequests] = useState<ParcelQuoteRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +57,9 @@ export const ParcelQuoteList: React.FC<ParcelQuoteListProps> = ({
     return (
       <div className="text-center py-12 bg-white rounded-xl shadow-sm">
         <Package className="mx-auto text-gray-300 mb-4" size={48} />
-        <p className="text-gray-600">Aucune demande de transport de colis pour le moment.</p>
+        <p className="text-gray-600">
+          {en ? 'No parcel requests yet.' : 'Aucune demande de transport de colis pour le moment.'}
+        </p>
       </div>
     );
   }
@@ -71,18 +77,18 @@ export const ParcelQuoteList: React.FC<ParcelQuoteListProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[req.status]}`}>
-                  {statusLabel(req.status)}
+                  {statusLabel(req.status, locale)}
                 </span>
-                <span className="text-xs text-gray-500">{directionLabel(req.direction)}</span>
+                <span className="text-xs text-gray-500">{directionLabel(req.direction, locale)}</span>
               </div>
               <p className="text-sm text-gray-900 truncate">
                 {req.departureAddress} → {req.arrivalAddress}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Date souhaitée : {new Date(req.desiredDate).toLocaleDateString('fr-FR')}
+                {en ? 'Preferred date: ' : 'Date souhaitée : '}{new Date(req.desiredDate).toLocaleDateString(dateLocale)}
                 {req.proposals && req.proposals.length > 0 && (
                   <span className="ml-2 text-blue-600">
-                    · {req.proposals.length} proposition{req.proposals.length > 1 ? 's' : ''}
+                    · {req.proposals.length} {en ? (req.proposals.length > 1 ? 'offers' : 'offer') : `proposition${req.proposals.length > 1 ? 's' : ''}`}
                   </span>
                 )}
               </p>

@@ -1,5 +1,7 @@
 // Utilitaire pour gérer les balises meta SEO
 import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
+import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
+import { alternateUrls, type Locale } from '../i18n/locale';
 
 export const SITE_URL = 'https://tunidrive.net';
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/tunidrive-logo.png`;
@@ -167,6 +169,135 @@ export const seoData: Record<string, SEOData> = {
   },
 };
 
+const seoDataEn: Partial<Record<string, SEOData>> = {
+  home: {
+    title: 'Private driver Tunisia | Airport transfer & taxi — TuniDrive',
+    description:
+      'Book a private driver, taxi or airport transfer in Tunisia with TuniDrive. Tunis-Carthage, Enfidha, Monastir, group transport (van, bus) and intercity rides. Price shown before you confirm.',
+    keywords:
+      'private driver tunisia, airport transfer tunisia, book taxi tunisia, vtc tunis, tunis carthage airport taxi, private driver sfax, sousse transfer',
+    ogTitle: 'Private driver & airport transfer in Tunisia | TuniDrive',
+    ogDescription:
+      'Book a private driver in Tunisia: airport transfers, online taxi, van and bus for groups. Transparent fare on tunidrive.net.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en',
+  },
+  'vtc-tunisie': {
+    title: 'Private driver Tunisia — airport transfer & group transport | TuniDrive',
+    description:
+      'Book a private driver, airport transfer (Tunis, Enfidha, Monastir, Djerba), taxi or group transport (van, minibus, bus) anywhere in Tunisia.',
+    keywords:
+      'private driver tunisia, airport transfer tunis carthage, enfidha hammamet transfer, private driver djerba, group transport tunisia',
+    ogTitle: 'Book a private driver in Tunisia | TuniDrive',
+    ogDescription:
+      'Airport transfer, private taxi and group transport: book your driver in Tunisia with TuniDrive.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/vtc-tunisia',
+  },
+  'parcel-transport': {
+    title: 'Parcel transport Europe ↔ Tunisia | Free quote — TuniDrive',
+    description:
+      'Send or receive parcels and goods between Europe and Tunisia. Submit a free quote request, compare carrier offers and confirm online.',
+    keywords:
+      'parcel europe tunisia, send parcel france tunisia, international parcel carrier, shipping quote tunisia',
+    ogTitle: 'Parcel transport Europe ↔ Tunisia | TuniDrive',
+    ogDescription:
+      'Request a free quote for international parcel and goods transport between Europe and Tunisia.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/parcel-europe-tunisia',
+  },
+  blog: {
+    title: 'TuniDrive blog | Private driver & mobility in Tunisia',
+    description:
+      'Guides on private drivers in Tunisia, Europe–Tunisia parcel transport and practical mobility tips. Articles are published in French.',
+    keywords: 'tunisia private driver blog, airport transfer guide tunisia, parcel europe tunisia',
+    ogTitle: 'TuniDrive blog',
+    ogDescription: 'Guides on private hire in Tunisia and international parcel transport.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/blog',
+  },
+  about: {
+    title: 'About TuniDrive | How it works — rides & parcels',
+    description:
+      'How TuniDrive works: book a private driver in Tunisia, airport transfers, group transport and Europe–Tunisia parcel quotes.',
+    keywords: 'about tunidrive, how tunidrive works, private driver tunisia, parcel europe tunisia',
+    ogTitle: 'About TuniDrive — How it works',
+    ogDescription:
+      'TuniDrive connects riders, private drivers and parcel carriers. See how to book a ride or request a quote.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/about',
+  },
+  signup: {
+    title: 'Become a driver or carrier | TuniDrive',
+    description:
+      'Join TuniDrive as a private driver in Tunisia or as a Europe–Tunisia parcel carrier. Free signup.',
+    keywords: 'become a driver tunisia, parcel carrier europe tunisia, tunidrive driver signup',
+    ogTitle: 'Become a driver or carrier | TuniDrive',
+    ogDescription: 'Sign up as a private driver or international parcel carrier on TuniDrive.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/signup',
+  },
+  'client-signup': {
+    title: 'Create a rider account | TuniDrive',
+    description:
+      'Create a free TuniDrive account to book a private driver in Tunisia or request a Europe–Tunisia parcel quote.',
+    keywords: 'tunidrive signup, book private driver tunisia, parcel quote',
+    ogTitle: 'Create a rider account | TuniDrive',
+    ogDescription: 'Rider account: private rides in Tunisia and international parcel quotes.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/client-signup',
+  },
+  'driver-login': {
+    title: 'Driver / carrier login | TuniDrive',
+    description: 'Driver and carrier space: manage rides, parcel requests and your schedule.',
+    keywords: 'tunidrive driver login, carrier login',
+    ogTitle: 'Driver / carrier login | TuniDrive',
+    ogDescription: 'Sign in to your TuniDrive driver or carrier space.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/driver-login',
+  },
+  'client-login': {
+    title: 'Rider login | TuniDrive',
+    description: 'Sign in to book a private ride or manage your Europe–Tunisia parcel requests.',
+    keywords: 'tunidrive login, book private driver',
+    ogTitle: 'Rider login | TuniDrive',
+    ogDescription: 'Your rider space: private rides and international parcels.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/client-login',
+  },
+  'client-dashboard': {
+    title: 'Rider account | TuniDrive',
+    description: 'Manage your private-hire bookings and Europe–Tunisia parcel requests from your TuniDrive rider account.',
+    keywords: 'tunidrive rider account, bookings, parcel quotes',
+    ogTitle: 'Rider account | TuniDrive',
+    ogDescription: 'Your private rides and international parcel requests on TuniDrive.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/client-dashboard',
+  },
+  'privacy-policy': {
+    title: 'Privacy policy | TuniDrive',
+    description:
+      'TuniDrive privacy policy: how we protect data for riders, private-hire drivers and Europe–Tunisia parcel carriers.',
+    keywords: 'TuniDrive privacy policy, personal data, parcel transport Tunisia, driver data',
+    ogTitle: 'Privacy policy | TuniDrive',
+    ogDescription:
+      'How TuniDrive handles personal data for private rides, parcel quotes and partner accounts.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/privacy-policy',
+  },
+  'terms-of-service': {
+    title: 'Terms of use | TuniDrive',
+    description:
+      'TuniDrive terms of use: private-hire bookings, Europe–Tunisia parcel quotes, and obligations of partner drivers and carriers.',
+    keywords: 'TuniDrive terms, terms of use, parcel carrier Tunisia, private driver Tunisia',
+    ogTitle: 'Terms of use | TuniDrive',
+    ogDescription:
+      'TuniDrive terms: private rides in Tunisia and introductions for international parcel transport.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/terms-of-service',
+  },
+};
+
 function setMetaContent(
   selector: string,
   attribute: 'name' | 'property',
@@ -190,6 +321,25 @@ function setLinkRel(href: string) {
     document.head.appendChild(canonical);
   }
   canonical.setAttribute('href', href);
+}
+
+function setHreflang(logicalPath: string) {
+  document.querySelectorAll('link[data-seo-hreflang]').forEach((node) => node.remove());
+  const urls = alternateUrls(logicalPath);
+  if (!urls) return;
+  const pairs: { lang: string; path: string }[] = [
+    { lang: 'fr', path: urls.fr },
+    { lang: 'en', path: urls.en },
+    { lang: 'x-default', path: urls.fr },
+  ];
+  for (const pair of pairs) {
+    const link = document.createElement('link');
+    link.setAttribute('rel', 'alternate');
+    link.setAttribute('hreflang', pair.lang);
+    link.setAttribute('href', `${SITE_URL}${pair.path === '/' ? '/' : pair.path}`);
+    link.setAttribute('data-seo-hreflang', pair.lang);
+    document.head.appendChild(link);
+  }
 }
 
 export const setFaqJsonLd = (items: FaqStructuredItem[]) => {
@@ -224,8 +374,8 @@ export const removeJsonLd = (id: string) => {
 };
 
 // Fonction pour mettre à jour les balises meta
-export const updateSEO = (pageKey: string) => {
-  const seo = seoData[pageKey];
+export const updateSEO = (pageKey: string, locale: Locale = 'fr', logicalPath?: string) => {
+  const seo = (locale === 'en' ? seoDataEn[pageKey] : undefined) ?? seoData[pageKey];
   if (!seo) return;
 
   const canonicalUrl = seo.canonical
@@ -243,6 +393,7 @@ export const updateSEO = (pageKey: string) => {
   setMetaContent('meta', 'property', 'og:type', 'website');
   setMetaContent('meta', 'property', 'og:url', canonicalUrl);
   setMetaContent('meta', 'property', 'og:site_name', 'TuniDrive');
+  setMetaContent('meta', 'property', 'og:locale', locale === 'en' ? 'en_US' : 'fr_TN');
 
   if (seo.ogTitle) {
     setMetaContent('meta', 'property', 'og:title', seo.ogTitle);
@@ -266,11 +417,12 @@ export const updateSEO = (pageKey: string) => {
   setMetaContent('meta', 'property', 'twitter:image', ogImage);
 
   setLinkRel(canonicalUrl);
+  if (logicalPath) setHreflang(logicalPath.startsWith('/blog/') ? '/blog' : logicalPath);
 
   if (pageKey === 'parcel-transport') {
-    setFaqJsonLd(getParcelFaqItems());
+    setFaqJsonLd(getParcelFaqItems(locale));
   } else if (pageKey === 'home' || pageKey === 'vtc-tunisie') {
-    setFaqJsonLd(vtcSeoFaqItems);
+    setFaqJsonLd(locale === 'en' ? vtcSeoFaqItemsEn : vtcSeoFaqItems);
   } else {
     removeJsonLd('faq-page');
   }
@@ -280,7 +432,32 @@ export const getSEOData = (pageKey: string): SEOData | null => {
   return seoData[pageKey] || null;
 };
 
-export const getParcelFaqItems = (): FaqStructuredItem[] => [
+const parcelFaqItemsEn: FaqStructuredItem[] = [
+  {
+    question: 'How do I request a quote for a parcel between Europe and Tunisia?',
+    answer:
+      'Create a free TuniDrive rider account, open the Parcel transport tab, set the direction (Europe → Tunisia or Tunisia → Europe), the addresses, the date and a description of your items. The request is sent to matching carriers.',
+  },
+  {
+    question: 'Which European countries are covered for parcels to Tunisia?',
+    answer:
+      'The service covers international parcels between Tunisia and France, Italy, Germany, Spain, Belgium, Luxembourg, Switzerland and the Netherlands, in both directions.',
+  },
+  {
+    question: 'How are parcel prices set?',
+    answer:
+      'Partner carriers send their own price offers. You compare them in your account and accept the one you want. Prices are in EUR for Europe → Tunisia and in TND for Tunisia → Europe.',
+  },
+  {
+    question: 'How do I become a parcel carrier on TuniDrive?',
+    answer:
+      'Sign up as a driver / carrier, choose Parcel transport or Both activities, then complete your profile and availability to receive matching requests.',
+  },
+];
+
+export const getParcelFaqItems = (locale: Locale = 'fr'): FaqStructuredItem[] => {
+  if (locale === 'en') return parcelFaqItemsEn;
+  return [
   {
     question: 'Comment demander un devis pour un colis Europe ↔ Tunisie ?',
     answer:
@@ -301,4 +478,5 @@ export const getParcelFaqItems = (): FaqStructuredItem[] => [
     answer:
       'Inscrivez-vous via Devenir chauffeur / transporteur, choisissez Transport de colis ou Les deux activités, complétez votre profil et vos disponibilités pour recevoir les demandes correspondantes.',
   },
-];
+  ];
+};

@@ -23,6 +23,7 @@ import { NotificationPermission, NotificationStatus } from './NotificationPermis
 import { useClientNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { AppDownloadModal } from './AppDownloadModal';
+import { LanguageSwitch, useLocale } from '../i18n/locale';
 import {
   clearPendingQuote,
   getPendingQuote,
@@ -34,6 +35,11 @@ interface ClientDashboardProps {
 }
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
+  const dateLocale = en ? 'en-GB' : 'fr-FR';
+  const money = (amount: number) =>
+    en ? amount.toFixed(2) : amount.toFixed(2).replace('.', ',');
   const initialPendingQuote = getPendingQuote();
   const [client, setClient] = useState<Client | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -228,35 +234,35 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
             <Clock size={12} />
-            En attente d'acceptation
+            {en ? 'Waiting for a driver' : "En attente d'acceptation"}
           </span>
         );
       case 'accepted':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
             <Car size={12} />
-            Acceptée
+            {en ? 'Accepted' : 'Acceptée'}
           </span>
         );
       case 'in_progress':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
             <MapPin size={12} />
-            En cours
+            {en ? 'In progress' : 'En cours'}
           </span>
         );
       case 'cancelled':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
             <XCircle size={12} />
-            Annulée
+            {en ? 'Cancelled' : 'Annulée'}
           </span>
         );
       case 'completed':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
             <CheckCircle size={12} />
-            Terminée
+            {en ? 'Completed' : 'Terminée'}
           </span>
         );
       default:
@@ -279,7 +285,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   };
 
   const cancelBooking = async (bookingId: string) => {
-    const confirmed = window.confirm("Confirmer l'annulation de votre réservation ?");
+    const confirmed = window.confirm(
+      en ? 'Cancel this booking?' : "Confirmer l'annulation de votre réservation ?",
+    );
     if (!confirmed) return;
     
     console.log('🚫 === DÉBUT ANNULATION PAR CLIENT ===');
@@ -291,7 +299,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
       console.log('📊 Booking trouvé:', booking);
       
       if (!booking) {
-        alert("Réservation non trouvée");
+        alert(en ? 'Booking not found' : 'Réservation non trouvée');
         return;
       }
 
@@ -301,7 +309,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         .eq('id', bookingId);
       
       if (error) {
-        alert("Impossible d'annuler la réservation: " + error.message);
+        alert((en ? 'Could not cancel the booking: ' : "Impossible d'annuler la réservation: ") + error.message);
         return;
       }
 
@@ -525,11 +533,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">TuniDrive</h1>
-                <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">Espace Client</p>
+                <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">
+                  {en ? 'Rider account' : 'Espace Client'}
+                </p>
               </div>
             </div>
             
             <div className="flex items-center gap-2 sm:gap-4">
+              <LanguageSwitch />
               <NotificationBell
                 unreadCount={unreadCount}
                 hasNewNotifications={hasNewBookings}
@@ -542,13 +553,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               <button
                 onClick={() => setShowProfileModal(true)}
                 className="p-2 text-gray-300 hover:text-white  hover:bg-gray-800 transition-colors"
-                title="Mon profil"
+                title={en ? 'My profile' : 'Mon profil'}
               >
                 <UserCircle size={22} />
               </button>
               <Button onClick={handleLogout} className="flex items-center gap-1 sm:gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base px-2 sm:px-4">
                 <LogOut size={14} className="sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Déconnexion</span>
+                <span className="hidden sm:inline">{en ? 'Log out' : 'Déconnexion'}</span>
               </Button>
             </div>
           </div>
@@ -570,7 +581,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Tableau de bord
+              {en ? 'Overview' : 'Tableau de bord'}
             </button>
             <button
               onClick={() => {
@@ -583,7 +594,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Nouvelle réservation
+              {en ? 'New booking' : 'Nouvelle réservation'}
             </button>
             <button
               onClick={() => {
@@ -596,7 +607,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Mes réservations ({bookings.length})
+              {en ? `My bookings (${bookings.length})` : `Mes réservations (${bookings.length})`}
             </button>
             <button
               onClick={() => {
@@ -611,7 +622,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               }`}
             >
               
-              Expédier mes colis
+              {en ? 'Ship parcels' : 'Expédier mes colis'}
             </button>
             <button
               onClick={() => {
@@ -624,7 +635,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Mes devis colis
+              {en ? 'Parcel quotes' : 'Mes devis colis'}
             </button>
           </nav>
         </div>
@@ -681,7 +692,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 {client?.profilePhotoUrl ? (
                   <img
                     src={client.profilePhotoUrl}
-                    alt="Photo de profil"
+                    alt={en ? 'Profile photo' : 'Photo de profil'}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 ) : (
@@ -691,9 +702,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 )}
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    Bienvenue, {client?.firstName} {client?.lastName}
+                    {en ? 'Welcome' : 'Bienvenue'}, {client?.firstName} {client?.lastName}
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-600">Espace client - Réservation de courses</p>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    {en ? 'Rider account — book a ride' : 'Espace client - Réservation de courses'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -706,8 +719,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     <Plus size={24} className="text-gray-700" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Nouvelle course</h3>
-                    <p className="text-sm text-gray-600">Réserver maintenant</p>
+                    <h3 className="font-semibold text-gray-900">{en ? 'New ride' : 'Nouvelle course'}</h3>
+                    <p className="text-sm text-gray-600">{en ? 'Book now' : 'Réserver maintenant'}</p>
                   </div>
                 </div>
                 <Button
@@ -717,7 +730,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     setShowBookingForm(true);
                   }}
                 >
-                  Réserver une course
+                  {en ? 'Book a ride' : 'Réserver une course'}
                 </Button>
               </div>
 
@@ -727,12 +740,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     <Clock size={24} className="text-gray-700" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Mes courses</h3>
-                    <p className="text-sm text-gray-600">Historique</p>
+                    <h3 className="font-semibold text-gray-900">{en ? 'My rides' : 'Mes courses'}</h3>
+                    <p className="text-sm text-gray-600">{en ? 'History' : 'Historique'}</p>
                   </div>
                 </div>
                 <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{bookings.length}</p>
-                <p className="text-sm text-gray-500">Courses réservées</p>
+                <p className="text-sm text-gray-500">{en ? 'Booked rides' : 'Courses réservées'}</p>
               </div>
 
               <div className="bg-white rounded-xl shadow-sm p-6">
@@ -741,14 +754,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     <Car size={24} className="text-gray-700" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Course en cours</h3>
-                    <p className="text-sm text-gray-600">Statut actuel</p>
+                    <h3 className="font-semibold text-gray-900">{en ? 'Current ride' : 'Course en cours'}</h3>
+                    <p className="text-sm text-gray-600">{en ? 'Current status' : 'Statut actuel'}</p>
                   </div>
                 </div>
                 {bookings.find(b => b.status === 'in_progress') ? (
-                  <p className="text-sm text-green-600 font-medium">Course en cours</p>
+                  <p className="text-sm text-green-600 font-medium">{en ? 'Ride in progress' : 'Course en cours'}</p>
                 ) : (
-                  <p className="text-sm text-gray-500">Aucune course en cours</p>
+                  <p className="text-sm text-gray-500">{en ? 'No ride in progress' : 'Aucune course en cours'}</p>
                 )}
               </div>
             </div>
@@ -760,8 +773,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   <Car size={20} className="text-green-600 sm:w-6 sm:h-6" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Tarifs</h3>
-                  <p className="text-xs sm:text-sm text-gray-600">Grille tarifaire TuniDrive</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">{en ? 'Fares' : 'Tarifs'}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {en ? 'TuniDrive fare grid' : 'Grille tarifaire TuniDrive'}
+                  </p>
                 </div>
               </div>
               
@@ -769,30 +784,31 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 {/* Tarif de base - Optimisé mobile */}
                 <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                   <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
-                    Prise en charge variable
+                    {en ? 'Pickup fee by driver distance' : 'Prise en charge variable'}
                   </h4>
                   <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm mb-3">
                     <p className="text-gray-600">{getDriverPickupFareSummaryText()}</p>
                     <p className="text-gray-500 text-[11px]">
-                      Estimation avant chauffeur : {RIDE_DEFAULT_PICKUP_FARE_TND.toFixed(2).replace('.', ',')} TND
+                      {en ? 'Estimate before a driver is assigned: ' : 'Estimation avant chauffeur : '}
+                      {money(RIDE_DEFAULT_PICKUP_FARE_TND)} TND
                     </p>
                   </div>
                   <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
-                    Tarif au kilomètre
+                    {en ? 'Price per kilometre' : 'Tarif au kilomètre'}
                   </h4>
                   <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     {RIDE_DISTANCE_TIERS.map((tier) => (
                       <div key={tier.label} className="flex justify-between items-center py-1">
                         <span className="text-gray-700 flex-1 pr-2">{tier.label}</span>
                         <span className="font-medium text-gray-900 text-right whitespace-nowrap">
-                          {tier.rate.toFixed(2).replace('.', ',')} TND/km
+                          {money(tier.rate)} TND/km
                         </span>
                       </div>
                     ))}
                     <div className="flex justify-between items-center py-1 pt-2 border-t border-gray-200">
-                      <span className="text-gray-700 flex-1 pr-2 font-medium">Prix minimum</span>
+                      <span className="text-gray-700 flex-1 pr-2 font-medium">{en ? 'Minimum fare' : 'Prix minimum'}</span>
                       <span className="font-semibold text-gray-900 text-right whitespace-nowrap">
-                        {RIDE_MIN_PRICE_TND.toFixed(2).replace('.', ',')} TND
+                        {money(RIDE_MIN_PRICE_TND)} TND
                       </span>
                     </div>
                   </div>
@@ -801,8 +817,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 {/* Info bonus - Optimisé mobile */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
                   <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
-                    <strong>💡 Bon à savoir :</strong> Plus votre trajet est long (aller ou aller-retour), plus vous économisez ! 
-                    Les remises s'appliquent automatiquement selon la distance totale.
+                    <strong>{en ? 'Good to know:' : '💡 Bon à savoir :'}</strong>{' '}
+                    {en
+                      ? 'The longer the trip (one way or return), the lower the per-kilometre rate. The tiers apply automatically to the total distance.'
+                      : "Plus votre trajet est long (aller ou aller-retour), plus vous économisez ! Les remises s'appliquent automatiquement selon la distance totale."}
                   </p>
                 </div>
                 
@@ -816,16 +834,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         {!showBookingForm && activeTab === 'bookings' && activeTab !== 'confirmation' && (
           <div className="bg-white rounded-xl shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Mes réservations</h3>
-              <p className="text-sm sm:text-base text-gray-600">Historique de vos courses</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{en ? 'My bookings' : 'Mes réservations'}</h3>
+              <p className="text-sm sm:text-base text-gray-600">{en ? 'Your ride history' : 'Historique de vos courses'}</p>
             </div>
 
             {bookings.length === 0 ? (
               <div className="text-center py-12">
                 <MapPin size={48} className="text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">Aucune réservation</h4>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">{en ? 'No bookings yet' : 'Aucune réservation'}</h4>
                 <p className="text-gray-500 mb-6">
-                  Vous n'avez pas encore effectué de réservation.
+                  {en ? 'You have not booked a ride yet.' : "Vous n'avez pas encore effectué de réservation."}
                 </p>
                 <Button
                   className="bg-black hover:bg-gray-800"
@@ -834,7 +852,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                     setShowBookingForm(true);
                   }}
                 >
-                  Réserver ma première course
+                  {en ? 'Book my first ride' : 'Réserver ma première course'}
                 </Button>
               </div>
             ) : (
@@ -846,7 +864,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                         <div className="flex items-center gap-3 mb-3">
                           <MapPin size={16} className="text-green-600" />
                           <span className="text-sm text-gray-500">
-                            Programmée pour le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
+                            {en ? 'Scheduled for ' : 'Programmée pour le '}{new Date(booking.scheduled_time).toLocaleString(dateLocale, {
                               weekday: 'long',
                               year: 'numeric',
                               month: 'long',
@@ -874,16 +892,18 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                             <Button
                               variant="outline"
                               size="sm"
-                              aria-label="Annuler la réservation"
+                              aria-label={en ? 'Cancel booking' : 'Annuler la réservation'}
                               className="border-red-300 text-red-600 hover:bg-red-50 order-3 w-full sm:w-auto mt-2 sm:mt-0"
                               onClick={() => cancelBooking(booking.id)}
                             >
-                              Annuler
+                              {en ? 'Cancel' : 'Annuler'}
                             </Button>
                           ) : (booking.status === 'pending' || booking.status === 'accepted') && (
                             <div className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2 order-3 w-full sm:w-auto mt-2 sm:mt-0">
-                              <p className="font-medium text-amber-800">⚠️ Délai d'annulation dépassé (24h)</p>
-                              <p className="mt-1">Contactez le chauffeur directement</p>
+                              <p className="font-medium text-amber-800">
+                                {en ? 'Cancellation window has passed (24h)' : "Délai d'annulation dépassé (24h)"}
+                              </p>
+                              <p className="mt-1">{en ? 'Contact the driver directly' : 'Contactez le chauffeur directement'}</p>
                               {booking.drivers?.phone && (
                                 <p className="font-semibold text-amber-900 mt-1">{booking.drivers.phone}</p>
                               )}
@@ -893,25 +913,25 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                             <Button
                               variant="outline"
                               size="sm"
-                              aria-label="Noter le chauffeur"
+                              aria-label={en ? 'Rate the driver' : 'Noter le chauffeur'}
                               className="border-purple-300 text-purple-600 hover:bg-purple-50 order-4 w-full sm:w-auto mt-2 sm:mt-0"
                               onClick={() => handleRateBooking(booking)}
                             >
-                              ⭐ Noter
+                              {en ? 'Rate' : 'Noter'}
                             </Button>
                           ) : booking.status === 'completed' && ratedBookings.has(booking.id) ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 order-4 w-full sm:w-auto mt-2 sm:mt-0">
-                              ✅ Notée
+                              {en ? 'Rated' : 'Notée'}
                             </span>
                           ) : null}
                         </div>
                         {booking.notes && (
                           <p className="mt-2 text-sm text-gray-600 italic">
-                            Note: {booking.notes}
+                            {en ? 'Note:' : 'Note:'} {booking.notes}
                           </p>
                         )}
                         <p className="mt-2 text-xs text-gray-500">
-                          Réservé le {new Date(booking.created_at).toLocaleDateString('fr-FR')}
+                          {en ? 'Booked on ' : 'Réservé le '}{new Date(booking.created_at).toLocaleDateString(dateLocale)}
                         </p>
                       </div>
                       <div className="lg:ml-4 flex-shrink-0">
@@ -920,21 +940,21 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                             <p className="text-sm font-medium text-gray-900">
                               {booking.drivers.first_name} {booking.drivers.last_name}
                             </p>
-                            <p className="text-xs text-gray-500">Chauffeur assigné</p>
+                            <p className="text-xs text-gray-500">{en ? 'Assigned driver' : 'Chauffeur assigné'}</p>
                             {booking.drivers.phone && (
                               <p className="text-xs text-gray-500">
-                                Tél: {booking.drivers.phone}
+                                {en ? 'Phone:' : 'Tél:'} {booking.drivers.phone}
                               </p>
                             )}
                           </div>
                         ) : booking.driverId ? (
                           <div className="text-right">
-                            <p className="text-sm font-medium text-gray-900">Chauffeur assigné</p>
-                            <p className="text-xs text-gray-500">En cours de chargement...</p>
+                            <p className="text-sm font-medium text-gray-900">{en ? 'Assigned driver' : 'Chauffeur assigné'}</p>
+                            <p className="text-xs text-gray-500">{en ? 'Loading…' : 'En cours de chargement...'}</p>
                           </div>
                         ) : (
                           <div className="text-right">
-                            <p className="text-sm text-gray-500">Aucun chauffeur assigné</p>
+                            <p className="text-sm text-gray-500">{en ? 'No driver assigned' : 'Aucun chauffeur assigné'}</p>
                           </div>
                         )}
                       </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bell } from 'lucide-react';
+import { useLocale } from '../i18n/locale';
 
 interface NotificationBellProps {
   unreadCount: number;
@@ -14,11 +15,17 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   onClick,
   className = ''
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   return (
     <button
       onClick={onClick}
       className={`relative p-2 rounded-lg transition-colors ${className}`}
-      title={hasNewNotifications ? `${unreadCount} nouvelle(s) notification(s)` : 'Notifications'}
+      title={
+        hasNewNotifications
+          ? (en ? `${unreadCount} new notification${unreadCount > 1 ? 's' : ''}` : `${unreadCount} nouvelle(s) notification(s)`)
+          : (en ? 'Notifications' : 'Notifications')
+      }
     >
       <Bell size={20} />
       
