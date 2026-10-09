@@ -1,137 +1,309 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
    <url>
       <loc>https://tunidrive.net/</loc>
-      <lastmod>2026-06-02</lastmod>
+      <lastmod>2026-10-09</lastmod>
       <changefreq>weekly</changefreq>
       <priority>1.0</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/"/>
    </url>
-
-   <url>
-      <loc>https://tunidrive.net/vtc-tunisie</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>weekly</changefreq>
-      <priority>0.95</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/transport-colis-europe-tunisie</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>weekly</changefreq>
-      <priority>0.9</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/a-propos</loc>
-      <lastmod>2026-07-09</lastmod>
-      <changefreq>monthly</changefreq>
-      <priority>0.75</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/blog</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>daily</changefreq>
-      <priority>0.8</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/signup</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>monthly</changefreq>
-      <priority>0.7</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/client-signup</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>monthly</changefreq>
-      <priority>0.7</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/driver-login</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>monthly</changefreq>
-      <priority>0.6</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/client-login</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>monthly</changefreq>
-      <priority>0.6</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/login</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>monthly</changefreq>
-      <priority>0.6</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/terms-of-service</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>yearly</changefreq>
-      <priority>0.4</priority>
-   </url>
-
    <url>
       <loc>https://tunidrive.net/en</loc>
       <lastmod>2026-10-09</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.9</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/"/>
    </url>
 
+   <url>
+      <loc>https://tunidrive.net/vtc-tunisie</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.95</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/vtc-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/vtc-tunisia"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/vtc-tunisie"/>
+   </url>
    <url>
       <loc>https://tunidrive.net/en/vtc-tunisia</loc>
       <lastmod>2026-10-09</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.85</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/vtc-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/vtc-tunisia"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/vtc-tunisie"/>
    </url>
 
+   <url>
+      <loc>https://tunidrive.net/transport-colis-europe-tunisie</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/transport-colis-europe-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/parcel-europe-tunisia"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/transport-colis-europe-tunisie"/>
+   </url>
    <url>
       <loc>https://tunidrive.net/en/parcel-europe-tunisia</loc>
       <lastmod>2026-10-09</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.8</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/transport-colis-europe-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/parcel-europe-tunisia"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/transport-colis-europe-tunisie"/>
    </url>
 
+   <url>
+      <loc>https://tunidrive.net/a-propos</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.75</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/a-propos"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/about"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/a-propos"/>
+   </url>
    <url>
       <loc>https://tunidrive.net/en/about</loc>
       <lastmod>2026-10-09</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.7</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/a-propos"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/about"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/a-propos"/>
    </url>
 
+   <url>
+      <loc>https://tunidrive.net/blog</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>daily</changefreq>
+      <priority>0.8</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog"/>
+   </url>
    <url>
       <loc>https://tunidrive.net/en/blog</loc>
       <lastmod>2026-10-09</lastmod>
       <changefreq>daily</changefreq>
       <priority>0.7</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog"/>
    </url>
 
+   <url>
+      <loc>https://tunidrive.net/blog/reussir-une-course-avec-un-voyageur-d-affaires-en-tunisie</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.6</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog/reussir-une-course-avec-un-voyageur-d-affaires-en-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog/reussir-une-course-avec-un-voyageur-d-affaires-en-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog/reussir-une-course-avec-un-voyageur-d-affaires-en-tunisie"/>
+   </url>
+   <url>
+      <loc>https://tunidrive.net/en/blog/reussir-une-course-avec-un-voyageur-d-affaires-en-tunisie</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.55</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog/reussir-une-course-avec-un-voyageur-d-affaires-en-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog/reussir-une-course-avec-un-voyageur-d-affaires-en-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog/reussir-une-course-avec-un-voyageur-d-affaires-en-tunisie"/>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/blog/transport-professionnel-en-tunisie-un-service-sur-mesure-pour-les-hommes-d-affai</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.6</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog/transport-professionnel-en-tunisie-un-service-sur-mesure-pour-les-hommes-d-affai"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog/transport-professionnel-en-tunisie-un-service-sur-mesure-pour-les-hommes-d-affai"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog/transport-professionnel-en-tunisie-un-service-sur-mesure-pour-les-hommes-d-affai"/>
+   </url>
+   <url>
+      <loc>https://tunidrive.net/en/blog/transport-professionnel-en-tunisie-un-service-sur-mesure-pour-les-hommes-d-affai</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.55</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog/transport-professionnel-en-tunisie-un-service-sur-mesure-pour-les-hommes-d-affai"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog/transport-professionnel-en-tunisie-un-service-sur-mesure-pour-les-hommes-d-affai"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog/transport-professionnel-en-tunisie-un-service-sur-mesure-pour-les-hommes-d-affai"/>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/blog/comment-obtenir-des-courses-de-transfert-pour-les-touristes-en-tunisie</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.6</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog/comment-obtenir-des-courses-de-transfert-pour-les-touristes-en-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog/comment-obtenir-des-courses-de-transfert-pour-les-touristes-en-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog/comment-obtenir-des-courses-de-transfert-pour-les-touristes-en-tunisie"/>
+   </url>
+   <url>
+      <loc>https://tunidrive.net/en/blog/comment-obtenir-des-courses-de-transfert-pour-les-touristes-en-tunisie</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.55</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog/comment-obtenir-des-courses-de-transfert-pour-les-touristes-en-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog/comment-obtenir-des-courses-de-transfert-pour-les-touristes-en-tunisie"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog/comment-obtenir-des-courses-de-transfert-pour-les-touristes-en-tunisie"/>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/blog/transfert-des-touristes-visitant-la-tunisie-une-experience-inoubliable</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.6</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog/transfert-des-touristes-visitant-la-tunisie-une-experience-inoubliable"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog/transfert-des-touristes-visitant-la-tunisie-une-experience-inoubliable"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog/transfert-des-touristes-visitant-la-tunisie-une-experience-inoubliable"/>
+   </url>
+   <url>
+      <loc>https://tunidrive.net/en/blog/transfert-des-touristes-visitant-la-tunisie-une-experience-inoubliable</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.55</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/blog/transfert-des-touristes-visitant-la-tunisie-une-experience-inoubliable"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/blog/transfert-des-touristes-visitant-la-tunisie-une-experience-inoubliable"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/blog/transfert-des-touristes-visitant-la-tunisie-une-experience-inoubliable"/>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/signup</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.7</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/signup"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/signup"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/signup"/>
+   </url>
+   <url>
+      <loc>https://tunidrive.net/en/signup</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/signup"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/signup"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/signup"/>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/client-signup</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.7</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/client-signup"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/client-signup"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/client-signup"/>
+   </url>
+   <url>
+      <loc>https://tunidrive.net/en/client-signup</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/client-signup"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/client-signup"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/client-signup"/>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/login</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/login"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/login"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/login"/>
+   </url>
+   <url>
+      <loc>https://tunidrive.net/en/login</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.5</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/login"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/login"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/login"/>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/client-login</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/client-login"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/client-login"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/client-login"/>
+   </url>
+   <url>
+      <loc>https://tunidrive.net/en/client-login</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.5</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/client-login"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/client-login"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/client-login"/>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/driver-login</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/driver-login"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/driver-login"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/driver-login"/>
+   </url>
+   <url>
+      <loc>https://tunidrive.net/en/driver-login</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.5</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/driver-login"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/driver-login"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/driver-login"/>
+   </url>
+
+   <url>
+      <loc>https://tunidrive.net/terms-of-service</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>yearly</changefreq>
+      <priority>0.4</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/terms-of-service"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/terms-of-service"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/terms-of-service"/>
+   </url>
    <url>
       <loc>https://tunidrive.net/en/terms-of-service</loc>
       <lastmod>2026-10-09</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.4</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/terms-of-service"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/terms-of-service"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/terms-of-service"/>
    </url>
 
+   <url>
+      <loc>https://tunidrive.net/privacy-policy</loc>
+      <lastmod>2026-10-09</lastmod>
+      <changefreq>yearly</changefreq>
+      <priority>0.4</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/privacy-policy"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/privacy-policy"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/privacy-policy"/>
+   </url>
    <url>
       <loc>https://tunidrive.net/en/privacy-policy</loc>
       <lastmod>2026-10-09</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.4</priority>
-   </url>
-
-   <url>
-      <loc>https://tunidrive.net/privacy-policy</loc>
-      <lastmod>2026-06-02</lastmod>
-      <changefreq>yearly</changefreq>
-      <priority>0.4</priority>
+      <xhtml:link rel="alternate" hreflang="fr" href="https://tunidrive.net/privacy-policy"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://tunidrive.net/en/privacy-policy"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://tunidrive.net/privacy-policy"/>
    </url>
 
 </urlset>
