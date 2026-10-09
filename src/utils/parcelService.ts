@@ -392,18 +392,31 @@ export async function acceptParcelProposal(proposalId: string): Promise<ParcelPr
   return mapProposal(data);
 }
 
-export function directionLabel(direction: ParcelDirection): string {
+export function directionLabel(direction: ParcelDirection, locale: 'fr' | 'en' = 'fr'): string {
+  if (locale === 'en') {
+    return direction === 'europe_to_tunisia' ? 'Europe → Tunisia' : 'Tunisia → Europe';
+  }
   return direction === 'europe_to_tunisia' ? 'Europe → Tunisie' : 'Tunisie → Europe';
 }
 
-export function statusLabel(status: ParcelQuoteRequest['status']): string {
-  const labels: Record<ParcelQuoteRequest['status'], string> = {
-    pending: 'En attente de propositions',
-    quoted: 'Propositions reçues',
-    accepted: 'Offre acceptée',
-    completed: 'Livraison effectuée',
-    cancelled: 'Annulée',
-    expired: 'Expirée',
-  };
+export function statusLabel(status: ParcelQuoteRequest['status'], locale: 'fr' | 'en' = 'fr'): string {
+  const labels: Record<ParcelQuoteRequest['status'], string> =
+    locale === 'en'
+      ? {
+          pending: 'Waiting for offers',
+          quoted: 'Offers received',
+          accepted: 'Offer accepted',
+          completed: 'Delivered',
+          cancelled: 'Cancelled',
+          expired: 'Expired',
+        }
+      : {
+          pending: 'En attente de propositions',
+          quoted: 'Propositions reçues',
+          accepted: 'Offre acceptée',
+          completed: 'Livraison effectuée',
+          cancelled: 'Annulée',
+          expired: 'Expirée',
+        };
   return labels[status];
 }

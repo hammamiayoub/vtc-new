@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Quote, Star } from 'lucide-react';
 import { fetchPublicReviews, type PublicReview } from '../utils/publicReviews';
+import { useLocale } from '../i18n/locale';
 
-function formatReviewDate(iso: string): string {
+function formatReviewDate(iso: string, locale: 'fr' | 'en'): string {
   try {
-    return new Date(iso).toLocaleDateString('fr-FR', {
+    return new Date(iso).toLocaleDateString(locale === 'en' ? 'en-GB' : 'fr-FR', {
       month: 'long',
       year: 'numeric',
     });
@@ -13,9 +14,9 @@ function formatReviewDate(iso: string): string {
   }
 }
 
-function StarRating({ rating }: { rating: number }) {
+function StarRating({ rating, en }: { rating: number; en: boolean }) {
   return (
-    <div className="flex items-center gap-0.5" aria-label={`${rating} sur 5 étoiles`}>
+    <div className="flex items-center gap-0.5" aria-label={en ? `${rating} out of 5 stars` : `${rating} sur 5 étoiles`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
@@ -29,6 +30,8 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export const ReviewsCarousel: React.FC = () => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const [reviews, setReviews] = useState<PublicReview[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -84,10 +87,10 @@ export const ReviewsCarousel: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
           <div className="max-w-2xl">
             <h2 id="reviews-carousel-heading" className="page-heading mb-3">
-              Ce que disent nos clients
+              {en ? 'What our riders say' : 'Ce que disent nos clients'}
             </h2>
             <p className="page-subheading">
-              Avis vérifiés après chaque course terminée sur TuniDrive
+              {en ? 'Verified reviews after every completed TuniDrive ride' : 'Avis vérifiés après chaque course terminée sur TuniDrive'}
             </p>
           </div>
           {total > 1 && (
@@ -96,7 +99,7 @@ export const ReviewsCarousel: React.FC = () => {
                 type="button"
                 onClick={goPrev}
                 className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                aria-label="Avis précédent"
+                aria-label={en ? 'Previous review' : 'Avis précédent'}
               >
                 <ChevronLeft size={20} />
               </button>
@@ -104,7 +107,7 @@ export const ReviewsCarousel: React.FC = () => {
                 type="button"
                 onClick={goNext}
                 className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                aria-label="Avis suivant"
+                aria-label={en ? 'Next review' : 'Avis suivant'}
               >
                 <ChevronRight size={20} />
               </button>
@@ -130,9 +133,9 @@ export const ReviewsCarousel: React.FC = () => {
                   <p className="text-xs text-gray-500">{review.city}</p>
                 </div>
                 <div className="text-right">
-                  <StarRating rating={review.rating} />
-                  {formatReviewDate(review.createdAt) && (
-                    <p className="text-xs text-gray-400 mt-1">{formatReviewDate(review.createdAt)}</p>
+                  <StarRating rating={review.rating} en={en} />
+                  {formatReviewDate(review.createdAt, locale) && (
+                    <p className="text-xs text-gray-400 mt-1">{formatReviewDate(review.createdAt, locale)}</p>
                   )}
                 </div>
               </div>
@@ -150,7 +153,7 @@ export const ReviewsCarousel: React.FC = () => {
                 className={`h-2 rounded-full transition-all ${
                   index === activeIndex ? 'w-6 bg-gray-900' : 'w-2 bg-gray-300 hover:bg-gray-400'
                 }`}
-                aria-label={`Aller à l'avis ${index + 1}`}
+                aria-label={en ? `Go to review ${index + 1}` : `Aller à l'avis ${index + 1}`}
                 aria-current={index === activeIndex ? 'true' : undefined}
               />
             ))}

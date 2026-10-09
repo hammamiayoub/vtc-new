@@ -3,6 +3,7 @@ import { Mail, MessageCircle, Facebook, Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AppStoreBadges } from './AppStoreBadges';
 import { Button } from './ui/Button';
+import { useLocale } from '../i18n/locale';
 
 interface FooterProps {
   onPrivacyPolicyClick?: () => void;
@@ -13,6 +14,9 @@ const footerLinkClass = 'text-sm text-gray-300 hover:text-white transition-color
 const footerHeadingClass = 'text-sm font-semibold text-white mb-4';
 
 export const Footer: React.FC<FooterProps> = () => {
+  const { locale, href } = useLocale();
+  const en = locale === 'en';
+
   return (
     <footer className="bg-black border-t border-gray-800 text-white">
       <div className="page-container py-12">
@@ -20,31 +24,32 @@ export const Footer: React.FC<FooterProps> = () => {
           <div className="sm:col-span-2 lg:col-span-2">
             <p className="text-xl font-bold text-white mb-4 tracking-tight">TuniDrive</p>
             <p className="text-sm text-gray-300 mb-4 max-w-md leading-relaxed">
-              Mobilité et transport en Tunisie : courses VTC avec chauffeurs professionnels
-              et transport international de colis Europe ↔ Tunisie.
+              {en
+                ? 'Mobility in Tunisia: private rides with professional drivers and international parcel transport between Europe and Tunisia.'
+                : 'Mobilité et transport en Tunisie : courses VTC avec chauffeurs professionnels et transport international de colis Europe ↔ Tunisie.'}
             </p>
           </div>
 
           <div>
-            <p className={footerHeadingClass}>Services</p>
+            <p className={footerHeadingClass}>{en ? 'Services' : 'Services'}</p>
             <ul className="space-y-3">
               <li>
-                <Link to="/vtc-tunisie" className={footerLinkClass}>
-                  VTC Tunisie &amp; transfert aéroport
+                <Link to={href('/vtc-tunisie')} className={footerLinkClass}>
+                  {en ? 'Private driver & airport transfer' : 'VTC Tunisie & transfert aéroport'}
                 </Link>
               </li>
               <li>
-                <Link to="/#transport-vtc" className={footerLinkClass}>
-                  Chauffeur privé
+                <Link to={href('/#transport-vtc')} className={footerLinkClass}>
+                  {en ? 'Private driver' : 'Chauffeur privé'}
                 </Link>
               </li>
               <li>
-                <Link to="/transport-colis-europe-tunisie" className={footerLinkClass}>
-                  Transport colis Europe ↔ Tunisie
+                <Link to={href('/transport-colis-europe-tunisie')} className={footerLinkClass}>
+                  {en ? 'Parcels Europe ↔ Tunisia' : 'Transport colis Europe ↔ Tunisie'}
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className={footerLinkClass}>
+                <Link to={href('/blog')} className={footerLinkClass}>
                   Blog
                 </Link>
               </li>
@@ -52,39 +57,39 @@ export const Footer: React.FC<FooterProps> = () => {
           </div>
 
           <div>
-            <p className={footerHeadingClass}>Inscription</p>
+            <p className={footerHeadingClass}>{en ? 'Sign up' : 'Inscription'}</p>
             <ul className="space-y-3">
               <li>
-                <Link to="/signup" className={footerLinkClass}>
-                  Devenir chauffeur ou transporteur
+                <Link to={href('/signup')} className={footerLinkClass}>
+                  {en ? 'Become a driver or carrier' : 'Devenir chauffeur ou transporteur'}
                 </Link>
               </li>
               <li>
-                <Link to="/client-signup" className={footerLinkClass}>
-                  Inscription client
+                <Link to={href('/client-signup')} className={footerLinkClass}>
+                  {en ? 'Rider signup' : 'Inscription client'}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <p className={footerHeadingClass}>Légal</p>
+            <p className={footerHeadingClass}>{en ? 'Legal' : 'Légal'}</p>
             <ul className="space-y-3">
               <li>
-                <Link to="/terms-of-service" className={footerLinkClass}>
-                  CGU
+                <Link to={href('/terms-of-service')} className={footerLinkClass}>
+                  {en ? 'Terms of use' : 'CGU'}
                 </Link>
               </li>
               <li>
-                <Link to="/privacy-policy" className={footerLinkClass}>
-                  RGPD
+                <Link to={href('/privacy-policy')} className={footerLinkClass}>
+                  {en ? 'Privacy policy' : 'RGPD'}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <p className={footerHeadingClass}>Application</p>
+            <p className={footerHeadingClass}>{en ? 'App' : 'Application'}</p>
             <AppStoreBadges layout="column" />
           </div>
 
@@ -117,12 +122,14 @@ export const Footer: React.FC<FooterProps> = () => {
 
         <div className="mt-10 rounded-2xl border border-gray-800 bg-gray-900/50 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <p className="text-lg font-semibold text-white mb-1">Prêt à réserver ?</p>
-            <p className="text-sm text-gray-400">Obtenez un tarif en quelques secondes, sans engagement.</p>
+            <p className="text-lg font-semibold text-white mb-1">{en ? 'Ready to book?' : 'Prêt à réserver ?'}</p>
+            <p className="text-sm text-gray-400">
+              {en ? 'Get a fare in a few seconds, with no commitment.' : 'Obtenez un tarif en quelques secondes, sans engagement.'}
+            </p>
           </div>
-          <Link to="/#reserver" className="w-full sm:w-auto">
+          <Link to={href('/#reserver')} className="w-full sm:w-auto">
             <Button className="w-full sm:w-auto rounded-full bg-white text-black hover:bg-gray-200">
-              Réserver une course
+              {en ? 'Book a ride' : 'Réserver une course'}
             </Button>
           </Link>
         </div>
@@ -130,7 +137,7 @@ export const Footer: React.FC<FooterProps> = () => {
         <div className="border-t border-gray-800 mt-10 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} TuniDrive. Tous droits réservés.
+              © {new Date().getFullYear()} TuniDrive. {en ? 'All rights reserved.' : 'Tous droits réservés.'}
             </p>
             <div className="flex items-center gap-4">
               <a

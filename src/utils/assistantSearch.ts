@@ -1,5 +1,8 @@
-import { faqCategories, type FaqItem } from '../data/faqData';
+import { faqCategories, type FaqCategory, type FaqItem } from '../data/faqData';
+import { faqCategoriesEn } from '../data/faqData.en';
 import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
+import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
+import type { Locale } from '../i18n/locale';
 
 export interface AssistantEntry {
   id: string;
@@ -104,8 +107,40 @@ function buildKeywords(question: string, answer: string, extra: string[] = []): 
   return [...new Set([...fromText, ...fromExtra])];
 }
 
-function flattenFaq(): AssistantEntry[] {
-  const fromCategories = faqCategories.flatMap((cat) =>
+const EXTRA_ENTRIES_EN: Omit<AssistantEntry, 'id'>[] = [
+  {
+    question: 'How do I contact support on WhatsApp?',
+    answer:
+      'Our team is available on WhatsApp at +216 28 528 477.\n\nYou can also email support@tunidrive.net (we usually reply within 24 hours).',
+    categoryId: 'general',
+    categoryLabel: 'General questions',
+    keywords: ['whatsapp', 'support', 'contact', 'help', 'phone', '21628528477'],
+  },
+  {
+    question: 'Where can I download the TuniDrive app?',
+    answer:
+      'The TuniDrive app is available on:\n• Google Play (Android)\n• App Store (iPhone/iPad)\n\nLinks are in the footer and in the download banner.',
+    categoryId: 'general',
+    categoryLabel: 'General questions',
+    keywords: ['app', 'application', 'mobile', 'android', 'iphone', 'play store', 'app store', 'download'],
+  },
+  {
+    question: 'Can I see a price on the homepage without signing in?',
+    answer:
+      'Yes. On the homepage, enter pickup and destination in Book now, then click See prices.\n\nA free rider account is required to confirm a ride. Your quote can be kept if you sign in right after.',
+    categoryId: 'client',
+    categoryLabel: 'I am a rider',
+    keywords: ['home', 'quote', 'price', 'without account', 'estimate', 'widget'],
+  },
+];
+
+function flattenFaq(locale: Locale = 'fr'): AssistantEntry[] {
+  const categories: FaqCategory[] = locale === 'en' ? faqCategoriesEn : faqCategories;
+  const seoItems = locale === 'en' ? vtcSeoFaqItemsEn : vtcSeoFaqItems;
+  const extras = locale === 'en' ? EXTRA_ENTRIES_EN : EXTRA_ENTRIES;
+  const clientLabel = locale === 'en' ? 'I am a rider' : 'Je suis client';
+
+  const fromCategories = categories.flatMap((cat) =>
     cat.items.map((item) => ({
       id: item.id,
       question: item.question,
@@ -116,16 +151,16 @@ function flattenFaq(): AssistantEntry[] {
     })),
   );
 
-  const fromSeo = vtcSeoFaqItems.map((item, index) => ({
+  const fromSeo = seoItems.map((item, index) => ({
     id: `seo-${index + 1}`,
     question: item.question,
     answer: item.answer,
     categoryId: 'client',
-    categoryLabel: 'Je suis client',
-    keywords: buildKeywords(item.question, item.answer, ['vtc', 'tunisie', 'aeroport']),
+    categoryLabel: clientLabel,
+    keywords: buildKeywords(item.question, item.answer, ['vtc', 'tunisia', 'airport', 'aeroport']),
   }));
 
-  const fromExtra = EXTRA_ENTRIES.map((entry, index) => ({
+  const fromExtra = extras.map((entry, index) => ({
     id: `extra-${index + 1}`,
     ...entry,
     keywords: buildKeywords(entry.question, entry.answer, entry.keywords),
@@ -140,15 +175,15 @@ function flattenFaq(): AssistantEntry[] {
   return [...byQuestion.values()];
 }
 
-let cachedEntries: AssistantEntry[] | null = null;
+const cachedEntries: Partial<Record<Locale, AssistantEntry[]>> = {};
 
-export function getAssistantEntries(): AssistantEntry[] {
-  if (!cachedEntries) cachedEntries = flattenFaq();
-  return cachedEntries;
+export function getAssistantEntries(locale: Locale = 'fr'): AssistantEntry[] {
+  if (!cachedEntries[locale]) cachedEntries[locale] = flattenFaq(locale);
+  return cachedEntries[locale] as AssistantEntry[];
 }
 
-export function findAssistantEntryById(id: string): AssistantEntry | undefined {
-  return getAssistantEntries().find((e) => e.id === id);
+export function findAssistantEntryById(id: string, locale: Locale = 'fr'): AssistantEntry | undefined {
+  return getAssistantEntries(locale).find((e) => e.id === id);
 }
 
 function scoreEntry(query: string, queryTokens: string[], entry: AssistantEntry): number {
@@ -175,16 +210,16 @@ function scoreEntry(query: string, queryTokens: string[], entry: AssistantEntry)
   }
 
   // Bonus expressions fréquentes
-  if (/combien|tarif|prix|coute/.test(normalizedQuery) && /tarif|prix|tnd|km/.test(normalizeText(entry.answer))) {
+  if (/combien|tarif|prix|coute|price|fare|cost/.test(normalizedQuery) && /tarif|prix|price|tnd|km/.test(normalizeText(entry.answer))) {
     score += 10;
   }
-  if (/aeroport|transfert|tun|enfidha/.test(normalizedQuery) && entry.keywords.includes('aeroport')) {
+  if (/aeroport|airport|transfert|transfer|tun|enfidha/.test(normalizedQuery) && /aeroport|airport/.test(entry.keywords.join(' '))) {
     score += 15;
   }
-  if (/colis|europe|envoi|parcel/.test(normalizedQuery) && entry.categoryId === 'parcel') {
+  if (/colis|europe|envoi|parcel|shipping/.test(normalizedQuery) && entry.categoryId === 'parcel') {
     score += 12;
   }
-  if (/chauffeur|conducteur|inscri|partenaire|vtc/.test(normalizedQuery) && entry.categoryId === 'driver') {
+  if (/chauffeur|driver|conducteur|inscri|partenaire|vtc|signup/.test(normalizedQuery) && entry.categoryId === 'driver') {
     score += 10;
   }
 
@@ -194,6 +229,7 @@ function scoreEntry(query: string, queryTokens: string[], entry: AssistantEntry)
 export function searchAssistantKnowledge(
   query: string,
   limit = 3,
+  locale: Locale = 'fr',
 ): AssistantSearchResult[] {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
@@ -201,21 +237,30 @@ export function searchAssistantKnowledge(
   const queryTokens = tokenize(trimmed);
   if (queryTokens.length === 0) return [];
 
-  return getAssistantEntries()
+  return getAssistantEntries(locale)
     .map((entry) => ({ entry, score: scoreEntry(trimmed, queryTokens, entry) }))
     .filter((r) => r.score >= 14)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 }
 
-export function getQuickSuggestions(): AssistantEntry[] {
+export function getQuickSuggestions(locale: Locale = 'fr'): AssistantEntry[] {
   const ids = ['c3', 'c1', 'p1', 'd1', 'g3', 'extra-1', 'seo-2'];
   return ids
-    .map((id) => findAssistantEntryById(id))
+    .map((id) => findAssistantEntryById(id, locale))
     .filter((e): e is AssistantEntry => Boolean(e));
 }
 
-export function formatAssistantFallback(): string {
+export function formatAssistantFallback(locale: Locale = 'fr'): string {
+  if (locale === 'en') {
+    return (
+      'I could not find a precise answer to that question.\n\n' +
+      'Try keywords such as “price”, “airport”, “parcel” or “driver subscription”, or browse the categories below.\n\n' +
+      'For personal help:\n' +
+      '• WhatsApp: +216 28 528 477\n' +
+      '• Email: support@tunidrive.net'
+    );
+  }
   return (
     'Je n\'ai pas trouvé de réponse précise à cette question.\n\n' +
     'Essayez des mots-clés comme « tarif », « aéroport », « colis », « abonnement chauffeur » ou parcourez les catégories ci-dessous.\n\n' +

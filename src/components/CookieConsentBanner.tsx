@@ -8,6 +8,7 @@ import {
   setCookieConsent,
   type CookieConsentChoice,
 } from '../utils/cookieConsent';
+import { useLocale } from '../i18n/locale';
 
 interface CookieConsentBannerProps {
   onConsentChange: (choice: CookieConsentChoice) => void;
@@ -16,6 +17,8 @@ interface CookieConsentBannerProps {
 export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
   onConsentChange,
 }) => {
+  const { locale, href } = useLocale();
+  const en = locale === 'en';
   const bannerRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(
     () => getCookieConsent() === null && !isCookieBannerDismissedThisSession(),
@@ -78,10 +81,10 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
                   id="cookie-consent-title"
                   className="text-base sm:text-lg font-bold text-gray-900 leading-snug"
                 >
-                  Ce site utilise des cookies
+                  {en ? 'This site uses cookies' : 'Ce site utilise des cookies'}
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                  Conformité RGPD
+                  {en ? 'GDPR' : 'Conformité RGPD'}
                 </p>
               </div>
             </div>
@@ -89,7 +92,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
               type="button"
               onClick={handleClose}
               className="flex-shrink-0 p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
-              aria-label="Fermer"
+              aria-label={en ? 'Close' : 'Fermer'}
             >
               <X size={20} />
             </button>
@@ -100,14 +103,14 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
               id="cookie-consent-description"
               className="text-sm text-gray-700 leading-relaxed"
             >
-              TuniDrive utilise des cookies pour le fonctionnement du site, vos préférences
-              de session et, avec votre accord, la mesure d&apos;audience et la publicité.
-              Consultez notre{' '}
+              {en
+                ? 'TuniDrive uses cookies to run the site, remember your session and, with your consent, measure audience and show ads. Read our '
+                : "TuniDrive utilise des cookies pour le fonctionnement du site, vos préférences de session et, avec votre accord, la mesure d'audience et la publicité. Consultez notre "}
               <Link
-                to="/privacy-policy"
+                to={href('/privacy-policy')}
                 className="text-blue-600 hover:text-blue-800 underline underline-offset-2 font-medium"
               >
-                politique de confidentialité
+                {en ? 'privacy policy' : 'politique de confidentialité'}
               </Link>
               .
             </p>
@@ -118,21 +121,21 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
                 onClick={() => handleChoice('accepted')}
                 className="px-5 py-2.5 rounded-full bg-black text-white text-sm font-semibold hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
               >
-                Tout accepter
+                {en ? 'Accept all' : 'Tout accepter'}
               </button>
               <button
                 type="button"
                 onClick={() => handleChoice('rejected')}
                 className="px-5 py-2.5 rounded-full border border-gray-300 bg-white text-gray-900 text-sm font-semibold hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
               >
-                Refuser les cookies non essentiels
+                {en ? 'Reject non-essential cookies' : 'Refuser les cookies non essentiels'}
               </button>
               <button
                 type="button"
                 onClick={handleClose}
                 className="px-5 py-2.5 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors sm:ml-auto"
               >
-                Fermer
+                {en ? 'Close' : 'Fermer'}
               </button>
             </div>
           </div>

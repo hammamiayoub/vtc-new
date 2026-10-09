@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Shield, Star, MessageCircle, MapPin, CheckCircle, Car } from 'lucide-react';
 import { fetchPlatformStats, type PlatformStats } from '../utils/platformStats';
+import { useLocale } from '../i18n/locale';
 
 type TrustSignalsVariant = 'compact' | 'bar' | 'grid';
 
@@ -9,33 +10,40 @@ interface TrustSignalsProps {
   className?: string;
 }
 
-function buildTrustItems(stats: PlatformStats) {
+function buildTrustItems(stats: PlatformStats, en: boolean) {
+  const num = (value: number) => value.toLocaleString(en ? 'en-GB' : 'fr-FR');
   const items: { icon: typeof Shield; label: string }[] = [
-    { icon: Shield, label: 'Chauffeurs vérifiés' },
-    { icon: CheckCircle, label: 'Prix confirmé avant le départ' },
-    { icon: MessageCircle, label: 'Support WhatsApp 7j/7' },
+    { icon: Shield, label: en ? 'Verified drivers' : 'Chauffeurs vérifiés' },
+    { icon: CheckCircle, label: en ? 'Price confirmed before departure' : 'Prix confirmé avant le départ' },
+    { icon: MessageCircle, label: en ? 'WhatsApp support, 7 days a week' : 'Support WhatsApp 7j/7' },
   ];
 
   if (stats.averageRating != null && stats.totalRatings > 0) {
     items.push({
       icon: Star,
-      label: `${stats.averageRating.toLocaleString('fr-FR')}/5 · ${stats.totalRatings} avis clients`,
+      label: en
+        ? `${num(stats.averageRating)}/5 · ${stats.totalRatings} rider reviews`
+        : `${num(stats.averageRating)}/5 · ${stats.totalRatings} avis clients`,
     });
   } else {
-    items.push({ icon: Star, label: 'Satisfaction clients suivie après chaque course' });
+    items.push({ icon: Star, label: en ? 'Rider feedback after every completed ride' : 'Satisfaction clients suivie après chaque course' });
   }
 
   if (stats.completedBookings > 0) {
     items.push({
       icon: Car,
-      label: `${stats.completedBookings.toLocaleString('fr-FR')}+ courses réalisées`,
+      label: en
+        ? `${num(stats.completedBookings)}+ completed rides`
+        : `${num(stats.completedBookings)}+ courses réalisées`,
     });
   }
 
   if (stats.activeDrivers > 0) {
     items.push({
       icon: MapPin,
-      label: `${stats.activeDrivers.toLocaleString('fr-FR')}+ chauffeurs actifs · Tunis, Sfax, Sousse…`,
+      label: en
+        ? `${num(stats.activeDrivers)}+ active drivers · Tunis, Sfax, Sousse…`
+        : `${num(stats.activeDrivers)}+ chauffeurs actifs · Tunis, Sfax, Sousse…`,
     });
   } else {
     items.push({ icon: MapPin, label: 'Tunis · Sfax · Sousse · Nabeul · Hammamet…' });
@@ -48,6 +56,8 @@ export const TrustSignals: React.FC<TrustSignalsProps> = ({
   variant = 'compact',
   className = '',
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const [stats, setStats] = useState<PlatformStats | null>(null);
 
   useEffect(() => {
@@ -65,7 +75,7 @@ export const TrustSignals: React.FC<TrustSignalsProps> = ({
     activeDrivers: 0,
     averageRating: null,
     totalRatings: 0,
-  }), [stats]);
+  }, en), [stats, en]);
 
   if (variant === 'bar') {
     return (

@@ -4,6 +4,8 @@ import { Button } from './ui/Button';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { supabase } from '../lib/supabase';
 import { TrustSignals } from './TrustSignals';
+import { useLocale } from '../i18n/locale';
+import { translateSignupMessage } from '../i18n/signupErrors';
 
 interface DriverLoginProps {
   onBack: () => void;
@@ -12,6 +14,8 @@ interface DriverLoginProps {
 }
 
 export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLoginSuccess }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -91,7 +95,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 sm:mb-8 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-            Retour
+            {en ? 'Back' : 'Retour'}
           </button>
 
           <div className="text-center mb-6 sm:mb-8">
@@ -100,10 +104,10 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
               <Car size={36} className="hidden sm:block text-gray-700" />
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight">
-              Connexion chauffeur
+              {en ? 'Driver login' : 'Connexion chauffeur'}
             </h1>
             <p className="text-gray-600 text-base sm:text-lg">
-              Accédez à votre espace partenaire
+              {en ? 'Open your partner space' : 'Accédez à votre espace partenaire'}
             </p>
           </div>
 
@@ -118,7 +122,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Adresse email"
+                placeholder={en ? 'Email address' : 'Adresse email'}
                 className="block w-full pl-10 pr-3 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
                 required
               />
@@ -132,7 +136,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mot de passe"
+                placeholder={en ? 'Password' : 'Mot de passe'}
                 className="block w-full pl-10 pr-12 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
                 required
               />
@@ -140,7 +144,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                aria-label={showPassword ? (en ? 'Hide password' : 'Masquer le mot de passe') : (en ? 'Show password' : 'Afficher le mot de passe')}
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5 text-gray-500 hover:text-gray-700" />
@@ -158,20 +162,20 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 text-gray-900 rounded border-gray-300 focus:ring-gray-900"
                 />
-                <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
+                <span className="ml-2 text-sm text-gray-600">{en ? 'Remember me' : 'Se souvenir de moi'}</span>
               </label>
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
                 className="text-sm text-gray-900 hover:underline font-medium"
               >
-                Mot de passe oublié ?
+                {en ? 'Forgot password?' : 'Mot de passe oublié ?'}
               </button>
             </div>
 
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm text-red-600">{error}</p>
+                <p className="text-sm text-red-600">{translateSignupMessage(error, locale)}</p>
               </div>
             )}
 
@@ -180,15 +184,15 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
               loading={isSubmitting}
               className="w-full py-4 bg-black hover:bg-gray-800 text-lg font-medium"
             >
-              Se connecter
+              {en ? 'Sign in' : 'Se connecter'}
             </Button>
           </form>
 
           <div className="mt-8 sm:mt-10 text-center">
             <p className="text-gray-600">
-              Pas encore partenaire ?{' '}
+              {en ? 'Not a partner yet? ' : 'Pas encore partenaire ? '}
               <button onClick={onSignup} className="text-gray-900 hover:underline font-medium">
-                Devenir chauffeur
+                {en ? 'Become a driver' : 'Devenir chauffeur'}
               </button>
             </p>
           </div>

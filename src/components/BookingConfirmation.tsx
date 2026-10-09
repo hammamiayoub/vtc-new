@@ -18,6 +18,7 @@ import { Booking, Driver } from '../types';
 import { getPricePerKm, calculateSurcharges, PriceSurcharges, getDriverPickupFareSummaryText } from '../utils/geolocation';
 import { analytics } from '../utils/analytics';
 import { triggerGoogleAdsConversion } from '../utils/googleAdsTrigger';
+import { useLocale } from '../i18n/locale';
 
 interface BookingConfirmationProps {
   bookingId: string;
@@ -28,6 +29,9 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   bookingId, 
   onBack 
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
+  const dateLocale = en ? 'en-GB' : 'fr-FR';
   const [booking, setBooking] = useState<Booking | null>(null);
   const [driver, setDriver] = useState<Driver | null>(null);
   const [loading, setLoading] = useState(true);
@@ -133,21 +137,21 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
             <Clock size={16} />
-            En attente d'acceptation
+            {en ? 'Waiting for a driver' : "En attente d'acceptation"}
           </span>
         );
       case 'accepted':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
             <CheckCircle size={16} />
-            Acceptée par le chauffeur
+            {en ? 'Accepted by the driver' : 'Acceptée par le chauffeur'}
           </span>
         );
       case 'in_progress':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
             <Car size={16} />
-            Course en cours
+            {en ? 'Ride in progress' : 'Course en cours'}
           </span>
         );
       default:
@@ -171,8 +175,8 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Réservation introuvable</h2>
-          <Button onClick={onBack}>Retour au tableau de bord</Button>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{en ? 'Booking not found' : 'Réservation introuvable'}</h2>
+          <Button onClick={onBack}>{en ? 'Back to overview' : 'Retour au tableau de bord'}</Button>
         </div>
       </div>
     );
@@ -188,7 +192,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             className="flex items-center gap-2 text-gray-600 hover:text-purple-600 mb-6 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-            Retour au tableau de bord
+            {en ? 'Back to overview' : 'Retour au tableau de bord'}
           </button>
 
           <div className="text-center">
@@ -196,10 +200,10 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               <CheckCircle size={40} className="text-orange-600" />
             </div>
             <h1 className="text-3xl font-bold text-orange-900 mb-2">
-              Réservation en attente de confirmation !
+              {en ? 'Booking waiting for confirmation!' : 'Réservation en attente de confirmation !'}
             </h1>
             <p className="text-gray-600 text-lg">
-              Votre course a été enregistrée avec succès
+              {en ? 'Your ride has been saved' : 'Votre course a été enregistrée avec succès'}
             </p>
           </div>
         </div>
@@ -209,10 +213,10 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Statut de votre réservation
+                {en ? 'Booking status' : 'Statut de votre réservation'}
               </h2>
               <p className="text-gray-600">
-                Réservation #{booking.id.slice(0, 8)}
+                {en ? 'Booking' : 'Réservation'} #{booking.id.slice(0, 8)}
               </p>
             </div>
             {getStatusBadge(booking.status)}
@@ -224,7 +228,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-purple-600" />
-              Détails de la course
+              {en ? 'Ride details' : 'Détails de la course'}
             </h3>
 
             <div className="space-y-6">
@@ -233,7 +237,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-3 h-3 bg-green-500 rounded-full mt-2"></div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Point de départ</p>
+                    <p className="text-sm text-gray-600 mb-1">{en ? 'Pickup' : 'Point de départ'}</p>
                     <p className="font-medium text-gray-900">{booking.pickup_address}</p>
                   </div>
                 </div>
@@ -241,7 +245,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <div className="flex items-start gap-3">
                   <div className="w-3 h-3 bg-red-500 rounded-full mt-2"></div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Destination</p>
+                    <p className="text-sm text-gray-600 mb-1">{en ? 'Destination' : 'Destination'}</p>
                     <p className="font-medium text-gray-900">{booking.destination_address}</p>
                   </div>
                 </div>
@@ -252,10 +256,10 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock size={16} className="text-blue-600" />
-                    <span className="text-sm text-gray-600">Heure prévue</span>
+                    <span className="text-sm text-gray-600">{en ? 'Scheduled time' : 'Heure prévue'}</span>
                   </div>
                   <p className="font-semibold text-gray-900">
-                    {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
+                    {new Date(booking.scheduled_time).toLocaleString(dateLocale, {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
@@ -278,33 +282,36 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               {/* Prix */}
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-medium text-purple-900">Prix total</span>
+                  <span className="text-lg font-medium text-purple-900">{en ? 'Total fare' : 'Prix total'}</span>
                   <span className="text-2xl font-bold text-purple-600">
                     {booking.price_tnd} TND
                   </span>
                 </div>
                 <p className="text-sm text-purple-700 mt-1">
-                  Prise en charge variable ({getDriverPickupFareSummaryText()}) + tarif progressif au km
+                  {en
+                    ? `Pickup fee by driver distance (${getDriverPickupFareSummaryText()}) + progressive per-km fare`
+                    : `Prise en charge variable (${getDriverPickupFareSummaryText()}) + tarif progressif au km`}
                   {(() => {
                     const { price } = getPricePerKm(booking.distance_km);
-                    return ` (palier indicatif : ${price.toFixed(2).replace('.', ',')} TND/km)`;
+                    const amount = en ? price.toFixed(2) : price.toFixed(2).replace('.', ',');
+                    return en ? ` (indicative tier: ${amount} TND/km)` : ` (palier indicatif : ${amount} TND/km)`;
                   })()}
                 </p>
                 
                 {/* Affichage des suppléments s'ils existent */}
                 {priceSurcharges && (priceSurcharges.isNightTime || priceSurcharges.isWeekend) && (
                   <div className="mt-3 pt-3 border-t border-purple-300">
-                    <p className="text-xs font-semibold text-purple-900 mb-2">Suppléments inclus:</p>
+                    <p className="text-xs font-semibold text-purple-900 mb-2">{en ? 'Extras included:' : 'Suppléments inclus:'}</p>
                     <div className="space-y-1">
                       {priceSurcharges.isNightTime && (
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-purple-800">🌙 Trajet de nuit</span>
+                          <span className="text-purple-800">{en ? 'Night trip' : 'Trajet de nuit'}</span>
                           <span className="font-semibold text-purple-900">+{priceSurcharges.nightSurchargePercent}%</span>
                         </div>
                       )}
                       {priceSurcharges.isWeekend && (
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-purple-800">📅 Week-end</span>
+                          <span className="text-purple-800">{en ? 'Weekend' : 'Week-end'}</span>
                           <span className="font-semibold text-purple-900">+{priceSurcharges.weekendSurchargePercent}%</span>
                         </div>
                       )}
@@ -318,7 +325,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <MessageSquare size={16} className="text-gray-600" />
-                    <span className="text-sm text-gray-600">Notes</span>
+                    <span className="text-sm text-gray-600">{en ? 'Notes' : 'Notes'}</span>
                   </div>
                   <p className="text-gray-900 bg-gray-50 rounded-lg p-3">
                     {booking.notes}
@@ -332,7 +339,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
               <User className="w-5 h-5 text-blue-600" />
-              {driver ? 'Votre chauffeur' : 'Chauffeur'}
+              {driver ? (en ? 'Your driver' : 'Votre chauffeur') : (en ? 'Driver' : 'Chauffeur')}
             </h3>
 
             {driver ? (
@@ -342,7 +349,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   {driver.profilePhotoUrl ? (
                     <img
                       src={driver.profilePhotoUrl}
-                      alt="Photo de profil"
+                      alt={en ? 'Profile photo' : 'Photo de profil'}
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   ) : (
@@ -354,7 +361,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <h4 className="text-xl font-semibold text-gray-900">
                       {driver.firstName} {driver.lastName}
                     </h4>
-                    <p className="text-gray-600">Chauffeur professionnel</p>
+                    <p className="text-gray-600">{en ? 'Professional driver' : 'Chauffeur professionnel'}</p>
                   </div>
                 </div>
 
@@ -365,14 +372,14 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                       <div className="flex items-center gap-3">
                         <Phone size={20} className="text-blue-600" />
                         <div>
-                          <p className="text-sm text-blue-700">Téléphone</p>
+                          <p className="text-sm text-blue-700">{en ? 'Phone' : 'Téléphone'}</p>
                           <p className="font-semibold text-blue-900">{driver.phone}</p>
                         </div>
                       </div>
                       <button
                         onClick={() => copyPhoneNumber(driver.phone!)}
                         className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                        title="Copier le numéro"
+                        title={en ? 'Copy number' : 'Copier le numéro'}
                       >
                         {phonecopied ? <Check size={20} /> : <Copy size={20} />}
                       </button>
@@ -385,7 +392,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   <div>
                     <div className="flex items-center gap-2 mb-3">
                       <Car size={16} className="text-gray-600" />
-                      <span className="text-sm text-gray-600">Véhicule</span>
+                      <span className="text-sm text-gray-600">{en ? 'Vehicle' : 'Véhicule'}</span>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4 space-y-4">
                       {/* Photo du véhicule */}
@@ -393,7 +400,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                         <div className="flex justify-center">
                           <img
                             src={driver.vehicleInfo.photoUrl}
-                            alt="Photo du véhicule"
+                            alt={en ? 'Vehicle photo' : 'Photo du véhicule'}
                             className="w-32 h-24 rounded-lg object-cover border border-gray-300 shadow-sm"
                           />
                         </div>
@@ -405,12 +412,12 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                         </p>
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                           <div>
-                            <span className="block">Année: {driver.vehicleInfo.year}</span>
-                            <span className="block">Couleur: {driver.vehicleInfo.color}</span>
+                            <span className="block">{en ? 'Year' : 'Année'}: {driver.vehicleInfo.year}</span>
+                            <span className="block">{en ? 'Color' : 'Couleur'}: {driver.vehicleInfo.color}</span>
                           </div>
                           <div>
-                            <span className="block">Places: {driver.vehicleInfo.seats}</span>
-                            <span className="block">Plaque: {driver.vehicleInfo.licensePlate}</span>
+                            <span className="block">{en ? 'Seats' : 'Places'}: {driver.vehicleInfo.seats}</span>
+                            <span className="block">{en ? 'Plate' : 'Plaque'}: {driver.vehicleInfo.licensePlate}</span>
                           </div>
                         </div>
                       </div>
@@ -426,7 +433,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                       className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <Phone size={20} />
-                      Appeler le chauffeur
+                      {en ? 'Call the driver' : 'Appeler le chauffeur'}
                     </a>
                   )}
                   
@@ -435,7 +442,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <MessageSquare size={20} />
-                    Envoyer un SMS
+                    {en ? 'Send a text' : 'Envoyer un SMS'}
                   </a>
                 </div>
               </div>
@@ -443,11 +450,12 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               <div className="text-center py-8">
                 <Clock size={48} className="text-gray-400 mx-auto mb-4" />
                 <h4 className="text-lg font-medium text-gray-900 mb-2">
-                  En attente d'assignation
+                  {en ? 'Waiting for a driver' : "En attente d'assignation"}
                 </h4>
                 <p className="text-gray-600">
-                  Un chauffeur va bientôt accepter votre course. 
-                  Vous recevrez ses coordonnées dès qu'il aura confirmé.
+                  {en
+                    ? 'A driver will accept your ride shortly. You will receive their contact details once they confirm.'
+                    : "Un chauffeur va bientôt accepter votre course. Vous recevrez ses coordonnées dès qu'il aura confirmé."}
                 </p>
               </div>
             )}
@@ -457,7 +465,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
         {/* Prochaines étapes */}
         <div className="bg-white rounded-xl shadow-sm p-6 mt-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">
-            Prochaines étapes
+            {en ? 'Next steps' : 'Prochaines étapes'}
           </h3>
           <div className="space-y-4">
             {booking.status === 'pending' && (
@@ -467,7 +475,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <span className="text-sm font-bold text-orange-600">1</span>
                   </div>
                   <p className="text-gray-700">
-                    <strong>En cours:</strong> Confirmation par le chauffeur
+                    <strong>{en ? 'In progress:' : 'En cours:'}</strong> {en ? 'Waiting for the driver to confirm' : 'Confirmation par le chauffeur'}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 opacity-50">
@@ -475,7 +483,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <span className="text-sm font-bold text-gray-400">3</span>
                   </div>
                   <p className="text-gray-500">
-                    Prise en charge à l'heure prévue
+                    {en ? 'Pickup at the scheduled time' : "Prise en charge à l'heure prévue"}
                   </p>
                 </div>
               </>
@@ -488,7 +496,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <CheckCircle size={16} className="text-green-600" />
                   </div>
                   <p className="text-gray-500">
-                    <strong>Terminé:</strong> Chauffeur trouvé et confirmé
+                    <strong>{en ? 'Done:' : 'Terminé:'}</strong> {en ? 'Driver found and confirmed' : 'Chauffeur trouvé et confirmé'}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -496,7 +504,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <span className="text-sm font-bold text-blue-600">2</span>
                   </div>
                   <p className="text-gray-700">
-                    <strong>En cours:</strong> Préparation pour la prise en charge
+                    <strong>{en ? 'In progress:' : 'En cours:'}</strong> {en ? 'Getting ready for pickup' : 'Préparation pour la prise en charge'}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 opacity-50">
@@ -504,7 +512,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                     <span className="text-sm font-bold text-gray-400">3</span>
                   </div>
                   <p className="text-gray-500">
-                    Prise en charge à l'heure prévue
+                    {en ? 'Pickup at the scheduled time' : "Prise en charge à l'heure prévue"}
                   </p>
                 </div>
               </>
@@ -515,13 +523,24 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
         {/* Informations importantes */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mt-8">
           <h3 className="text-lg font-semibold text-yellow-900 mb-3">
-            Informations importantes
+            {en ? 'Important information' : 'Informations importantes'}
           </h3>
           <ul className="space-y-2 text-yellow-800">
-            <li>• Soyez prêt 5 minutes avant l'heure prévue</li>
-            <li>• Le chauffeur vous contactera si nécessaire</li>
-            <li>• En cas de problème, contactez directement votre chauffeur</li>
-            <li>• Le paiement se fait en espèces à la fin de la course</li>
+            {en ? (
+              <>
+                <li>• Be ready 5 minutes before the scheduled time</li>
+                <li>• The driver will contact you if needed</li>
+                <li>• If there is a problem, contact your driver directly</li>
+                <li>• Payment is in cash at the end of the ride</li>
+              </>
+            ) : (
+              <>
+                <li>• Soyez prêt 5 minutes avant l'heure prévue</li>
+                <li>• Le chauffeur vous contactera si nécessaire</li>
+                <li>• En cas de problème, contactez directement votre chauffeur</li>
+                <li>• Le paiement se fait en espèces à la fin de la course</li>
+              </>
+            )}
           </ul>
         </div>
       </div>

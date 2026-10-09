@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Mail, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
+import { useLocale } from '../i18n/locale';
+import { translateSignupMessage } from '../i18n/signupErrors';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -14,6 +16,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   onClose,
   userType
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -123,25 +127,27 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <CheckCircle size={40} className="text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Email envoyé !
+                {en ? 'Email sent' : 'Email envoyé !'}
               </h2>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Un email avec les instructions pour réinitialiser votre mot de passe 
-                a été envoyé à <strong>{email}</strong>.
+                {en
+                  ? <>An email with instructions to reset your password was sent to <strong>{email}</strong>.</>
+                  : <>Un email avec les instructions pour réinitialiser votre mot de passe a été envoyé à <strong>{email}</strong>.</>}
               </p>
               <p className="text-sm text-gray-500 mb-8">
-                Vérifiez votre boîte de réception et vos spams. 
-                Le lien sera valide pendant 1 heure.
+                {en
+                  ? 'Check your inbox and spam folder. The link is valid for 1 hour.'
+                  : 'Vérifiez votre boîte de réception et vos spams. Le lien sera valide pendant 1 heure.'}
               </p>
               <Button onClick={handleClose} className="w-full">
-                Fermer
+                {en ? 'Close' : 'Fermer'}
               </Button>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Mot de passe oublié
+                  {en ? 'Forgot password' : 'Mot de passe oublié'}
                 </h2>
                 <button
                   onClick={handleClose}
@@ -152,8 +158,9 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               </div>
 
               <p className="text-gray-600 mb-6">
-                Saisissez votre adresse email et nous vous enverrons un lien 
-                pour créer un nouveau mot de passe.
+                {en
+                  ? 'Enter your email address and we will send you a link to create a new password.'
+                  : 'Saisissez votre adresse email et nous vous enverrons un lien pour créer un nouveau mot de passe.'}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -165,7 +172,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Votre adresse email"
+                    placeholder={en ? 'Your email address' : 'Votre adresse email'}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all"
                     required
                   />
@@ -173,7 +180,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                    <p className="text-sm text-red-600">{error}</p>
+                    <p className="text-sm text-red-600">{translateSignupMessage(error, locale)}</p>
                   </div>
                 )}
 
@@ -185,10 +192,10 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   {isSubmitting ? (
                     <>
                       <Loader2 size={16} className="mr-2 animate-spin" />
-                      Envoi en cours...
+                      {en ? 'Sending...' : 'Envoi en cours...'}
                     </>
                   ) : (
-                    'Envoyer le lien de réinitialisation'
+                    en ? 'Send reset link' : 'Envoyer le lien de réinitialisation'
                   )}
                 </Button>
               </form>
@@ -198,7 +205,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   onClick={handleClose}
                   className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  Retour à la connexion
+                  {en ? 'Back to login' : 'Retour à la connexion'}
                 </button>
               </div>
             </>

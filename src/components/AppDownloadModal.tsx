@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Smartphone, X } from 'lucide-react';
 import { AppStoreBadges } from './AppStoreBadges';
+import { useLocale } from '../i18n/locale';
 
 interface AppDownloadModalProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface AppDownloadModalProps {
 }
 
 export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onClose }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,10 +60,10 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
                     id="app-download-banner-title"
                     className="text-base sm:text-lg font-bold leading-snug pr-2"
                   >
-                    Téléchargez l&apos;application TuniDrive
+                    {en ? 'Download the TuniDrive app' : "Téléchargez l'application TuniDrive"}
                   </h2>
                   <p className="text-sm text-gray-300 mt-1">
-                    Réservation et suivi en temps réel sur mobile.
+                    {en ? 'Book and track your ride in real time on mobile.' : 'Réservation et suivi en temps réel sur mobile.'}
                   </p>
                 </div>
               </div>
@@ -71,7 +74,7 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
                 className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-gray-600 text-sm font-semibold text-white hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
               >
                 <X size={16} aria-hidden="true" />
-                <span className="hidden sm:inline">Fermer</span>
+                <span className="hidden sm:inline">{en ? 'Close' : 'Fermer'}</span>
               </button>
             </div>
 

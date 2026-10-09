@@ -12,12 +12,17 @@ import { DRIVER_ACTIVITY_SIGNUP_OPTIONS } from '../utils/driverActivity';
 import type { SignupCountryCode } from '../utils/signupCountries';
 import { supabase } from '../lib/supabase';
 import { TrustSignals } from './TrustSignals';
+import { useLocale } from '../i18n/locale';
+import { translateSignupMessage } from '../i18n/signupErrors';
 
 interface DriverSignupProps {
   onBack: () => void;
 }
 
 export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
+  const { locale, href } = useLocale();
+  const en = locale === 'en';
+  const te = (message?: string) => translateSignupMessage(message, locale);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -242,7 +247,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             <CheckCircle size={40} className="text-green-600" />
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Inscription réussie</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">{en ? 'Signup complete' : 'Inscription réussie'}</h1>
 
           <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-lg text-left">
             <div className="flex items-start">
@@ -251,15 +256,20 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               </div>
               <div className="ml-3">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                  Vérifiez votre boîte email
+                  {en ? 'Check your inbox' : 'Vérifiez votre boîte email'}
                 </h3>
                 <p className="text-blue-700 mb-4 leading-relaxed">
-                  Nous avons envoyé un email de confirmation à votre adresse.
-                  <strong> Cliquez sur le lien pour activer votre compte partenaire.</strong>
+                  {en
+                    ? 'We sent a confirmation email to your address. '
+                    : 'Nous avons envoyé un email de confirmation à votre adresse. '}
+                  <strong>{en ? 'Click the link to activate your partner account.' : 'Cliquez sur le lien pour activer votre compte partenaire.'}</strong>
                 </p>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-yellow-800 text-sm font-medium">
-                    <strong>Important :</strong> Vérifiez aussi votre dossier Spam ou Courrier indésirable si vous ne recevez pas l&apos;email dans les prochaines minutes.
+                    <strong>{en ? 'Important:' : 'Important :'}</strong>{' '}
+                    {en
+                      ? 'Also check your spam folder if the email does not arrive in the next few minutes.'
+                      : "Vérifiez aussi votre dossier Spam ou Courrier indésirable si vous ne recevez pas l'email dans les prochaines minutes."}
                   </p>
                 </div>
               </div>
@@ -267,28 +277,26 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4 mb-8">
-            <h4 className="font-semibold text-gray-800 mb-2">Prochaines étapes :</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">{en ? 'Next steps:' : 'Prochaines étapes :'}</h4>
             <ul className="text-sm text-gray-600 space-y-1 text-left">
-              <li>• Vérifiez votre boîte email (et le dossier spam)</li>
-              <li>• Cliquez sur le lien de confirmation</li>
-              <li>• Connectez-vous à votre compte chauffeur</li>
-              <li>• Complétez votre profil et commencez à recevoir des demandes !</li>
+              <li>• {en ? 'Check your inbox (and spam)' : 'Vérifiez votre boîte email (et le dossier spam)'}</li>
+              <li>• {en ? 'Click the confirmation link' : 'Cliquez sur le lien de confirmation'}</li>
+              <li>• {en ? 'Sign in to your driver account' : 'Connectez-vous à votre compte chauffeur'}</li>
+              <li>• {en ? 'Complete your profile and start receiving requests' : 'Complétez votre profil et commencez à recevoir des demandes !'}</li>
             </ul>
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8 text-left">
-            <h4 className="font-semibold text-gray-900 mb-2">Bienvenue dans l&apos;équipe TuniDrive</h4>
+            <h4 className="font-semibold text-gray-900 mb-2">{en ? 'Welcome to the TuniDrive team' : "Bienvenue dans l'équipe TuniDrive"}</h4>
             <p className="text-gray-700 text-sm">
-              Une fois votre compte activé, complétez votre profil pour recevoir des{' '}
-              {registeredActivityType === 'transporteur'
-                ? 'demandes de transport de colis'
-                : 'courses de personnes'}
-              .
+              {en
+                ? `Once your account is active, complete your profile to receive ${registeredActivityType === 'transporteur' ? 'parcel requests' : 'passenger rides'}.`
+                : `Une fois votre compte activé, complétez votre profil pour recevoir des ${registeredActivityType === 'transporteur' ? 'demandes de transport de colis' : 'courses de personnes'}.`}
             </p>
           </div>
 
           <Button onClick={onBack} className="w-full bg-black hover:bg-gray-800 text-lg py-3">
-            Retour à l&apos;accueil
+            {en ? 'Back to home' : "Retour à l'accueil"}
           </Button>
         </div>
       </div>
@@ -301,15 +309,15 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         <div className="flex flex-col lg:flex-row">
           {/* Avantages — au-dessus du formulaire sur mobile */}
           <div className="order-1 lg:order-2 lg:w-96 bg-black p-6 sm:p-8 lg:p-12 text-white">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Avantages partenaire</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">{en ? 'Partner benefits' : 'Avantages partenaire'}</h2>
             <div className="space-y-4 sm:space-y-6">
               {[
                 watchActivityType === 'transporteur'
-                  ? 'Demandes de colis Europe ↔ Tunisie'
-                  : 'Courses de personnes sur demande',
-                'Revenus attractifs et transparents',
-                'Flexibilité totale des horaires',
-                'Support 7j/7 dédié aux partenaires',
+                  ? (en ? 'Europe ↔ Tunisia parcel requests' : 'Demandes de colis Europe ↔ Tunisie')
+                  : (en ? 'Passenger rides on demand' : 'Courses de personnes sur demande'),
+                en ? 'Attractive, transparent earnings' : 'Revenus attractifs et transparents',
+                en ? 'Fully flexible hours' : 'Flexibilité totale des horaires',
+                en ? 'Partner support, 7 days a week' : 'Support 7j/7 dédié aux partenaires',
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <CheckCircle size={20} className="text-gray-400 flex-shrink-0" />
@@ -319,10 +327,11 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             </div>
 
             <div className="mt-8 sm:mt-12 p-5 sm:p-6 bg-gray-800 rounded-xl">
-              <h3 className="font-semibold text-lg mb-2">Prêt à commencer ?</h3>
+              <h3 className="font-semibold text-lg mb-2">{en ? 'Ready to start?' : 'Prêt à commencer ?'}</h3>
               <p className="text-gray-300 text-sm">
-                L&apos;inscription ne prend que quelques minutes. Commencez à recevoir vos
-                premières demandes après validation de votre profil.
+                {en
+                  ? 'Signup takes only a few minutes. Start receiving requests after your profile is approved.'
+                  : "L'inscription ne prend que quelques minutes. Commencez à recevoir vos premières demandes après validation de votre profil."}
               </p>
             </div>
           </div>
@@ -334,15 +343,15 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 sm:mb-8 transition-colors group"
             >
               <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-              Retour
+              {en ? 'Back' : 'Retour'}
             </button>
 
             <div className="mb-6 sm:mb-8">
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">
-                Devenez partenaire TuniDrive
+                {en ? 'Become a TuniDrive partner' : 'Devenez partenaire TuniDrive'}
               </h1>
               <p className="text-gray-600 text-base sm:text-lg">
-                Transport de personnes ou de colis — choisissez votre activité
+                {en ? 'Passenger or parcel transport — choose your activity' : 'Transport de personnes ou de colis — choisissez votre activité'}
               </p>
             </div>
 
@@ -351,13 +360,13 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-800 text-sm">{error}</p>
+                  <p className="text-red-800 text-sm">{te(error ?? undefined)}</p>
                 </div>
               )}
 
               <div>
                 <p className="text-sm font-medium text-gray-900 mb-3">
-                  Type d&apos;activité *
+                  {en ? 'Type of activity *' : "Type d'activité *"}
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {DRIVER_ACTIVITY_SIGNUP_OPTIONS.map((option) => {
@@ -383,17 +392,21 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                           className={selected ? 'text-gray-900' : 'text-gray-500'}
                         />
                         <span className="font-semibold text-gray-900 mt-2 text-sm">
-                          {option.label}
+                          {en
+                            ? (option.value === 'vtc' ? 'Passenger transport' : 'Parcel transport')
+                            : option.label}
                         </span>
                         <span className="text-xs text-gray-600 mt-1 leading-snug">
-                          {option.description}
+                          {en
+                            ? (option.value === 'vtc' ? 'Rides with passengers.' : 'Parcels and goods, Europe ↔ Tunisia.')
+                            : option.description}
                         </span>
                       </label>
                     );
                   })}
                 </div>
                 {errors.activityType && (
-                  <p className="mt-2 text-sm text-red-600">{errors.activityType.message}</p>
+                  <p className="mt-2 text-sm text-red-600">{te(errors.activityType.message)}</p>
                 )}
               </div>
 
@@ -405,13 +418,13 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   <input
                     {...register('firstName')}
                     type="text"
-                    placeholder="Prénom"
+                    placeholder={en ? 'First name' : 'Prénom'}
                     className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                       errors.firstName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
                   {errors.firstName && (
-                    <p className="mt-2 text-sm text-red-600">{errors.firstName.message}</p>
+                    <p className="mt-2 text-sm text-red-600">{te(errors.firstName.message)}</p>
                   )}
                 </div>
 
@@ -422,13 +435,13 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   <input
                     {...register('lastName')}
                     type="text"
-                    placeholder="Nom"
+                    placeholder={en ? 'Last name' : 'Nom'}
                     className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                       errors.lastName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
                   {errors.lastName && (
-                    <p className="mt-2 text-sm text-red-600">{errors.lastName.message}</p>
+                    <p className="mt-2 text-sm text-red-600">{te(errors.lastName.message)}</p>
                   )}
                 </div>
               </div>
@@ -440,13 +453,13 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 <input
                   {...register('email')}
                   type="email"
-                  placeholder="Adresse email"
+                  placeholder={en ? 'Email address' : 'Adresse email'}
                   className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+                  <p className="mt-2 text-sm text-red-600">{te(errors.email.message)}</p>
                 )}
               </div>
 
@@ -460,14 +473,14 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
               <div>
                 <label htmlFor="driver-city" className="block text-sm font-medium text-gray-700 mb-1">
-                  Ville
+                  {en ? 'City' : 'Ville'}
                 </label>
                 <CityInput
                   value={watchCity}
                   onChange={handleCityChange}
                   country={watchCountry}
-                  placeholder="Rechercher votre ville"
-                  error={errors.city?.message}
+                  placeholder={en ? 'Search for your city' : 'Rechercher votre ville'}
+                  error={te(errors.city?.message)}
                   required
                 />
               </div>
@@ -479,7 +492,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mot de passe"
+                  placeholder={en ? 'Password' : 'Mot de passe'}
                   className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -496,7 +509,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   )}
                 </button>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
+                  <p className="mt-2 text-sm text-red-600">{te(errors.password.message)}</p>
                 )}
               </div>
 
@@ -514,7 +527,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 <input
                   {...register('confirmPassword')}
                   type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Confirmer le mot de passe"
+                  placeholder={en ? 'Confirm password' : 'Confirmer le mot de passe'}
                   className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -531,27 +544,35 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   )}
                 </button>
                 {errors.confirmPassword && (
-                  <p className="mt-2 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                  <p className="mt-2 text-sm text-red-600">{te(errors.confirmPassword.message)}</p>
                 )}
               </div>
 
             {/* Directive légale pour les chauffeurs */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <h4 className="text-yellow-900 font-semibold mb-2">
-                Responsabilités et obligations des chauffeurs indépendants
+                {en ? 'Responsibilities of independent drivers' : 'Responsabilités et obligations des chauffeurs indépendants'}
               </h4>
               <p className="text-yellow-900 text-sm mb-2">
-                Les prestations de transport sont entièrement exécutées sous la responsabilité des chauffeurs indépendants, lesquels :
+                {en
+                  ? 'Transport services are carried out entirely under the responsibility of independent drivers, who:'
+                  : 'Les prestations de transport sont entièrement exécutées sous la responsabilité des chauffeurs indépendants, lesquels :'}
               </p>
               <ul className="list-disc pl-5 text-yellow-900 text-sm space-y-1">
                 <li>
-                  sont tenus de disposer de toutes les autorisations légales nécessaires à l’exercice du transport de personnes à titre onéreux (permis, carte d’exploitation, assurance, etc.) conformément à la réglementation tunisienne ;
+                  {en
+                    ? 'must hold every legal authorisation required to transport passengers for a fee (licence, operating permit, insurance, and so on) under Tunisian regulations;'
+                    : 'sont tenus de disposer de toutes les autorisations légales nécessaires à l’exercice du transport de personnes à titre onéreux (permis, carte d’exploitation, assurance, etc.) conformément à la réglementation tunisienne ;'}
                 </li>
                 <li>
-                  Ils assument seuls les obligations liées à la sécurité, la conformité des véhicules et le respect du code de la route.
+                  {en
+                    ? 'They alone are responsible for safety, vehicle compliance and the highway code.'
+                    : 'Ils assument seuls les obligations liées à la sécurité, la conformité des véhicules et le respect du code de la route.'}
                 </li>
                 <li className="text-yellow-900 font-semibold mb-2">
-                En utilisant TuniDrive.net, les utilisateurs reconnaissent expressément que la plateforme n’assure ni le transport, ni l’exploitation de véhicules, et qu’elle ne peut être tenue responsable des incidents, retards, dommages ou infractions liés à la prestation de transport.
+                {en
+                  ? 'By using TuniDrive.net, users acknowledge that the platform does not operate the transport or the vehicles, and is not liable for incidents, delays, damage or offences related to the transport service.'
+                  : 'En utilisant TuniDrive.net, les utilisateurs reconnaissent expressément que la plateforme n’assure ni le transport, ni l’exploitation de véhicules, et qu’elle ne peut être tenue responsable des incidents, retards, dommages ou infractions liés à la prestation de transport.'}
                 </li>
               </ul>
             </div>
@@ -562,32 +583,32 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 disabled={!isValid || isSubmitting}
                 className="w-full py-4 text-lg bg-black hover:bg-gray-800 focus:ring-gray-900"
               >
-                {isSubmitting ? 'Création du compte...' : 'Créer mon compte partenaire'}
+                {isSubmitting ? (en ? 'Creating account...' : 'Création du compte...') : (en ? 'Create my partner account' : 'Créer mon compte partenaire')}
               </Button>
 
 
               <p className="text-sm text-gray-500 text-center">
-                En créant votre compte, vous acceptez nos{' '}
+                {en ? 'By creating an account, you accept our ' : 'En créant votre compte, vous acceptez nos '}
                 <a 
                   href="#" 
                   className="text-gray-900 hover:underline font-medium"
                   onClick={(e) => {
                     e.preventDefault();
-                    window.open('/terms-of-service', '_blank');
+                    window.open(href('/terms-of-service'), '_blank');
                   }}
                 >
-                  conditions d'utilisation
+                  {en ? 'terms of use' : "conditions d'utilisation"}
                 </a>{' '}
-                et notre{' '}
+                {en ? 'and our ' : 'et notre '}
                 <a 
                   href="#" 
                   className="text-gray-900 hover:underline font-medium"
                   onClick={(e) => {
                     e.preventDefault();
-                    window.open('/privacy-policy', '_blank');
+                    window.open(href('/privacy-policy'), '_blank');
                   }}
                 >
-                  politique de confidentialité
+                  {en ? 'privacy policy' : 'politique de confidentialité'}
                 </a>.
               </p>
             </form>

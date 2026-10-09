@@ -9,6 +9,7 @@ import {
   statusLabel,
 } from '../utils/parcelService';
 import type { ParcelQuoteRequest } from '../types';
+import { useLocale } from '../i18n/locale';
 
 interface ParcelQuoteDetailProps {
   requestId: string;
@@ -21,6 +22,9 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
   onBack,
   onAccepted,
 }) => {
+  const { locale } = useLocale();
+  const en = locale === 'en';
+  const dateLocale = en ? 'en-GB' : 'fr-FR';
   const [request, setRequest] = useState<ParcelQuoteRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
@@ -69,8 +73,8 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
   if (!request) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Demande introuvable.</p>
-        <Button onClick={onBack} className="mt-4">Retour</Button>
+        <p className="text-gray-600">{en ? 'Request not found.' : 'Demande introuvable.'}</p>
+        <Button onClick={onBack} className="mt-4">{en ? 'Back' : 'Retour'}</Button>
       </div>
     );
   }
@@ -87,46 +91,46 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
         className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
       >
         <ArrowLeft size={16} />
-        Retour à mes demandes
+        {en ? 'Back to my requests' : 'Retour à mes demandes'}
       </button>
 
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex items-start gap-3 mb-4">
           <Package className="text-blue-600 mt-1" size={22} />
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Demande de transport de colis</h2>
-            <p className="text-sm text-gray-500">{directionLabel(request.direction)} · {statusLabel(request.status)}</p>
+            <h2 className="text-lg font-bold text-gray-900">{en ? 'Parcel transport request' : 'Demande de transport de colis'}</h2>
+            <p className="text-sm text-gray-500">{directionLabel(request.direction, locale)} · {statusLabel(request.status, locale)}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-gray-500">Départ</p>
+            <p className="text-gray-500">{en ? 'Pickup' : 'Départ'}</p>
             <p className="font-medium">{request.departureAddress}</p>
             {request.departureCountry && <p className="text-xs text-gray-400">{request.departureCountry}</p>}
           </div>
           <div>
-            <p className="text-gray-500">Arrivée</p>
+            <p className="text-gray-500">{en ? 'Destination' : 'Arrivée'}</p>
             <p className="font-medium">{request.arrivalAddress}</p>
             {request.arrivalCountry && <p className="text-xs text-gray-400">{request.arrivalCountry}</p>}
           </div>
           <div>
-            <p className="text-gray-500">Date souhaitée</p>
-            <p className="font-medium">{new Date(request.desiredDate).toLocaleDateString('fr-FR')}</p>
+            <p className="text-gray-500">{en ? 'Preferred date' : 'Date souhaitée'}</p>
+            <p className="font-medium">{new Date(request.desiredDate).toLocaleDateString(dateLocale)}</p>
           </div>
           <div>
-            <p className="text-gray-500">Devise des propositions</p>
+            <p className="text-gray-500">{en ? 'Offer currency' : 'Devise des propositions'}</p>
             <p className="font-medium">{request.currency}</p>
           </div>
         </div>
 
         {request.items && request.items.length > 0 && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-sm font-medium text-gray-700 mb-2">Objets</p>
+            <p className="text-sm font-medium text-gray-700 mb-2">{en ? 'Items' : 'Objets'}</p>
             <ul className="space-y-1 text-sm">
               {request.items.map((item, i) => (
                 <li key={item.id || i} className="text-gray-600">
-                  {item.name} — {item.quantity} colis
+                  {item.name} — {item.quantity} {en ? (item.quantity > 1 ? 'parcels' : 'parcel') : 'colis'}
                   {item.weightKg != null && ` · ${item.weightKg} kg`}
                   {item.volumeM3 != null && ` · ${item.volumeM3} m³`}
                 </li>
@@ -150,19 +154,19 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle className="text-emerald-600" size={20} />
-            <h3 className="font-semibold text-emerald-900">Livraison effectuée</h3>
+            <h3 className="font-semibold text-emerald-900">{en ? 'Delivered' : 'Livraison effectuée'}</h3>
           </div>
           <p className="text-lg font-bold text-emerald-800 mb-2">
             {acceptedProposal.price} {acceptedProposal.currency}
           </p>
           {request.completedAt && (
             <p className="text-sm text-emerald-800">
-              Clôturée le {new Date(request.completedAt).toLocaleString('fr-FR')}
+              {en ? 'Closed on ' : 'Clôturée le '}{new Date(request.completedAt).toLocaleString(dateLocale)}
             </p>
           )}
           {acceptedProposal.drivers && (
             <p className="text-sm text-emerald-900 mt-2">
-              Transporteur : {acceptedProposal.drivers.first_name} {acceptedProposal.drivers.last_name}
+              {en ? 'Carrier: ' : 'Transporteur : '}{acceptedProposal.drivers.first_name} {acceptedProposal.drivers.last_name}
             </p>
           )}
         </div>
@@ -172,7 +176,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
         <div className="bg-green-50 border border-green-200 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle className="text-green-600" size={20} />
-            <h3 className="font-semibold text-green-900">Offre acceptée — livraison en cours</h3>
+            <h3 className="font-semibold text-green-900">{en ? 'Offer accepted — delivery in progress' : 'Offre acceptée — livraison en cours'}</h3>
           </div>
           <p className="text-lg font-bold text-green-800 mb-3">
             {acceptedProposal.price} {acceptedProposal.currency}
@@ -198,7 +202,9 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
             </div>
           )}
           <p className="text-xs text-green-700 mt-3">
-            Un email de confirmation avec les coordonnées a été envoyé aux deux parties.
+            {en
+              ? 'A confirmation email with contact details was sent to both parties.'
+              : 'Un email de confirmation avec les coordonnées a été envoyé aux deux parties.'}
           </p>
         </div>
       )}
@@ -206,7 +212,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
       {proposals.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h3 className="font-semibold text-gray-900 mb-4">
-            Propositions reçues ({proposals.length})
+            {en ? `Offers received (${proposals.length})` : `Propositions reçues (${proposals.length})`}
           </h3>
           <div className="space-y-4">
             {proposals.map((proposal) => (
@@ -232,8 +238,8 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
                     )}
                     {proposal.estimatedDeliveryDate && (
                       <p className="text-xs text-gray-500 mt-1">
-                        Livraison estimée :{' '}
-                        {new Date(proposal.estimatedDeliveryDate).toLocaleDateString('fr-FR')}
+                        {en ? 'Estimated delivery: ' : 'Livraison estimée : '}
+                        {new Date(proposal.estimatedDeliveryDate).toLocaleDateString(dateLocale)}
                       </p>
                     )}
                     {proposal.message && (
@@ -249,15 +255,15 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
                       {acceptingId === proposal.id ? (
                         <Loader2 size={16} className="animate-spin" />
                       ) : (
-                        'Valider cette offre'
+                        en ? 'Accept this offer' : 'Valider cette offre'
                       )}
                     </Button>
                   )}
                   {proposal.status === 'accepted' && (
-                    <span className="text-sm font-medium text-green-700">Acceptée</span>
+                    <span className="text-sm font-medium text-green-700">{en ? 'Accepted' : 'Acceptée'}</span>
                   )}
                   {proposal.status === 'rejected' && (
-                    <span className="text-sm text-gray-400">Non retenue</span>
+                    <span className="text-sm text-gray-400">{en ? 'Not selected' : 'Non retenue'}</span>
                   )}
                 </div>
               </div>
@@ -268,7 +274,9 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
 
       {proposals.length === 0 && request.status === 'pending' && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
-          Votre demande a été envoyée aux transporteurs éligibles. Vous recevrez un email à chaque nouvelle proposition.
+          {en
+            ? 'Your request was sent to eligible carriers. You will get an email for each new offer.'
+            : 'Votre demande a été envoyée aux transporteurs éligibles. Vous recevrez un email à chaque nouvelle proposition.'}
         </div>
       )}
     </div>

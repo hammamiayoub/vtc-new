@@ -17,12 +17,24 @@ import {
   vtcSeoFaqItems,
   vtcServiceHighlights,
 } from '../data/vtcSeoFaq';
+import {
+  vtcAirportTransfersEn,
+  vtcSeoFaqItemsEn,
+  vtcServiceHighlightsEn,
+} from '../data/vtcSeoFaq.en';
+import { useLocale } from '../i18n/locale';
 
 interface VtcTunisiePageProps {
   onClientLogin: () => void;
 }
 
 export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin }) => {
+  const { locale, href } = useLocale();
+  const en = locale === 'en';
+  const highlights = en ? vtcServiceHighlightsEn : vtcServiceHighlights;
+  const airports = en ? vtcAirportTransfersEn : vtcAirportTransfers;
+  const faq = en ? vtcSeoFaqItemsEn : vtcSeoFaqItems;
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero SEO */}
@@ -30,21 +42,32 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="max-w-4xl">
             <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
-              VTC Tunisie · Chauffeur privé
+              {en ? 'Tunisia · Private driver' : 'VTC Tunisie · Chauffeur privé'}
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
-              VTC Tunisie — Réservez votre chauffeur privé en ligne
+              {en
+                ? 'Private driver in Tunisia — book online'
+                : 'VTC Tunisie — Réservez votre chauffeur privé en ligne'}
             </h1>
             <p className="text-xl text-gray-600 mb-4 leading-relaxed">
-              TuniDrive est la plateforme pour{' '}
-              <strong>réserver un chauffeur privé</strong>, un{' '}
-              <strong>taxi VTC</strong> ou un{' '}
-              <strong>transport collectif</strong> partout en Tunisie : trajets urbains,
-              inter-villes, transferts aéroport et déplacements en groupe.
+              {en ? (
+                <>
+                  TuniDrive is the platform to <strong>book a private driver</strong>, a{' '}
+                  <strong>taxi</strong> or <strong>group transport</strong> anywhere in Tunisia:
+                  city trips, intercity rides, airport transfers and group travel.
+                </>
+              ) : (
+                <>
+                  TuniDrive est la plateforme pour <strong>réserver un chauffeur privé</strong>, un{' '}
+                  <strong>taxi VTC</strong> ou un <strong>transport collectif</strong> partout en Tunisie :
+                  trajets urbains, inter-villes, transferts aéroport et déplacements en groupe.
+                </>
+              )}
             </p>
             <p className="text-base text-gray-500 mb-8">
-              Prix transparent affiché avant confirmation · Chauffeurs partenaires vérifiés ·
-              Réservation web et application mobile
+              {en
+                ? 'Price shown before you confirm · Verified partner drivers · Web and mobile booking'
+                : 'Prix transparent affiché avant confirmation · Chauffeurs partenaires vérifiés · Réservation web et application mobile'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
@@ -52,14 +75,14 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
                 onClick={onClientLogin}
                 className="text-lg px-8 py-4 bg-black hover:bg-gray-800 text-white rounded-lg font-medium inline-flex items-center justify-center gap-2"
               >
-                Réserver un chauffeur
+                {en ? 'Book a driver' : 'Réserver un chauffeur'}
                 <ArrowRight size={20} />
               </Button>
               <Link
-                to="/signup"
+                to={href('/signup')}
                 className="text-lg px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium inline-flex items-center justify-center gap-2 text-center"
               >
-                Devenir chauffeur VTC
+                {en ? 'Become a driver' : 'Devenir chauffeur VTC'}
               </Link>
             </div>
           </div>
@@ -70,15 +93,25 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 text-center">
-            Nos services VTC en Tunisie
+            {en ? 'Private driver services in Tunisia' : 'Nos services VTC en Tunisie'}
           </h2>
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">
-            Que vous cherchiez un <strong>chauffeur privé Tunisie</strong>, un{' '}
-            <strong>transfert aéroport</strong> ou un <strong>transport collectif</strong>,
-            TuniDrive vous met en relation avec des chauffeurs professionnels.
+            {en ? (
+              <>
+                Whether you need a <strong>private driver in Tunisia</strong>, an{' '}
+                <strong>airport transfer</strong> or <strong>group transport</strong>, TuniDrive
+                connects you with professional drivers.
+              </>
+            ) : (
+              <>
+                Que vous cherchiez un <strong>chauffeur privé Tunisie</strong>, un{' '}
+                <strong>transfert aéroport</strong> ou un <strong>transport collectif</strong>,
+                TuniDrive vous met en relation avec des chauffeurs professionnels.
+              </>
+            )}
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {vtcServiceHighlights.map((item) => (
+            {highlights.map((item) => (
               <article
                 key={item.title}
                 className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
@@ -97,15 +130,24 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
           <div className="flex items-center gap-3 justify-center mb-4">
             <Plane className="text-gray-700" size={28} />
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center">
-              Transfert aéroport Tunisie
+              {en ? 'Airport transfer in Tunisia' : 'Transfert aéroport Tunisie'}
             </h2>
           </div>
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">
-            Réservez votre <strong>transfert aéroport Tunisie</strong> à l&apos;avance : accueil
-            avec pancarte, suivi de vol et trajet direct vers votre destination.
+            {en ? (
+              <>
+                Book your <strong>Tunisia airport transfer</strong> in advance: name-board welcome,
+                flight monitoring and a direct ride to your destination.
+              </>
+            ) : (
+              <>
+                Réservez votre <strong>transfert aéroport Tunisie</strong> à l&apos;avance : accueil
+                avec pancarte, suivi de vol et trajet direct vers votre destination.
+              </>
+            )}
           </p>
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {vtcAirportTransfers.map((airport) => (
+            {airports.map((airport) => (
               <article
                 key={airport.name}
                 className="bg-white rounded-xl border border-gray-200 p-6"
@@ -121,7 +163,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
               onClick={onClientLogin}
               className="bg-black hover:bg-gray-800 text-white inline-flex items-center gap-2"
             >
-              Réserver mon transfert aéroport
+              {en ? 'Book my airport transfer' : 'Réserver mon transfert aéroport'}
               <ArrowRight size={18} />
             </Button>
           </div>
@@ -136,23 +178,41 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
               <div className="flex items-center gap-2 mb-4">
                 <Users className="text-gray-700" size={24} />
                 <h2 className="text-3xl font-bold text-gray-900">
-                  Transport collectif Tunisie
+                  {en ? 'Group transport in Tunisia' : 'Transport collectif Tunisie'}
                 </h2>
               </div>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Pour vos sorties en groupe, séminaires, mariages ou circuits touristiques,
-                réservez un <strong>van</strong> (jusqu&apos;à 8 personnes), un{' '}
-                <strong>minibus</strong> ou un <strong>bus</strong> (jusqu&apos;à 50 passagers).
-                Idéal pour le <strong>transport collectif</strong> en Tunisie avec un seul
-                chauffeur et un tarif adapté à votre distance.
+                {en ? (
+                  <>
+                    For group outings, seminars, weddings or sightseeing, book a <strong>van</strong>{' '}
+                    (up to 8 people), a <strong>minibus</strong> or a <strong>bus</strong> (up to 50
+                    passengers). One driver, with a fare based on your distance.
+                  </>
+                ) : (
+                  <>
+                    Pour vos sorties en groupe, séminaires, mariages ou circuits touristiques,
+                    réservez un <strong>van</strong> (jusqu&apos;à 8 personnes), un{' '}
+                    <strong>minibus</strong> ou un <strong>bus</strong> (jusqu&apos;à 50 passagers).
+                    Idéal pour le <strong>transport collectif</strong> en Tunisie avec un seul
+                    chauffeur et un tarif adapté à votre distance.
+                  </>
+                )}
               </p>
               <ul className="space-y-3 text-sm text-gray-700">
-                {[
-                  'Van et minibus pour familles et petits groupes',
-                  'Bus pour événements et longues distances',
-                  'Tarif calculé selon la distance et le véhicule',
-                  'Réservation en ligne sur le site ou l\'app TuniDrive',
-                ].map((line) => (
+                {(en
+                  ? [
+                      'Van and minibus for families and small groups',
+                      'Bus for events and long distances',
+                      'Fare based on distance and vehicle',
+                      'Book online on the website or the TuniDrive app',
+                    ]
+                  : [
+                      'Van et minibus pour familles et petits groupes',
+                      'Bus pour événements et longues distances',
+                      'Tarif calculé selon la distance et le véhicule',
+                      "Réservation en ligne sur le site ou l'app TuniDrive",
+                    ]
+                ).map((line) => (
                   <li key={line} className="flex items-start gap-2">
                     <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
                     {line}
@@ -162,15 +222,23 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
             </div>
             <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Pourquoi réserver sur TuniDrive ?
+                {en ? 'Why book on TuniDrive?' : 'Pourquoi réserver sur TuniDrive ?'}
               </h2>
               <div className="space-y-5">
-                {[
-                  { icon: Shield, title: 'Chauffeurs vérifiés', text: 'Partenaires inscrits et contrôlés par TuniDrive.' },
-                  { icon: Clock, title: 'Réservation rapide', text: 'Réservez un taxi ou un VTC en quelques minutes.' },
-                  { icon: MapPin, title: 'Toute la Tunisie', text: 'Grandes villes, côtes, sud tunisien et trajets inter-villes.' },
-                  { icon: Car, title: 'Tarif affiché à l\'avance', text: 'Grille tarifaire claire, sans mauvaise surprise.' },
-                ].map(({ icon: Icon, title, text }) => (
+                {(en
+                  ? [
+                      { icon: Shield, title: 'Verified drivers', text: 'Partners registered and checked by TuniDrive.' },
+                      { icon: Clock, title: 'Fast booking', text: 'Book a taxi or a private driver in a few minutes.' },
+                      { icon: MapPin, title: 'All of Tunisia', text: 'Major cities, the coast, the south and intercity trips.' },
+                      { icon: Car, title: 'Fare shown in advance', text: 'A clear fare grid, with no surprise.' },
+                    ]
+                  : [
+                      { icon: Shield, title: 'Chauffeurs vérifiés', text: 'Partenaires inscrits et contrôlés par TuniDrive.' },
+                      { icon: Clock, title: 'Réservation rapide', text: 'Réservez un taxi ou un VTC en quelques minutes.' },
+                      { icon: MapPin, title: 'Toute la Tunisie', text: 'Grandes villes, côtes, sud tunisien et trajets inter-villes.' },
+                      { icon: Car, title: "Tarif affiché à l'avance", text: 'Grille tarifaire claire, sans mauvaise surprise.' },
+                    ]
+                ).map(({ icon: Icon, title, text }) => (
                   <div key={title} className="flex gap-4">
                     <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200 flex-shrink-0">
                       <Icon size={20} className="text-gray-700" />
@@ -191,10 +259,10 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
       <section id="faq-vtc" className="py-16 md:py-20 bg-gray-50 border-t border-gray-100">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            Questions fréquentes — VTC &amp; chauffeur privé
+            {en ? 'Frequently asked questions — private driver' : 'Questions fréquentes — VTC & chauffeur privé'}
           </h2>
           <div className="space-y-4">
-            {vtcSeoFaqItems.map((item) => (
+            {faq.map((item) => (
               <details
                 key={item.question}
                 className="bg-white rounded-xl border border-gray-200 p-5 group open:shadow-sm"
@@ -218,21 +286,21 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
       <section className="py-16 bg-black text-white">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Réservez votre VTC ou votre chauffeur privé maintenant
+            {en ? 'Book your private driver now' : 'Réservez votre VTC ou votre chauffeur privé maintenant'}
           </h2>
           <p className="text-gray-300 mb-8">
-            Inscription gratuite · Disponible sur{' '}
-            <Link to="/" className="underline hover:text-white">
+            {en ? 'Free signup · Available on ' : 'Inscription gratuite · Disponible sur '}
+            <Link to={href('/')} className="underline hover:text-white">
               tunidrive.net
             </Link>{' '}
-            et sur l&apos;application mobile iOS &amp; Android
+            {en ? 'and on the iOS & Android app' : "et sur l'application mobile iOS & Android"}
           </p>
           <Button
             size="lg"
             onClick={onClientLogin}
             className="bg-white text-gray-900 hover:bg-gray-100 text-lg px-8 py-4"
           >
-            Commencer ma réservation
+            {en ? 'Start my booking' : 'Commencer ma réservation'}
           </Button>
         </div>
       </section>

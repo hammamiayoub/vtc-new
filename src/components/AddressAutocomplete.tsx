@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { googleMapsLoader } from '../utils/googleMapsLoader';
+import { isTranslatablePublicPath, useLocale } from '../i18n/locale';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -35,6 +36,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   countries = 'tn',
   inputClassName,
 }) => {
+  const { locale, logicalPath } = useLocale();
+  const mapsPendingEn = locale === 'en' && isTranslatablePublicPath(logicalPath);
   // Clé stable pour déclencher la réinitialisation quand la restriction pays change
   const countriesKey = Array.isArray(countries) ? countries.join(',') : (countries ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -246,7 +249,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       </div>
 
       {!isGoogleMapsLoaded && (
-        <p className="text-xs text-gray-500 mt-1">Autocomplétion en attente du chargement de Google Maps…</p>
+        <p className="text-xs text-gray-500 mt-1">
+          {mapsPendingEn
+            ? 'Address suggestions will appear once Google Maps has loaded…'
+            : 'Autocomplétion en attente du chargement de Google Maps…'}
+        </p>
       )}
     </div>
   );

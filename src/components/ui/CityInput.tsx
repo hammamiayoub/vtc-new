@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { googleMapsLoader } from '../../utils/googleMapsLoader';
+import { isTranslatablePublicPath, useLocale } from '../../i18n/locale';
 import {
   getSignupCountryLabel,
   getSignupGoogleCountryCode,
@@ -65,6 +66,8 @@ export const CityInput: React.FC<CityInputProps> = ({
   required = false,
   country = 'TN',
 }) => {
+  const { locale, logicalPath } = useLocale();
+  const mapsPendingEn = locale === 'en' && isTranslatablePublicPath(logicalPath);
   const [loading, setLoading] = useState(false);
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -209,7 +212,9 @@ export const CityInput: React.FC<CityInputProps> = ({
 
       {!isGoogleMapsLoaded && (
         <p className="text-xs text-gray-500 mt-1">
-          Autocomplétion en attente du chargement de Google Maps…
+          {mapsPendingEn
+            ? 'Address suggestions will appear once Google Maps has loaded…'
+            : 'Autocomplétion en attente du chargement de Google Maps…'}
         </p>
       )}
 

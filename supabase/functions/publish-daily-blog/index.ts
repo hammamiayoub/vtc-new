@@ -196,7 +196,7 @@ function decodeBase64(value: string): Uint8Array {
   return bytes
 }
 
-async function requestIllustration(apiKey: string, model: string, prompt: string): Promise<Uint8Array> {
+async function requestIllustration(apiKey: string, model: string, prompt: string): Promise<{ bytes: Uint8Array; contentType: string; ext: string }> {
   const body: Record<string, unknown> = {
     model,
     prompt,
@@ -204,11 +204,13 @@ async function requestIllustration(apiKey: string, model: string, prompt: string
   }
   if (model === 'dall-e-3') {
     body.size = '1792x1024'
-    body.quality = 'standard'
+    body.quality = 'hd'
     body.response_format = 'b64_json'
   } else {
     body.size = '1536x1024'
-    body.quality = 'medium'
+    body.quality = 'high'
+    body.output_format = 'jpeg'
+    body.output_compression = 90
   }
 
   const response = await fetch('https://api.openai.com/v1/images/generations', {
@@ -230,36 +232,95 @@ async function requestIllustration(apiKey: string, model: string, prompt: string
   if (typeof encoded !== 'string' || !encoded) throw new Error(`Image ${model} vide.`)
   const bytes = decodeBase64(encoded)
   if (bytes.byteLength > 5 * 1024 * 1024) throw new Error('Image trop lourde pour le blog.')
-  return bytes
+  const jpeg = model !== 'dall-e-3'
+  return {
+    bytes,
+    contentType: jpeg ? 'image/jpeg' : 'image/png',
+    ext: jpeg ? 'jpg' : 'png',
+  }
 }
 
-async function uploadIllustration(admin: SupabaseClient, subject: string): Promise<StoredImage> {
+function illustrationSource(input: { title: string; keyword?: string | null; content?: string | null }): string {
+  const excerpt = (input.content ?? '')
+    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/tunidrive\.net/gi, '')
+    .replace(/tunidrive/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 1400)
+  return [
+    input.title,
+    input.keyword ? `Sujet : ${input.keyword}` : '',
+    excerpt,
+  ].filter(Boolean).join('\n')
+}
+
+async function sceneBrief(apiKey: string, source: string): Promise<string> {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: Deno.env.get('BLOG_OPENAI_MODEL') || 'gpt-4o-mini',
+      temperature: 0.4,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: `Tu prépares le brief d'une seule photographie pour illustrer un article.
+Réponds en JSON : {"scene":"..."}.
+La scène tient en deux phrases, en anglais, et décrit uniquement ce que l'article raconte : ville ou aéroport cité, type de véhicule (berline, taxi, van, minibus, bus), nombre de personnes, action, moment de la journée.
+N'ajoute pas un aéroport, une famille ou un voyageur d'affaires si le texte n'en parle pas.
+Aucun nom de marque, aucun site web, aucun logo, aucun texte à inscrire dans l'image.`,
+        },
+        { role: 'user', content: source.slice(0, 1800) },
+      ],
+    }),
+  })
+  if (!response.ok) {
+    const detail = await response.text()
+    throw new Error(`Brief image ${response.status}: ${detail.slice(0, 200)}`)
+  }
+  const payload = await response.json()
+  const raw = payload?.choices?.[0]?.message?.content
+  const parsed = JSON.parse(String(raw ?? '{}')) as { scene?: string }
+  const scene = String(parsed.scene ?? '').replace(/\s+/g, ' ').trim()
+  if (scene.length < 40) throw new Error('Brief image trop vague.')
+  return scene.slice(0, 900)
+}
+
+async function uploadIllustration(
+  admin: SupabaseClient,
+  input: { title: string; keyword?: string | null; content?: string | null },
+): Promise<StoredImage> {
   const apiKey = Deno.env.get('OPENAI_API_KEY')
   if (!apiKey) throw new Error('OPENAI_API_KEY manquante dans les secrets de la fonction.')
 
+  const scene = await sceneBrief(apiKey, illustrationSource(input))
   const prompt = [
-    'Photorealistic editorial photograph in Tunisia, natural daylight.',
-    'No text, no letters, no logo, no watermark, no readable license plate.',
-    'A private transfer scene: a clean dark sedan or passenger van, a driver seen from a distance, airport or city street.',
-    `Subject to illustrate: ${subject}.`,
+    scene,
+    'Photorealistic editorial photograph, sharp focus, natural colors, realistic skin and materials, Tunisia.',
+    'No text, no letters, no numbers, no logo, no watermark, no brand name, no website address, no readable license plate.',
   ].join(' ')
 
-  let bytes: Uint8Array | null = null
+  let image: { bytes: Uint8Array; contentType: string; ext: string } | null = null
   let lastError = 'Illustration impossible.'
-  for (const model of ['dall-e-3', 'gpt-image-1']) {
+  for (const model of ['gpt-image-1', 'dall-e-3']) {
     try {
-      bytes = await requestIllustration(apiKey, model, prompt.slice(0, 3900))
+      image = await requestIllustration(apiKey, model, prompt.slice(0, 3900))
       break
     } catch (error) {
       lastError = error instanceof Error ? error.message : lastError
       console.error(lastError)
     }
   }
-  if (!bytes) throw new Error(lastError)
+  if (!image) throw new Error(lastError)
 
-  const path = `auto-${crypto.randomUUID()}.png`
-  const { error } = await admin.storage.from('blog-images').upload(path, bytes, {
-    contentType: 'image/png',
+  const path = `auto-v2-${crypto.randomUUID()}.${image.ext}`
+  const { error } = await admin.storage.from('blog-images').upload(path, image.bytes, {
+    contentType: image.contentType,
     upsert: false,
     cacheControl: '86400',
   })
@@ -287,7 +348,7 @@ async function publishAudience(
 ): Promise<PublishResult> {
   const { data: existing, error: existingError } = await admin
     .from('blog_posts')
-    .select('id, title, slug, keyword, image_url')
+    .select('id, title, slug, keyword, content, image_url, image_path')
     .eq('source', 'auto')
     .eq('audience', audience)
     .eq('published_day', day)
@@ -298,7 +359,14 @@ async function publishAudience(
     return { audience, status: 'skipped', title: existing.title, slug: existing.slug }
   }
   if (existing) {
-    const image = await uploadIllustration(admin, existing.keyword || existing.title)
+    const image = await uploadIllustration(admin, {
+      title: existing.title,
+      keyword: existing.keyword,
+      content: existing.content,
+    })
+    if (existing.image_path) {
+      await admin.storage.from('blog-images').remove([existing.image_path])
+    }
     const { error: imageError } = await admin
       .from('blog_posts')
       .update({
@@ -339,7 +407,11 @@ async function publishAudience(
 
   const now = new Date().toISOString()
   const slug = await uniqueSlug(admin, draft.title)
-  const image = await uploadIllustration(admin, topic?.keyword ?? draft.keyword)
+  const image = await uploadIllustration(admin, {
+    title: draft.title,
+    keyword: topic?.keyword ?? draft.keyword,
+    content: draft.content,
+  })
   const { data: post, error: insertError } = await admin
     .from('blog_posts')
     .insert({
@@ -385,6 +457,49 @@ async function publishAudience(
   return { audience, status: 'published', title: post.title, slug: post.slug }
 }
 
+async function refreshStaleIllustrations(admin: SupabaseClient, limit: number): Promise<PublishResult[]> {
+  const { data, error } = await admin
+    .from('blog_posts')
+    .select('id, title, slug, keyword, content, audience, image_path')
+    .eq('source', 'auto')
+    .order('published_at', { ascending: false })
+    .limit(40)
+
+  if (error) throw error
+  const stale = (data ?? [])
+    .filter((post) => !String(post.image_path ?? '').startsWith('auto-v2-'))
+    .slice(0, limit)
+  const updated: PublishResult[] = []
+
+  for (const post of stale) {
+    const image = await uploadIllustration(admin, {
+      title: post.title,
+      keyword: post.keyword,
+      content: post.content,
+    })
+    const { error: updateError } = await admin
+      .from('blog_posts')
+      .update({
+        image_url: image.url,
+        image_path: image.path,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', post.id)
+    if (updateError) throw updateError
+    if (post.image_path && post.image_path !== image.path) {
+      await admin.storage.from('blog-images').remove([post.image_path])
+    }
+    updated.push({
+      audience: post.audience === 'driver' ? 'driver' : 'client',
+      status: 'illustrated',
+      title: post.title,
+      slug: post.slug,
+    })
+  }
+
+  return updated
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ ok: false, error: 'Méthode non autorisée.' }, 405)
@@ -400,6 +515,12 @@ serve(async (req) => {
   try {
     if (!(await isAuthorized(req, admin))) {
       return json({ ok: false, error: 'Non autorisé.' }, 401)
+    }
+
+    const body = await req.json().catch(() => ({})) as { refreshImages?: boolean; limit?: number }
+    if (body.refreshImages) {
+      const posts = await refreshStaleIllustrations(admin, Math.min(body.limit ?? 2, 4))
+      return json({ ok: true, refreshed: posts.length, posts })
     }
 
     const day = tunisDate()

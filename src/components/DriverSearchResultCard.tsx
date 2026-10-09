@@ -1,6 +1,7 @@
 import { Car, CheckCircle, MapPin, Star, User } from 'lucide-react';
 import type { Driver } from '../types';
 import { formatVehicleType } from '../utils/vehicles';
+import { useLocale } from '../i18n/locale';
 import { getVehiclePlaceholderImage, SEDAN_PLACEHOLDER_IMAGE } from '../utils/vehiclePlaceholderImage';
 
 interface DriverSearchResultCardProps {
@@ -16,6 +17,8 @@ export function DriverSearchResultCard({
   estimatedPrice,
   onSelect,
 }: DriverSearchResultCardProps) {
+  const { locale } = useLocale();
+  const en = locale === 'en';
   const vehicle = driver.vehicleInfo;
   const hasPhoto = !!vehicle?.photoUrl;
   const vehicleVisualSrc = hasPhoto
@@ -24,7 +27,7 @@ export function DriverSearchResultCard({
   const usesSedanPlaceholder = !hasPhoto && vehicleVisualSrc === SEDAN_PLACEHOLDER_IMAGE;
   const vehicleVisualAlt = hasPhoto
     ? `${vehicle!.make} ${vehicle!.model}`
-    : formatVehicleType(vehicle?.type);
+    : formatVehicleType(vehicle?.type, locale);
 
   const hasRating =
     typeof driver.averageRating === 'number'
@@ -71,7 +74,7 @@ export function DriverSearchResultCard({
         />
         {!hasPhoto && (
           <span className="absolute bottom-2 left-2 inline-flex items-center rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-gray-600 shadow-sm">
-            Photo non disponible
+            {en ? 'No photo' : 'Photo non disponible'}
           </span>
         )}
       </div>
@@ -106,11 +109,11 @@ export function DriverSearchResultCard({
                       size={10}
                       className={hasRating ? 'text-yellow-500' : 'text-gray-400'}
                     />
-                    {hasRating ? driver.averageRating!.toFixed(1) : 'Nouveau'}
+                    {hasRating ? driver.averageRating!.toFixed(1) : (en ? 'New' : 'Nouveau')}
                   </span>
                   {typeof driver.bookingCount === 'number' && driver.bookingCount > 0 && (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-800 text-[9px] sm:text-[10px] font-semibold">
-                      ~{Math.max(1, Math.round(driver.bookingCount / 5) * 5)} courses
+                      ~{Math.max(1, Math.round(driver.bookingCount / 5) * 5)} {en ? 'rides' : 'courses'}
                     </span>
                   )}
                 </div>
@@ -140,7 +143,7 @@ export function DriverSearchResultCard({
                 <div className="flex items-center gap-2 mb-1">
                   <Car size={12} className="text-gray-900 flex-shrink-0" />
                   <p className="text-xs font-semibold text-gray-900 truncate">
-                    {[vehicle.make, vehicle.model].filter(Boolean).join(' ') || formatVehicleType(vehicle.type)}
+                    {[vehicle.make, vehicle.model].filter(Boolean).join(' ') || formatVehicleType(vehicle.type, locale)}
                   </p>
                   {vehicle.isVip && (
                     <span className="ml-auto inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold bg-gray-100 text-gray-800">
@@ -153,10 +156,10 @@ export function DriverSearchResultCard({
                     <span className="bg-gray-100 px-1.5 py-0.5 rounded">{vehicle.color}</span>
                   )}
                   <span className="bg-gray-100 px-1.5 py-0.5 rounded">
-                    {formatVehicleType(vehicle.type)}
+                    {formatVehicleType(vehicle.type, locale)}
                   </span>
                   {vehicle.seats && (
-                    <span className="bg-gray-100 px-1.5 py-0.5 rounded">{vehicle.seats} places</span>
+                    <span className="bg-gray-100 px-1.5 py-0.5 rounded">{vehicle.seats} {en ? 'seats' : 'places'}</span>
                   )}
                 </div>
               </div>
@@ -169,7 +172,7 @@ export function DriverSearchResultCard({
             {isNearby && (
               <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
                 <MapPin size={12} />
-                Chauffeur proche
+                {en ? 'Nearby driver' : 'Chauffeur proche'}
               </div>
             )}
           </div>

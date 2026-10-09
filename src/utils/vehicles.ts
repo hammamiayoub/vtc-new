@@ -103,19 +103,32 @@ export async function softDeleteVehicle(vehicleId: string): Promise<void> {
   if (error) throw error;
 }
 
-export function formatVehicleType(type?: string | null): string {
+export function formatVehicleType(type?: string | null, locale: 'fr' | 'en' = 'fr'): string {
   if (!type) return 'N/A';
-  const labels: Record<string, string> = {
-    sedan: 'Berline',
-    pickup: 'Pickup',
-    van: 'Van',
-    minibus: 'Minibus',
-    bus: 'Bus',
-    truck: 'Camion',
-    utility: 'Utilitaire',
-    taxi: 'Taxi',
-    limousine: 'Limousine',
-  };
+  const labels: Record<string, string> =
+    locale === 'en'
+      ? {
+          sedan: 'Sedan',
+          pickup: 'Pickup',
+          van: 'Van',
+          minibus: 'Minibus',
+          bus: 'Bus',
+          truck: 'Truck',
+          utility: 'Utility vehicle',
+          taxi: 'Taxi',
+          limousine: 'Limousine',
+        }
+      : {
+          sedan: 'Berline',
+          pickup: 'Pickup',
+          van: 'Van',
+          minibus: 'Minibus',
+          bus: 'Bus',
+          truck: 'Camion',
+          utility: 'Utilitaire',
+          taxi: 'Taxi',
+          limousine: 'Limousine',
+        };
   return labels[type] || type;
 }
 

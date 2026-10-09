@@ -12,12 +12,17 @@ import type { SignupCountryCode } from '../utils/signupCountries';
 import { supabase } from '../lib/supabase';
 import { hasPendingQuote } from '../utils/pendingQuote';
 import { TrustSignals } from './TrustSignals';
+import { useLocale } from '../i18n/locale';
+import { translateSignupMessage } from '../i18n/signupErrors';
 
 interface ClientSignupProps {
   onBack: () => void;
 }
 
 export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
+  const { locale, href } = useLocale();
+  const en = locale === 'en';
+  const te = (message?: string) => translateSignupMessage(message, locale);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -216,7 +221,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             <CheckCircle size={48} className="text-green-600" />
           </div>
           
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Inscription réussie</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">{en ? 'Signup complete' : 'Inscription réussie'}</h1>
           
           <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-lg">
             <div className="flex items-start">
@@ -225,15 +230,20 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               </div>
               <div className="ml-3 text-left">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                  Vérifiez votre boîte email
+                  {en ? 'Check your inbox' : 'Vérifiez votre boîte email'}
                 </h3>
                 <p className="text-blue-700 mb-4 leading-relaxed">
-                  Nous avons envoyé un email de confirmation à votre adresse. 
-                  <strong> Cliquez sur le lien dans l&apos;email pour activer votre compte.</strong>
+                  {en
+                    ? 'We sent a confirmation email to your address. '
+                    : 'Nous avons envoyé un email de confirmation à votre adresse. '}
+                  <strong>{en ? 'Click the link in the email to activate your account.' : "Cliquez sur le lien dans l'email pour activer votre compte."}</strong>
                 </p>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-yellow-800 text-sm font-medium">
-                    <strong>Important :</strong> Vérifiez aussi votre dossier Spam ou Courrier indésirable si vous ne recevez pas l&apos;email dans les prochaines minutes.
+                    <strong>{en ? 'Important:' : 'Important :'}</strong>{' '}
+                    {en
+                      ? 'Also check your spam folder if the email does not arrive in the next few minutes.'
+                      : "Vérifiez aussi votre dossier Spam ou Courrier indésirable si vous ne recevez pas l'email dans les prochaines minutes."}
                   </p>
                 </div>
               </div>
@@ -241,17 +251,19 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4 mb-8">
-            <h4 className="font-semibold text-gray-800 mb-2">Prochaines étapes :</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">{en ? 'Next steps:' : 'Prochaines étapes :'}</h4>
             <ul className="text-sm text-gray-600 space-y-1 text-left">
-              <li>• Vérifiez votre boîte email (et le dossier spam)</li>
-              <li>• Cliquez sur le lien de confirmation</li>
-              <li>• Connectez-vous à votre compte</li>
-              <li>• Commencez à réserver vos courses !</li>
+              {(en
+                ? ['Check your inbox (and spam)', 'Click the confirmation link', 'Sign in to your account', 'Start booking your rides']
+                : ['Vérifiez votre boîte email (et le dossier spam)', 'Cliquez sur le lien de confirmation', 'Connectez-vous à votre compte', 'Commencez à réserver vos courses !']
+              ).map((line) => (
+                <li key={line}>• {line}</li>
+              ))}
             </ul>
           </div>
 
           <Button onClick={onBack} className="w-full bg-black hover:bg-gray-800 text-lg py-3">
-            Retour à l'accueil
+            {en ? 'Back to home' : "Retour à l'accueil"}
           </Button>
         </div>
       </div>
@@ -264,15 +276,12 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
         <div className="flex flex-col lg:flex-row">
           {/* Avantages — au-dessus du formulaire sur mobile */}
           <div className="order-1 lg:order-2 lg:w-96 bg-black p-6 sm:p-8 lg:p-12 text-white">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Avantages client</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">{en ? 'Rider benefits' : 'Avantages client'}</h2>
             <div className="space-y-4 sm:space-y-6">
-              {[
-                'Réservation en quelques clics',
-                'Chauffeurs professionnels vérifiés',
-                'Tarifs transparents et compétitifs',
-                'Suivi en temps réel de votre course',
-                'Support client 24/7',
-              ].map((benefit, index) => (
+              {(en
+                ? ['Booking in a few clicks', 'Verified professional drivers', 'Transparent, competitive fares', 'Live tracking of your ride', '24/7 rider support']
+                : ['Réservation en quelques clics', 'Chauffeurs professionnels vérifiés', 'Tarifs transparents et compétitifs', 'Suivi en temps réel de votre course', 'Support client 24/7']
+              ).map((benefit, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <CheckCircle size={20} className="text-gray-400 flex-shrink-0" />
                   <span className="text-gray-200 text-sm sm:text-base">{benefit}</span>
@@ -281,10 +290,11 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             </div>
 
             <div className="mt-8 sm:mt-12 p-5 sm:p-6 bg-gray-800 rounded-xl">
-              <h3 className="font-semibold text-lg mb-2">Prêt à voyager ?</h3>
+              <h3 className="font-semibold text-lg mb-2">{en ? 'Ready to go?' : 'Prêt à voyager ?'}</h3>
               <p className="text-gray-300 text-sm">
-                Créez votre compte en quelques minutes et réservez votre première
-                course dès maintenant.
+                {en
+                  ? 'Create your account in a few minutes and book your first ride now.'
+                  : 'Créez votre compte en quelques minutes et réservez votre première course dès maintenant.'}
               </p>
             </div>
           </div>
@@ -296,21 +306,23 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 sm:mb-8 transition-colors group"
             >
               <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-              Retour
+              {en ? 'Back' : 'Retour'}
             </button>
 
             <div className="mb-6 sm:mb-8">
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Créer un compte client</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{en ? 'Create a rider account' : 'Créer un compte client'}</h1>
               <p className="text-gray-600 text-base sm:text-lg">
                 {hasPendingQuote()
-                  ? 'Finalisez votre réservation en créant votre compte'
-                  : 'Rejoignez TuniDrive pour réserver vos courses'}
+                  ? (en ? 'Finish your booking by creating an account' : 'Finalisez votre réservation en créant votre compte')
+                  : (en ? 'Join TuniDrive to book your rides' : 'Rejoignez TuniDrive pour réserver vos courses')}
               </p>
             </div>
 
             {hasPendingQuote() && (
               <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                Votre devis depuis l&apos;accueil sera repris après confirmation de l&apos;email et connexion.
+                {en
+                  ? 'Your homepage quote will be kept after you confirm your email and sign in.'
+                  : "Votre devis depuis l'accueil sera repris après confirmation de l'email et connexion."}
               </div>
             )}
 
@@ -321,7 +333,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                  <p className="text-red-800 text-sm font-medium">{error}</p>
+                  <p className="text-red-800 text-sm font-medium">{te(error ?? undefined)}</p>
                 </div>
               </div>
             )}
@@ -336,13 +348,13 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   <input
                     {...register('firstName')}
                     type="text"
-                    placeholder="Prénom"
+                    placeholder={en ? 'First name' : 'Prénom'}
                     autoComplete="given-name"
                     className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                       errors.firstName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.firstName && <p className="mt-2 text-sm text-red-600">{errors.firstName.message}</p>}
+                  {errors.firstName && <p className="mt-2 text-sm text-red-600">{te(errors.firstName.message)}</p>}
                 </div>
 
                 <div className="relative">
@@ -352,13 +364,13 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   <input
                     {...register('lastName')}
                     type="text"
-                    placeholder="Nom"
+                    placeholder={en ? 'Last name' : 'Nom'}
                     autoComplete="family-name"
                     className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                       errors.lastName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.lastName && <p className="mt-2 text-sm text-red-600">{errors.lastName.message}</p>}
+                  {errors.lastName && <p className="mt-2 text-sm text-red-600">{te(errors.lastName.message)}</p>}
                 </div>
               </div>
 
@@ -370,14 +382,14 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 <input
                   {...register('email')}
                   type="email"
-                  placeholder="Adresse email"
+                  placeholder={en ? 'Email address' : 'Adresse email'}
                   autoComplete="email"
                   inputMode="email"
                   className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
-                {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
+                {errors.email && <p className="mt-2 text-sm text-red-600">{te(errors.email.message)}</p>}
               </div>
 
               <SignupCountryPhoneFields
@@ -390,14 +402,14 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
               <div>
                 <label htmlFor="client-city" className="block text-sm font-medium text-gray-700 mb-1">
-                  Ville
+                  {en ? 'City' : 'Ville'}
                 </label>
                 <CityInput
                   value={watchCity}
                   onChange={handleCityChange}
                   country={watchCountry}
-                  placeholder="Rechercher votre ville"
-                  error={errors.city?.message}
+                  placeholder={en ? 'Search for your city' : 'Rechercher votre ville'}
+                  error={te(errors.city?.message)}
                   required
                 />
               </div>
@@ -410,7 +422,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mot de passe"
+                  placeholder={en ? 'Password' : 'Mot de passe'}
                   autoComplete="new-password"
                   className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
@@ -420,11 +432,11 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute top-0 right-0 pr-3 h-12 flex items-center"
-                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  aria-label={showPassword ? (en ? 'Hide password' : 'Masquer le mot de passe') : (en ? 'Show password' : 'Afficher le mot de passe')}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
                 </button>
-                {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>}
+                {errors.password && <p className="mt-2 text-sm text-red-600">{te(errors.password.message)}</p>}
               </div>
 
               {/* Indicateur de force */}
@@ -440,7 +452,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 <input
                   {...register('confirmPassword')}
                   type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Confirmer le mot de passe"
+                  placeholder={en ? 'Confirm password' : 'Confirmer le mot de passe'}
                   autoComplete="new-password"
                   className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
                     errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
@@ -450,12 +462,12 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   type="button"
                   onClick={() => setShowConfirmPassword((v) => !v)}
                   className="absolute top-0 right-0 pr-3 h-12 flex items-center"
-                  aria-label={showConfirmPassword ? 'Masquer la confirmation' : 'Afficher la confirmation'}
+                  aria-label={showConfirmPassword ? (en ? 'Hide confirmation' : 'Masquer la confirmation') : (en ? 'Show confirmation' : 'Afficher la confirmation')}
                 >
                   {showConfirmPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
                 </button>
                 {errors.confirmPassword && (
-                  <p className="mt-2 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                  <p className="mt-2 text-sm text-red-600">{te(errors.confirmPassword.message)}</p>
                 )}
               </div>
 
@@ -465,32 +477,32 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 disabled={!isValid || isSubmitting}
                 className="w-full py-4 text-lg bg-black hover:bg-gray-800 focus:ring-gray-900"
               >
-                {isSubmitting ? 'Création du compte...' : 'Créer mon compte client'}
+                {isSubmitting ? (en ? 'Creating account...' : 'Création du compte...') : (en ? 'Create my rider account' : 'Créer mon compte client')}
               </Button>
 
 
               <p className="text-sm text-gray-500 text-center">
-                En créant votre compte, vous acceptez nos{' '}
+                {en ? 'By creating an account, you accept our ' : 'En créant votre compte, vous acceptez nos '}
                 <a
                   href="#"
                   className="text-gray-900 hover:underline font-medium"
                   onClick={(e) => {
                     e.preventDefault();
-                    window.open('/terms-of-service', '_blank');
+                    window.open(href('/terms-of-service'), '_blank');
                   }}
                 >
-                  conditions d'utilisation
+                  {en ? 'terms of use' : "conditions d'utilisation"}
                 </a>{' '}
-                et notre{' '}
+                {en ? 'and our ' : 'et notre '}
                 <a
                   href="#"
                   className="text-gray-900 hover:underline font-medium"
                   onClick={(e) => {
                     e.preventDefault();
-                    window.open('/privacy-policy', '_blank');
+                    window.open(href('/privacy-policy'), '_blank');
                   }}
                 >
-                  politique de confidentialité
+                  {en ? 'privacy policy' : 'politique de confidentialité'}
                 </a>.
               </p>
             </form>

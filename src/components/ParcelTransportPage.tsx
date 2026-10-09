@@ -11,7 +11,9 @@ import {
 import { Button } from './ui/Button';
 import { Footer } from './Footer';
 import { faqCategories } from '../data/faqData';
+import { faqCategoriesEn } from '../data/faqData.en';
 import { getParcelFaqItems, setFaqJsonLd } from '../utils/seo';
+import { useLocale } from '../i18n/locale';
 
 const EUROPE_CORRIDORS = [
   'France',
@@ -22,6 +24,17 @@ const EUROPE_CORRIDORS = [
   'Luxembourg',
   'Suisse',
   'Pays-Bas',
+];
+
+const EUROPE_CORRIDORS_EN = [
+  'France',
+  'Italy',
+  'Germany',
+  'Spain',
+  'Belgium',
+  'Luxembourg',
+  'Switzerland',
+  'Netherlands',
 ];
 
 const STEPS = [
@@ -42,17 +55,36 @@ const STEPS = [
   },
 ];
 
+const STEPS_EN = [
+  {
+    title: 'Describe your shipment',
+    description: 'Enter pickup and delivery addresses, the date you want, what is in the parcels, and attach photos or invoices.',
+  },
+  {
+    title: 'Receive quotes',
+    description: 'Qualified partner carriers send their price offers and estimated times.',
+  },
+  {
+    title: 'Compare and confirm',
+    description: 'Choose the offer online. Contact details are exchanged to arrange pickup and delivery.',
+  },
+];
+
 export const ParcelTransportPage: React.FC = () => {
   const navigate = useNavigate();
-  const parcelFaq = faqCategories.find((c) => c.id === 'parcel')?.items ?? [];
+  const { locale, href } = useLocale();
+  const en = locale === 'en';
+  const parcelFaq = (en ? faqCategoriesEn : faqCategories).find((c) => c.id === 'parcel')?.items ?? [];
+  const steps = en ? STEPS_EN : STEPS;
+  const corridors = en ? EUROPE_CORRIDORS_EN : EUROPE_CORRIDORS;
   const [openFaqId, setOpenFaqId] = useState<string | null>(parcelFaq[0]?.id ?? null);
 
   useEffect(() => {
-    setFaqJsonLd(getParcelFaqItems());
+    setFaqJsonLd(getParcelFaqItems(locale));
     return () => {
       document.querySelector('script[data-seo-jsonld="faq-page"]')?.remove();
     };
-  }, []);
+  }, [locale]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -61,34 +93,38 @@ export const ParcelTransportPage: React.FC = () => {
           <div className="max-w-4xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-medium mb-6">
               <Globe size={16} aria-hidden="true" />
-              Europe ↔ Tunisie
+              {en ? 'Europe ↔ Tunisia' : 'Europe ↔ Tunisie'}
             </span>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 tracking-tight leading-tight">
-              Transport de colis et marchandises entre l&apos;Europe et la Tunisie
+              {en
+                ? 'Parcel and goods transport between Europe and Tunisia'
+                : "Transport de colis et marchandises entre l'Europe et la Tunisie"}
             </h1>
             <p className="text-xl text-gray-600 mb-4 leading-relaxed">
-              Envoyez ou recevez vos colis à l&apos;international avec TuniDrive : demande de devis
-              gratuite, plusieurs transporteurs, comparaison transparente des offres.
+              {en
+                ? 'Send or receive parcels internationally with TuniDrive: a free quote request, several carriers, and a transparent comparison of offers.'
+                : "Envoyez ou recevez vos colis à l'international avec TuniDrive : demande de devis gratuite, plusieurs transporteurs, comparaison transparente des offres."}
             </p>
             <p className="text-base text-gray-500 mb-10 max-w-2xl mx-auto">
-              Idéal pour cartons, effets personnels, marchandises volumineuses ou envois réguliers
-              entre la Tunisie et l&apos;Europe — France, Italie, Allemagne et plus encore.
+              {en
+                ? 'Useful for boxes, personal belongings, bulky goods or regular shipments between Tunisia and Europe — France, Italy, Germany and more.'
+                : "Idéal pour cartons, effets personnels, marchandises volumineuses ou envois réguliers entre la Tunisie et l'Europe — France, Italie, Allemagne et plus encore."}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/client-signup')}
+                onClick={() => navigate(href('/client-signup'))}
                 className="text-lg px-8 py-4 bg-black hover:bg-gray-800 text-white rounded-lg font-medium inline-flex items-center justify-center gap-2"
               >
-                Demander un devis gratuit
+                {en ? 'Request a free quote' : 'Demander un devis gratuit'}
                 <ArrowRight size={20} aria-hidden="true" />
               </Button>
               <Button
                 size="lg"
-                onClick={() => navigate('/client-login')}
+                onClick={() => navigate(href('/client-login'))}
                 className="text-lg px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium"
               >
-                J&apos;ai déjà un compte
+                {en ? 'I already have an account' : "J'ai déjà un compte"}
               </Button>
             </div>
           </div>
@@ -99,20 +135,23 @@ export const ParcelTransportPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 id="parcel-corridors-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Trajets couverts
+              {en ? 'Routes we cover' : 'Trajets couverts'}
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Transport international de colis dans les deux sens :{' '}
-              <strong>Europe → Tunisie</strong> et <strong>Tunisie → Europe</strong>.
+              {en ? (
+                <>International parcels both ways: <strong>Europe → Tunisia</strong> and <strong>Tunisia → Europe</strong>.</>
+              ) : (
+                <>Transport international de colis dans les deux sens : <strong>Europe → Tunisie</strong> et <strong>Tunisie → Europe</strong>.</>
+              )}
             </p>
           </div>
           <ul className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
-            {EUROPE_CORRIDORS.map((country) => (
+            {corridors.map((country) => (
               <li
                 key={country}
                 className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium"
               >
-                {country} ↔ Tunisie
+                {country} ↔ {en ? 'Tunisia' : 'Tunisie'}
               </li>
             ))}
           </ul>
@@ -123,14 +162,16 @@ export const ParcelTransportPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 id="parcel-how-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Comment ça marche ?
+              {en ? 'How it works' : 'Comment ça marche ?'}
             </h2>
             <p className="text-lg text-gray-600">
-              Un processus simple en trois étapes pour expédier vos colis en toute confiance.
+              {en
+                ? 'Three simple steps to ship your parcels with confidence.'
+                : 'Un processus simple en trois étapes pour expédier vos colis en toute confiance.'}
             </p>
           </div>
           <ol className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto list-none">
-            {STEPS.map((step, index) => (
+            {steps.map((step, index) => (
               <li
                 key={step.title}
                 className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
@@ -154,15 +195,13 @@ export const ParcelTransportPage: React.FC = () => {
                 <Package className="text-gray-700" size={24} aria-hidden="true" />
               </div>
               <h2 id="parcel-audience-heading" className="text-xl font-semibold text-gray-900 mb-3">
-                Pour les particuliers et entreprises
+                {en ? 'For individuals and businesses' : 'Pour les particuliers et entreprises'}
               </h2>
               <ul className="space-y-2 text-gray-600 text-sm">
-                {[
-                  'Envoi de cartons, effets personnels ou cadeaux',
-                  'Transport de marchandises volumineuses',
-                  'Photos et factures pour un devis précis',
-                  'Comparaison de plusieurs propositions de prix',
-                ].map((item) => (
+                {(en
+                  ? ['Boxes, personal belongings or gifts', 'Bulky goods', 'Photos and invoices for an accurate quote', 'Compare several price offers']
+                  : ['Envoi de cartons, effets personnels ou cadeaux', 'Transport de marchandises volumineuses', 'Photos et factures pour un devis précis', 'Comparaison de plusieurs propositions de prix']
+                ).map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     {item}
@@ -175,15 +214,13 @@ export const ParcelTransportPage: React.FC = () => {
                 <Truck className="text-gray-700" size={24} aria-hidden="true" />
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-3">
-                Pour les transporteurs partenaires
+                {en ? 'For partner carriers' : 'Pour les transporteurs partenaires'}
               </h2>
               <ul className="space-y-2 text-gray-600 text-sm">
-                {[
-                  'Demandes filtrées selon vos disponibilités',
-                  'Proposition libre en EUR ou TND',
-                  'Visibilité sur les trajets Europe ↔ Tunisie',
-                  'Compatible avec une activité VTC',
-                ].map((item) => (
+                {(en
+                  ? ['Requests filtered by your availability', 'Your own price in EUR or TND', 'Visibility on Europe ↔ Tunisia routes', 'Compatible with private-hire work']
+                  : ['Demandes filtrées selon vos disponibilités', 'Proposition libre en EUR ou TND', 'Visibilité sur les trajets Europe ↔ Tunisie', 'Compatible avec une activité VTC']
+                ).map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     {item}
@@ -192,10 +229,10 @@ export const ParcelTransportPage: React.FC = () => {
               </ul>
               <Button
                 size="md"
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate(href('/signup'))}
                 className="mt-6 bg-black hover:bg-gray-800 text-white"
               >
-                Devenir transporteur
+                {en ? 'Become a carrier' : 'Devenir transporteur'}
               </Button>
             </article>
           </div>
@@ -206,10 +243,10 @@ export const ParcelTransportPage: React.FC = () => {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 id="parcel-faq-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Questions fréquentes — transport de colis
+              {en ? 'Frequently asked questions — parcels' : 'Questions fréquentes — transport de colis'}
             </h2>
             <p className="text-gray-600">
-              Tout savoir sur les devis, les trajets et le rôle de TuniDrive.
+              {en ? 'Quotes, routes and what TuniDrive does.' : 'Tout savoir sur les devis, les trajets et le rôle de TuniDrive.'}
             </p>
           </div>
           <div className="space-y-3">
@@ -245,17 +282,19 @@ export const ParcelTransportPage: React.FC = () => {
       <section className="py-16 bg-black text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Prêt à expédier vos colis ?
+            {en ? 'Ready to ship your parcels?' : 'Prêt à expédier vos colis ?'}
           </h2>
           <p className="text-gray-300 mb-8 text-lg">
-            Créez votre compte gratuitement et recevez vos premières propositions de transporteurs.
+            {en
+              ? 'Create a free account and receive your first carrier offers.'
+              : 'Créez votre compte gratuitement et recevez vos premières propositions de transporteurs.'}
           </p>
           <Button
             size="lg"
-            onClick={() => navigate('/client-signup')}
+            onClick={() => navigate(href('/client-signup'))}
             className="text-lg px-8 py-4 bg-white text-gray-900 hover:bg-gray-100 rounded-lg font-medium inline-flex items-center gap-2"
           >
-            Commencer ma demande de devis
+            {en ? 'Start my quote request' : 'Commencer ma demande de devis'}
             <ArrowRight size={20} aria-hidden="true" />
           </Button>
         </div>
