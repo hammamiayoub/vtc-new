@@ -125,6 +125,26 @@ export async function addBlogTopic(audience: BlogAudience, keyword: string): Pro
   }
 }
 
+export async function fetchBlogAutopublishEnabled(): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('blog_settings')
+    .select('autopublish_enabled')
+    .eq('id', 1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data?.autopublish_enabled !== false;
+}
+
+export async function setBlogAutopublishEnabled(enabled: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('blog_settings')
+    .update({ autopublish_enabled: enabled, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+
+  if (error) throw error;
+}
+
 export async function deleteBlogTopic(id: string): Promise<void> {
   const { error } = await supabase.from('blog_topics').delete().eq('id', id).is('used_at', null);
   if (error) throw error;
