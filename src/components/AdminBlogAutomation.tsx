@@ -4,7 +4,9 @@ import { supabase } from '../lib/supabase';
 import {
   addBlogTopic,
   deleteBlogTopic,
+  fetchBlogAutopublishEnabled,
   fetchBlogTopics,
+  setBlogAutopublishEnabled,
   type BlogAudience,
   type BlogTopic,
 } from '../utils/blogPosts';
@@ -27,6 +29,9 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
+  const [autopublishEnabled, setAutopublishEnabled] = useState(true);
+  const [settingsReady, setSettingsReady] = useState(false);
+  const [pausing, setPausing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -39,6 +44,14 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
     } catch (err) {
       console.error(err);
       setError('La file de sujets n’est pas disponible. Appliquez la migration du blog automatique.');
+    }
+
+    try {
+      setAutopublishEnabled(await fetchBlogAutopublishEnabled());
+      setSettingsReady(true);
+    } catch (err) {
+      console.error(err);
+      setSettingsReady(false);
     } finally {
       setLoading(false);
     }
@@ -93,6 +106,27 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
     }
   };
 
+  const toggleAutopublish = async () => {
+    setPausing(true);
+    setError(null);
+    setNotice(null);
+    const next = !autopublishEnabled;
+    try {
+      await setBlogAutopublishEnabled(next);
+      setAutopublishEnabled(next);
+      setNotice(
+        next
+          ? 'La publication automatique du matin est réactivée.'
+          : 'La publication automatique du matin est en pause. Aucun article ne sera publié à 7 h.',
+      );
+    } catch (err) {
+      console.error(err);
+      setError('Impossible de modifier la publication automatique. Appliquez la migration de mise en pause.');
+    } finally {
+      setPausing(false);
+    }
+  };
+
   const saveTopic = async (event: React.FormEvent) => {
     event.preventDefault();
     const value = keyword.trim();
@@ -125,14 +159,37 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
   return (
     <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
       <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Publication automatique</h2>
-      <p className="text-sm text-gray-600 mt-1 mb-5">
+      <p className="text-sm text-gray-600 mt-1 mb-3">
         Chaque jour à 7 h, heure de Tunis, le site publie un article pour les voyageurs et un article pour les chauffeurs.
         Les sujets ci-dessous sont utilisés dans l’ordre. Quand la file est vide, un nouveau sujet est proposé automatiquement.
       </p>
+      {!loading && (
+        <p className={`text-sm font-medium mb-5 ${
+          !settingsReady ? 'text-gray-600' : autopublishEnabled ? 'text-green-800' : 'text-amber-800'
+        }`}>
+          {settingsReady
+            ? autopublishEnabled
+              ? 'Publication du matin : active.'
+              : 'Publication du matin : en pause. Le bouton « Publier les articles du jour » reste disponible.'
+            : 'La mise en pause n’est pas encore disponible. Appliquez la migration du blog automatique.'}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <Button type="button" onClick={() => void publishToday()} disabled={publishing || loading}>
           {publishing ? 'Rédaction en cours…' : 'Publier les articles du jour'}
+        </Button>
+        <Button
+          type="button"
+          variant={autopublishEnabled ? 'outline' : 'primary'}
+          onClick={() => void toggleAutopublish()}
+          disabled={!settingsReady || pausing || loading}
+        >
+          {pausing
+            ? 'Enregistrement…'
+            : autopublishEnabled
+              ? 'Mettre en pause'
+              : 'Reprendre la publication'}
         </Button>
         <p className="text-sm text-gray-600">
           {loading

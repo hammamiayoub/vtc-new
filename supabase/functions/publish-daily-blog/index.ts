@@ -68,6 +68,23 @@ function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length
 }
 
+function isCronRequest(req: Request): boolean {
+  const cronSecret = Deno.env.get('BLOG_CRON_SECRET') ?? ''
+  const headerSecret = req.headers.get('x-blog-cron-secret') ?? ''
+  return Boolean(cronSecret && headerSecret && secretsMatch(headerSecret, cronSecret))
+}
+
+async function autopublishEnabled(admin: SupabaseClient): Promise<boolean> {
+  const { data, error } = await admin
+    .from('blog_settings')
+    .select('autopublish_enabled')
+    .eq('id', 1)
+    .maybeSingle()
+
+  if (error || !data) return true
+  return data.autopublish_enabled !== false
+}
+
 async function isAuthorized(req: Request, admin: SupabaseClient): Promise<boolean> {
   const cronSecret = Deno.env.get('BLOG_CRON_SECRET') ?? ''
   const headerSecret = req.headers.get('x-blog-cron-secret') ?? ''
@@ -524,6 +541,10 @@ serve(async (req) => {
     }
 
     const day = tunisDate()
+    if (isCronRequest(req) && !(await autopublishEnabled(admin))) {
+      return json({ ok: true, paused: true, day, posts: [] })
+    }
+
     const client = await publishAudience(admin, 'client', day)
     const driver = await publishAudience(admin, 'driver', day)
     return json({ ok: true, day, posts: [client, driver] })
