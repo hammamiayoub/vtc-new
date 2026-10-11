@@ -159,6 +159,8 @@ function buildTrackingUrl(token: string): string {
   return `${window.location.origin}/track.html?token=${encodeURIComponent(token)}`;
 }
 
+const ADMIN_VEHICLE_TYPES = ['sedan', 'pickup', 'van', 'minibus', 'bus', 'truck', 'utility', 'taxi'] as const;
+
 function canShowBookingGpsTracking(booking: AdminBooking): boolean {
   return (
     !!booking.trackingToken &&
@@ -172,6 +174,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [clients, setClients] = useState<ClientWithBookings[]>([]);
   const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
   const [vehiclesFetchError, setVehiclesFetchError] = useState<string | null>(null);
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState<string>('all');
   const [subscriptions, setSubscriptions] = useState<DriverSubscription[]>([]);
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
@@ -1441,6 +1444,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     });
   }, [bookings, bookingSearch, bookingStatusFilter]);
 
+  const vehicleTypeOptions = useMemo(() => {
+    const known = new Set<string>(ADMIN_VEHICLE_TYPES);
+    const extra = vehicles
+      .map((vehicle) => vehicle.type)
+      .filter((type): type is string => Boolean(type) && !known.has(type));
+    return [...ADMIN_VEHICLE_TYPES, ...Array.from(new Set(extra))];
+  }, [vehicles]);
+
+  const filteredVehicles = useMemo(() => {
+    if (vehicleTypeFilter === 'all') return vehicles;
+    return vehicles.filter((vehicle) => vehicle.type === vehicleTypeFilter);
+  }, [vehicles, vehicleTypeFilter]);
+
   const pendingSubscriptions = subscriptions.filter((s) => s.paymentStatus === 'pending').length;
 
   const adminTabs: {
@@ -2445,7 +2461,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         ) : activeTab === 'vehicles' ? (
           /* Vehicles List */
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Véhicules et disponibilités</h2>
@@ -2457,6 +2473,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <span className="hidden sm:inline">Actualisation...</span>
                   </div>
                 )}
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <select
+                  value={vehicleTypeFilter}
+                  onChange={(e) => setVehicleTypeFilter(e.target.value)}
+                  aria-label="Filtrer par type de véhicule"
+                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                >
+                  <option value="all">Tous les types</option>
+                  {vehicleTypeOptions.map((type) => (
+                    <option key={type} value={type}>{formatVehicleType(type)}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500">
+                  {filteredVehicles.length} véhicule{filteredVehicles.length > 1 ? 's' : ''}
+                  {vehicleTypeFilter !== 'all' ? ` sur ${vehicles.length}` : ''}
+                </p>
               </div>
             </div>
 
@@ -2492,7 +2525,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {vehicles.map((vehicle) => (
+                  {filteredVehicles.map((vehicle) => (
                     <tr key={vehicle.id} className="hover:bg-gray-50 transition-colors">
                       {/* Véhicule */}
                       <td className="px-3 py-3">
@@ -2636,7 +2669,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             {/* Version mobile/tablet - Cards des véhicules */}
             <div className="lg:hidden">
               <div className="divide-y divide-gray-200">
-                {vehicles.map((vehicle) => (
+                {filteredVehicles.map((vehicle) => (
                   <div key={vehicle.id} className="p-6 hover:bg-gray-50 transition-colors">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
@@ -2828,11 +2861,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               </div>
             </div>
 
-            {vehicles.length === 0 && (
+            {filteredVehicles.length === 0 && (
               <div className="text-center py-12">
                 <Car size={48} className="text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun véhicule enregistré</h3>
-                <p className="text-gray-500">Les véhicules apparaîtront ici une fois ajoutés par les chauffeurs.</p>
+                {vehicles.length === 0 ? (
+                  <>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun véhicule enregistré</h3>
+                    <p className="text-gray-500">Les véhicules apparaîtront ici une fois ajoutés par les chauffeurs.</p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun véhicule de ce type</h3>
+                    <p className="text-gray-500">
+                      Aucun résultat pour {formatVehicleType(vehicleTypeFilter)}.
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>
