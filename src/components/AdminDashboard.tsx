@@ -175,6 +175,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
   const [vehiclesFetchError, setVehiclesFetchError] = useState<string | null>(null);
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState<string>('all');
+  const [vehicleDriverStatusFilter, setVehicleDriverStatusFilter] = useState<'all' | 'active' | 'pending' | 'rejected' | 'none'>('all');
   const [subscriptions, setSubscriptions] = useState<DriverSubscription[]>([]);
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
@@ -1453,9 +1454,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   }, [vehicles]);
 
   const filteredVehicles = useMemo(() => {
-    if (vehicleTypeFilter === 'all') return vehicles;
-    return vehicles.filter((vehicle) => vehicle.type === vehicleTypeFilter);
-  }, [vehicles, vehicleTypeFilter]);
+    return vehicles.filter((vehicle) => {
+      const matchesType = vehicleTypeFilter === 'all' || vehicle.type === vehicleTypeFilter;
+      const matchesStatus =
+        vehicleDriverStatusFilter === 'all' ||
+        (vehicleDriverStatusFilter === 'none'
+          ? !vehicle.driver
+          : vehicle.driver?.status === vehicleDriverStatusFilter);
+      return matchesType && matchesStatus;
+    });
+  }, [vehicles, vehicleTypeFilter, vehicleDriverStatusFilter]);
 
   const pendingSubscriptions = subscriptions.filter((s) => s.paymentStatus === 'pending').length;
 
@@ -2486,9 +2494,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <option key={type} value={type}>{formatVehicleType(type)}</option>
                   ))}
                 </select>
+                <select
+                  value={vehicleDriverStatusFilter}
+                  onChange={(e) => setVehicleDriverStatusFilter(e.target.value as typeof vehicleDriverStatusFilter)}
+                  aria-label="Filtrer par statut du chauffeur"
+                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="active">Actif</option>
+                  <option value="pending">En attente</option>
+                  <option value="rejected">Rejeté</option>
+                  <option value="none">Aucun chauffeur</option>
+                </select>
                 <p className="text-xs text-gray-500">
                   {filteredVehicles.length} véhicule{filteredVehicles.length > 1 ? 's' : ''}
-                  {vehicleTypeFilter !== 'all' ? ` sur ${vehicles.length}` : ''}
+                  {vehicleTypeFilter !== 'all' || vehicleDriverStatusFilter !== 'all' ? ` sur ${vehicles.length}` : ''}
                 </p>
               </div>
             </div>
@@ -2871,10 +2891,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </>
                 ) : (
                   <>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun véhicule de ce type</h3>
-                    <p className="text-gray-500">
-                      Aucun résultat pour {formatVehicleType(vehicleTypeFilter)}.
-                    </p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun véhicule ne correspond</h3>
+                    <p className="text-gray-500">Modifiez le type ou le statut du chauffeur pour élargir la liste.</p>
                   </>
                 )}
               </div>
