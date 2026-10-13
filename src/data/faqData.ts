@@ -173,7 +173,7 @@ export const faqCategories: FaqCategory[] = [
         id: "d6",
         question: "Combien de courses gratuites ai-je sans abonnement ?",
         answer:
-          "Chaque nouveau chauffeur bénéficie de 3 courses gratuites à vie (offre valable une seule fois, sans reset mensuel).\n\nUne fois ces 3 courses utilisées, l'abonnement Premium est nécessaire pour continuer à accepter de nouvelles courses.",
+          "Chaque nouveau chauffeur bénéficie de 2 courses gratuites à vie (offre valable une seule fois, sans reset mensuel).\n\nUne fois ces 2 courses utilisées, l'abonnement Premium est nécessaire pour continuer à accepter de nouvelles courses.",
       },
       {
         id: "d7",

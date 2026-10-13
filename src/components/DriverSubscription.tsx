@@ -356,7 +356,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                  {isPremium ? 'Abonnement Premium' : 'Compte Gratuit'}
                </h3>
                <p className={`text-sm ${isPremium ? 'text-white/90' : 'text-gray-600'}`}>
-                 {isPremium ? 'Courses illimitées' : '3 courses gratuites'}
+                 {isPremium ? 'Courses illimitées' : '2 courses gratuites'}
                </p>
             </div>
           </div>
@@ -377,7 +377,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             </span>
              <span className={`text-2xl font-bold ${isPremium ? 'text-white' : 'text-gray-900'}`}>
                {subscriptionStatus.lifetimeAcceptedBookings}
-               {!isPremium && <span className="text-sm font-normal"> / 3</span>}
+               {!isPremium && <span className="text-sm font-normal"> / 2</span>}
              </span>
           </div>
           
@@ -386,7 +386,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                  <div 
                    className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-                   style={{ width: `${(subscriptionStatus.lifetimeAcceptedBookings / 3) * 100}%` }}
+                   style={{ width: `${Math.min(100, (subscriptionStatus.lifetimeAcceptedBookings / 2) * 100)}%` }}
                  ></div>
                </div>
               <p className="text-xs text-gray-600">
@@ -423,7 +423,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                    Courses gratuites épuisées
                  </h4>
                  <p className="text-sm text-red-800">
-                   Vous avez utilisé vos 3 courses gratuites. 
+                   Vous avez utilisé vos 2 courses gratuites. 
                    Souscrivez à l'abonnement Premium pour continuer à recevoir des courses.
                  </p>
               </div>
@@ -764,7 +764,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
           <p className="text-sm text-gray-600 flex items-start gap-2">
             <Info size={16} className="flex-shrink-0 mt-0.5" />
             <span>
-              <strong>Période d'essai gratuite :</strong> 3 courses gratuites pour tous les nouveaux chauffeurs (offre valable une seule fois).
+              <strong>Période d'essai gratuite :</strong> 2 courses gratuites pour tous les nouveaux chauffeurs (offre valable une seule fois).
             </span>
           </p>
           <p className="text-sm text-gray-600 flex items-start gap-2">

@@ -162,7 +162,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'd6',
         question: 'How many free rides do I get without a subscription?',
         answer:
-          'Each new driver gets 3 free rides in total (one-time offer, not reset every month).\n\nAfter those 3 rides, the Premium plan is required to accept new rides.',
+          'Each new driver gets 2 free rides in total (one-time offer, not reset every month).\n\nAfter those 2 rides, the Premium plan is required to accept new rides.',
       },
       {
         id: 'd7',
