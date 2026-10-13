@@ -364,7 +364,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           setSubscriptionStatus(currentSubscriptionStatus);
           alert(
             '❌ Limite de courses gratuites atteinte\n\n' +
-            'Vous avez déjà accepté 3 courses avec votre compte gratuit.\n\n' +
+            'Vous avez déjà accepté 2 courses avec votre compte gratuit.\n\n' +
             'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Premium (35.70 TND/mois).\n\n' +
             'Rendez-vous dans l\'onglet "Abonnement" pour plus d\'informations.'
           );
@@ -393,7 +393,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         if (error.message?.includes('subscription_required')) {
           alert(
             '❌ Limite de courses gratuites atteinte\n\n' +
-            'Vous avez déjà accepté 3 courses avec votre compte gratuit.\n\n' +
+            'Vous avez déjà accepté 2 courses avec votre compte gratuit.\n\n' +
             'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Premium (35.70 TND/mois).\n\n' +
             'Rendez-vous dans l\'onglet "Abonnement" pour plus d\'informations.'
           );
@@ -903,7 +903,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           ? `Votre abonnement Premium a expiré le ${expirationDateString}.`
           : 'Votre dernier abonnement Premium est arrivé à expiration.'
       } Souscrivez à un nouvel abonnement pour continuer à recevoir des courses.`
-    : 'Vous avez utilisé vos 3 courses gratuites. Souscrivez à l\'abonnement Premium pour continuer à recevoir des courses.';
+    : 'Vous avez utilisé vos 2 courses gratuites. Souscrivez à l\'abonnement Premium pour continuer à recevoir des courses.';
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -1034,10 +1034,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-amber-900 mb-2">
-                  ⚠️ Limite mensuelle atteinte
+                  ⚠️ Courses gratuites épuisées
                 </h3>
                 <p className="text-amber-800 mb-4">
-                  Vous avez accepté vos 3 courses gratuites. Vous ne pouvez plus accepter de nouvelles courses.
+                  Vous avez accepté vos 2 courses gratuites. Vous ne pouvez plus accepter de nouvelles courses.
                 </p>
                 <p className="text-amber-900 font-semibold mb-4">
                   💡 Passez à l'abonnement Premium pour continuer à recevoir des courses !

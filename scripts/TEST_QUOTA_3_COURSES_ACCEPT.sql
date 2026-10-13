@@ -1,15 +1,15 @@
 -- =============================================================================
--- TEST AUTOMATISÉ — Quota 3 courses gratuites + blocage serveur à l'acceptation
+-- TEST AUTOMATISÉ — Quota 2 courses gratuites + blocage serveur à l'acceptation
 -- =============================================================================
 --
 -- Objectif :
---   1. Simuler 3 acceptations de course (pending → accepted)
+--   1. Simuler 2 acceptations de course (pending → accepted)
 --   2. Vérifier le compteur et get_driver_subscription_status après chaque étape
---   3. Tenter une 4e acceptation → doit échouer avec subscription_required
+--   3. Tenter une 3e acceptation → doit échouer avec subscription_required
 --   4. (Optionnel) Tester le chemin dispatch searching → accepted
 --
 -- Prérequis :
---   - Migration 20260713100000_enforce_subscription_on_booking_accept.sql déployée
+--   - Migration 20261013140000_free_rides_quota_2.sql déployée
 --   - get_driver_subscription_status(UUID) disponible
 --   - Exécution dans le SQL Editor Supabase (rôle postgres / service)
 --
@@ -142,7 +142,7 @@ DECLARE
 BEGIN
   RAISE NOTICE '';
   RAISE NOTICE '========================================';
-  RAISE NOTICE '🧪 TEST QUOTA 3 COURSES — DÉBUT';
+  RAISE NOTICE '🧪 TEST QUOTA 2 COURSES — DÉBUT';
   RAISE NOTICE '========================================';
 
   -- Réutiliser ou créer le chauffeur test
@@ -258,8 +258,8 @@ BEGIN
   );
 
   PERFORM _quota_test_assert(
-    'T02_initial_remaining_3',
-    v_status.remaining_free_bookings = 3,
+    'T02_initial_remaining_2',
+    v_status.remaining_free_bookings = 2,
     format('remaining=%s', v_status.remaining_free_bookings)
   );
 
@@ -269,8 +269,8 @@ BEGIN
     'driver_can_accept_new_booking() = true'
   );
 
-  -- T04–T06 — Accepter 3 courses gratuites
-  FOR i IN 1..3 LOOP
+  -- T04–T05 — Accepter 2 courses gratuites
+  FOR i IN 1..2 LOOP
     INSERT INTO bookings (
       client_id,
       driver_id,
@@ -322,12 +322,12 @@ BEGIN
     );
   END LOOP;
 
-  -- T07 — Après 3 courses : plus de quota
+  -- T07 — Après 2 courses : plus de quota
   SELECT * INTO v_status
   FROM get_driver_subscription_status(v_driver_id);
 
   PERFORM _quota_test_assert(
-    'T07_blocked_after_3',
+    'T07_blocked_after_2',
     v_status.can_accept_more_bookings = FALSE
       AND v_status.remaining_free_bookings = 0
       AND v_status.has_used_free_trial = TRUE,
@@ -338,12 +338,12 @@ BEGIN
   );
 
   PERFORM _quota_test_assert(
-    'T08_helper_false_after_3',
+    'T08_helper_false_after_2',
     driver_can_accept_new_booking(v_driver_id) = FALSE,
     'driver_can_accept_new_booking() = false'
   );
 
-  -- T09 — 4e acceptation pending → accepted (doit être bloquée)
+  -- T09 — 3e acceptation pending → accepted (doit être bloquée)
   INSERT INTO bookings (
     client_id,
     driver_id,
@@ -360,8 +360,8 @@ BEGIN
   ) VALUES (
     v_client_id,
     v_driver_id,
-    'QUOTA-TEST-pickup-4-blocked',
-    'QUOTA-TEST-destination-4-blocked',
+      'QUOTA-TEST-pickup-3-blocked',
+      'QUOTA-TEST-destination-3-blocked',
     36.8100,
     10.1900,
     36.8900,
@@ -381,7 +381,7 @@ BEGIN
     PERFORM _quota_test_record(
       'T09_fourth_accept_blocked',
       'FAIL',
-      'La 4e acceptation aurait dû lever subscription_required'
+      'La 3e acceptation aurait dû lever subscription_required'
     );
   EXCEPTION
     WHEN OTHERS THEN
@@ -511,14 +511,14 @@ BEGIN
   WHERE id = v_driver_id;
 
   PERFORM _quota_test_assert(
-    'T12_lifetime_still_3',
-    v_lifetime = 3,
-    format('lifetime=%s (attendu 3)', v_lifetime)
+    'T12_lifetime_still_2',
+    v_lifetime = 2,
+    format('lifetime=%s (attendu 2)', v_lifetime)
   );
 
   RAISE NOTICE '';
   RAISE NOTICE '========================================';
-  RAISE NOTICE '🧪 TEST QUOTA 3 COURSES — FIN';
+  RAISE NOTICE '🧪 TEST QUOTA 2 COURSES — FIN';
   RAISE NOTICE '========================================';
 END $$;
 

@@ -81,10 +81,10 @@ BEGIN
   RAISE NOTICE '✅ Client créé : % (demo.client@tunidrive.test)', v_client_id;
   RAISE NOTICE '';
   
-  -- ✅ ÉTAPE 3 : Accepter 3 courses gratuites
-  RAISE NOTICE '📝 Étape 3/7 : Acceptation des 3 courses gratuites...';
+  -- ✅ ÉTAPE 3 : Accepter 2 courses gratuites
+  RAISE NOTICE '📝 Étape 3/7 : Acceptation des 2 courses gratuites...';
   
-  FOR i IN 1..3 LOOP
+  FOR i IN 1..2 LOOP
     -- Créer une réservation
     INSERT INTO bookings (
       client_id,
@@ -132,7 +132,7 @@ BEGIN
     SELECT * INTO v_status
     FROM get_driver_subscription_status(v_driver_id);
     
-    RAISE NOTICE '  🚗 Course gratuite %/3 acceptée (Booking ID: %)', 
+    RAISE NOTICE '  🚗 Course gratuite %/2 acceptée (Booking ID: %)', 
       i, v_booking_id;
     RAISE NOTICE '     📊 Compteur lifetime: % | Restantes: %', 
       v_status.lifetime_accepted_bookings, 
@@ -140,7 +140,7 @@ BEGIN
   END LOOP;
   
   RAISE NOTICE '';
-  RAISE NOTICE '✅ 3 courses gratuites acceptées';
+  RAISE NOTICE '✅ 2 courses gratuites acceptées';
   RAISE NOTICE '🔒 Chauffeur maintenant BLOQUÉ (can_accept_more_bookings = false)';
   RAISE NOTICE '';
   
