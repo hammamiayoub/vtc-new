@@ -44,6 +44,8 @@ function secretsMatch(left: string, right: string): boolean {
   return diff === 0
 }
 
+const AUTOPUBLISH_INTERVAL_DAYS = 3
+
 function tunisDate(now = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Africa/Tunis',
@@ -51,6 +53,14 @@ function tunisDate(now = new Date()): string {
     month: '2-digit',
     day: '2-digit',
   }).format(now)
+}
+
+function daysBetweenDates(earlier: string, later: string): number {
+  const [year1, month1, day1] = earlier.split('-').map(Number)
+  const [year2, month2, day2] = later.split('-').map(Number)
+  const start = Date.UTC(year1, month1 - 1, day1)
+  const end = Date.UTC(year2, month2 - 1, day2)
+  return Math.round((end - start) / 86_400_000)
 }
 
 function slugify(title: string): string {
@@ -72,6 +82,22 @@ function isCronRequest(req: Request): boolean {
   const cronSecret = Deno.env.get('BLOG_CRON_SECRET') ?? ''
   const headerSecret = req.headers.get('x-blog-cron-secret') ?? ''
   return Boolean(cronSecret && headerSecret && secretsMatch(headerSecret, cronSecret))
+}
+
+async function latestAutoPublishedDay(admin: SupabaseClient): Promise<string | null> {
+  const { data, error } = await admin
+    .from('blog_posts')
+    .select('published_day, published_at')
+    .eq('source', 'auto')
+    .order('published_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) return null
+  if (data.published_day) return String(data.published_day).slice(0, 10)
+  if (data.published_at) return tunisDate(new Date(data.published_at))
+  return null
 }
 
 async function autopublishEnabled(admin: SupabaseClient): Promise<boolean> {
@@ -543,6 +569,20 @@ serve(async (req) => {
     const day = tunisDate()
     if (isCronRequest(req) && !(await autopublishEnabled(admin))) {
       return json({ ok: true, paused: true, day, posts: [] })
+    }
+
+    if (isCronRequest(req)) {
+      const lastDay = await latestAutoPublishedDay(admin)
+      if (lastDay && daysBetweenDates(lastDay, day) < AUTOPUBLISH_INTERVAL_DAYS) {
+        return json({
+          ok: true,
+          skipped: true,
+          reason: 'interval',
+          day,
+          lastPublishedDay: lastDay,
+          posts: [],
+        })
+      }
     }
 
     const client = await publishAudience(admin, 'client', day)

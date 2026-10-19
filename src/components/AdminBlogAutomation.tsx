@@ -116,8 +116,8 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
       setAutopublishEnabled(next);
       setNotice(
         next
-          ? 'La publication automatique du matin est réactivée.'
-          : 'La publication automatique du matin est en pause. Aucun article ne sera publié à 7 h.',
+          ? 'La publication automatique est réactivée. Le passage de 7 h publie seulement si le dernier article date d’au moins 3 jours.'
+          : 'La publication automatique est en pause. Aucun article ne sera publié à 7 h.',
       );
     } catch (err) {
       console.error(err);
@@ -160,7 +160,7 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
     <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
       <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Publication automatique</h2>
       <p className="text-sm text-gray-600 mt-1 mb-3">
-        Chaque jour à 7 h, heure de Tunis, le site publie un article pour les voyageurs et un article pour les chauffeurs.
+        Tous les 3 jours à 7 h, heure de Tunis, le site publie un article pour les voyageurs et un article pour les chauffeurs.
         Les sujets ci-dessous sont utilisés dans l’ordre. Quand la file est vide, un nouveau sujet est proposé automatiquement.
       </p>
       {!loading && (
@@ -169,8 +169,8 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
         }`}>
           {settingsReady
             ? autopublishEnabled
-              ? 'Publication du matin : active.'
-              : 'Publication du matin : en pause. Le bouton « Publier les articles du jour » reste disponible.'
+              ? 'Publication automatique : active, au plus une fois tous les 3 jours à 7 h.'
+              : 'Publication automatique : en pause. Le bouton « Publier les articles du jour » reste disponible.'
             : 'La mise en pause n’est pas encore disponible. Appliquez la migration du blog automatique.'}
         </p>
       )}
