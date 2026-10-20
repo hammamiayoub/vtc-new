@@ -8,6 +8,39 @@ export const DRIVER_PICKUP_FARE_TIERS = [
   { upToKm: Infinity, fareTnd: 50, label: '50 km+' },
 ] as const;
 
+/** Van, minibus et bus : visibles jusqu'à 150 km, avec un supplément fixe par tranche de 50 km atteinte. */
+export const LONG_RANGE_VEHICLE_TYPES = ['van', 'minibus', 'bus'] as const;
+export const LONG_RANGE_SEARCH_RADIUS_KM = 150;
+export const LONG_RANGE_APPROACH_TRANCHE_KM = 50;
+export const LONG_RANGE_APPROACH_TRANCHE_TND = 30;
+
+export function isLongRangeVehicleType(vehicleType?: string | null): boolean {
+  return (
+    vehicleType != null
+    && (LONG_RANGE_VEHICLE_TYPES as readonly string[]).includes(vehicleType)
+  );
+}
+
+/**
+ * Supplément ajouté au prix total, sans coefficient véhicule.
+ * 0 TND sous 50 km, 30 TND dès 50 km, 60 TND dès 100 km, 90 TND à 150 km.
+ */
+export function computeLongRangeApproachSurchargeTnd(
+  driverToPickupKm: number | undefined,
+  vehicleType?: string | null,
+): number {
+  if (!isLongRangeVehicleType(vehicleType)) return 0;
+  if (
+    driverToPickupKm == null
+    || !Number.isFinite(driverToPickupKm)
+    || driverToPickupKm < LONG_RANGE_APPROACH_TRANCHE_KM
+  ) {
+    return 0;
+  }
+  const tranches = Math.floor(driverToPickupKm / LONG_RANGE_APPROACH_TRANCHE_KM);
+  return tranches * LONG_RANGE_APPROACH_TRANCHE_TND;
+}
+
 /** Prise en charge par défaut (estimation avant sélection du chauffeur). */
 export const RIDE_DEFAULT_PICKUP_FARE_TND = 10;
 

@@ -798,6 +798,42 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     };
   }, [driver?.id, driver?.driverType]);
 
+  useEffect(() => {
+    if (!driver?.id) return;
+
+    const channel = supabase
+      .channel(`driver-bookings-${driver.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings',
+          filter: `driver_id=eq.${driver.id}`,
+        },
+        () => {
+          void refreshBookings();
+        }
+      )
+      .subscribe();
+
+    const shared = supabase
+      .channel('booking-reassignments')
+      .on('broadcast', { event: 'reassigned' }, (message) => {
+        const payload = message.payload as { previousDriverId?: string | null; newDriverId?: string } | undefined;
+        if (!payload) return;
+        if (payload.previousDriverId === driver.id || payload.newDriverId === driver.id) {
+          void refreshBookings();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(shared);
+    };
+  }, [driver?.id]);
+
   const handleCompleteParcelDelivery = async (requestId: string) => {
     if (
       !window.confirm(

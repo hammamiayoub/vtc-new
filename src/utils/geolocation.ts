@@ -1,6 +1,7 @@
 // Service de calcul de distance et tarification
 import {
   calculateProgressiveDistancePrice,
+  computeLongRangeApproachSurchargeTnd,
   getIndicativePricePerKm,
 } from './ridePricing';
 
@@ -219,7 +220,8 @@ export const calculatePriceWithSurcharges = (
   );
   
   const surcharges = calculateSurcharges(scheduledTime, basePrice);
-  const finalPrice = Math.ceil(basePrice + surcharges.totalSurcharge);
+  const approachSurcharge = computeLongRangeApproachSurchargeTnd(driverToPickupKm, vehicleType);
+  const finalPrice = Math.ceil(basePrice + surcharges.totalSurcharge + approachSurcharge);
   
   return {
     basePrice,
