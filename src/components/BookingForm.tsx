@@ -36,7 +36,8 @@ import {
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { analytics } from '../utils/analytics';
-import { DRIVER_SEARCH_RADIUS_KM } from '../utils/driverSearchDistance';
+import { searchRadiusKmForVehicleType } from '../utils/driverSearchDistance';
+import { computeLongRangeApproachSurchargeTnd } from '../utils/ridePricing';
 import { MAX_DRIVERS_TO_SHOW } from '../utils/booking/bookingSearchConstants';
 import { enrichDriversWithMetadata } from '../utils/booking/enrichDriverSearchResults';
 import { fetchRefusedDriverIds } from '../utils/booking/fetchRefusedDriverIds';
@@ -198,6 +199,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     (driver) => getDriverEntryKey(driver) === selectedDriver,
   );
   const vipMultiplier = selectedDriverData?.vehicleInfo?.isVip ? 2.5 : 1;
+  const pricedVehicleType = selectedDriverData?.vehicleInfo?.type || watchVehicleType;
+  const searchRadiusKm = searchRadiusKmForVehicleType(watchVehicleType);
   const driverToPickupKm =
     selectedDriverData?.distanceFromPickup != null &&
     selectedDriverData.distanceFromPickup !== Infinity &&
@@ -207,8 +210,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
 
   /** Trajet trop court pour les véhicules hors taxi : message + pas de réservation tant que distance aller < seuil. */
   const isShortTripBlockedForNonTaxi =
-    !!watchVehicleType &&
-    watchVehicleType !== 'taxi' &&
+    !!pricedVehicleType &&
+    pricedVehicleType !== 'taxi' &&
     baseDistance !== null &&
     baseDistance < SHORT_TRIP_NON_TAXI_WARNING_KM;
 
@@ -224,7 +227,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       // Calculer les suppléments (nuit et week-end) avec le paramètre isReturnTrip
       const { surcharges, finalPrice } = calculatePriceWithSurcharges(
         baseDistance,
-        watchVehicleType,
+        pricedVehicleType,
         watchScheduledTime,
         watchIsReturnTrip,
         vipMultiplier,
@@ -242,7 +245,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       // Utiliser calculatePriceWithSurcharges même sans date pour gérer le trajet retour
       const { surcharges, finalPrice } = calculatePriceWithSurcharges(
         baseDistance,
-        watchVehicleType,
+        pricedVehicleType,
         new Date(),
         watchIsReturnTrip,
         vipMultiplier,
@@ -252,7 +255,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       setEstimatedPrice(finalPrice);
       setPriceSurcharges(surcharges);
     }
-  }, [watchVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime, vipMultiplier, driverToPickupKm]);
+  }, [watchVehicleType, pricedVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime, vipMultiplier, driverToPickupKm]);
 
   // Départ immédiat : verrouiller la date/heure sur maintenant
   useEffect(() => {
@@ -312,7 +315,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             setBaseDistance(distance);
         
         // Calculer le prix avec le type de véhicule sélectionné
-        const selectedVehicleType = watchVehicleType;
+        const selectedVehicleType = pricedVehicleType;
         console.log('🚗 Type de véhicule sélectionné:', selectedVehicleType);
         
         if (selectedVehicleType) {
@@ -357,7 +360,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     };
 
     calculateRoute();
-  }, [pickupCoords, destinationCoords, watchVehicleType, watchIsReturnTrip, vipMultiplier, driverToPickupKm]);
+  }, [pickupCoords, destinationCoords, watchVehicleType, pricedVehicleType, watchIsReturnTrip, vipMultiplier, driverToPickupKm]);
 
 
   const useCurrentLocation = async () => {
@@ -914,7 +917,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                   <div className="text-xs sm:text-sm font-medium text-gray-900">
                     {(() => {
                       if (!baseDistance && !estimatedDistance) return '';
-                      const selectedVehicleType = watch('vehicleType');
+                      const selectedVehicleType = pricedVehicleType;
                       const vehicleMultiplier = getVehicleMultiplier(selectedVehicleType);
                       const vehicleTypeName = vehicleTypeOptions.find(opt => opt.value === selectedVehicleType)?.label || 'Standard';
                       const rawOneWay =
@@ -926,8 +929,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                         : oneWayBillable;
 
                       const pricing = getProgressivePriceBreakdown(effectiveDistance, driverToPickupKm);
+                      const approachSurcharge = computeLongRangeApproachSurchargeTnd(
+                        driverToPickupKm,
+                        selectedVehicleType,
+                      );
                       const totalWithMultiplier =
-                        Math.round(pricing.subtotal * vehicleMultiplier * vipMultiplier * 100) / 100;
+                        Math.round((pricing.subtotal * vehicleMultiplier * vipMultiplier + approachSurcharge) * 100) / 100;
 
                       return (
                         <div className="mt-2 space-y-2">
@@ -989,6 +996,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                               <div className="flex items-center justify-between text-gray-900 font-semibold">
                                 <span>VIP</span>
                                 <span className="tabular-nums">×{vipMultiplier}</span>
+                              </div>
+                            )}
+                            {approachSurcharge > 0 && (
+                              <div className="flex items-center justify-between text-gray-900 font-semibold">
+                                <span>
+                                  {en
+                                    ? `Approach (${Math.floor((driverToPickupKm ?? 0) / 50)} × 30 TND)`
+                                    : `Approche (${Math.floor((driverToPickupKm ?? 0) / 50)} × 30 TND)`}
+                                </span>
+                                <span className="tabular-nums">+{approachSurcharge.toFixed(0)} TND</span>
                               </div>
                             )}
                             <div className="flex items-center justify-between text-gray-900 font-semibold">
@@ -1076,8 +1093,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                     </h3>
                     <p className="text-sm sm:text-base text-gray-600">
                       {en
-                        ? `Checking availability and distance within ${DRIVER_SEARCH_RADIUS_KM} km…`
-                        : `Vérification des disponibilités, abonnements et distances dans un rayon de ${DRIVER_SEARCH_RADIUS_KM} km…`}
+                        ? `Checking availability and distance within ${searchRadiusKm} km…`
+                        : `Vérification des disponibilités, abonnements et distances dans un rayon de ${searchRadiusKm} km…`}
                     </p>
                   </div>
                 </div>
@@ -1105,8 +1122,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Car className="w-5 h-5" />
                 {en
-                  ? `Available drivers (${availableDrivers.length}) — ${DRIVER_SEARCH_RADIUS_KM} km radius`
-                  : `Chauffeurs disponibles (${availableDrivers.length}) — rayon ${DRIVER_SEARCH_RADIUS_KM} km`}
+                  ? `Available drivers (${availableDrivers.length}) — ${searchRadiusKm} km radius`
+                  : `Chauffeurs disponibles (${availableDrivers.length}) — rayon ${searchRadiusKm} km`}
               </h3>
               
               {availableDrivers.length === 0 ? (
@@ -1116,12 +1133,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                   <p className="text-sm text-gray-500">
                     {driversSearchRefusalsExcluded
                       ? (en
-                        ? `No drivers available within ${DRIVER_SEARCH_RADIUS_KM} km. Drivers who already declined are temporarily excluded.`
-                        : `Aucun chauffeur disponible dans un rayon de ${DRIVER_SEARCH_RADIUS_KM} km. Des chauffeurs précédemment sollicités ont refusé et sont temporairement exclus.`)
+                        ? `No drivers available within ${searchRadiusKm} km. Drivers who already declined are temporarily excluded.`
+                        : `Aucun chauffeur disponible dans un rayon de ${searchRadiusKm} km. Des chauffeurs précédemment sollicités ont refusé et sont temporairement exclus.`)
                       : pickupCoords
                         ? (en
-                          ? `No drivers found within ${DRIVER_SEARCH_RADIUS_KM} km of the pickup. Try another date or change the address.`
-                          : `Aucun chauffeur trouvé dans un rayon de ${DRIVER_SEARCH_RADIUS_KM} km autour du point de départ. Essayez une autre date/heure ou modifiez l'adresse.`)
+                          ? `No drivers found within ${searchRadiusKm} km of the pickup. Try another date or change the address.`
+                          : `Aucun chauffeur trouvé dans un rayon de ${searchRadiusKm} km autour du point de départ. Essayez une autre date/heure ou modifiez l'adresse.`)
                         : (en ? 'Try another date or change the addresses' : 'Essayez de modifier la date/heure ou les adresses')}
                   </p>
                 </div>

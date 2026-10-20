@@ -3,12 +3,12 @@ import {
   buildDriverDistanceMap,
   getDriverDistanceKm,
   refineTopDriverDistancesWithMatrix,
+  searchRadiusKmForVehicleType,
   SEDAN_VAN_EXTRA_RADIUS_KM,
   type DriverDistanceInfo,
 } from '../driverSearchDistance';
 import type { Coordinates } from '../geolocation';
 import {
-  MAX_DRIVER_SEARCH_RADIUS_KM,
   MAX_DRIVERS_MATRIX_REFINE,
 } from './bookingSearchConstants';
 import { isDriverEligibleAtTime, isVehicleAvailableAtTime } from './driverAvailability';
@@ -251,6 +251,15 @@ async function filterDriversBySubscription(drivers: EnrichedDriver[]): Promise<E
   return driversWithValidSubscription;
 }
 
+const SEARCH_VEHICLE_TYPE_GROUPS: Record<string, readonly string[]> = {
+  van: ['van', 'minibus'],
+  minibus: ['van', 'minibus'],
+};
+
+function acceptedVehicleTypes(vehicleType: string): readonly string[] {
+  return SEARCH_VEHICLE_TYPE_GROUPS[vehicleType] ?? [vehicleType];
+}
+
 function buildDriverVehicleEntries(
   drivers: EnrichedDriver[],
   vehicleType: string,
@@ -275,7 +284,10 @@ function buildDriverVehicleEntries(
       let availableVehicles: RawVehicle[] = [];
 
       if (vehicleType) {
-        const matchingVehicles = vehicles.filter((v) => v.type === vehicleType);
+        const acceptedTypes = acceptedVehicleTypes(vehicleType);
+        const matchingVehicles = vehicles.filter(
+          (v) => v.type != null && acceptedTypes.includes(v.type),
+        );
         availableVehicles.push(...matchingVehicles);
 
         if (vehicleType === 'sedan' && pickupCoords) {
@@ -344,14 +356,18 @@ async function sortDriverEntries(
       })
       .filter(
         (entry): entry is NonNullable<typeof entry> =>
-          entry != null && (entry.calculatedDistance ?? Infinity) <= MAX_DRIVER_SEARCH_RADIUS_KM,
+          entry != null
+          && (entry.calculatedDistance ?? Infinity) <= searchRadiusKmForVehicleType(entry.primary_vehicle?.type),
       )
       .sort((a, b) => (a.calculatedDistance ?? Infinity) - (b.calculatedDistance ?? Infinity));
 
-    sortedDrivers = await refineTopDriverDistancesWithMatrix(
+    const refinedDrivers = await refineTopDriverDistancesWithMatrix(
       withDistance,
       pickupCoords,
       MAX_DRIVERS_MATRIX_REFINE,
+    );
+    sortedDrivers = refinedDrivers.filter(
+      (entry) => (entry.calculatedDistance ?? Infinity) <= searchRadiusKmForVehicleType(entry.primary_vehicle?.type),
     );
   } else {
     sortedDrivers = filteredDrivers;

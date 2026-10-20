@@ -169,6 +169,40 @@ function canShowBookingGpsTracking(booking: AdminBooking): boolean {
   );
 }
 
+function reassignVehicleLabel(vehicle: Vehicle): string {
+  const type = formatVehicleType(vehicle.type);
+  const plate = vehicle.licensePlate ? ` · ${vehicle.licensePlate}` : '';
+  return `${vehicle.make} ${vehicle.model} (${type})${plate}`;
+}
+
+function defaultReassignVehicleId(driver: AdminDriver): string {
+  const vehicles = driver.vehicles ?? [];
+  const primary = vehicles.find((vehicle) => vehicle.is_primary) ?? vehicles[0];
+  return primary?.id ?? '';
+}
+
+async function notifyOpenDriverDashboards(previousDriverId: string | undefined, newDriverId: string) {
+  const channel = supabase.channel('booking-reassignments');
+  try {
+    await new Promise<void>((resolve) => {
+      const timeout = window.setTimeout(resolve, 1200);
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          window.clearTimeout(timeout);
+          resolve();
+        }
+      });
+    });
+    await channel.send({
+      type: 'broadcast',
+      event: 'reassigned',
+      payload: { previousDriverId: previousDriverId ?? null, newDriverId },
+    });
+  } finally {
+    supabase.removeChannel(channel);
+  }
+}
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [drivers, setDrivers] = useState<AdminDriver[]>([]);
   const [clients, setClients] = useState<ClientWithBookings[]>([]);
@@ -228,6 +262,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [savingClient, setSavingClient] = useState(false);
   const [clientEditError, setClientEditError] = useState<string | null>(null);
   const [bookingToCancel, setBookingToCancel] = useState<AdminBooking | null>(null);
+  const [bookingToReassign, setBookingToReassign] = useState<AdminBooking | null>(null);
+  const [reassigningBooking, setReassigningBooking] = useState(false);
+  const [reassignError, setReassignError] = useState<string | null>(null);
+  const [reassignSearch, setReassignSearch] = useState('');
+  const [reassignDriverId, setReassignDriverId] = useState('');
+  const [reassignVehicleId, setReassignVehicleId] = useState('');
+  const [reassignEligibleIds, setReassignEligibleIds] = useState<Set<string> | null>(null);
+  const [reassignEligibilityLoading, setReassignEligibilityLoading] = useState(false);
+  const [reassignNotice, setReassignNotice] = useState<string | null>(null);
   const [cancellingBooking, setCancellingBooking] = useState(false);
   const [cancelBookingError, setCancelBookingError] = useState<string | null>(null);
   const [cancelReasonId, setCancelReasonId] = useState<BookingCancellationReasonId | ''>('');
@@ -737,6 +780,199 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       setCancelBookingError(msg);
     } finally {
       setCancellingBooking(false);
+    }
+  };
+
+  const loadReassignEligibility = async (booking: AdminBooking) => {
+    const candidates = drivers.filter(
+      (driver) =>
+        driver.status === 'active' &&
+        driver.id !== booking.driverId &&
+        driver.driverType !== 'transporteur' &&
+        (driver.vehicles?.length ?? 0) > 0
+    );
+
+    setReassignEligibilityLoading(true);
+    setReassignEligibleIds(null);
+    try {
+      if (candidates.length === 0) {
+        setReassignEligibleIds(new Set());
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('get_driver_subscription_statuses', {
+        p_driver_ids: candidates.map((driver) => driver.id),
+      });
+      if (error) throw error;
+
+      const rows = (data || []) as Array<{
+        driver_id: string;
+        has_active_subscription: boolean;
+        remaining_free_bookings: number;
+      }>;
+      const statusById = new Map(rows.map((row) => [row.driver_id, row]));
+      const allowed = new Set<string>();
+      for (const driver of candidates) {
+        const status = statusById.get(driver.id);
+        if (!status || status.has_active_subscription || status.remaining_free_bookings > 0) {
+          allowed.add(driver.id);
+        }
+      }
+      setReassignEligibleIds(allowed);
+    } catch (error) {
+      console.error('Erreur vérification abonnements pour réaffectation:', error);
+      setReassignError('Impossible de vérifier quels chauffeurs peuvent encore accepter une course.');
+      setReassignEligibleIds(new Set());
+    } finally {
+      setReassignEligibilityLoading(false);
+    }
+  };
+
+  const openReassignBookingModal = (booking: AdminBooking) => {
+    setReassignError(null);
+    setReassignSearch('');
+    setReassignDriverId('');
+    setReassignVehicleId('');
+    setReassignEligibleIds(null);
+    setBookingToReassign(booking);
+    void loadReassignEligibility(booking);
+  };
+
+  const closeReassignBookingModal = () => {
+    if (reassigningBooking) return;
+    setBookingToReassign(null);
+    setReassignError(null);
+  };
+
+  const handleReassignBooking = async () => {
+    if (!bookingToReassign || !reassignDriverId || !reassignVehicleId) return;
+
+    const nextDriver = drivers.find((driver) => driver.id === reassignDriverId);
+    const nextVehicle = nextDriver?.vehicles?.find((vehicle) => vehicle.id === reassignVehicleId);
+    if (!nextDriver || !nextVehicle) {
+      setReassignError('Choisissez un chauffeur et son véhicule.');
+      return;
+    }
+
+    setReassigningBooking(true);
+    setReassignError(null);
+
+    try {
+      const { data: updated, error } = await supabase
+        .from('bookings')
+        .update({
+          driver_id: nextDriver.id,
+          vehicle_id: nextVehicle.id,
+        })
+        .eq('id', bookingToReassign.id)
+        .eq('status', 'pending')
+        .select('id');
+
+      if (error) throw error;
+      if (!updated || updated.length === 0) {
+        throw new Error('Cette course n\'est plus en attente. Elle a peut-être déjà été acceptée.');
+      }
+
+      const { error: offerError } = await supabase
+        .from('booking_offers')
+        .update({ status: 'expired', responded_at: new Date().toISOString() })
+        .eq('booking_id', bookingToReassign.id)
+        .eq('status', 'offered');
+      if (offerError) {
+        console.error('Offres de course non expirées:', offerError);
+      }
+
+      let emailSent = false;
+      let pushSent = false;
+      let notifyError: string | null = null;
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-reassignment-notification`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bookingData: {
+                id: bookingToReassign.id,
+                pickup_address: bookingToReassign.pickupAddress,
+                destination_address: bookingToReassign.destinationAddress,
+                scheduled_time: bookingToReassign.scheduledTime,
+                distance_km: bookingToReassign.distanceKm,
+                price_tnd: bookingToReassign.priceTnd,
+                notes: bookingToReassign.notes,
+                status: 'pending',
+              },
+              clientData: {
+                first_name: bookingToReassign.clients?.first_name || '',
+                last_name: bookingToReassign.clients?.last_name || '',
+                phone: bookingToReassign.clients?.phone || '',
+              },
+              driverData: {
+                id: nextDriver.id,
+                first_name: nextDriver.firstName,
+                last_name: nextDriver.lastName,
+                email: nextDriver.email,
+                phone: nextDriver.phone || '',
+              },
+            }),
+          }
+        );
+        const result = await response.json().catch(() => null);
+        if (!response.ok || !result?.success) {
+          notifyError = result?.error || 'La notification n\'a pas pu être envoyée.';
+        } else {
+          emailSent = Boolean(result.emailSent);
+          pushSent = Boolean(result.pushSent);
+        }
+      } catch (notifyException) {
+        console.error('Erreur notification réaffectation:', notifyException);
+        notifyError = 'La notification n\'a pas pu être envoyée.';
+      }
+
+      try {
+        await notifyOpenDriverDashboards(bookingToReassign.driverId, nextDriver.id);
+      } catch (broadcastError) {
+        console.error('Rafraîchissement des tableaux de bord:', broadcastError);
+      }
+
+      setBookings((prev) =>
+        prev.map((booking) =>
+          booking.id === bookingToReassign.id
+            ? {
+                ...booking,
+                driverId: nextDriver.id,
+                drivers: {
+                  first_name: nextDriver.firstName,
+                  last_name: nextDriver.lastName,
+                  email: nextDriver.email,
+                  phone: nextDriver.phone,
+                },
+              }
+            : booking
+        )
+      );
+
+      const driverName = `${nextDriver.firstName} ${nextDriver.lastName}`;
+      if (notifyError || !emailSent) {
+        setReassignNotice(`Course réaffectée à ${driverName}. L'e-mail n'a pas pu être envoyé.`);
+      } else if (!pushSent) {
+        setReassignNotice(
+          `Course réaffectée à ${driverName}. E-mail envoyé. Notification téléphone non envoyée : l'application n'est pas installée sur ce téléphone.`
+        );
+      } else {
+        setReassignNotice(`Course réaffectée à ${driverName}. E-mail et notification envoyés.`);
+      }
+
+      setBookingToReassign(null);
+    } catch (error) {
+      console.error('Erreur lors de la réaffectation:', error);
+      const message = error instanceof Error ? error.message : 'Erreur lors de la réaffectation.';
+      setReassignError(message);
+    } finally {
+      setReassigningBooking(false);
     }
   };
 
@@ -1445,6 +1681,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     });
   }, [bookings, bookingSearch, bookingStatusFilter]);
 
+  const reassignCandidates = useMemo(() => {
+    if (!bookingToReassign || !reassignEligibleIds) return [];
+    const query = reassignSearch.trim().toLowerCase();
+    return drivers
+      .filter(
+        (driver) =>
+          reassignEligibleIds.has(driver.id) &&
+          driver.id !== bookingToReassign.driverId &&
+          (driver.vehicles?.length ?? 0) > 0
+      )
+      .filter((driver) => {
+        if (!query) return true;
+        const vehicleText = (driver.vehicles ?? [])
+          .map((vehicle) => `${vehicle.make} ${vehicle.model} ${vehicle.licensePlate ?? ''}`)
+          .join(' ');
+        return `${driver.firstName} ${driver.lastName} ${driver.phone ?? ''} ${driver.city ?? ''} ${vehicleText}`
+          .toLowerCase()
+          .includes(query);
+      })
+      .sort((a, b) => a.lastName.localeCompare(b.lastName, 'fr'));
+  }, [drivers, bookingToReassign, reassignSearch, reassignEligibleIds]);
+
+  const selectedReassignDriver = drivers.find((driver) => driver.id === reassignDriverId) ?? null;
+
   const vehicleTypeOptions = useMemo(() => {
     const known = new Set<string>(ADMIN_VEHICLE_TYPES);
     const extra = vehicles
@@ -1964,6 +2224,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         ) : activeTab === 'bookings' ? (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 space-y-3">
+              {reassignNotice && (
+                <div className="flex items-start justify-between gap-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
+                  <span>{reassignNotice}</span>
+                  <button
+                    type="button"
+                    onClick={() => setReassignNotice(null)}
+                    className="text-green-800 hover:text-green-950"
+                    aria-label="Fermer"
+                  >
+                    <XCircle size={16} />
+                  </button>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Réservations</h2>
@@ -2101,6 +2374,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <div className="text-xs text-gray-500">
                           Statut: {booking.status}
                         </div>
+                        {booking.status === 'pending' && (
+                          <Button
+                            onClick={() => openReassignBookingModal(booking)}
+                            size="sm"
+                            className="bg-black hover:bg-gray-800 text-white flex items-center gap-2 mt-1"
+                          >
+                            <UserCheck size={16} />
+                            Changer de chauffeur
+                          </Button>
+                        )}
                         {canShowBookingGpsTracking(booking) && (
                           <Button
                             onClick={() => window.open(buildTrackingUrl(booking.trackingToken!), '_blank', 'noopener,noreferrer')}
@@ -2134,6 +2417,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           >
                             <MapPin size={16} />
                             Voir le suivi GPS
+                          </Button>
+                        )}
+                        {booking.status === 'pending' && (
+                          <Button
+                            onClick={() => openReassignBookingModal(booking)}
+                            size="sm"
+                            className="w-full bg-black hover:bg-gray-800 text-white flex items-center justify-center gap-2"
+                          >
+                            <UserCheck size={16} />
+                            Changer de chauffeur
                           </Button>
                         )}
                         {['pending', 'accepted', 'in_progress'].includes(booking.status) && (
@@ -4361,6 +4654,130 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       )}
 
       {/* Cancel Booking Confirmation Modal */}
+      {bookingToReassign && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <UserCheck size={20} className="text-gray-800" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Changer de chauffeur</h3>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">
+                Réservation <span className="font-semibold text-gray-900">#{bookingToReassign.id.slice(-8)}</span>
+                {bookingToReassign.drivers && (
+                  <> — actuellement <span className="font-semibold text-gray-900">{bookingToReassign.drivers.first_name} {bookingToReassign.drivers.last_name}</span></>
+                )}
+              </p>
+              <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
+                <p className="text-gray-700"><span className="text-gray-500">Trajet :</span> {bookingToReassign.pickupAddress} → {bookingToReassign.destinationAddress}</p>
+                <p className="text-gray-700"><span className="text-gray-500">Date :</span> {new Date(bookingToReassign.scheduledTime).toLocaleString('fr-FR')}</p>
+                <p className="text-gray-700"><span className="text-gray-500">Prix :</span> {bookingToReassign.priceTnd?.toFixed(0)} TND</p>
+              </div>
+              <p className="text-xs text-gray-500">
+                La course reste en attente. Le nouveau chauffeur reçoit un e-mail et une notification, comme pour une nouvelle course. Elle disparaît du tableau de bord du chauffeur actuel.
+              </p>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="search"
+                  value={reassignSearch}
+                  onChange={(e) => setReassignSearch(e.target.value)}
+                  placeholder="Nom, téléphone, ville, véhicule..."
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                />
+              </div>
+
+              {reassignEligibilityLoading ? (
+                <div className="text-center py-6">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-500">Recherche des chauffeurs disponibles...</p>
+                </div>
+              ) : reassignCandidates.length === 0 ? (
+                <p className="text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
+                  Aucun autre chauffeur actif, avec un véhicule, ne peut encore accepter une course.
+                </p>
+              ) : (
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {reassignCandidates.map((driver) => {
+                    const selected = reassignDriverId === driver.id;
+                    const vehicle = driver.vehicles?.find((item) => item.is_primary) ?? driver.vehicles?.[0];
+                    return (
+                      <button
+                        key={driver.id}
+                        type="button"
+                        onClick={() => {
+                          setReassignDriverId(driver.id);
+                          setReassignVehicleId(defaultReassignVehicleId(driver));
+                          setReassignError(null);
+                        }}
+                        className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${
+                          selected
+                            ? 'border-gray-900 bg-gray-50 text-gray-900'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <User size={18} className={selected ? 'text-gray-900 mt-0.5' : 'text-gray-500 mt-0.5'} />
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-sm font-medium">{driver.firstName} {driver.lastName}</span>
+                          <span className="block text-xs text-gray-500">
+                            {[driver.phone, driver.city, vehicle ? reassignVehicleLabel(vehicle) : null].filter(Boolean).join(' · ')}
+                          </span>
+                        </span>
+                        {selected && <CheckCircle size={18} className="text-gray-900 flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {selectedReassignDriver && (selectedReassignDriver.vehicles?.length ?? 0) > 1 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Véhicule</label>
+                  <select
+                    value={reassignVehicleId}
+                    onChange={(e) => setReassignVehicleId(e.target.value)}
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                  >
+                    {(selectedReassignDriver.vehicles ?? []).map((vehicle) => (
+                      <option key={vehicle.id} value={vehicle.id}>
+                        {reassignVehicleLabel(vehicle)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {reassignError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
+                  <span>{reassignError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex items-center justify-end gap-3">
+              <Button variant="outline" onClick={closeReassignBookingModal} disabled={reassigningBooking}>
+                Retour
+              </Button>
+              <Button
+                onClick={handleReassignBooking}
+                loading={reassigningBooking}
+                disabled={!reassignDriverId || !reassignVehicleId || reassignEligibilityLoading}
+                className="bg-black hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {reassigningBooking ? 'Affectation...' : 'Affecter ce chauffeur'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {bookingToCancel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">

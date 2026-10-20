@@ -1,4 +1,5 @@
 import { calculateDistance, getCityCoordinates, type Coordinates } from './geolocation';
+import { isLongRangeVehicleType, LONG_RANGE_SEARCH_RADIUS_KM } from './ridePricing';
 import { googleMapsLoader } from './googleMapsLoader';
 import { supabase } from '../lib/supabase';
 
@@ -17,6 +18,12 @@ export interface DriverDistanceInfo {
 }
 
 const geocodeCache = new Map<string, Coordinates | null>();
+
+export function searchRadiusKmForVehicleType(vehicleType?: string | null): number {
+  return isLongRangeVehicleType(vehicleType)
+    ? LONG_RANGE_SEARCH_RADIUS_KM
+    : DRIVER_SEARCH_RADIUS_KM;
+}
 
 export function isDriverWithinSearchRadius(distanceKm: number | null | undefined): boolean {
   return (
