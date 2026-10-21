@@ -243,7 +243,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </RevealSection>
 
-        <RevealSection id="groupes-tunisie" className="py-16 bg-white">
+        <RevealSection id="groupes-tunisie" className="py-16 md:py-20 bg-white border-y border-[#d5e4e4]">
           <div className="page-container">
             <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
               <div>
@@ -252,49 +252,47 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </p>
                 <h2 className="page-heading mb-4">
                   {en
-                    ? 'Transport for groups coming to Tunisia'
-                    : 'Transport des groupes qui viennent en Tunisie'}
+                    ? 'Transport for groups'
+                    : 'Transport de groupes'}
                 </h2>
-                <p className="page-subheading">
+                <p className="page-subheading mb-6">
                   {en
                     ? 'Families, agencies and groups of friends landing for a stay: TuniDrive organizes their movements on the ground — airport welcome, hotel transfers, trips between cities and the return.'
                     : 'Familles, agences et groupes d\'amis qui arrivent pour un séjour : TuniDrive organise leurs déplacements sur place — accueil à l\'aéroport, transferts hôtel, trajets entre villes et retour.'}
                 </p>
-              </div>
-              <div className="space-y-4">
-                <ul className="space-y-3 text-sm text-gray-700">
-                  {(en
-                    ? [
-                        'Pickup at Tunis-Carthage, Enfidha, Monastir or Djerba',
-                        'Van, minibus or bus sized to the group',
-                        'The stay programme is arranged before arrival',
-                      ]
-                    : [
-                        'Prise en charge à Tunis-Carthage, Enfidha, Monastir ou Djerba',
-                        'Van, minibus ou bus selon la taille du groupe',
-                        'Le programme du séjour est préparé avant l\'arrivée',
-                      ]
-                  ).map((item) => (
-                    <li key={item} className="flex gap-3">
-                      <Users size={18} className="text-gray-900 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
                 <Link
                   to={href('/transport-groupes-tunisie')}
-                  className="inline-flex items-center gap-2 mt-2 text-sm font-semibold text-gray-900 hover:underline"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 hover:underline"
                 >
                   {en ? 'See group transport' : 'Voir le transport de groupes'}
                   <ArrowRight size={16} aria-hidden="true" />
                 </Link>
               </div>
+              <ul className="uber-card p-8 space-y-4">
+                {(en
+                  ? [
+                      'Pickup at Tunis-Carthage, Enfidha, Monastir or Djerba',
+                      'Van, minibus or bus sized to the group',
+                      'The stay programme is arranged before arrival',
+                    ]
+                  : [
+                      'Prise en charge à Tunis-Carthage, Enfidha, Monastir ou Djerba',
+                      'Van, minibus ou bus selon la taille du groupe',
+                      'Le programme du séjour est préparé avant l\'arrivée',
+                    ]
+                ).map((item) => (
+                  <li key={item} className="flex gap-3 text-sm text-gray-700">
+                    <Users size={18} className="text-gray-900 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </RevealSection>
 
         {/* Transport VTC */}
-        <RevealSection id="transport-vtc" className="py-16 bg-white">
+        <RevealSection id="transport-vtc" className="py-16 md:py-20 bg-surface-muted">
           <div className="page-container">
             <div className="max-w-5xl mx-auto space-y-10">
               <div className="text-center">
@@ -373,7 +371,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </RevealSection>
 
         {/* Transport colis */}
-        <RevealSection id="transport-colis" className="py-16 bg-surface-muted">
+        <RevealSection id="transport-colis" className="py-16 bg-white">
           <div className="page-container">
             <div className="text-center mb-12 max-w-3xl mx-auto">
               <span className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full text-xs font-semibold text-gray-700 border border-surface-border mb-4">
@@ -438,7 +436,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </RevealSection>
 
         {/* Pourquoi TuniDrive */}
-        <RevealSection className="py-16 bg-white">
+        <RevealSection className="py-16 bg-surface-muted">
           <div className="page-container">
             <div className="text-center mb-12 max-w-2xl mx-auto">
               <h2 className="page-heading mb-4">{en ? 'Why choose TuniDrive?' : 'Pourquoi choisir TuniDrive ?'}</h2>
