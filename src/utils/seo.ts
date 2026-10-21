@@ -59,6 +59,18 @@ export const seoData: Record<string, SEOData> = {
     ogImage: DEFAULT_OG_IMAGE,
     canonical: '/transport-colis-europe-tunisie',
   },
+  'group-travel': {
+    title: 'Transport de groupes en Tunisie | Séjours depuis l\'étranger — TuniDrive',
+    description:
+      'TuniDrive organise les déplacements des groupes venant de l\'étranger pour un séjour en Tunisie : accueil aéroport, transferts hôtel, trajets entre villes, van, minibus et bus.',
+    keywords:
+      'transport groupe tunisie, séjour groupe tunisie, transfert aéroport groupe, minibus tunisie touristes, organisation déplacements tunisie, bus groupe hammamet djerba',
+    ogTitle: 'Groupes en séjour en Tunisie | TuniDrive',
+    ogDescription:
+      'Accueil à l\'aéroport et organisation des trajets pour les groupes qui viennent passer un séjour en Tunisie.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/transport-groupes-tunisie',
+  },
   blog: {
     title: 'Blog TuniDrive | VTC, transport colis & mobilité en Tunisie',
     description:
@@ -205,6 +217,18 @@ const seoDataEn: Partial<Record<string, SEOData>> = {
       'Request a free quote for international parcel and goods transport between Europe and Tunisia.',
     ogImage: DEFAULT_OG_IMAGE,
     canonical: '/en/parcel-europe-tunisia',
+  },
+  'group-travel': {
+    title: 'Group transport in Tunisia | Stays from abroad — TuniDrive',
+    description:
+      'TuniDrive organizes trips for groups coming from abroad to stay in Tunisia: airport welcome, hotel transfers, travel between cities, van, minibus and bus.',
+    keywords:
+      'group transport tunisia, tourist transfer tunisia, airport group pickup tunis, minibus tunisia stay, organize travel tunisia',
+    ogTitle: 'Groups staying in Tunisia | TuniDrive',
+    ogDescription:
+      'Airport welcome and organized trips for groups coming from abroad for a stay in Tunisia.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/group-transport-tunisia',
   },
   blog: {
     title: 'TuniDrive blog | Private driver & mobility in Tunisia',

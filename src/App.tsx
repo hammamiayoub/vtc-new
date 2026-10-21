@@ -55,6 +55,9 @@ const ResetPasswordPage = lazy(() =>
 const ParcelTransportPage = lazy(() =>
   import('./components/ParcelTransportPage').then((m) => ({ default: m.ParcelTransportPage }))
 );
+const GroupTravelPage = lazy(() =>
+  import('./components/GroupTravelPage').then((m) => ({ default: m.GroupTravelPage }))
+);
 const BlogPage = lazy(() =>
   import('./components/BlogPage').then((m) => ({ default: m.BlogPage }))
 );
@@ -90,6 +93,7 @@ type View =
   | 'terms-of-service'
   | 'reset-password'
   | 'parcel-transport'
+  | 'group-travel'
   | 'blog'
   | 'vtc-tunisie'
   | 'about';
@@ -118,6 +122,8 @@ function pathToView(path: string): { view: View; seoKey: string } {
       return { view: 'admin-dashboard', seoKey: 'home' };
     case '/transport-colis-europe-tunisie':
       return { view: 'parcel-transport', seoKey: 'parcel-transport' };
+    case '/transport-groupes-tunisie':
+      return { view: 'group-travel', seoKey: 'group-travel' };
     case '/vtc-tunisie':
       return { view: 'vtc-tunisie', seoKey: 'vtc-tunisie' };
     case '/blog':
@@ -329,6 +335,8 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
         );
       case 'parcel-transport':
         return <ParcelTransportPage />;
+      case 'group-travel':
+        return <GroupTravelPage />;
       case 'vtc-tunisie':
         return <VtcTunisiePage onClientLogin={() => navigate(href('/client-login'))} />;
       case 'blog':
@@ -356,6 +364,7 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
     currentView === 'home' ||
     currentView === 'admin' ||
     currentView === 'parcel-transport' ||
+    currentView === 'group-travel' ||
     currentView === 'vtc-tunisie' ||
     currentView === 'blog' ||
     currentView === 'about';

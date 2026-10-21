@@ -94,13 +94,13 @@ const serviceOffers = [
   },
   {
     icon: Users,
-    title: 'Transport collectif',
-    titleEn: 'Group transport',
-    description: 'Van, minibus ou bus pour vos groupes, familles et déplacements pro.',
-    descriptionEn: 'Van, minibus or bus for groups, families and business trips.',
-    href: '/vtc-tunisie#faq-vtc',
-    cta: 'Détails',
-    ctaEn: 'Details',
+    title: 'Groupes en séjour',
+    titleEn: 'Groups on a stay',
+    description: 'Visiteurs venant de l\'étranger : accueil à l\'aéroport et organisation des trajets du séjour.',
+    descriptionEn: 'Visitors arriving from abroad: airport pickup and the trips of the stay, organized for the group.',
+    href: '/transport-groupes-tunisie',
+    cta: 'Découvrir',
+    ctaEn: 'Discover',
   },
   {
     icon: Package,
@@ -243,6 +243,56 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </RevealSection>
 
+        <RevealSection id="groupes-tunisie" className="py-16 bg-white">
+          <div className="page-container">
+            <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-3">
+                  {en ? 'From abroad' : 'Depuis l\'étranger'}
+                </p>
+                <h2 className="page-heading mb-4">
+                  {en
+                    ? 'Transport for groups coming to Tunisia'
+                    : 'Transport des groupes qui viennent en Tunisie'}
+                </h2>
+                <p className="page-subheading">
+                  {en
+                    ? 'Families, agencies and groups of friends landing for a stay: TuniDrive organizes their movements on the ground — airport welcome, hotel transfers, trips between cities and the return.'
+                    : 'Familles, agences et groupes d\'amis qui arrivent pour un séjour : TuniDrive organise leurs déplacements sur place — accueil à l\'aéroport, transferts hôtel, trajets entre villes et retour.'}
+                </p>
+              </div>
+              <div className="space-y-4">
+                <ul className="space-y-3 text-sm text-gray-700">
+                  {(en
+                    ? [
+                        'Pickup at Tunis-Carthage, Enfidha, Monastir or Djerba',
+                        'Van, minibus or bus sized to the group',
+                        'The stay programme is arranged before arrival',
+                      ]
+                    : [
+                        'Prise en charge à Tunis-Carthage, Enfidha, Monastir ou Djerba',
+                        'Van, minibus ou bus selon la taille du groupe',
+                        'Le programme du séjour est préparé avant l\'arrivée',
+                      ]
+                  ).map((item) => (
+                    <li key={item} className="flex gap-3">
+                      <Users size={18} className="text-gray-900 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to={href('/transport-groupes-tunisie')}
+                  className="inline-flex items-center gap-2 mt-2 text-sm font-semibold text-gray-900 hover:underline"
+                >
+                  {en ? 'See group transport' : 'Voir le transport de groupes'}
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </RevealSection>
+
         {/* Transport VTC */}
         <RevealSection id="transport-vtc" className="py-16 bg-white">
           <div className="page-container">
@@ -262,7 +312,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 {[
                   { icon: Plane, label: en ? 'Airport transfer in Tunisia' : 'Transfert aéroport Tunisie', href: '/vtc-tunisie#transfert-aeroport-tunisie' },
                   { icon: Car, label: en ? 'Book a taxi / driver' : 'Réserver taxi / chauffeur', href: '/client-login' },
-                  { icon: Users, label: en ? 'Group transport' : 'Transport collectif', href: '/vtc-tunisie#faq-vtc' },
+                  { icon: Users, label: en ? 'Groups from abroad' : 'Groupes venant de l\'étranger', href: '/transport-groupes-tunisie' },
                 ].map(({ icon: Icon, label, href: itemHref }) => (
                   <Link
                     key={label}

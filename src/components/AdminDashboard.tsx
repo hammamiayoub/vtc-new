@@ -237,7 +237,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     licensePlate: string;
     seats: string;
     type: string;
-  }>({ make: '', model: '', year: '', color: '', licensePlate: '', seats: '', type: '' });
+    isVip: boolean;
+  }>({ make: '', model: '', year: '', color: '', licensePlate: '', seats: '', type: '', isVip: false });
   const [savingVehicle, setSavingVehicle] = useState(false);
   const [vehicleEditError, setVehicleEditError] = useState<string | null>(null);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
@@ -456,7 +457,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       color: vehicle.color ?? '',
       licensePlate: vehicle.licensePlate ?? '',
       seats: vehicle.seats ? String(vehicle.seats) : '',
-      type: vehicle.type ?? ''
+      type: vehicle.type ?? '',
+      isVip: Boolean(vehicle.isVip)
     });
     setEditingVehicle(vehicle);
   };
@@ -481,8 +483,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           ? vehicleEditForm.licensePlate.trim().toUpperCase()
           : undefined,
         seats: vehicleEditForm.seats ? Number(vehicleEditForm.seats) : undefined,
-        type: (vehicleEditForm.type || undefined) as Vehicle['type']
+        type: (vehicleEditForm.type || undefined) as Vehicle['type'],
+        isVip: vehicleEditForm.isVip
       });
+
+      const vipPatch = { isVip: updated.isVip ?? false };
 
       // Mettre à jour la liste et la modale de détail localement
       setVehicles(prev =>
@@ -497,6 +502,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 licensePlate: updated.licensePlate,
                 seats: updated.seats,
                 type: updated.type,
+                ...vipPatch,
                 updatedAt: updated.updatedAt
               }
             : v
@@ -513,9 +519,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               licensePlate: updated.licensePlate,
               seats: updated.seats,
               type: updated.type,
+              ...vipPatch,
               updatedAt: updated.updatedAt
             }
           : prev
+      );
+      setDrivers(prev =>
+        prev.map(driver => {
+          if (!driver.vehicles?.some(v => v.id === editingVehicle.id)) return driver;
+          const vehicles = driver.vehicles.map(v =>
+            v.id === editingVehicle.id ? { ...v, ...vipPatch } : v
+          );
+          const edited = vehicles.find(v => v.id === editingVehicle.id);
+          const vehicleInfo =
+            edited?.is_primary && driver.vehicleInfo
+              ? { ...driver.vehicleInfo, ...vipPatch }
+              : driver.vehicleInfo;
+          return { ...driver, vehicles, vehicleInfo };
+        })
       );
       setEditingVehicle(null);
     } catch (e) {
@@ -2864,6 +2885,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                                 Principal
                               </span>
                             )}
+                            {vehicle.isVip && (
+                              <span className="inline-block mt-0.5 ml-1 text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded-full">
+                                VIP
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -3005,6 +3031,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           {vehicle.is_primary && (
                             <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
                               Principal
+                            </span>
+                          )}
+                          {vehicle.isVip && (
+                            <span className="inline-block mt-1 ml-1 text-xs bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full">
+                              VIP
                             </span>
                           )}
                         </div>
@@ -5188,6 +5219,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     placeholder="Ex: 123 TUN 4567"
                   />
                 </div>
+                <div className="sm:col-span-2">
+                  <label className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={vehicleEditForm.isVip}
+                      onChange={(e) => setVehicleEditForm(f => ({ ...f, isVip: e.target.checked }))}
+                      className="mt-1 h-4 w-4 rounded border-gray-300"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-gray-900">Véhicule VIP</span>
+                      <span className="block text-xs text-gray-500">
+                        Cochez pour appliquer le tarif VIP (prix × 2,5). Décochez pour retirer ce critère.
+                      </span>
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -5280,6 +5327,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <p className="font-semibold text-gray-900 capitalize">
                       {formatVehicleType(selectedVehicle.type)}
                     </p>
+                  </div>
+                  <div className={`rounded-lg p-4 ${selectedVehicle.isVip ? 'bg-purple-50' : 'bg-gray-50'}`}>
+                    <p className="text-sm text-gray-600 mb-1">Tarif</p>
+                    {selectedVehicle.isVip ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                        VIP · prix × 2,5
+                      </span>
+                    ) : (
+                      <p className="font-semibold text-gray-900">Standard</p>
+                    )}
                   </div>
                   {selectedVehicle.is_primary && (
                     <div className="bg-blue-50 rounded-lg p-4">

@@ -10,6 +10,7 @@ const ROUTE_PAIRS: { fr: string; en: string }[] = [
   { fr: '/a-propos', en: '/en/about' },
   { fr: '/blog', en: '/en/blog' },
   { fr: '/transport-colis-europe-tunisie', en: '/en/parcel-europe-tunisia' },
+  { fr: '/transport-groupes-tunisie', en: '/en/group-transport-tunisia' },
   { fr: '/vtc-tunisie', en: '/en/vtc-tunisia' },
   { fr: '/signup', en: '/en/signup' },
   { fr: '/client-signup', en: '/en/client-signup' },

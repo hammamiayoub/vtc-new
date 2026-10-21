@@ -8,6 +8,7 @@ import {
   X,
   Package,
   BookOpen,
+  Users,
 } from 'lucide-react';
 import { prefetchRoute } from '../utils/prefetchRoute';
 import { focusHomeBookingForm } from '../utils/focusHomeBooking';
@@ -23,6 +24,7 @@ interface HeaderProps {
     | 'client-signup'
     | 'client-login'
     | 'parcel-transport'
+    | 'group-travel'
     | 'vtc-tunisie'
     | 'blog'
     | 'about'
@@ -92,6 +94,15 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
               className={navLinkClass(currentView === 'about')}
             >
               {en ? 'About' : 'À propos'}
+            </button>
+
+            <button
+              onClick={() => go('/transport-groupes-tunisie')}
+              onMouseEnter={() => prefetchRoute('/transport-groupes-tunisie')}
+              onFocus={() => prefetchRoute('/transport-groupes-tunisie')}
+              className={navLinkClass(currentView === 'group-travel')}
+            >
+              {en ? 'Groups' : 'Groupes'}
             </button>
 
             <button
@@ -211,6 +222,14 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
               >
                 <BookOpen size={20} />
                 <span>Blog</span>
+              </button>
+
+              <button
+                onClick={() => go('/transport-groupes-tunisie')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <Users size={20} />
+                <span>{en ? 'Groups in Tunisia' : 'Groupes en Tunisie'}</span>
               </button>
 
               <button

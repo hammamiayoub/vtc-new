@@ -36,7 +36,7 @@ import {
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { analytics } from '../utils/analytics';
-import { searchRadiusKmForVehicleType } from '../utils/driverSearchDistance';
+import { findNearbyFrequentPlace, loadFrequentPlaces } from '../utils/frequentPlaces';
 import { computeLongRangeApproachSurchargeTnd } from '../utils/ridePricing';
 import { MAX_DRIVERS_TO_SHOW } from '../utils/booking/bookingSearchConstants';
 import { enrichDriversWithMetadata } from '../utils/booking/enrichDriverSearchResults';
@@ -367,12 +367,24 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     setGettingLocation(true);
     try {
       const position = await getCurrentPosition();
-      
-      // Géocodage inverse pour obtenir l'adresse
+      const nearby = findNearbyFrequentPlace(
+        await loadFrequentPlaces(),
+        position.latitude,
+        position.longitude,
+        ['tn']
+      );
+      if (nearby) {
+        setValue('pickupAddress', nearby.label);
+        setPickupAddressValue(nearby.label);
+        setPickupCoords({ latitude: nearby.latitude, longitude: nearby.longitude });
+        return;
+      }
+
+      // Un seul géocodage, au moment où la position est confirmée.
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&countrycodes=tn`
       );
-      
+
       if (response.ok) {
         const data = await response.json();
         setValue('pickupAddress', data.display_name);
