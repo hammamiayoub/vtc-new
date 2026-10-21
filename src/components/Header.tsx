@@ -120,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
               onFocus={() => prefetchRoute('/transport-colis-europe-tunisie')}
               className={navLinkClass(currentView === 'parcel-transport')}
             >
-              {en ? 'Parcels' : 'Transport colis'}
+              {en ? 'Parcels' : 'Colis'}
             </button>
 
             <button

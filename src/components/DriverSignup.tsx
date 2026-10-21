@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Car, Package } from 'lucide-react';
@@ -23,11 +24,14 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   const { locale, href } = useLocale();
   const en = locale === 'en';
   const te = (message?: string) => translateSignupMessage(message, locale);
+  const [searchParams] = useSearchParams();
+  const initialActivityType: 'vtc' | 'transporteur' =
+    searchParams.get('activity') === 'transporteur' ? 'transporteur' : 'vtc';
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [registeredActivityType, setRegisteredActivityType] = useState<'vtc' | 'transporteur'>('vtc');
+  const [registeredActivityType, setRegisteredActivityType] = useState<'vtc' | 'transporteur'>(initialActivityType);
   const [error, setError] = useState<string | null>(null);
   const {
     register,
@@ -39,7 +43,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
     resolver: zodResolver(driverSignupSchema),
     mode: 'onChange',
     defaultValues: {
-      activityType: 'vtc',
+      activityType: initialActivityType,
       country: 'TN',
       city: '',
     },
