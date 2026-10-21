@@ -38,6 +38,7 @@ import { pushNotificationService } from '../utils/pushNotifications';
 import { analytics } from '../utils/analytics';
 import { findNearbyFrequentPlace, loadFrequentPlaces } from '../utils/frequentPlaces';
 import { computeLongRangeApproachSurchargeTnd } from '../utils/ridePricing';
+import { searchRadiusKmForVehicleType } from '../utils/driverSearchDistance';
 import { MAX_DRIVERS_TO_SHOW } from '../utils/booking/bookingSearchConstants';
 import { enrichDriversWithMetadata } from '../utils/booking/enrichDriverSearchResults';
 import { fetchRefusedDriverIds } from '../utils/booking/fetchRefusedDriverIds';
