@@ -5,6 +5,7 @@ const ROUTE_IMPORTS: Record<string, () => Promise<unknown>> = {
   '/a-propos': () => import('../components/AboutPage'),
   '/vtc-tunisie': () => import('../components/VtcTunisiePage'),
   '/transport-colis-europe-tunisie': () => import('../components/ParcelTransportPage'),
+  '/transport-groupes-tunisie': () => import('../components/GroupTravelPage'),
   '/signup': () => import('../components/DriverSignup'),
   '/client-signup': () => import('../components/ClientSignup'),
   '/login': () => import('../components/LoginSelection'),

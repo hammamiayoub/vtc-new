@@ -44,6 +44,11 @@ export const Footer: React.FC<FooterProps> = () => {
                 </Link>
               </li>
               <li>
+                <Link to={href('/transport-groupes-tunisie')} className={footerLinkClass}>
+                  {en ? 'Groups staying in Tunisia' : 'Groupes en séjour en Tunisie'}
+                </Link>
+              </li>
+              <li>
                 <Link to={href('/transport-colis-europe-tunisie')} className={footerLinkClass}>
                   {en ? 'Parcels Europe ↔ Tunisia' : 'Transport colis Europe ↔ Tunisie'}
                 </Link>

@@ -3,6 +3,14 @@ import { MapPin, Loader2 } from 'lucide-react';
 import { googleMapsLoader } from '../../utils/googleMapsLoader';
 import { isTranslatablePublicPath, useLocale } from '../../i18n/locale';
 import {
+  GOOGLE_DEBOUNCE_MS,
+  GOOGLE_QUERY_MIN_LENGTH,
+  createPlacesSessionToken,
+  fetchPlaceDetails,
+  fetchPlacePredictions,
+} from '../../utils/placeSearch';
+import { PlaceSuggestionList } from './PlaceSuggestionList';
+import {
   getSignupCountryLabel,
   getSignupGoogleCountryCode,
   type SignupCountryCode,
@@ -70,11 +78,16 @@ export const CityInput: React.FC<CityInputProps> = ({
   const mapsPendingEn = locale === 'en' && isTranslatablePublicPath(logicalPath);
   const [loading, setLoading] = useState(false);
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
+  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const placeChangedListenerRef = useRef<google.maps.MapsEventListener | null>(null);
   const onChangeRef = useRef(onChange);
   const countryRef = useRef(country);
+  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  const requestSeq = useRef(0);
+  const selectedValueRef = useRef<string | null>(null);
 
   const googleCountryCode = getSignupGoogleCountryCode(country);
 
@@ -115,78 +128,100 @@ export const CityInput: React.FC<CityInputProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!isGoogleMapsLoaded || !inputRef.current) return;
-
-    try {
-      const ac = new google.maps.places.Autocomplete(inputRef.current, {
-        fields: ['formatted_address', 'geometry', 'place_id', 'name', 'address_components'],
-        types: ['(cities)'],
-        componentRestrictions: { country: googleCountryCode },
-      });
-
-      if (placeChangedListenerRef.current) {
-        placeChangedListenerRef.current.remove();
-        placeChangedListenerRef.current = null;
-      }
-
-      placeChangedListenerRef.current = ac.addListener('place_changed', () => {
-        try {
-          const place = ac.getPlace();
-          let cityName = '';
-
-          if (place?.address_components) {
-            const components = place.address_components;
-            const locality =
-              components.find((c) => c.types.includes('locality'))?.long_name || '';
-            const administrativeArea =
-              components.find((c) => c.types.includes('administrative_area_level_1'))
-                ?.long_name || '';
-            const countryComponent = components.find((c) => c.types.includes('country'));
-
-            const city = locality || administrativeArea || place.name || '';
-            const addressParts: string[] = [];
-            if (city) addressParts.push(city);
-            addressParts.push(
-              englishCountryName(countryComponent, countryRef.current)
-            );
-            cityName = addressParts.join(', ');
-          }
-
-          if (!cityName) {
-            cityName = place?.formatted_address ?? place?.name ?? '';
-          }
-
-          onChangeRef.current(cityName);
-          setTimeout(() => inputRef.current?.blur(), 100);
-        } catch (err) {
-          console.error('Erreur place_changed:', err);
-        }
-      });
-
-      autocompleteRef.current = ac;
-    } catch (err) {
-      console.error('Erreur init Autocomplete ville:', err);
+    const query = value.trim();
+    if (selectedValueRef.current === value) {
+      setSuggestions([]);
+      setOpen(false);
+      setSearching(false);
+      return;
+    }
+    if (query.length < GOOGLE_QUERY_MIN_LENGTH || !isGoogleMapsLoaded) {
+      requestSeq.current += 1;
+      setSuggestions([]);
+      setOpen(false);
+      setSearching(false);
+      return;
     }
 
-    return () => {
-      try {
-        placeChangedListenerRef.current?.remove?.();
-        if (autocompleteRef.current) {
-          google.maps.event.clearInstanceListeners(autocompleteRef.current);
-        }
-      } catch {
-        // ignore
+    setSearching(true);
+    const seq = ++requestSeq.current;
+    const timer = window.setTimeout(() => {
+      const token = sessionTokenRef.current ?? createPlacesSessionToken();
+      sessionTokenRef.current = token;
+      if (!token) {
+        if (seq === requestSeq.current) setSearching(false);
+        return;
       }
-      autocompleteRef.current = null;
-      placeChangedListenerRef.current = null;
+      fetchPlacePredictions(query, token, {
+        countries: [googleCountryCode],
+        types: ['(cities)'],
+      }).then((predictions) => {
+        if (seq !== requestSeq.current) return;
+        setSuggestions(predictions);
+        setOpen(predictions.length > 0);
+        setActiveIndex(0);
+        setSearching(false);
+      });
+    }, GOOGLE_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
     };
-  }, [isGoogleMapsLoaded, googleCountryCode]);
+  }, [value, googleCountryCode, isGoogleMapsLoaded]);
+
+  const choosePrediction = async (prediction: google.maps.places.AutocompletePrediction) => {
+    const token = sessionTokenRef.current ?? createPlacesSessionToken();
+    sessionTokenRef.current = null;
+    if (!token) return;
+    const place = await fetchPlaceDetails(prediction.place_id, token);
+    if (!place) return;
+
+    let cityName = '';
+    if (place.address_components) {
+      const components = place.address_components;
+      const locality = components.find((c) => c.types.includes('locality'))?.long_name || '';
+      const administrativeArea =
+        components.find((c) => c.types.includes('administrative_area_level_1'))?.long_name || '';
+      const countryComponent = components.find((c) => c.types.includes('country'));
+      const city = locality || administrativeArea || place.name || '';
+      const addressParts: string[] = [];
+      if (city) addressParts.push(city);
+      addressParts.push(englishCountryName(countryComponent, countryRef.current));
+      cityName = addressParts.join(', ');
+    }
+    if (!cityName) {
+      cityName = place.formatted_address ?? place.name ?? prediction.description;
+    }
+
+    selectedValueRef.current = cityName;
+    onChangeRef.current(cityName);
+    setOpen(false);
+    setSuggestions([]);
+    inputRef.current?.blur();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!open || suggestions.length === 0) return;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveIndex((index) => (index + 1) % suggestions.length);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveIndex((index) => (index - 1 + suggestions.length) % suggestions.length);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      const prediction = suggestions[activeIndex];
+      if (prediction) void choosePrediction(prediction);
+    } else if (event.key === 'Escape') {
+      setOpen(false);
+    }
+  };
 
   return (
     <div className={`relative w-full ${className}`}>
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-          {loading ? (
+          {loading || searching ? (
             <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
           ) : (
             <MapPin className="h-5 w-5 text-gray-400" />
@@ -196,18 +231,45 @@ export const CityInput: React.FC<CityInputProps> = ({
           ref={inputRef}
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            selectedValueRef.current = null;
+            onChange(e.target.value);
+          }}
+          onKeyDown={handleKeyDown}
+          onFocus={() => {
+            if (suggestions.length > 0 && selectedValueRef.current !== value) setOpen(true);
+          }}
+          onBlur={() => setOpen(false)}
           placeholder={placeholder}
           required={required}
-          disabled={!isGoogleMapsLoaded}
-          autoComplete="chrome-off"
+          autoComplete="off"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
+          role="combobox"
+          aria-expanded={open}
+          aria-autocomplete="list"
           className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed ${
             error ? 'border-red-500' : 'border-gray-300'
           }`}
         />
+        {open && (
+          <PlaceSuggestionList
+            listId="city-suggestions"
+            items={suggestions.map((prediction) => ({
+              id: prediction.place_id,
+              title: prediction.structured_formatting?.main_text || prediction.description,
+              subtitle: prediction.structured_formatting?.secondary_text,
+            }))}
+            activeIndex={activeIndex}
+            onHover={setActiveIndex}
+            onSelect={(index) => {
+              const prediction = suggestions[index];
+              if (prediction) void choosePrediction(prediction);
+            }}
+            showGoogleCredit
+          />
+        )}
       </div>
 
       {!isGoogleMapsLoaded && (

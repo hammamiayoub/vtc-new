@@ -1,4 +1,5 @@
 import { googleMapsLoader } from './googleMapsLoader';
+import { findNearbyFrequentPlace, loadFrequentPlaces } from './frequentPlaces';
 import type { ParcelDirection } from '../types';
 
 // Codes ISO des pays européens couverts par le service
@@ -68,8 +69,9 @@ export function extractPlaceDetails(
 }
 
 /**
- * Géolocalise le client (navigator.geolocation) puis reverse-geocode
- * l'adresse via Google. Renvoie les détails du lieu.
+ * Position GPS confirmée par le bouton « Ma position ».
+ * Un lieu fréquent proche est renvoyé sans Google.
+ * Sinon un seul géocodage inverse est fait, au moment de cette confirmation.
  */
 export async function geolocateCurrentPosition(): Promise<PlaceDetails> {
   if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -85,6 +87,16 @@ export async function geolocateCurrentPosition(): Promise<PlaceDetails> {
   });
 
   const { latitude, longitude } = position.coords;
+
+  const nearby = findNearbyFrequentPlace(await loadFrequentPlaces(), latitude, longitude);
+  if (nearby) {
+    return {
+      address: nearby.label,
+      country: nearby.country_code === 'tn' ? 'Tunisia' : nearby.country_code.toUpperCase(),
+      latitude: nearby.latitude,
+      longitude: nearby.longitude,
+    };
+  }
 
   await googleMapsLoader.loadGoogleMaps();
   const geocoder = new google.maps.Geocoder();
