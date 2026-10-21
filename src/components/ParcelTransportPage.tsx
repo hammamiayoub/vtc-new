@@ -111,7 +111,7 @@ export const ParcelTransportPage: React.FC = () => {
                 ? 'Useful for boxes, personal belongings, bulky goods or regular shipments between Tunisia and Europe — France, Italy, Germany and more.'
                 : "Idéal pour cartons, effets personnels, marchandises volumineuses ou envois réguliers entre la Tunisie et l'Europe — France, Italie, Allemagne et plus encore."}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
               <Button
                 size="lg"
                 onClick={() => navigate(href('/client-signup'))}
@@ -126,6 +126,13 @@ export const ParcelTransportPage: React.FC = () => {
                 className="text-lg px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium"
               >
                 {en ? 'I already have an account' : "J'ai déjà un compte"}
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => navigate(href('/signup?activity=transporteur'))}
+                className="text-lg px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium"
+              >
+                {en ? 'Become a partner carrier' : 'Devenez un transporteur partenaire'}
               </Button>
             </div>
           </div>
@@ -209,6 +216,13 @@ export const ParcelTransportPage: React.FC = () => {
                   </li>
                 ))}
               </ul>
+              <Button
+                size="md"
+                onClick={() => navigate(href('/client-login'))}
+                className="mt-6 bg-black hover:bg-gray-800 text-white"
+              >
+                {en ? 'Request a free quote' : 'Demander un devis gratuit'}
+              </Button>
             </article>
             <article className="rounded-2xl p-8 border border-gray-200">
               <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
@@ -230,7 +244,7 @@ export const ParcelTransportPage: React.FC = () => {
               </ul>
               <Button
                 size="md"
-                onClick={() => navigate(href('/signup'))}
+                onClick={() => navigate(href('/signup?activity=transporteur'))}
                 className="mt-6 bg-black hover:bg-gray-800 text-white"
               >
                 {en ? 'Become a carrier' : 'Devenir transporteur'}
