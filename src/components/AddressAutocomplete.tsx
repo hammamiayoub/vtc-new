@@ -48,6 +48,7 @@ const KIND_LABELS: Record<FrequentPlaceKind, { fr: string; en: string }> = {
   airport: { fr: 'Aéroport', en: 'Airport' },
   station: { fr: 'Gare', en: 'Station' },
   hotel: { fr: 'Hôtel', en: 'Hotel' },
+  city: { fr: 'Ville', en: 'City' },
 };
 
 function countryList(countries: string | string[] | null | undefined): string[] | null {
@@ -291,11 +292,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   const items = suggestions.map((suggestion) => {
     if (suggestion.source === 'frequent') {
-      const kind = KIND_LABELS[suggestion.place.kind];
+      const kind = KIND_LABELS[suggestion.place.kind as FrequentPlaceKind];
       return {
         id: suggestion.id,
         title: suggestion.place.label,
-        subtitle: en ? kind.en : kind.fr,
+        subtitle: kind ? (en ? kind.en : kind.fr) : undefined,
       };
     }
     return {
