@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { calculateDistance } from './geolocation';
 
-export type FrequentPlaceKind = 'airport' | 'station' | 'hotel';
+export type FrequentPlaceKind = 'airport' | 'station' | 'hotel' | 'city';
 
 export interface FrequentPlace {
   id: string;
@@ -17,6 +17,7 @@ const NEARBY_RADIUS_KM: Record<FrequentPlaceKind, number> = {
   airport: 2,
   station: 0.45,
   hotel: 0.3,
+  city: 0.3,
 };
 
 const STRONG_PREFIXES = new Set(['aeroport', 'airport', 'gare', 'station', 'hotel']);

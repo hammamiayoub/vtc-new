@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.frequent_places (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   label text NOT NULL,
   aliases text[] NOT NULL DEFAULT '{}',
-  kind text NOT NULL CHECK (kind IN ('airport', 'station', 'hotel')),
+  kind text NOT NULL CHECK (kind IN ('airport', 'station', 'hotel', 'city')),
   country_code text NOT NULL,
   latitude double precision NOT NULL,
   longitude double precision NOT NULL,
