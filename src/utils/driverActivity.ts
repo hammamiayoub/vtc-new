@@ -45,10 +45,10 @@ export function driverActivityBadgeClasses(type?: DriverActivityValue): string {
   const base = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap';
   switch (type) {
     case 'transporteur':
-      return `${base} bg-amber-100 text-amber-800`;
+      return `${base} bg-warning-100 text-warning-800`;
     case 'both':
-      return `${base} bg-indigo-100 text-indigo-800`;
+      return `${base} bg-gray-900 text-white`;
     default:
-      return `${base} bg-sky-100 text-sky-800`;
+      return `${base} bg-gray-100 text-gray-800`;
   }
 }

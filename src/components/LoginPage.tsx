@@ -49,7 +49,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onSignup, onLoginS
         <div className="p-8">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-8 transition-colors group"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-700 mb-8 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             Retour
@@ -71,10 +71,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onSignup, onLoginS
               </div>
               <input
                 type="email"
+                autoComplete="email"
+                inputMode="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Adresse email"
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all"
                 required
               />
             </div>
@@ -85,10 +87,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onSignup, onLoginS
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mot de passe"
-                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all"
                 required
               />
               <button
@@ -106,17 +109,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onSignup, onLoginS
 
             <div className="flex items-center justify-between">
               <label className="flex items-center">
-                <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                <input type="checkbox" className="w-4 h-4 text-gray-900 rounded border-gray-300 focus:ring-gray-900" />
                 <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
               </label>
-              <a href="#" className="text-sm text-blue-600 hover:underline">
+              <a href="#" className="text-sm font-medium text-gray-900 underline underline-offset-2 hover:text-gray-600">
                 Mot de passe oublié ?
               </a>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg">
+                <p className="text-sm text-danger-600">{error}</p>
               </div>
             )}
 
@@ -134,7 +137,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onSignup, onLoginS
               Pas encore inscrit ?{' '}
               <button
                 onClick={onSignup}
-                className="text-blue-600 hover:underline font-medium"
+                className="text-gray-900 underline underline-offset-2 hover:text-gray-600 font-medium"
               >
                 Créer un compte
               </button>

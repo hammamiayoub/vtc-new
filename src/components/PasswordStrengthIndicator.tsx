@@ -21,9 +21,9 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
   const strength = requirements.filter(req => req.met).length;
   
   const getStrengthColor = () => {
-    if (strength <= 2) return 'text-red-500';
-    if (strength <= 4) return 'text-orange-500';
-    return 'text-green-500';
+    if (strength <= 2) return 'text-danger-500';
+    if (strength <= 4) return 'text-warning-500';
+    return 'text-success-500';
   };
 
   const getStrengthText = () => {
@@ -56,11 +56,11 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
         {requirements.map((req, index) => (
           <div key={index} className="flex items-center gap-2">
             {req.met ? (
-              <CheckCircle2 size={16} className="text-green-500" />
+              <CheckCircle2 size={16} className="text-success-500" />
             ) : (
               <Circle size={16} className="text-gray-300" />
             )}
-            <span className={`text-sm ${req.met ? 'text-green-600' : 'text-gray-500'}`}>
+            <span className={`text-sm ${req.met ? 'text-success-600' : 'text-gray-500'}`}>
               {requirementLabels ? requirementLabels[index] : req.message}
             </span>
           </div>

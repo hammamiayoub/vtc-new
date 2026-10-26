@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { User, Car, Clock, MapPin, LogOut, UserCircle, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare, FileText, Package } from 'lucide-react';
+import { TabBar } from './ui/TabBar';
+import { Badge } from './ui/Badge';
+import { BookingStatusBadge } from './ui/StatusBadge';
+import { DashboardSkeleton } from './ui/Skeleton';
+import { User, Car, Clock, MapPin, LogOut, UserCircle, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare, FileText, Package, Check, ChevronDown, Lightbulb } from 'lucide-react';
 import { TransporteurRequests } from './TransporteurRequests';
 import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
@@ -25,6 +29,21 @@ import { AppDownloadModal } from './AppDownloadModal';
 interface DriverDashboardProps {
   onLogout: () => void;
 }
+
+/** Pastille d'étape du parcours chauffeur : validée (coche verte), en cours (noire) ou à venir (grise). */
+const StepMarker: React.FC<{ n: number; state: 'done' | 'current' | 'todo' }> = ({ n, state }) => (
+  <div
+    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+      state === 'done'
+        ? 'bg-success-600 text-white'
+        : state === 'current'
+          ? 'bg-gray-900 text-white'
+          : 'bg-gray-200 text-gray-500'
+    }`}
+  >
+    {state === 'done' ? <Check size={16} aria-hidden="true" /> : n}
+  </div>
+);
 
 export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) => {
   const [driver, setDriver] = useState<Driver | null>(null);
@@ -870,58 +889,15 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     completedBookings: completedBookings.length,
     driverId: driver?.id
   });
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <Clock size={12} />
-            En attente d'acceptation
-          </span>
-        );
-      case 'accepted':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <Clock size={12} />
-            Programmée
-          </span>
-        );
-      case 'in_progress':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <Car size={12} />
-            En cours
-          </span>
-        );
-      case 'completed':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <CheckCircle size={12} />
-            Terminée
-          </span>
-        );
-      case 'cancelled':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <XCircle size={12} />
-            Annulée
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-            {status}
-          </span>
-        );
-    }
-  };
   
+  const handleTabChange = (id: string) => {
+    setActiveTab(id as typeof activeTab);
+    setShowProfileForm(false);
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <DashboardSkeleton />
     );
   }
 
@@ -982,79 +958,23 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       </header>
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-2 sm:space-x-8 overflow-x-auto">
-            <button
-              onClick={() => { setActiveTab('dashboard'); setShowProfileForm(false); }}
-              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                activeTab === 'dashboard'
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Tableau de bord
-            </button>
-            <button
-              onClick={() => { setActiveTab('availability'); setShowProfileForm(false); }}
-              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                activeTab === 'availability'
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Mes disponibilités
-            </button>
-            <button
-              onClick={() => { setActiveTab('vehicles'); setShowProfileForm(false); }}
-              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                activeTab === 'vehicles'
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Mes véhicules
-            </button>
-            <button
-              onClick={() => { setActiveTab('bookings'); setShowProfileForm(false); }}
-              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                activeTab === 'bookings'
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Mes courses ({totalTripsCount})
-              {pendingBookings.length > 0 && (
-                <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                  {pendingBookings.length}
-                </span>
-              )}
-            </button>
-            {(driver?.driverType === 'transporteur' || driver?.driverType === 'both') && (
-              <button
-                onClick={() => { setActiveTab('parcel-requests'); setShowProfileForm(false); }}
-                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap flex items-center gap-1 ${
-                  activeTab === 'parcel-requests'
-                    ? 'border-black text-black'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Mes devis de colis
-              </button>
-            )}
-            <button
-              onClick={() => { setActiveTab('subscription'); setShowProfileForm(false); }}
-              className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                activeTab === 'subscription'
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Mon abonnement
-            </button>
-          </nav>
-        </div>
-      </div>
+      <TabBar
+        ariaLabel="Sections du tableau de bord"
+        activeId={activeTab}
+        onChange={handleTabChange}
+        tabs={[
+          { id: 'dashboard', label: 'Tableau de bord' },
+          { id: 'availability', label: 'Mes disponibilités' },
+          { id: 'vehicles', label: 'Mes véhicules' },
+          { id: 'bookings', label: `Mes courses (${totalTripsCount})`, alertCount: pendingBookings.length },
+          {
+            id: 'parcel-requests',
+            label: 'Mes devis de colis',
+            hidden: !(driver?.driverType === 'transporteur' || driver?.driverType === 'both'),
+          },
+          { id: 'subscription', label: 'Mon abonnement' },
+        ]}
+      />
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 w-full">
@@ -1063,25 +983,25 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
         {/* Alerte abonnement si limite proche ou atteinte */}
         {driver && subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings && (
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-6 mb-8">
+          <div className="bg-warning-50 border border-warning-200 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <AlertCircle className="text-white" size={24} />
+              <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="text-warning-700" size={24} />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-amber-900 mb-2">
-                  ⚠️ Courses gratuites épuisées
+                <h3 className="text-xl font-bold text-warning-900 mb-2">
+                  Courses gratuites épuisées
                 </h3>
-                <p className="text-amber-800 mb-4">
+                <p className="text-warning-800 mb-4">
                   Vous avez accepté vos 2 courses gratuites. Vous ne pouvez plus accepter de nouvelles courses.
                 </p>
-                <p className="text-amber-900 font-semibold mb-4">
-                  💡 Passez à l'abonnement Premium pour continuer à recevoir des courses !
+                <p className="text-warning-900 font-semibold mb-4">
+                  Passez à l'abonnement Premium pour continuer à recevoir des courses !
                 </p>
                 <div className="flex gap-3">
                   <Button
                     onClick={() => setActiveTab('subscription')}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
+                    className="bg-black hover:bg-gray-800 text-white font-semibold"
                   >
                     Voir l'abonnement Premium
                   </Button>
@@ -1093,7 +1013,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         
         {/* Profile Completion Alert */}
         {needsProfileCompletion && !showProfileForm && activeTab === 'dashboard' && (
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
             <div className="flex items-start gap-4">
               <AlertCircle className="w-6 h-6 text-gray-700 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
@@ -1133,13 +1053,13 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
                 <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
                   <div className="flex items-center gap-3">
-                    <AlertCircle className="w-6 h-6 text-red-600" />
+                    <AlertCircle className="w-6 h-6 text-danger-600" />
                     <h3 className="text-xl font-bold text-gray-900">Abonnement expiré</h3>
                   </div>
                   <p className="text-gray-700">{subscriptionModalMessage}</p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button
-                      className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+                      className="flex-1 bg-black hover:bg-gray-800 text-white"
                       onClick={() => {
                         if (typeof window !== 'undefined' && driver) {
                           window.sessionStorage.setItem(`td_driver_subscription_modal_${driver.id}`, 'dismissed');
@@ -1167,7 +1087,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               </div>
             )}
             {/* Welcome Section */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-4 sm:p-6 mb-6 sm:mb-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 {driver?.profilePhotoUrl ? (
                   <img
@@ -1188,14 +1108,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </div>
               </div>
               {/* Directive légale pour les chauffeurs */}
-              <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h4 className="text-yellow-900 font-semibold mb-2">
+              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="text-gray-900 font-semibold mb-2">
                   Responsabilités et obligations des chauffeurs indépendants
                 </h4>
-                <p className="text-yellow-900 text-sm mb-2">
+                <p className="text-gray-600 text-sm mb-2">
                   Les prestations de transport sont entièrement exécutées sous la responsabilité des chauffeurs indépendants, lesquels :
                 </p>
-                <ul className="list-disc pl-5 text-yellow-900 text-sm space-y-1">
+                <ul className="list-disc pl-5 text-gray-600 text-sm space-y-1">
                   <li>
                     Sont tenus de disposer de toutes les autorisations légales nécessaires à l'exercice du transport de personnes à titre onéreux (permis, autorisations, assurance, etc.) conformément à la réglementation tunisienne ;
                   </li>
@@ -1205,12 +1125,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </ul>
                 
                 {/* Lien vers le document légal */}
-                <div className="mt-4 pt-3 border-t border-yellow-300">
+                <div className="mt-4 pt-3 border-t border-gray-200">
                   <a 
                     href="/Cadre Légal – Transport De Personnes Par Des Particuliers En Tunisie.pdf"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-yellow-800 hover:text-yellow-900 font-medium text-sm transition-colors"
+                    className="focus-ring inline-flex items-center gap-2 rounded-md text-gray-900 hover:text-gray-600 font-medium text-sm underline underline-offset-4 transition-colors"
                   >
                     <FileText size={16} />
                     Consulter le cadre légal du transport de personnes en Tunisie
@@ -1222,12 +1142,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {/* Status and Stats Cards */}
             <div className="mb-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="bg-white rounded-xl border border-surface-border p-4 sm:p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                      driver?.status === 'active' ? 'bg-green-100' : 'bg-gray-100'
-                    }`}>
-                      <Clock size={24} className={driver?.status === 'active' ? 'text-green-600' : 'text-gray-700'} />
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Clock size={24} className="text-gray-700" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Statut</h3>
@@ -1236,23 +1154,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       </p>
                     </div>
                   </div>
-                  <div className={`border rounded-lg p-4 ${
-                    driver?.status === 'active' 
-                      ? 'bg-green-50 border-green-200' 
-                      : 'bg-orange-50 border-orange-200'
-                  }`}>
-                    <p className={`text-sm ${
-                      driver?.status === 'active' ? 'text-green-800' : 'text-orange-800'
-                    }`}>
-                      {driver?.status === 'active' 
-                        ? 'Votre compte est actif et vous pouvez recevoir des courses.'
-                        : 'Votre compte est en cours de validation. Vous recevrez un email une fois approuvé.'
-                      }
-                    </p>
-                  </div>
+                  <Badge tone={driver?.status === 'active' ? 'success' : 'warning'} dot>
+                    {driver?.status === 'active' ? 'Compte actif' : 'En validation'}
+                  </Badge>
+                  <p className="mt-3 text-sm text-gray-600">
+                    {driver?.status === 'active'
+                      ? 'Votre compte est actif et vous pouvez recevoir des courses.'
+                      : 'Votre compte est en cours de validation. Vous recevrez un email une fois approuvé.'}
+                  </p>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="bg-white rounded-xl border border-surface-border p-4 sm:p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                       <Car size={24} className="text-gray-700" />
@@ -1270,7 +1182,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   )}
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="bg-white rounded-xl border border-surface-border p-4 sm:p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                       <MapPin size={24} className="text-gray-700" />
@@ -1287,10 +1199,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </div>
 
                 {/* Carte des notes */}
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="bg-white rounded-xl border border-surface-border p-4 sm:p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                      <MessageSquare size={24} className="text-yellow-600" />
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <MessageSquare size={24} className="text-gray-700" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Notes clients</h3>
@@ -1308,94 +1220,69 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             </div>
 
             {/* Validation Process Guide */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 mb-8">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-600" />
-                Processus de validation du compte chauffeur
-              </h3>
-              <div className="space-y-4">
-                <div className="bg-white rounded-lg p-4 border border-blue-200">
-                  <h4 className="font-semibold text-gray-900 mb-2">📋 Étapes de validation</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                        1
+            <div className="bg-white rounded-xl border border-surface-border p-4 sm:p-6 mb-6 sm:mb-8">
+              {/* Replié par défaut une fois le compte validé : ces étapes ne servent plus qu'à l'inscription */}
+              <details open={driver?.status !== 'active'} className="group">
+                <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
+                    Processus de validation du compte
+                  </h3>
+                  <ChevronDown
+                    size={20}
+                    aria-hidden="true"
+                    className="flex-shrink-0 text-gray-500 transition-transform group-open:rotate-180"
+                  />
+                </summary>
+                <ol className="mt-4 space-y-4">
+                  {[
+                    ['Complétion du profil', 'Renseignez toutes vos informations personnelles et véhicule'],
+                    ['Vérification des documents', 'Nos équipes vérifient votre permis de conduire et les documents du véhicule'],
+                    ['Validation administrative', 'Un administrateur valide votre compte (24-48h)'],
+                    ['Configuration des disponibilités', 'Définissez vos créneaux de disponibilité pour recevoir des courses'],
+                  ].map(([title, text], index) => (
+                    <li key={title} className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-700">
+                        {index + 1}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">Complétion du profil</p>
-                        <p className="text-sm text-gray-600">Renseignez toutes vos informations personnelles et véhicule</p>
+                        <p className="font-medium text-gray-900">{title}</p>
+                        <p className="text-sm text-gray-600">{text}</p>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                        2
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">Vérification des documents</p>
-                        <p className="text-sm text-gray-600">Nos équipes vérifient votre permis de conduire et les documents du véhicule</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                        3
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">Validation administrative</p>
-                        <p className="text-sm text-gray-600">Un administrateur valide votre compte (24-48h)</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                        4
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">Configuration des disponibilités</p>
-                        <p className="text-sm text-gray-600">Définissez vos créneaux de disponibilité pour recevoir des courses</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    💡 Conseil important pour recevoir des courses
-                  </h4>
-                  <p className="text-sm text-amber-800 mb-3">
-                    Pour maximiser vos chances de recevoir des courses, nous vous recommandons fortement de :
-                  </p>
-                  <ul className="text-sm text-amber-800 space-y-1 ml-4">
-                    <li>• <strong>Saisir des disponibilités sur des plages étendues</strong> (semaines ou mois)</li>
-                    <li>• Définir des créneaux réguliers et récurrents</li>
-                    <li>• Être disponible aux heures de pointe (7h-9h, 17h-19h)</li>
-                    <li>• Maintenir vos disponibilités à jour</li>
-                  </ul>
-                  <p className="text-xs text-amber-700 mt-2">
-                    Plus vous êtes disponible, plus vous aurez de chances de recevoir des demandes de course !
-                  </p>
-                </div>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+
+              <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <h4 className="mb-2 flex items-center gap-2 font-semibold text-gray-900">
+                  <Lightbulb className="h-4 w-4 text-gray-700" aria-hidden="true" />
+                  Conseil pour recevoir plus de courses
+                </h4>
+                <p className="mb-3 text-sm text-gray-600">
+                  Pour maximiser vos chances de recevoir des courses, nous vous recommandons fortement de :
+                </p>
+                <ul className="list-disc space-y-1 pl-5 text-sm text-gray-600">
+                  <li><strong className="font-semibold text-gray-900">Saisir des disponibilités sur des plages étendues</strong> (semaines ou mois)</li>
+                  <li>Définir des créneaux réguliers et récurrents</li>
+                  <li>Être disponible aux heures de pointe (7h-9h, 17h-19h)</li>
+                  <li>Maintenir vos disponibilités à jour</li>
+                </ul>
+                <p className="mt-3 text-xs text-gray-500">
+                  Plus vous êtes disponible, plus vous aurez de chances de recevoir des demandes de course.
+                </p>
               </div>
             </div>
 
             {/* Next Steps */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-white rounded-xl border border-surface-border p-4 sm:p-6">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Prochaines étapes</h3>
-              <div className="space-y-4">
-                <div className={`flex items-center gap-4 p-4 rounded-lg ${
-                  needsProfileCompletion ? 'bg-gray-50 border border-gray-200' : 'bg-green-50 border border-green-200'
-                }`}>
-                  <div className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold ${
-                    needsProfileCompletion ? 'bg-gray-700' : 'bg-green-600'
-                  }`}>
-                    1
-                  </div>
+              <ol className="space-y-3">
+                <li className={`flex items-center gap-4 rounded-lg border border-gray-200 p-4 ${needsProfileCompletion ? 'bg-gray-50' : ''}`}>
+                  <StepMarker n={1} state={needsProfileCompletion ? 'current' : 'done'} />
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-gray-900">Compléter le profil</h4>
                     <p className="text-sm text-gray-600">
-                      {needsProfileCompletion 
-                        ? 'Ajoutez vos informations personnelles'
-                        : 'Profil complété ✓'
-                      }
+                      {needsProfileCompletion ? 'Ajoutez vos informations personnelles' : 'Profil complété'}
                     </p>
                   </div>
                   {needsProfileCompletion && (
@@ -1407,36 +1294,29 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       Compléter
                     </Button>
                   )}
-                </div>
-                
-                <div className={`flex items-center gap-4 p-4 rounded-lg ${
-                  driver?.status === 'active' ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'
+                </li>
+
+                <li className={`flex items-center gap-4 rounded-lg border border-gray-200 p-4 ${
+                  driver?.status !== 'active' && !needsProfileCompletion ? 'bg-gray-50' : ''
                 }`}>
-                  <div className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold ${
-                    driver?.status === 'active' ? 'bg-green-600' : 'bg-orange-500'
-                  }`}>
-                    2
-                  </div>
+                  <StepMarker
+                    n={2}
+                    state={driver?.status === 'active' ? 'done' : needsProfileCompletion ? 'todo' : 'current'}
+                  />
                   <div className="min-w-0">
                     <h4 className="font-medium text-gray-900">Validation du compte</h4>
                     <p className="text-sm text-gray-600">
-                      {driver?.status === 'active' ? 'Compte validé ✓' : 'En attente - Un administrateur doit valider votre compte'}
+                      {driver?.status === 'active' ? 'Compte validé' : 'En attente - Un administrateur doit valider votre compte'}
                     </p>
                   </div>
-                </div>
+                </li>
 
-                <div className={`flex items-center gap-4 p-4 rounded-lg ${
-                  driver?.status === 'active' ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'
-                }`}>
-                  <div className={`w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold ${
-                    driver?.status === 'active' ? 'bg-blue-600' : 'bg-gray-400'
-                  }`}>
-                    3
-                  </div>
+                <li className={`flex items-center gap-4 rounded-lg border border-gray-200 p-4 ${driver?.status === 'active' ? 'bg-gray-50' : ''}`}>
+                  <StepMarker n={3} state={driver?.status === 'active' ? 'current' : 'todo'} />
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-gray-900">Définir vos disponibilités</h4>
                     <p className="text-sm text-gray-600">
-                      {driver?.status === 'active' 
+                      {driver?.status === 'active'
                         ? 'Configurez vos créneaux pour recevoir des courses'
                         : 'Disponible après validation du compte'
                       }
@@ -1446,13 +1326,13 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     <Button
                       onClick={() => setActiveTab('availability')}
                       size="sm"
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="bg-black hover:bg-gray-800 text-white"
                     >
                       Configurer
                     </Button>
                   )}
-                </div>
-              </div>
+                </li>
+              </ol>
             </div>
 
             {/* Ancienne section "Mon véhicule" supprimée (remplacée par gestion multi-véhicules) */}
@@ -1507,8 +1387,12 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {/* Onglet Courses */}
         {!showProfileForm && activeTab === 'bookings' && (
           <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900 space-y-2">
-              <h3 className="text-base font-semibold text-blue-950">Tutoriel rapide</h3>
+            <details className="group bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700">
+              <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-base font-semibold text-gray-900 [&::-webkit-details-marker]:hidden">
+                Tutoriel rapide
+                <span aria-hidden="true" className="text-gray-500 transition-transform group-open:rotate-180">▾</span>
+              </summary>
+              <div className="space-y-2 px-4 pb-4">
               <p><strong>Accepter / Refuser :</strong> dans “Nouvelles demandes”, utilisez les boutons <em>Accepter</em> ou <em>Refuser</em>. Si le délai est dépassé, contactez le client.</p>
               <p><strong>Démarrer :</strong> une fois la course acceptée, appuyez sur <em>Commencer</em> quand vous êtes prêt à prendre en charge le client.</p>
               <p><strong>Terminer :</strong> après avoir déposé le client, marquez la course comme terminée via le bouton prévu dans les actions.</p>
@@ -1518,24 +1402,25 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   Une fois la marchandise livrée, cliquez sur <em>Livraison effectuée</em> pour archiver le trajet.
                 </p>
               )}
-            </div>
+              </div>
+            </details>
             {/* Nouvelles demandes - Statut 'pending' */}
             {pendingBookings.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <Bell className="w-5 h-5 text-blue-600" />
+                    <Bell className="w-5 h-5 text-gray-700" />
                     Nouvelles demandes ({pendingBookings.length})
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600">Courses en attente de votre confirmation</p>
                 </div>
                 <div className="divide-y divide-gray-200">
                   {pendingBookings.map((booking) => (
-                    <div key={booking.id} className="p-6">
+                    <div key={booking.id} className="p-4 sm:p-6">
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            {getStatusBadge(booking.status)}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
+                            {<BookingStatusBadge status={booking.status} labels={{ pending: "En attente d'acceptation", accepted: 'Programmée', in_progress: 'En cours', completed: 'Terminée', cancelled: 'Annulée' }} />}
                             <span className="text-sm text-gray-500">
                               Réservé pour le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
                                 weekday: 'long',
@@ -1549,17 +1434,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <MapPin size={16} className="text-green-600" />
+                              <MapPin size={16} className="text-success-600" />
                               <span className="font-medium text-gray-900">{booking.pickup_address}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Navigation size={16} className="text-red-600" />
+                              <Navigation size={16} className="text-danger-600" />
                               <span className="text-sm text-gray-600">Arrivée:</span>
                               <span className="font-medium text-gray-900">{booking.destination_address}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
                               <span>{booking.distanceKm} km</span>
-                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                              <span className="font-bold text-success-600">{booking.price_tnd} TND</span>
                             </div>
                             {booking.notes && (
                               <div className="bg-gray-50 rounded-lg p-3 mt-2">
@@ -1585,18 +1470,18 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                                 <Button
                                   onClick={() => cancelBookingByDriver(booking.id)}
                                   variant="outline"
-                                  className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  className="border-danger-300 text-danger-600 hover:bg-danger-50 flex items-center gap-2"
                                   size="sm"
                                 >
                                   <XCircle size={16} />
                                   Refuser
                                 </Button>
                               ) : (
-                                <div className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2">
-                                  <p className="font-medium text-amber-800">⚠️ Délai d'annulation dépassé</p>
+                                <div className="text-xs text-gray-500 bg-warning-50 border border-warning-200 rounded-lg p-2">
+                                  <p className="font-medium text-warning-800">Délai d'annulation dépassé</p>
                                   <p className="mt-1">Contactez le client par téléphone</p>
                                   {booking.clients?.phone && (
-                                    <p className="font-semibold text-amber-900 mt-1">{booking.clients.phone}</p>
+                                    <p className="font-semibold text-warning-900 mt-1">{booking.clients.phone}</p>
                                   )}
                                 </div>
                               )}
@@ -1620,18 +1505,18 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                                 <Button
                                   onClick={() => cancelBookingByDriver(booking.id)}
                                   variant="outline"
-                                  className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  className="border-danger-300 text-danger-600 hover:bg-danger-50 flex items-center gap-2"
                                   size="sm"
                                 >
                                   <XCircle size={16} />
                                   Annuler
                                 </Button>
                               ) : (
-                                <div className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2">
-                                  <p className="font-medium text-amber-800">⚠️ Délai d'annulation dépassé</p>
+                                <div className="text-xs text-gray-500 bg-warning-50 border border-warning-200 rounded-lg p-2">
+                                  <p className="font-medium text-warning-800">Délai d'annulation dépassé</p>
                                   <p className="mt-1">Contactez le client par téléphone</p>
                                   {booking.clients?.phone && (
-                                    <p className="font-semibold text-amber-900 mt-1">{booking.clients.phone}</p>
+                                    <p className="font-semibold text-warning-900 mt-1">{booking.clients.phone}</p>
                                   )}
                                 </div>
                               )}
@@ -1641,19 +1526,19 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       </div>
                       
                       {/* Informations client */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                        <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                        <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
                           <User size={16} />
                           Informations client
                         </h4>
                         {booking.clients ? (
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
-                              <p className="font-medium text-blue-900">
+                              <p className="font-medium text-gray-900">
                                 {booking.clients.first_name} {booking.clients.last_name}
                               </p>
                               {booking.clients.phone && (
-                                <p className="text-sm text-blue-700">
+                                <p className="text-sm text-gray-600">
                                   Tél: {booking.clients.phone}
                                 </p>
                               )}
@@ -1662,14 +1547,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                               <div className="flex gap-2">
                                 <a
                                   href={`tel:${booking.clients.phone}`}
-                                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                  className="focus-ring touch-target inline-flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                                   title="Appeler le client"
                                 >
                                   <Phone size={16} />
                                 </a>
                                 <a
                                   href={`sms:${booking.clients.phone}`}
-                                  className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                  className="focus-ring touch-target inline-flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                                   title="Envoyer un SMS"
                                 >
                                   <MessageSquare size={16} />
@@ -1679,11 +1564,11 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           </div>
                         ) : (
                           <div className="text-center py-4">
-                            <User size={32} className="text-blue-400 mx-auto mb-2" />
-                            <p className="text-blue-700 font-medium">
+                            <User size={32} className="text-gray-400 mx-auto mb-2" />
+                            <p className="text-gray-600 font-medium">
                               Informations client en cours de chargement...
                             </p>
-                            <p className="text-sm text-blue-600 mt-1">
+                            <p className="text-sm text-gray-700 mt-1">
                               Les données client seront disponibles sous peu
                             </p>
                           </div>
@@ -1703,7 +1588,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           </div>
                           <div>
                             <span className="text-gray-600">Prix:</span>
-                            <span className="ml-2 font-bold text-green-600">{booking.price_tnd} TND</span>
+                            <span className="ml-2 font-bold text-success-600">{booking.price_tnd} TND</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Réservé le:</span>
@@ -1726,20 +1611,20 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {/* Courses programmées (accepted) en premier */}
             {acceptedBookings.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-blue-600" />
+                    <Clock className="w-5 h-5 text-gray-700" />
                     Courses programmées ({acceptedBookings.length})
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600">Prochaines courses à venir</p>
                 </div>
                 <div className="divide-y divide-gray-200">
                   {acceptedBookings.map((booking) => (
-                    <div key={booking.id} className="p-6">
+                    <div key={booking.id} className="p-4 sm:p-6">
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            {getStatusBadge(booking.status)}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
+                            {<BookingStatusBadge status={booking.status} labels={{ pending: "En attente d'acceptation", accepted: 'Programmée', in_progress: 'En cours', completed: 'Terminée', cancelled: 'Annulée' }} />}
                             <span className="text-sm text-gray-500">
                               Prévue le {new Date(booking.scheduled_time).toLocaleString('fr-FR', {
                                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -1748,17 +1633,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <MapPin size={16} className="text-green-600" />
+                              <MapPin size={16} className="text-success-600" />
                               <span className="font-medium text-gray-900">{booking.pickup_address}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Navigation size={16} className="text-red-600" />
+                              <Navigation size={16} className="text-danger-600" />
                               <span className="text-sm text-gray-600">Arrivée:</span>
                               <span className="font-medium text-gray-900">{booking.destination_address}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
                               <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-green-600">{booking.pricetnd} TND</span>
+                              <span className="font-bold text-success-600">{booking.pricetnd} TND</span>
                             </div>
                           </div>
                         </div>
@@ -1775,18 +1660,18 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             <Button
                               onClick={() => cancelBookingByDriver(booking.id)}
                               variant="outline"
-                              className="border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              className="border-danger-300 text-danger-600 hover:bg-danger-50 flex items-center gap-2"
                               size="sm"
                             >
                               <XCircle size={16} />
                               Annuler
                             </Button>
                           ) : (
-                            <div className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2">
-                              <p className="font-medium text-amber-800">⚠️ Délai d'annulation dépassé</p>
+                            <div className="text-xs text-gray-500 bg-warning-50 border border-warning-200 rounded-lg p-2">
+                              <p className="font-medium text-warning-800">Délai d'annulation dépassé</p>
                               <p className="mt-1">Contactez le client par téléphone</p>
                               {booking.clients?.phone && (
-                                <p className="font-semibold text-amber-900 mt-1">{booking.clients.phone}</p>
+                                <p className="font-semibold text-warning-900 mt-1">{booking.clients.phone}</p>
                               )}
                             </div>
                           )}
@@ -1801,7 +1686,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {/* Transports colis programmés */}
             {showParcelInBookings && activeParcelTrips.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <Package className="w-5 h-5 text-gray-700" />
                     Transports colis en cours ({activeParcelTrips.length})
@@ -1827,20 +1712,20 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {/* Courses en cours */}
             {bookings.filter(b => b.status === 'in_progress').length > 0 && (
               <div className="bg-white rounded-xl shadow-sm">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <Car className="w-5 h-5 text-green-600" />
+                    <Car className="w-5 h-5 text-success-600" />
                     Courses en cours ({bookings.filter(b => b.status === 'in_progress').length})
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600">Courses que vous avez commencées</p>
                 </div>
                 <div className="divide-y divide-gray-200">
                   {bookings.filter(b => b.status === 'in_progress').map((booking) => (
-                    <div key={booking.id} className="p-6">
+                    <div key={booking.id} className="p-4 sm:p-6">
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            {getStatusBadge(booking.status)}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
+                            {<BookingStatusBadge status={booking.status} labels={{ pending: "En attente d'acceptation", accepted: 'Programmée', in_progress: 'En cours', completed: 'Terminée', cancelled: 'Annulée' }} />}
                             <span className="text-sm text-gray-500">
                               Commencée le {booking.pickup_time ? 
                                 new Date(booking.pickup_time).toLocaleString('fr-FR') : 
@@ -1850,16 +1735,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <MapPin size={14} className="text-green-600" />
+                              <MapPin size={14} className="text-success-600" />
                               <span className="text-sm text-gray-900">{booking.pickup_address}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Navigation size={14} className="text-red-600" />
+                              <Navigation size={14} className="text-danger-600" />
                               <span className="text-sm text-gray-900">{booking.destination_address}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
                               <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                              <span className="font-bold text-success-600">{booking.price_tnd} TND</span>
                             </div>
                           </div>
                         </div>
@@ -1874,15 +1759,15 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       </div>
                       {/* Informations client */}
                       {booking.clients && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                          <h4 className="font-medium text-blue-900 mb-2 text-sm sm:text-base">Informations client</h4>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                          <h4 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">Informations client</h4>
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
-                              <p className="font-medium text-blue-900">
+                              <p className="font-medium text-gray-900">
                                 {booking.clients.first_name} {booking.clients.last_name}
                               </p>
                               {booking.clients.phone && (
-                                <p className="text-sm text-blue-700">
+                                <p className="text-sm text-gray-600">
                                   Tél: {booking.clients.phone}
                                 </p>
                               )}
@@ -1891,14 +1776,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                               <div className="flex gap-2">
                                 <a
                                   href={`tel:${booking.clients.phone}`}
-                                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                  className="focus-ring touch-target inline-flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                                   title="Appeler le client"
                                 >
                                   <Phone size={16} />
                                 </a>
                                 <a
                                   href={`sms:${booking.clients.phone}`}
-                                  className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                  className="focus-ring touch-target inline-flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                                   title="Envoyer un SMS"
                                 >
                                   <MessageSquare size={16} />
@@ -1916,7 +1801,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
             {/* Historique */}
             <div className="bg-white rounded-xl shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Historique</h3>
                 <p className="text-sm sm:text-base text-gray-600">
                   Courses VTC terminées ou annulées et transports colis passés
@@ -1939,27 +1824,27 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       <DriverParcelTripCard key={trip.proposalId} trip={trip} variant="completed" />
                     ))}
                   {historyBookings.map((booking) => (
-                    <div key={booking.id} className="p-6">
+                    <div key={booking.id} className="p-4 sm:p-6">
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            {getStatusBadge(booking.status)}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
+                            {<BookingStatusBadge status={booking.status} labels={{ pending: "En attente d'acceptation", accepted: 'Programmée', in_progress: 'En cours', completed: 'Terminée', cancelled: 'Annulée' }} />}
                             <span className="text-sm text-gray-500">
                               {new Date(booking.scheduled_time).toLocaleString('fr-FR')}
                             </span>
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <MapPin size={14} className="text-green-600" />
+                              <MapPin size={14} className="text-success-600" />
                               <span className="text-sm text-gray-900">{booking.pickup_address}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Navigation size={14} className="text-red-600" />
+                              <Navigation size={14} className="text-danger-600" />
                               <span className="text-sm text-gray-900">{booking.destination_address}</span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
                               <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-green-600">{booking.price_tnd} TND</span>
+                              <span className="font-bold text-success-600">{booking.price_tnd} TND</span>
                             </div>
                           </div>
                         </div>

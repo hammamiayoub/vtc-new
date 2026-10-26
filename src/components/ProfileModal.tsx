@@ -256,7 +256,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               {!isEditing && (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="p-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                  className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
                   title={en ? 'Edit profile' : 'Modifier le profil'}
                 >
                   <Edit3 size={20} />
@@ -277,7 +277,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           {/* Photo de profil */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Camera className="w-5 h-5 text-purple-600" />
+              <Camera className="w-5 h-5 text-gray-700" />
               {en ? 'Profile photo' : 'Photo de profil'}
             </h3>
             <ImageUpload
@@ -291,7 +291,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           {/* Informations personnelles */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-600" />
+              <User className="w-5 h-5 text-gray-700" />
               {en ? 'Personal details' : 'Informations personnelles'}
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
@@ -302,7 +302,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     type="text"
                     value={editData.firstName}
                     onChange={(e) => setEditData({ ...editData, firstName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
                 ) : (
                   <p className="font-semibold text-gray-900">{user.firstName}</p>
@@ -315,7 +315,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     type="text"
                     value={editData.lastName}
                     onChange={(e) => setEditData({ ...editData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
                 ) : (
                   <p className="font-semibold text-gray-900">{user.lastName}</p>
@@ -337,7 +337,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     type="tel"
                     value={editData.phone}
                     onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
                 ) : (
                   <p className="font-semibold text-gray-900">
@@ -368,15 +368,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             <>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-green-600" />
+                  <CreditCard className="w-5 h-5 text-success-600" />
                   Informations chauffeur
                 </h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <label className="block text-sm text-gray-600 mb-1">Statut</label>
                     <p className={`font-semibold ${
-                      driver.status === 'active' ? 'text-green-600' : 
-                      driver.status === 'pending' ? 'text-orange-600' : 'text-red-600'
+                      driver.status === 'active' ? 'text-success-600' : 
+                      driver.status === 'pending' ? 'text-warning-600' : 'text-danger-600'
                     }`}>
                       {driver.status === 'active' ? 'Actif' : 
                        driver.status === 'pending' ? 'En attente' : 'Suspendu'}
@@ -399,7 +399,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                             driverType: e.target.value as 'vtc' | 'transporteur' | 'both',
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                       >
                         {DRIVER_ACTIVITY_PROFILE_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -458,7 +458,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <Button
                 onClick={handleSaveProfile}
                 loading={isSaving}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                className="flex items-center gap-2 bg-black hover:bg-gray-800"
               >
                 <Save size={16} />
                 {isSaving ? (en ? 'Saving...' : 'Enregistrement...') : (en ? 'Save' : 'Enregistrer')}
@@ -484,7 +484,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <Button
                 onClick={() => setShowDeleteConfirm(true)}
                 variant="outline"
-                className="flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50"
+                className="flex items-center gap-2 border-danger-300 text-danger-600 hover:bg-danger-50"
               >
                 <Trash2 size={16} />
                 {en ? 'Delete my account' : 'Supprimer mon compte'}
@@ -498,8 +498,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertTriangle size={24} className="text-red-600" />
+                <div className="w-12 h-12 bg-danger-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle size={24} className="text-danger-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{en ? 'Delete account' : 'Supprimer le compte'}</h3>
@@ -507,12 +507,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 </div>
               </div>
               
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                <p className="text-red-800 text-sm">
+              <div className="bg-danger-50 border border-danger-200 rounded-lg p-4 mb-6">
+                <p className="text-danger-800 text-sm">
                   <strong>{en ? 'Warning:' : 'Attention :'}</strong>{' '}
                   {en ? 'Deleting your account will:' : 'La suppression de votre compte entraînera :'}
                 </p>
-                <ul className="text-red-700 text-sm mt-2 space-y-1">
+                <ul className="text-danger-700 text-sm mt-2 space-y-1">
                   <li>• {en ? 'Permanently delete all your data' : 'Suppression définitive de toutes vos données'}</li>
                   {userType === 'driver' ? (
                     <>
@@ -530,7 +530,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <Button
                   onClick={handleDeleteProfile}
                   loading={isDeleting}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  className="flex-1 bg-danger-600 hover:bg-danger-700 text-white"
                 >
                   {isDeleting ? (en ? 'Deleting...' : 'Suppression...') : (en ? 'Confirm deletion' : 'Confirmer la suppression')}
                 </Button>

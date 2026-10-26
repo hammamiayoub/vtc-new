@@ -56,14 +56,14 @@ export const NotificationPermission: React.FC<NotificationPermissionProps> = ({
 
   if (!isSupported) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+      <div className="bg-warning-50 border border-warning-200 rounded-lg p-4 mb-4">
         <div className="flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-yellow-600" />
+          <AlertCircle className="w-5 h-5 text-warning-600" />
           <div>
-            <h3 className="text-sm font-medium text-yellow-800">
+            <h3 className="text-sm font-medium text-warning-800">
               {en ? 'Notifications are not supported' : 'Notifications non supportées'}
             </h3>
-            <p className="text-sm text-yellow-700">
+            <p className="text-sm text-warning-700">
               {en ? 'This browser does not support push notifications.' : 'Votre navigateur ne supporte pas les notifications push.'}
             </p>
           </div>
@@ -77,16 +77,16 @@ export const NotificationPermission: React.FC<NotificationPermissionProps> = ({
   }
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
-          <Bell className="w-5 h-5 text-blue-600 mt-0.5" />
+          <Bell className="w-5 h-5 text-gray-700 mt-0.5" />
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">
+          <h3 className="text-sm font-medium text-gray-900 mb-2">
             {en ? 'Turn on notifications' : 'Activer les notifications'}
           </h3>
-          <p className="text-sm text-blue-700 mb-3">
+          <p className="text-sm text-gray-600 mb-3">
             {en
               ? 'Get live updates for your rides: new requests, cancellations and status changes.'
               : 'Recevez des notifications en temps réel pour vos courses : nouvelles demandes, annulations, et mises à jour de statut.'}
@@ -96,7 +96,7 @@ export const NotificationPermission: React.FC<NotificationPermissionProps> = ({
               onClick={handleRequestPermission}
               disabled={isRequesting}
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-black hover:bg-gray-800 text-white"
             >
               {isRequesting ? (
                 <>
@@ -114,7 +114,7 @@ export const NotificationPermission: React.FC<NotificationPermissionProps> = ({
               onClick={handleDismiss}
               variant="outline"
               size="sm"
-              className="border-blue-300 text-blue-600 hover:bg-blue-50"
+              className="border-gray-300 text-gray-900 hover:bg-gray-100"
             >
               {en ? 'Later' : 'Plus tard'}
             </Button>
@@ -122,7 +122,7 @@ export const NotificationPermission: React.FC<NotificationPermissionProps> = ({
         </div>
         <button
           onClick={handleDismiss}
-          className="flex-shrink-0 text-blue-400 hover:text-blue-600"
+          className="flex-shrink-0 text-gray-400 hover:text-gray-700"
         >
           <XCircle className="w-5 h-5" />
         </button>
@@ -149,21 +149,21 @@ export const NotificationStatus: React.FC = () => {
   switch (permission) {
     case 'granted':
       return (
-        <div className="flex items-center gap-2 text-green-600">
+        <div className="flex items-center gap-2 text-success-600">
           <CheckCircle className="w-4 h-4" />
           <span className="text-sm">{en ? 'Notifications on' : 'Notifications activées'}</span>
         </div>
       );
     case 'denied':
       return (
-        <div className="flex items-center gap-2 text-red-600">
+        <div className="flex items-center gap-2 text-danger-600">
           <XCircle className="w-4 h-4" />
           <span className="text-sm">{en ? 'Notifications blocked' : 'Notifications refusées'}</span>
         </div>
       );
     default:
       return (
-        <div className="flex items-center gap-2 text-yellow-600">
+        <div className="flex items-center gap-2 text-warning-600">
           <AlertCircle className="w-4 h-4" />
           <span className="text-sm">{en ? 'Notifications pending' : 'Notifications en attente'}</span>
         </div>

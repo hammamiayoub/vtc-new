@@ -165,7 +165,7 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
       </p>
       {!loading && (
         <p className={`text-sm font-medium mb-5 ${
-          !settingsReady ? 'text-gray-600' : autopublishEnabled ? 'text-green-800' : 'text-amber-800'
+          !settingsReady ? 'text-gray-600' : autopublishEnabled ? 'text-success-800' : 'text-warning-800'
         }`}>
           {settingsReady
             ? autopublishEnabled
@@ -222,9 +222,9 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
         </Button>
       </form>
 
-      {notice && <p className="text-sm text-green-800 mb-3">{notice}</p>}
+      {notice && <p className="text-sm text-success-800 mb-3">{notice}</p>}
       {error && (
-        <p className="text-sm text-red-600 mb-3" role="alert">
+        <p className="text-sm text-danger-600 mb-3" role="alert">
           {error}
         </p>
       )}
@@ -241,7 +241,7 @@ export const AdminBlogAutomation: React.FC<{ onPublished: () => void }> = ({ onP
                     <button
                       type="button"
                       onClick={() => void removeTopic(topic)}
-                      className="text-xs font-medium text-gray-500 hover:text-red-600"
+                      className="text-xs font-medium text-gray-500 hover:text-danger-600"
                     >
                       Retirer
                     </button>

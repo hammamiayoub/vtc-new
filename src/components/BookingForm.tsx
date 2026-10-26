@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { 
   MapPin, 
   Clock, 
-  Calculator, 
   Car, 
   MessageSquare,
   CheckCircle,
@@ -14,8 +13,11 @@ import {
   Target,
   Route,
   LocateFixed,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
+import { cn } from '../utils/cn';
 import { bookingSchema } from '../utils/validation';
 import { BookingFormData, Driver } from '../types';
 import { supabase } from '../lib/supabase';
@@ -48,6 +50,33 @@ import { DriverSearchResultCard } from './DriverSearchResultCard';
 import type { PendingQuote } from '../utils/pendingQuote';
 import { useLocale } from '../i18n/locale';
 import { translateSignupMessage } from '../i18n/signupErrors';
+
+/** TND avec la virgule en français (comme le widget d'accueil). */
+function formatTnd(amount: number, en: boolean, decimals = 2): string {
+  const value = amount.toFixed(decimals);
+  return `${en ? value : value.replace('.', ',')} TND`;
+}
+
+function formatKm(km: number, en: boolean, decimals = 1): string {
+  const value = km.toFixed(decimals);
+  return `${en ? value : value.replace('.', ',')} km`;
+}
+
+/** Ligne du détail du tarif : libellé à gauche, montant aligné à droite. */
+const DetailRow: React.FC<{
+  label: React.ReactNode;
+  hint?: React.ReactNode;
+  value: React.ReactNode;
+  strong?: boolean;
+}> = ({ label, hint, value, strong }) => (
+  <div className={cn('flex items-baseline justify-between gap-4 py-1.5 text-sm', strong ? 'font-semibold text-gray-900' : 'text-gray-600')}>
+    <span className="min-w-0">
+      {label}
+      {hint && <span className="block text-xs font-normal text-gray-400">{hint}</span>}
+    </span>
+    <span className="whitespace-nowrap tabular-nums text-gray-900">{value}</span>
+  </div>
+);
 
 interface BookingFormProps {
   clientId: string;
@@ -676,15 +705,15 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           </p>
 
           {restoredFromQuote && initialQuote && (
-            <div className="mt-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start gap-2">
+            <div className="mt-4 rounded-lg border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-800 flex items-start gap-2">
               <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <p>
                 {en
                   ? 'Your estimate from the homepage was restored ('
                   : "Votre estimation depuis l'accueil a été reprise ("}
-                <strong>{initialQuote.distanceKm.toFixed(1)} km</strong>
+                <strong>{formatKm(initialQuote.distanceKm, en)}</strong>
                 {' · '}
-                <strong>{initialQuote.estimatedPrice.toFixed(2)} TND</strong>
+                <strong>{formatTnd(initialQuote.estimatedPrice, en, Number.isInteger(initialQuote.estimatedPrice) ? 0 : 2)}</strong>
                 {en
                   ? '). Choose a date and search for a driver to confirm.'
                   : '). Choisissez la date et recherchez un chauffeur pour confirmer.'}
@@ -694,7 +723,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
         </div>
 
         {formError && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 flex items-start gap-2">
+          <div className="mb-6 rounded-lg border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-800 flex items-start gap-2">
             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <p>{tx(formError)}</p>
           </div>
@@ -732,7 +761,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                   }}
                   onPlaceSelect={handlePickupPlaceSelect}
                   placeholder={en ? 'Pickup address' : 'Adresse de départ'}
-                  className={errors.pickupAddress ? 'ring-2 ring-red-500 rounded-lg' : ''}
+                  className={errors.pickupAddress ? 'ring-2 ring-danger-500 rounded-lg' : ''}
                 />
 
                 {/* Bouton de géolocalisation à l'intérieur du champ */}
@@ -740,7 +769,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               </div>
               
               {errors.pickupAddress && (
-                <p className="mt-2 text-sm text-red-600">{tx(errors.pickupAddress.message)}</p>
+                <p className="mt-2 text-sm text-danger-600">{tx(errors.pickupAddress.message)}</p>
               )}
             </div>
 
@@ -758,11 +787,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                 }}
                 onPlaceSelect={handleDestinationPlaceSelect}
                 placeholder={en ? 'Destination address' : "Adresse d'arrivée"}
-                className={errors.destinationAddress ? 'ring-2 ring-red-500 rounded-lg' : ''}
+                className={errors.destinationAddress ? 'ring-2 ring-danger-500 rounded-lg' : ''}
               />
               
               {errors.destinationAddress && (
-                <p className="mt-2 text-sm text-red-600">{tx(errors.destinationAddress.message)}</p>
+                <p className="mt-2 text-sm text-danger-600">{tx(errors.destinationAddress.message)}</p>
               )}
             </div>
           </div>
@@ -776,7 +805,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             <select
               {...register('vehicleType')}
               className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all appearance-none ${
-                errors.vehicleType ? 'border-red-500' : 'border-gray-300'
+                errors.vehicleType ? 'border-danger-500' : 'border-gray-300'
               }`}
             >
               {vehicleTypeOptions.map((option) => (
@@ -786,7 +815,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               ))}
             </select>
             {errors.vehicleType && (
-              <p className="mt-2 text-sm text-red-600">{tx(errors.vehicleType.message)}</p>
+              <p className="mt-2 text-sm text-danger-600">{tx(errors.vehicleType.message)}</p>
             )}
           </div>
 
@@ -816,11 +845,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               min={getMinDateTime()}
               disabled={isImmediateDeparture}
               className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                errors.scheduledTime ? 'border-red-500' : 'border-gray-300'
+                errors.scheduledTime ? 'border-danger-500' : 'border-gray-300'
               }`}
             />
             {errors.scheduledTime && (
-              <p className="mt-2 text-sm text-red-600">{tx(errors.scheduledTime.message)}</p>
+              <p className="mt-2 text-sm text-danger-600">{tx(errors.scheduledTime.message)}</p>
             )}
           </div>
 
@@ -861,221 +890,178 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           )}
 
           {/* Estimation de prix */}
-          {estimatedDistance && estimatedPrice && !isCalculating && (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Route className="w-6 h-6 text-gray-900" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+          {estimatedDistance && estimatedPrice && !isCalculating && (() => {
+            const selectedVehicleType = pricedVehicleType;
+            const vehicleMultiplier = getVehicleMultiplier(selectedVehicleType);
+            const vehicleTypeName = vehicleTypeOptions.find((opt) => opt.value === selectedVehicleType)?.label || 'Standard';
+            const rawOneWay =
+              baseDistance ??
+              (watchIsReturnTrip ? estimatedDistance / 2 : estimatedDistance);
+            const oneWayBillable = getBillableOneWayDistanceKm(rawOneWay, selectedVehicleType);
+            const effectiveDistance = watchIsReturnTrip ? oneWayBillable * 2 : oneWayBillable;
+            const minimumDistanceApplied = !!selectedVehicleType && selectedVehicleType !== 'taxi' && rawOneWay < oneWayBillable;
+
+            const pricing = getProgressivePriceBreakdown(effectiveDistance, driverToPickupKm);
+            const approachSurcharge = computeLongRangeApproachSurchargeTnd(driverToPickupKm, selectedVehicleType);
+            const subtotal =
+              Math.round((pricing.subtotal * vehicleMultiplier * vipMultiplier + approachSurcharge) * 100) / 100;
+
+            const night = priceSurcharges?.isNightTime ? priceSurcharges.nightSurchargePercent : 0;
+            const weekend = priceSurcharges?.isWeekend ? priceSurcharges.weekendSurchargePercent : 0;
+            const extrasTotal = priceSurcharges?.totalSurcharge ?? 0;
+            const extraAmount = (percent: number) =>
+              priceSurcharges && priceSurcharges.totalSurchargePercent > 0
+                ? (extrasTotal * percent) / priceSurcharges.totalSurchargePercent
+                : 0;
+            // Le prix affiché est arrondi au dinar supérieur : on montre l'écart pour que le total tombe juste.
+            const rounding = Math.round((estimatedPrice - subtotal - extrasTotal) * 100) / 100;
+            const showRounding = rounding > 0.004 && rounding < 1;
+            const hasAdjustments = vehicleMultiplier > 1 || vipMultiplier > 1 || approachSurcharge > 0 || extrasTotal > 0 || showRounding;
+
+            return (
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
+                <h3 className="mb-3 text-sm font-semibold text-gray-900">
                   {en ? 'Trip estimate' : 'Estimation du trajet'}
-                  {watchIsReturnTrip && (
-                    <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      {en ? 'Return trip' : 'Trajet retour'}
-                    </span>
-                  )}
                 </h3>
-              </div>
-              {vipMultiplier > 1 && (
-                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                  {en ? (
-                    <>This vehicle is marked <strong>VIP</strong>: the fare is higher than a standard vehicle.</>
-                  ) : (
-                    <>Ce véhicule est marqué <strong>VIP</strong> : le prix est plus élevé qu’un véhicule classique.</>
-                  )}
-                </div>
-              )}
-              {isShortTripBlockedForNonTaxi && (
-                <div className="mb-4 rounded-lg border-2 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-950 flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5" />
-                  <p>
+
+                {vipMultiplier > 1 && (
+                  <div className="mb-4 rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
                     {en ? (
-                      <>
-                        The one-way distance ({baseDistance} km) is under {SHORT_TRIP_NON_TAXI_WARNING_KM} km for this vehicle. Increase the distance or choose <strong>Taxi</strong> for short trips.
-                      </>
+                      <>This vehicle is marked <strong>VIP</strong>: the fare is higher than a standard vehicle.</>
                     ) : (
-                      <>
-                        La distance aller ({baseDistance} km) est inférieure à {SHORT_TRIP_NON_TAXI_WARNING_KM} km pour ce type de véhicule. Augmentez la distance du trajet ou choisissez le type <strong>Taxi</strong> pour les courses courtes.
-                      </>
+                      <>Ce véhicule est marqué <strong>VIP</strong> : le prix est plus élevé qu’un véhicule classique.</>
                     )}
-                  </p>
-                </div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-white rounded-lg p-4 text-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Route size={24} className="text-gray-900" />
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    {en ? 'Distance' : 'Distance'} {watchIsReturnTrip && (en ? '(return)' : '(aller-retour)')}
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {estimatedDistance} km
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg p-4 text-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Calculator size={24} className="text-gray-900" />
+                )}
+                {isShortTripBlockedForNonTaxi && (
+                  <div className="mb-4 flex items-start gap-2 rounded-lg border border-warning-300 bg-warning-50 px-4 py-3 text-sm text-warning-900">
+                    <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-warning-600" />
+                    <p>
+                      {en ? (
+                        <>
+                          The one-way distance ({baseDistance} km) is under {SHORT_TRIP_NON_TAXI_WARNING_KM} km for this vehicle. Increase the distance or choose <strong>Taxi</strong> for short trips.
+                        </>
+                      ) : (
+                        <>
+                          La distance aller ({baseDistance} km) est inférieure à {SHORT_TRIP_NON_TAXI_WARNING_KM} km pour ce type de véhicule. Augmentez la distance du trajet ou choisissez le type <strong>Taxi</strong> pour les courses courtes.
+                        </>
+                      )}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    {en ? 'Total fare' : 'Prix total'} {watchIsReturnTrip && (en ? '(with return)' : '(avec retour)')}
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {estimatedPrice} TND
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg p-4 text-left">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Calculator size={24} className="text-green-600" />
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1 text-center">{en ? 'Breakdown' : 'Calcul'}</p>
-                  <div className="text-xs sm:text-sm font-medium text-gray-900">
-                    {(() => {
-                      if (!baseDistance && !estimatedDistance) return '';
-                      const selectedVehicleType = pricedVehicleType;
-                      const vehicleMultiplier = getVehicleMultiplier(selectedVehicleType);
-                      const vehicleTypeName = vehicleTypeOptions.find(opt => opt.value === selectedVehicleType)?.label || 'Standard';
-                      const rawOneWay =
-                        baseDistance ??
-                        (watchIsReturnTrip ? (estimatedDistance ?? 0) / 2 : (estimatedDistance ?? 0));
-                      const oneWayBillable = getBillableOneWayDistanceKm(rawOneWay, selectedVehicleType);
-                      const effectiveDistance = watchIsReturnTrip
-                        ? oneWayBillable * 2
-                        : oneWayBillable;
+                )}
 
-                      const pricing = getProgressivePriceBreakdown(effectiveDistance, driverToPickupKm);
-                      const approachSurcharge = computeLongRangeApproachSurchargeTnd(
-                        driverToPickupKm,
-                        selectedVehicleType,
-                      );
-                      const totalWithMultiplier =
-                        Math.round((pricing.subtotal * vehicleMultiplier * vipMultiplier + approachSurcharge) * 100) / 100;
-
-                      return (
-                        <div className="mt-2 space-y-2">
-                          <div className="text-gray-700 text-center">
-                            {watchIsReturnTrip
-                              ? `${oneWayBillable.toFixed(0)} km × 2 ${en ? '(return)' : '(retour)'}`
-                              : `${effectiveDistance.toFixed(0)} km`}
-                            {selectedVehicleType && selectedVehicleType !== 'taxi' && rawOneWay < oneWayBillable && (
-                              <span className="block text-[11px] text-gray-500 mt-1">
-                                {en
-                                  ? `(actual distance ${rawOneWay.toFixed(1)} km — ${oneWayBillable.toFixed(0)} km minimum applied to the fare)`
-                                  : `(distance réelle ${rawOneWay.toFixed(1)} km — minimum ${oneWayBillable.toFixed(0)} km appliqué au tarif)`}
-                              </span>
-                            )}
-                          </div>
-                          <div className="space-y-1">
-                            <div className="grid grid-cols-[72px_1fr] items-start gap-2 text-gray-700">
-                              <span className="whitespace-nowrap text-[11px] sm:text-xs">{en ? 'Pickup fee' : 'Prise en charge'}</span>
-                              <span className="tabular-nums text-[11px] sm:text-xs text-right">
-                                {pricing.baseFare.toFixed(2)} TND
-                                {driverToPickupKm != null && (
-                                  <span className="block text-[10px] text-gray-500">
-                                    {en
-                                      ? `(driver ~${Math.round(driverToPickupKm)} km)`
-                                      : `(chauffeur ~${Math.round(driverToPickupKm)} km)`}
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                            {pricing.rows.map((row, index) => (
-                              <div key={index} className="grid grid-cols-[72px_1fr] items-start gap-2 text-gray-700">
-                                <span className="whitespace-nowrap text-[11px] sm:text-xs">{row.label}</span>
-                                <span className="tabular-nums text-[11px] sm:text-xs text-right break-words">
-                                  {row.km.toFixed(1)} km × {row.rate.toFixed(2)} = {row.subtotal.toFixed(2)} TND
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="border-t border-gray-200 pt-2 space-y-1">
-                            {pricing.appliedMinimum && (
-                              <div className="flex items-center justify-between text-amber-700 text-[11px] sm:text-xs">
-                                <span>{en ? 'Minimum fare applied' : 'Prix minimum appliqué'}</span>
-                                <span className="tabular-nums font-semibold">{pricing.subtotal.toFixed(2)} TND</span>
-                              </div>
-                            )}
-                            {!pricing.appliedMinimum && (
-                              <div className="flex items-center justify-between text-gray-800">
-                                <span>{en ? 'Base' : 'Base'}</span>
-                                <span className="tabular-nums font-semibold">{pricing.subtotal.toFixed(2)} TND</span>
-                              </div>
-                            )}
-                            {vehicleMultiplier > 1 && (
-                              <div className="flex items-center justify-between text-gray-900 font-semibold">
-                                <span>{en ? 'Multiplier' : 'Multiplicateur'} ({vehicleTypeName})</span>
-                                <span className="tabular-nums">×{vehicleMultiplier}</span>
-                              </div>
-                            )}
-                            {vipMultiplier > 1 && (
-                              <div className="flex items-center justify-between text-gray-900 font-semibold">
-                                <span>VIP</span>
-                                <span className="tabular-nums">×{vipMultiplier}</span>
-                              </div>
-                            )}
-                            {approachSurcharge > 0 && (
-                              <div className="flex items-center justify-between text-gray-900 font-semibold">
-                                <span>
-                                  {en
-                                    ? `Approach (${Math.floor((driverToPickupKm ?? 0) / 50)} × 30 TND)`
-                                    : `Approche (${Math.floor((driverToPickupKm ?? 0) / 50)} × 30 TND)`}
-                                </span>
-                                <span className="tabular-nums">+{approachSurcharge.toFixed(0)} TND</span>
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between text-gray-900 font-semibold">
-                              <span>{en ? 'Total (before extras)' : 'Total (hors suppléments)'}</span>
-                              <span className="tabular-nums">{totalWithMultiplier.toFixed(2)} TND</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
+                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {en ? 'Estimated fare' : 'Prix estimé'}
+                      {watchIsReturnTrip && (en ? ' · with return' : ' · avec retour')}
+                    </p>
+                    <p className="text-4xl font-bold tracking-tight text-gray-900">{estimatedPrice} TND</p>
                   </div>
+                  <p className="flex items-center gap-2 pb-1 text-sm text-gray-600">
+                    <Route size={16} className="text-gray-500" aria-hidden="true" />
+                    {formatKm(estimatedDistance, en, 2)}
+                    {watchIsReturnTrip && <span className="text-gray-400">{en ? '(round trip)' : '(aller-retour)'}</span>}
+                  </p>
                 </div>
-              </div>
-              
-              {/* Suppléments de prix (nuit et week-end) */}
-              {priceSurcharges && (priceSurcharges.isNightTime || priceSurcharges.isWeekend) && (
-                <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
-                  <h4 className="text-sm font-semibold text-yellow-900 mb-2 flex items-center gap-2">
-                    <Clock size={16} />
-                    {en ? 'Applicable extras' : 'Suppléments applicables'}
-                  </h4>
-                  <div className="space-y-2">
-                    {priceSurcharges.isNightTime && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-yellow-800">
-                          {en ? 'Night trip (9pm–6am)' : 'Trajet de nuit (21h-6h)'}
+
+                {(watchIsReturnTrip || night > 0 || weekend > 0) && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {watchIsReturnTrip && <Badge tone="neutral">{en ? 'Return trip' : 'Aller-retour'}</Badge>}
+                    {night > 0 && <Badge tone="warning">{en ? `Night +${night}%` : `Nuit +${night} %`}</Badge>}
+                    {weekend > 0 && <Badge tone="warning">{en ? `Weekend +${weekend}%` : `Week-end +${weekend} %`}</Badge>}
+                  </div>
+                )}
+
+                <details className="group mt-4 border-t border-gray-100 pt-1">
+                  <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-2 text-sm font-medium text-gray-900 [&::-webkit-details-marker]:hidden">
+                    {en ? 'See how it is calculated' : 'Voir le détail du calcul'}
+                    <ChevronDown size={18} aria-hidden="true" className="text-gray-500 transition-transform group-open:rotate-180" />
+                  </summary>
+
+                  <div className="pb-1 pt-2">
+                    <p className="mb-2 text-sm text-gray-600">
+                      {en ? 'Billed distance: ' : 'Distance facturée : '}
+                      <span className="font-medium text-gray-900">
+                        {watchIsReturnTrip
+                          ? `${oneWayBillable.toFixed(0)} km × 2`
+                          : formatKm(effectiveDistance, en, 0)}
+                      </span>
+                      {minimumDistanceApplied && (
+                        <span className="mt-0.5 block text-xs text-gray-400">
+                          {en
+                            ? `Actual distance ${formatKm(rawOneWay, en)}: the ${oneWayBillable.toFixed(0)} km minimum applies to this vehicle.`
+                            : `Distance réelle ${formatKm(rawOneWay, en)} : le minimum de ${oneWayBillable.toFixed(0)} km s’applique à ce véhicule.`}
                         </span>
-                        <span className="font-bold text-yellow-900">
-                          +{priceSurcharges.nightSurchargePercent}%
-                        </span>
-                      </div>
-                    )}
-                    {priceSurcharges.isWeekend && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-yellow-800">
-                          {en ? 'Weekend (Saturday/Sunday)' : 'Week-end (Samedi/Dimanche)'}
-                        </span>
-                        <span className="font-bold text-yellow-900">
-                          +{priceSurcharges.weekendSurchargePercent}%
-                        </span>
-                      </div>
-                    )}
-                    <div className="border-t-2 border-yellow-300 pt-2 mt-2">
-                      <div className="flex items-center justify-between text-sm font-bold">
-                        <span className="text-yellow-900">
-                          {en ? 'Extras total' : 'Total des suppléments'}
-                        </span>
-                        <span className="text-yellow-900">
-                          +{priceSurcharges.totalSurcharge.toFixed(2)} TND ({priceSurcharges.totalSurchargePercent}%)
-                        </span>
-                      </div>
+                      )}
+                    </p>
+
+                    <div className="divide-y divide-gray-100">
+                      <DetailRow
+                        label={en ? 'Pickup fee' : 'Prise en charge'}
+                        hint={driverToPickupKm != null ? (en ? `Driver about ${Math.round(driverToPickupKm)} km away` : `Chauffeur à environ ${Math.round(driverToPickupKm)} km`) : undefined}
+                        value={formatTnd(pricing.baseFare, en)}
+                      />
+                      {pricing.rows.map((row, index) => (
+                        <DetailRow
+                          key={index}
+                          label={row.label}
+                          hint={`${formatKm(row.km, en)} × ${row.rate.toFixed(2).replace('.', en ? '.' : ',')}`}
+                          value={formatTnd(row.subtotal, en)}
+                        />
+                      ))}
+                      {pricing.appliedMinimum && (
+                        <DetailRow
+                          label={en ? 'Minimum fare applied' : 'Prix minimum appliqué'}
+                          value={formatTnd(pricing.subtotal, en)}
+                        />
+                      )}
+                      {vehicleMultiplier > 1 && (
+                        <DetailRow
+                          label={`${en ? 'Vehicle' : 'Véhicule'} (${vehicleTypeName})`}
+                          value={`×${String(vehicleMultiplier).replace('.', en ? '.' : ',')}`}
+                        />
+                      )}
+                      {vipMultiplier > 1 && <DetailRow label="VIP" value={`×${String(vipMultiplier).replace('.', en ? '.' : ',')}`} />}
+                      {approachSurcharge > 0 && (
+                        <DetailRow
+                          label={en ? 'Long-distance approach' : 'Approche longue distance'}
+                          hint={`${Math.floor((driverToPickupKm ?? 0) / 50)} × 30 TND`}
+                          value={`+${formatTnd(approachSurcharge, en, 0)}`}
+                        />
+                      )}
+                      {hasAdjustments && (
+                        <DetailRow
+                          strong
+                          label={en ? 'Subtotal' : 'Sous-total'}
+                          value={formatTnd(subtotal, en)}
+                        />
+                      )}
+                      {night > 0 && (
+                        <DetailRow
+                          label={en ? `Night trip (9pm–6am) +${night}%` : `Trajet de nuit (21h–6h) +${night} %`}
+                          value={`+${formatTnd(extraAmount(night), en)}`}
+                        />
+                      )}
+                      {weekend > 0 && (
+                        <DetailRow
+                          label={en ? `Weekend +${weekend}%` : `Week-end +${weekend} %`}
+                          value={`+${formatTnd(extraAmount(weekend), en)}`}
+                        />
+                      )}
+                      {showRounding && (
+                        <DetailRow
+                          label={en ? 'Rounded up to the next dinar' : 'Arrondi au dinar supérieur'}
+                          value={`+${formatTnd(rounding, en)}`}
+                        />
+                      )}
+                      <DetailRow strong label={en ? 'Total' : 'Total'} value={`${estimatedPrice} TND`} />
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                </details>
+              </div>
+            );
+          })()}
 
           
           {/* Date et heure */}
@@ -1115,14 +1101,14 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             )}
             
             {!isValid && (
-              <p className="mt-2 text-sm text-amber-600 flex items-center gap-2">
+              <p className="mt-2 text-sm text-warning-600 flex items-center gap-2">
                 <AlertCircle size={16} />
                 {en ? 'Please fill in all required fields' : 'Veuillez remplir tous les champs requis'}
               </p>
             )}
             
             {!estimatedPrice && isValid && (
-              <p className="mt-2 text-sm text-amber-600 flex items-center gap-2">
+              <p className="mt-2 text-sm text-warning-600 flex items-center gap-2">
                 <AlertCircle size={16} />
                 {en ? 'Please enter valid addresses so we can calculate the fare' : 'Veuillez saisir des adresses valides pour calculer le prix'}
               </p>

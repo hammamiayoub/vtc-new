@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { SkeletonList } from './ui/Skeleton';
 import { ArrowLeft, Loader2, Package, CheckCircle, User, Phone, Mail } from 'lucide-react';
 import { Button } from './ui/Button';
 import { ParcelAttachmentsGallery } from './ui/ParcelAttachmentsGallery';
@@ -64,9 +65,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="animate-spin text-gray-400" size={32} />
-      </div>
+      <SkeletonList count={3} />
     );
   }
 
@@ -96,7 +95,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
 
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex items-start gap-3 mb-4">
-          <Package className="text-blue-600 mt-1" size={22} />
+          <Package className="text-gray-700 mt-1" size={22} />
           <div>
             <h2 className="text-lg font-bold text-gray-900">{en ? 'Parcel transport request' : 'Demande de transport de colis'}</h2>
             <p className="text-sm text-gray-500">{directionLabel(request.direction, locale)} · {statusLabel(request.status, locale)}</p>
@@ -173,16 +172,16 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
       )}
 
       {request.status === 'accepted' && acceptedProposal && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+        <div className="bg-success-50 border border-success-200 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-3">
-            <CheckCircle className="text-green-600" size={20} />
-            <h3 className="font-semibold text-green-900">{en ? 'Offer accepted — delivery in progress' : 'Offre acceptée — livraison en cours'}</h3>
+            <CheckCircle className="text-success-600" size={20} />
+            <h3 className="font-semibold text-success-900">{en ? 'Offer accepted — delivery in progress' : 'Offre acceptée — livraison en cours'}</h3>
           </div>
-          <p className="text-lg font-bold text-green-800 mb-3">
+          <p className="text-lg font-bold text-success-800 mb-3">
             {acceptedProposal.price} {acceptedProposal.currency}
           </p>
           {acceptedProposal.drivers && (
-            <div className="space-y-1 text-sm text-green-900">
+            <div className="space-y-1 text-sm text-success-900">
               <p className="flex items-center gap-2">
                 <User size={14} />
                 {acceptedProposal.drivers.first_name} {acceptedProposal.drivers.last_name}
@@ -201,7 +200,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
               )}
             </div>
           )}
-          <p className="text-xs text-green-700 mt-3">
+          <p className="text-xs text-success-700 mt-3">
             {en
               ? 'A confirmation email with contact details was sent to both parties.'
               : 'Un email de confirmation avec les coordonnées a été envoyé aux deux parties.'}
@@ -220,7 +219,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
                 key={proposal.id}
                 className={`p-4 rounded-lg border ${
                   proposal.status === 'accepted'
-                    ? 'border-green-300 bg-green-50'
+                    ? 'border-success-300 bg-success-50'
                     : proposal.status === 'rejected'
                     ? 'border-gray-200 bg-gray-50 opacity-60'
                     : 'border-gray-200'
@@ -260,7 +259,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
                     </Button>
                   )}
                   {proposal.status === 'accepted' && (
-                    <span className="text-sm font-medium text-green-700">{en ? 'Accepted' : 'Acceptée'}</span>
+                    <span className="text-sm font-medium text-success-700">{en ? 'Accepted' : 'Acceptée'}</span>
                   )}
                   {proposal.status === 'rejected' && (
                     <span className="text-sm text-gray-400">{en ? 'Not selected' : 'Non retenue'}</span>
@@ -273,7 +272,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
       )}
 
       {proposals.length === 0 && request.status === 'pending' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700">
           {en
             ? 'Your request was sent to eligible carriers. You will get an email for each new offer.'
             : 'Votre demande a été envoyée aux transporteurs éligibles. Vous recevrez un email à chaque nouvelle proposition.'}

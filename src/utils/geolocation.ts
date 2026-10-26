@@ -203,6 +203,12 @@ export const calculatePrice = (
   return Math.round(totalPrice * 100) / 100;
 };
 
+/**
+ * Prix client final : arrondi au dinar supérieur. On passe d'abord par les centimes pour qu'un total
+ * de 252,0000000001 (bruit de calcul flottant) ne devienne pas 253.
+ */
+export const roundFareUp = (amount: number): number => Math.ceil(Math.round(amount * 100) / 100);
+
 export const calculatePriceWithSurcharges = (
   distanceKm: number,
   vehicleType: string | undefined,
@@ -221,7 +227,7 @@ export const calculatePriceWithSurcharges = (
   
   const surcharges = calculateSurcharges(scheduledTime, basePrice);
   const approachSurcharge = computeLongRangeApproachSurchargeTnd(driverToPickupKm, vehicleType);
-  const finalPrice = Math.ceil(basePrice + surcharges.totalSurcharge + approachSurcharge);
+  const finalPrice = roundFareUp(basePrice + surcharges.totalSurcharge + approachSurcharge);
   
   return {
     basePrice,

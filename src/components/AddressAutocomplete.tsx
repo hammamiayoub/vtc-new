@@ -354,7 +354,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           data-form-type="other"
           className={
             inputClassName ??
-            'w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed'
+            'w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed'
           }
         />
 

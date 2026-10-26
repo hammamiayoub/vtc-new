@@ -304,7 +304,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+              <AlertCircle className="w-6 h-6 text-danger-600" />
               <h3 className="text-xl font-bold text-gray-900">Abonnement expiré</h3>
             </div>
             <p className="text-gray-700">
@@ -315,7 +315,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
-                className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+                className="flex-1 bg-black text-white hover:bg-gray-800"
                 onClick={() => {
                   setShowExpiredModal(false);
                   setSelectedBillingPeriod('monthly');
@@ -335,10 +335,10 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
         </div>
       )}
       {/* Carte de statut principal */}
-      <div className={`rounded-xl shadow-lg p-6 ${
+      <div className={`rounded-xl p-6 ${
         isPremium 
-          ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white' 
-          : 'bg-white border-2 border-gray-200'
+          ? 'bg-gray-900 text-white' 
+          : 'bg-white border border-surface-border'
       }`}>
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -385,7 +385,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             <>
                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                  <div 
-                   className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                   className="bg-gray-900 h-2 rounded-full transition-all duration-300"
                    style={{ width: `${Math.min(100, (subscriptionStatus.lifetimeAcceptedBookings / 2) * 100)}%` }}
                  ></div>
                </div>
@@ -415,14 +415,14 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
 
         {/* Alerte si quota atteint */}
         {!isPremium && !subscriptionStatus.canAcceptMoreBookings && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="mt-4 bg-danger-50 border border-danger-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-danger-600 flex-shrink-0 mt-0.5" />
               <div>
-                 <h4 className="font-semibold text-red-900 mb-1">
+                 <h4 className="font-semibold text-danger-900 mb-1">
                    Courses gratuites épuisées
                  </h4>
-                 <p className="text-sm text-red-800">
+                 <p className="text-sm text-danger-800">
                    Vous avez utilisé vos 2 courses gratuites. 
                    Souscrivez à l'abonnement Premium pour continuer à recevoir des courses.
                  </p>
@@ -434,9 +434,9 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
 
       {/* Carte Premium - Si compte gratuit */}
       {!isPremium && (
-        <div className="bg-gradient-to-br from-purple-50 to-blue-50 border-2 border-purple-200 rounded-xl p-6">
+        <div className="bg-white border border-surface-border rounded-xl p-6">
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center flex-shrink-0">
               <Unlock size={24} className="text-white" />
             </div>
             <div>
@@ -459,20 +459,20 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                 onClick={() => setSelectedBillingPeriod('monthly')}
                 className={`relative p-4 border-2 rounded-lg transition-all ${
                   selectedBillingPeriod === 'monthly'
-                    ? 'border-purple-600 bg-purple-50'
+                    ? 'border-gray-900 bg-gray-50'
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
                 <div className="text-center">
                   <p className="font-semibold text-gray-900 mb-1">Mensuel</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-gray-900">
                     {calculatePrices('monthly').totalPrice} TND
                   </p>
                   <p className="text-xs text-gray-500 mt-1">par mois</p>
                 </div>
                 {selectedBillingPeriod === 'monthly' && (
                   <div className="absolute top-2 right-2">
-                    <Check className="w-5 h-5 text-purple-600" />
+                    <Check className="w-5 h-5 text-gray-900" />
                   </div>
                 )}
               </button>
@@ -481,18 +481,18 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                 onClick={() => setSelectedBillingPeriod('yearly')}
                 className={`relative p-4 border-2 rounded-lg transition-all ${
                   selectedBillingPeriod === 'yearly'
-                    ? 'border-purple-600 bg-purple-50'
+                    ? 'border-gray-900 bg-gray-50'
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
                 <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  <span className="bg-success-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                     -10%
                   </span>
                 </div>
                 <div className="text-center">
                   <p className="font-semibold text-gray-900 mb-1">Annuel</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-gray-900">
                     {calculatePrices('yearly').totalPrice} TND
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -501,14 +501,14 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                 </div>
                 {selectedBillingPeriod === 'yearly' && (
                   <div className="absolute top-2 right-2">
-                    <Check className="w-5 h-5 text-purple-600" />
+                    <Check className="w-5 h-5 text-gray-900" />
                   </div>
                 )}
               </button>
             </div>
             {selectedBillingPeriod === 'yearly' && (
-              <p className="text-xs text-green-700 mt-2 text-center font-medium">
-                🎉 Économisez {(parseFloat(calculatePrices('monthly').totalPrice) * 12 - parseFloat(calculatePrices('yearly').totalPrice)).toFixed(2)} TND par an !
+              <p className="text-xs text-success-700 mt-2 text-center font-medium">
+                Économisez {(parseFloat(calculatePrices('monthly').totalPrice) * 12 - parseFloat(calculatePrices('yearly').totalPrice)).toFixed(2)} TND par an !
               </p>
             )}
           </div>
@@ -516,21 +516,21 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
           {/* Avantages Premium */}
           <div className="space-y-3 mb-6">
             <div className="flex items-start gap-3">
-              <Check size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
+              <Check size={20} className="text-success-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-gray-900">Courses illimitées</p>
                 <p className="text-sm text-gray-600">Acceptez autant de courses que vous le souhaitez</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Check size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
+              <Check size={20} className="text-success-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-gray-900">Priorité sur les réservations</p>
                 <p className="text-sm text-gray-600">Recevez les nouvelles demandes en priorité</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Check size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
+              <Check size={20} className="text-success-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-gray-900">Support prioritaire</p>
                 <p className="text-sm text-gray-600">Assistance rapide en cas de besoin</p>
@@ -554,7 +554,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               <span className="text-gray-700 font-medium">{prices.vatAmount} TND</span>
             </div>
             {selectedBillingPeriod === 'yearly' && (
-              <div className="flex items-baseline justify-between text-sm mb-3 text-green-700">
+              <div className="flex items-baseline justify-between text-sm mb-3 text-success-700">
                 <span className="font-medium">Réduction annuelle (10%)</span>
                 <span className="font-bold">
                   -{(parseFloat(calculatePrices('monthly').basePrice) * 12 * 0.10).toFixed(2)} TND
@@ -564,7 +564,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             <div className="border-t border-gray-200 pt-3">
               <div className="flex items-baseline justify-between mb-1">
                 <span className="text-gray-900 font-semibold">Total TTC</span>
-                <span className="text-2xl font-bold text-purple-600">{prices.totalPrice} TND</span>
+                <span className="text-2xl font-bold text-gray-900">{prices.totalPrice} TND</span>
               </div>
               {selectedBillingPeriod === 'yearly' && (
                 <p className="text-xs text-gray-500 text-right">
@@ -579,7 +579,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             <Button
               onClick={handleSubscriptionRequest}
               disabled={submittingRequest}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 rounded-lg transition-colors duration-200"
             >
               {submittingRequest ? (
                 <>
@@ -595,19 +595,19 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             </Button>
           ) : (
             <div className="space-y-3">
-              <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
+              <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-warning-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-amber-900 mb-1">
+                    <h4 className="font-semibold text-warning-900 mb-1">
                       Demande en attente
                     </h4>
-                    <p className="text-sm text-amber-800">
+                    <p className="text-sm text-warning-800">
                       Vous avez déjà une demande d'abonnement en cours. Effectuez le paiement avec les informations ci-dessous.
                     </p>
                     {pendingRequest && (
-                      <div className="mt-3 rounded-lg border border-amber-200 bg-white p-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-900 mb-1">
+                      <div className="mt-3 rounded-lg border border-warning-200 bg-white p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-warning-900 mb-1">
                           Durée souscrite
                         </p>
                         <p className="text-sm font-bold text-gray-900">
@@ -624,7 +624,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               </div>
               <Button
                 onClick={() => setShowPaymentInfo(!showPaymentInfo)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-lg"
+                className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 rounded-lg"
               >
                 <Info size={20} className="mr-2" />
                 {showPaymentInfo ? 'Masquer' : 'Voir'} les informations de paiement
@@ -633,11 +633,11 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                 onClick={handleCancelPendingRequest}
                 disabled={cancellingRequest}
                 variant="outline"
-                className="w-full border-red-300 text-red-700 hover:bg-red-50 font-semibold py-4 rounded-lg"
+                className="w-full border-danger-300 text-danger-700 hover:bg-danger-50 font-semibold py-4 rounded-lg"
               >
                 {cancellingRequest ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600 mr-2" />
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-danger-600 mr-2" />
                     Annulation...
                   </>
                 ) : (
@@ -654,21 +654,21 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
 
       {/* Informations de paiement */}
       {showPaymentInfo && (
-        <div className="bg-white border-2 border-blue-200 rounded-xl p-6">
+        <div className="bg-white border border-surface-border rounded-xl p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Info className="text-blue-600" size={24} />
+            <Info className="text-gray-700" size={24} />
             Informations de paiement
           </h3>
 
           {pendingRequest && (
-            <div className="mb-4 rounded-lg border-2 border-purple-200 bg-purple-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-purple-900 mb-1">
+            <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-900 mb-1">
                 Durée souscrite (en attente de validation)
               </p>
               <p className="text-base font-bold text-gray-900">
                 {getBillingPeriodLabel(pendingRequest.billingPeriod)} — {getSubscriptionDurationLabel(pendingRequest.billingPeriod)}
               </p>
-              <p className="text-sm text-purple-800 mt-1">
+              <p className="text-sm text-gray-700 mt-1">
                 Montant : {pendingRequest.totalPriceTnd.toFixed(2)} TND TTC. Les dates exactes seront calculées à la validation de votre paiement.
               </p>
             </div>
@@ -676,25 +676,25 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
 
           <div className="space-y-4">
             {/* Méthode 1: Virement bancaire */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <CreditCard size={18} />
                 Méthode 1 : Virement bancaire
               </h4>
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-blue-800 font-medium">Bénéficiaire :</span>
-                  <p className="text-blue-900">TuniDrive SARL</p>
+                  <span className="text-gray-700 font-medium">Bénéficiaire :</span>
+                  <p className="text-gray-900">TuniDrive SARL</p>
                 </div>
                 <div>
-                  <span className="text-blue-800 font-medium">Numéro de compte :</span>
+                  <span className="text-gray-700 font-medium">Numéro de compte :</span>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="bg-white px-3 py-2 rounded border border-blue-300 text-blue-900 font-mono flex-1">
+                    <code className="bg-white px-3 py-2 rounded border border-gray-200 text-gray-900 font-mono flex-1">
                       TN59 04 117 1850077170413 86
                     </code>
                     <button
                       onClick={copyBankAccount}
-                      className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                      className="p-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
                       title="Copier le numéro"
                     >
                       {bankAccountCopied ? <Check size={16} /> : <Copy size={16} />}
@@ -702,26 +702,26 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                   </div>
                 </div>
                 <div>
-                  <span className="text-blue-800 font-medium">Montant :</span>
-                  <p className="text-blue-900 font-bold">{prices.totalPrice} TND</p>
+                  <span className="text-gray-700 font-medium">Montant :</span>
+                  <p className="text-gray-900 font-bold">{prices.totalPrice} TND</p>
                   {selectedBillingPeriod === 'yearly' && (
-                    <p className="text-xs text-blue-700 mt-1">Abonnement annuel avec 10% de réduction</p>
+                    <p className="text-xs text-gray-600 mt-1">Abonnement annuel avec 10% de réduction</p>
                   )}
                 </div>
                 <div>
-                  <span className="text-blue-800 font-medium">Motif du virement :</span>
-                  <p className="text-blue-900 font-mono">ABONNEMENT-{driverId.slice(0, 8).toUpperCase()}</p>
+                  <span className="text-gray-700 font-medium">Motif du virement :</span>
+                  <p className="text-gray-900 font-mono">ABONNEMENT-{driverId.slice(0, 8).toUpperCase()}</p>
                 </div>
               </div>
             </div>
 
             {/* Instructions après paiement */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <AlertCircle size={18} />
                 Après votre paiement
               </h4>
-              <ol className="text-sm text-amber-800 space-y-1 ml-4 list-decimal mb-4">
+              <ol className="text-sm text-gray-700 space-y-1 ml-4 list-decimal mb-4">
                 <li>Conservez le reçu de paiement</li>
                 <li>Notez votre numéro de référence de paiement</li>
                 <li>Contactez le support avec votre référence de paiement</li>
@@ -729,28 +729,28 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               </ol>
               
               {/* Liens de contact */}
-              <div className="border-t border-amber-300 pt-3">
-                <p className="text-xs font-semibold text-amber-900 mb-2">💬 Contactez-nous pour valider votre paiement :</p>
+              <div className="border-t border-gray-200 pt-3">
+                <p className="text-xs font-semibold text-gray-900 mb-2">Contactez-nous pour valider votre paiement :</p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <a
                     href={`https://wa.me/21628528477?text=${encodeURIComponent(`Bonjour, je souhaite valider mon abonnement Premium ${selectedBillingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'}.\n\nRéférence : ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}\n\nJ'ai effectué le paiement de ${prices.totalPrice} TND.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-lg"
+                    className="flex items-center justify-center gap-2 bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-lg"
                   >
                     <MessageCircle size={16} />
                     WhatsApp
                   </a>
                   <a
                     href={`mailto:support@tunidrive.net?subject=Validation%20Abonnement%20Premium%20${selectedBillingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'}%20-%20ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}&body=Bonjour,%0D%0A%0D%0AJe souhaite valider mon abonnement Premium ${selectedBillingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'}.%0D%0A%0D%0ARéférence : ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}%0D%0A%0D%0AJ'ai effectué le paiement de ${prices.totalPrice} TND par virement bancaire.%0D%0A%0D%0ANuméro de référence du paiement : __________%0D%0A%0D%0ACi-joint la preuve de paiement.%0D%0A%0D%0ACordialement`}
-                    className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-lg"
+                    className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-lg"
                   >
                     <Mail size={16} />
                     Email
                   </a>
                 </div>
-                <p className="text-xs text-amber-700 mt-2">
-                  💡 Les messages sont pré-remplis avec votre référence d'abonnement
+                <p className="text-xs text-gray-500 mt-2">
+                  Les messages sont pré-remplis avec votre référence d'abonnement
                 </p>
               </div>
             </div>

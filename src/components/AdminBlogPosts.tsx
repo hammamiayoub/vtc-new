@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Badge } from './ui/Badge';
 import { FileText, ImagePlus, Pencil, Trash2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
@@ -252,7 +253,7 @@ export const AdminBlogPosts: React.FC = () => {
           </label>
 
           {error && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-danger-600" role="alert">
               {error}
             </p>
           )}
@@ -301,13 +302,9 @@ export const AdminBlogPosts: React.FC = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <h3 className="font-semibold text-gray-900 truncate">{post.title}</h3>
-                    <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        post.published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
+                    <Badge tone={post.published ? 'success' : 'neutral'}>
                       {post.published ? 'Publié' : 'Brouillon'}
-                    </span>
+                    </Badge>
                     {post.source === 'auto' && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
                         Auto · {post.audience === 'driver' ? 'Chauffeurs' : 'Voyageurs'}
@@ -337,7 +334,7 @@ export const AdminBlogPosts: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => void removePost(post)}
-                      className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-danger-600 hover:text-danger-700"
                     >
                       <Trash2 size={14} />
                       Supprimer

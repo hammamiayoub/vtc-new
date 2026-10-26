@@ -87,7 +87,7 @@ const GoogleMapsTest: React.FC = () => {
       <p><strong>Clé API:</strong> {apiKey.substring(0, 20)}...</p>
       <p><strong>Statut:</strong> {status}</p>
       {status.includes('✅') && (
-        <p className="text-green-600 mt-2">🎉 L'autocomplétion devrait maintenant fonctionner !</p>
+        <p className="text-success-600 mt-2">🎉 L'autocomplétion devrait maintenant fonctionner !</p>
       )}
     </div>
   );

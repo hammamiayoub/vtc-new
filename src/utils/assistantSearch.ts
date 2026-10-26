@@ -46,6 +46,31 @@ const SYNONYMS: Record<string, string[]> = {
   paiement: ['payer', 'especes', 'carte', 'virement'],
   noter: ['avis', 'note', 'evaluation', 'etoile'],
   disponibilite: ['calendrier', 'horaire', 'planning'],
+  supplement: ['nuit', 'weekend', 'majoration', 'surcharge'],
+  surcharge: ['supplement', 'nuit', 'weekend'],
+  nuit: ['supplement', 'night'],
+  night: ['supplement', 'nuit', 'surcharge'],
+  weekend: ['supplement', 'samedi', 'dimanche'],
+  retour: ['aller', 'return', 'aller retour'],
+  return: ['retour', 'aller'],
+  gratuit: ['gratuite', 'quota', 'essai', 'free', 'offert'],
+  free: ['gratuit', 'quota', 'essai'],
+  mdp: ['mot', 'passe', 'password', 'oublie', 'reinitialiser'],
+  password: ['mot', 'passe', 'mdp', 'forgot', 'reset'],
+  oublie: ['password', 'mdp', 'reinitialiser'],
+  van: ['minibus', 'bus', 'vehicule', 'court'],
+  minibus: ['van', 'bus', 'vehicule'],
+  vehicule: ['voiture', 'van', 'minibus', 'berline', 'vehicle'],
+  vehicle: ['vehicule', 'van', 'minibus'],
+  rembourser: ['annulation', 'annuler'],
+  telephone: ['appeler', 'numero', 'phone', 'call'],
+  appeler: ['telephone', 'numero', 'call'],
+  parler: ['support', 'contact', 'whatsapp', 'aide'],
+  humain: ['support', 'contact', 'whatsapp', 'aide'],
+  conseiller: ['support', 'contact', 'whatsapp', 'aide'],
+  joindre: ['support', 'contact', 'whatsapp'],
+  reclamation: ['support', 'contact', 'probleme'],
+  probleme: ['support', 'contact', 'aide'],
 };
 
 const EXTRA_ENTRIES: Omit<AssistantEntry, 'id'>[] = [
@@ -86,19 +111,46 @@ function normalizeText(value: string): string {
     .trim();
 }
 
+/** Ramène un pluriel simple au singulier (« tarifs » → « tarif ») pour que requête et FAQ se rejoignent. */
+function stem(token: string): string {
+  if (token.length > 4 && (token.endsWith('s') || token.endsWith('x'))) return token.slice(0, -1);
+  return token;
+}
+
 function tokenize(value: string): string[] {
   const normalized = normalizeText(value);
   if (!normalized) return [];
 
   const tokens = normalized.split(' ').filter((t) => t.length > 1 && !STOP_WORDS.has(t));
-  const expanded = new Set(tokens);
+  const expanded = new Set<string>();
 
   for (const token of tokens) {
-    const extras = SYNONYMS[token];
-    if (extras) extras.forEach((e) => expanded.add(normalizeText(e)));
+    expanded.add(token);
+    expanded.add(stem(token));
+    const extras = SYNONYMS[token] ?? SYNONYMS[stem(token)];
+    if (extras) extras.forEach((e) => expanded.add(stem(normalizeText(e))));
   }
 
   return [...expanded];
+}
+
+/** Distance d'édition bornée : renvoie max+1 dès que l'écart dépasse `max` (rapide, sans matrice complète). */
+function editDistanceWithin(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    let rowMin = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      const value = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + cost);
+      row.push(value);
+      if (value < rowMin) rowMin = value;
+    }
+    if (rowMin > max) return max + 1;
+    prev = row;
+  }
+  return prev[b.length];
 }
 
 function buildKeywords(question: string, answer: string, extra: string[] = []): string[] {
@@ -201,7 +253,20 @@ function scoreEntry(query: string, queryTokens: string[], entry: AssistantEntry)
   const entryTokens = new Set(entry.keywords);
 
   for (const token of queryTokens) {
-    if (entryTokens.has(token)) score += 12;
+    if (entryTokens.has(token)) {
+      score += 12;
+      continue;
+    }
+    // Faute de frappe : 1 erreur tolérée dès 5 lettres, 2 dès 9 lettres (« aeroprt », « abonement »)
+    if (token.length >= 5) {
+      const max = token.length >= 9 ? 2 : 1;
+      for (const candidate of entryTokens) {
+        if (candidate.length >= 5 && editDistanceWithin(token, candidate, max) <= max) {
+          score += 7;
+          break;
+        }
+      }
+    }
   }
 
   const questionTokens = tokenize(entry.question);
@@ -226,10 +291,23 @@ function scoreEntry(query: string, queryTokens: string[], entry: AssistantEntry)
   return score;
 }
 
+export type AssistantAudience = 'client' | 'driver' | 'parcel';
+
+/** Profil probable du visiteur d'après la page : sert à départager « annuler une course » client/chauffeur. */
+export function audienceForPath(path: string): AssistantAudience | undefined {
+  if (path.startsWith('/client-dashboard')) return 'client';
+  if (path.startsWith('/dashboard') || path.startsWith('/signup') || path.startsWith('/driver')) return 'driver';
+  if (path.includes('colis') || path.includes('parcel')) return 'parcel';
+  return undefined;
+}
+
+const AUDIENCE_BOOST = 25;
+
 export function searchAssistantKnowledge(
   query: string,
   limit = 3,
   locale: Locale = 'fr',
+  audience?: AssistantAudience,
 ): AssistantSearchResult[] {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
@@ -238,35 +316,59 @@ export function searchAssistantKnowledge(
   if (queryTokens.length === 0) return [];
 
   return getAssistantEntries(locale)
-    .map((entry) => ({ entry, score: scoreEntry(trimmed, queryTokens, entry) }))
+    .map((entry) => {
+      const base = scoreEntry(trimmed, queryTokens, entry);
+      // Le biais ne s'applique qu'aux entrées déjà pertinentes, jamais à un score nul.
+      const boost = audience && base >= 14 && entry.categoryId === audience ? AUDIENCE_BOOST : 0;
+      return { entry, score: base + boost };
+    })
     .filter((r) => r.score >= 14)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 }
 
-export function getQuickSuggestions(locale: Locale = 'fr'): AssistantEntry[] {
-  const ids = ['c3', 'c1', 'p1', 'd1', 'g3', 'extra-1', 'seo-2'];
-  return ids
+const DEFAULT_SUGGESTION_IDS = ['c3', 'c1', 'p1', 'd1', 'g3', 'extra-1'];
+
+/** Questions proposées selon la page où se trouve le visiteur. */
+function suggestionIdsForPath(path: string): string[] {
+  if (path.startsWith('/client-dashboard')) return ['c1', 'c2', 'c12', 'c3', 'c10', 'g4'];
+  if (path.startsWith('/dashboard')) return ['d2', 'd3', 'd9', 'd6', 'd4', 'g4'];
+  if (path.startsWith('/signup') || path.startsWith('/driver') || path.includes('chauffeur')) {
+    return ['d1', 'd4', 'd6', 'd5', 'd8', 'g4'];
+  }
+  if (path.includes('colis') || path.includes('parcel')) return ['p1', 'p3', 'p5', 'p2', 'c9', 'g4'];
+  if (path.includes('groupes') || path.includes('group')) return ['c3', 'c12', 'c10', 'c1', 'g4', 'extra-1'];
+  if (path === '/' || path.startsWith('/vtc')) return ['c3', 'c10', 'c1', 'extra-3', 'g3', 'extra-1'];
+  return DEFAULT_SUGGESTION_IDS;
+}
+
+export function getQuickSuggestions(locale: Locale = 'fr', path = '/'): AssistantEntry[] {
+  return suggestionIdsForPath(path)
     .map((id) => findAssistantEntryById(id, locale))
     .filter((e): e is AssistantEntry => Boolean(e));
+}
+
+/** Autres questions de la même catégorie, les plus proches par mots-clés (après une réponse). */
+export function getRelatedEntries(entry: AssistantEntry, locale: Locale = 'fr', limit = 3): AssistantEntry[] {
+  const own = new Set(entry.keywords);
+  return getAssistantEntries(locale)
+    .filter((e) => e.id !== entry.id && e.categoryId === entry.categoryId && !e.id.startsWith('seo-'))
+    .map((e) => ({ e, overlap: e.keywords.reduce((n, k) => n + (own.has(k) ? 1 : 0), 0) }))
+    .sort((a, b) => b.overlap - a.overlap)
+    .slice(0, limit)
+    .map((r) => r.e);
 }
 
 export function formatAssistantFallback(locale: Locale = 'fr'): string {
   if (locale === 'en') {
     return (
       'I could not find a precise answer to that question.\n\n' +
-      'Try keywords such as “price”, “airport”, “parcel” or “driver subscription”, or browse the categories below.\n\n' +
-      'For personal help:\n' +
-      '• WhatsApp: +216 28 528 477\n' +
-      '• Email: support@tunidrive.net'
+      'Try keywords such as “price”, “airport”, “parcel” or “driver subscription”, or contact our team directly:'
     );
   }
   return (
     'Je n\'ai pas trouvé de réponse précise à cette question.\n\n' +
-    'Essayez des mots-clés comme « tarif », « aéroport », « colis », « abonnement chauffeur » ou parcourez les catégories ci-dessous.\n\n' +
-    'Pour une aide personnalisée :\n' +
-    '• WhatsApp : +216 28 528 477\n' +
-    '• Email : support@tunidrive.net'
+    'Essayez des mots-clés comme « tarif », « aéroport », « colis » ou « abonnement chauffeur », ou contactez directement notre équipe :'
   );
 }
 

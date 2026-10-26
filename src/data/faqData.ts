@@ -21,19 +21,19 @@ export const faqCategories: FaqCategory[] = [
         id: "c1",
         question: "Comment créer une course ?",
         answer:
-          "Connectez-vous à votre espace client, puis cliquez sur « Réserver une course ». Saisissez votre adresse de départ, votre destination et choisissez le type de véhicule souhaité. Confirmez la réservation : un chauffeur sera assigné et vous recevrez une notification.",
+          "Connectez-vous à votre espace client, puis ouvrez l'onglet « Nouvelle réservation ». Saisissez votre adresse de départ, votre destination, la date et le type de véhicule. Le prix estimé s'affiche, puis la liste des chauffeurs disponibles : choisissez celui qui vous convient et confirmez.\n\nLe chauffeur doit ensuite accepter la course ; vous êtes notifié dès que c'est fait.",
       },
       {
         id: "c2",
         question: "Comment annuler ou modifier une réservation ?",
         answer:
-          "Depuis votre tableau de bord, retrouvez la course dans la liste « Mes courses ». Cliquez sur la course concernée et sélectionnez « Annuler » ou contactez le support. Pensez à annuler le plus tôt possible pour ne pas pénaliser le chauffeur.",
+          "Depuis « Mes réservations », ouvrez la course concernée et cliquez sur « Annuler ». L'annulation en ligne est possible jusqu'à 24 h avant l'heure prévue, tant que la course est en attente ou acceptée.\n\nPassé ce délai, contactez directement le chauffeur (son numéro est affiché sur la course) ou le support. Pour changer l'horaire ou l'adresse, annulez puis réservez de nouveau, ou écrivez-nous.",
       },
       {
         id: "c3",
         question: "Quels sont les tarifs des courses ?",
         answer:
-          "Les tarifs VTC TuniDrive comprennent :\n• Prise en charge variable selon la distance du chauffeur : 10 TND (< 10 km), 20 TND (10–30 km), 30 TND (30–50 km), 50 TND (50 km+)\n• 0–15 km : 1,53 TND/km\n• 15–50 km : 1,98 TND/km\n• 50–100 km : 1,71 TND/km\n• 100–250 km : 1,35 TND/km\n• 250+ km : 1,08 TND/km\n• Prix minimum : 14,40 TND\n• Multiplicateurs véhicule : Van ×1,875 · Minibus ×3,125 · Bus ×4,375\n\nLe tarif au km est progressif : chaque tranche est facturée séparément. Le prix estimé vous est affiché avant confirmation.",
+          "Les tarifs VTC TuniDrive comprennent :\n• Prise en charge variable selon la distance du chauffeur : 10 TND (< 10 km), 20 TND (10–30 km), 30 TND (30–50 km), 50 TND (50 km+)\n• 0–15 km : 1,53 TND/km\n• 15–50 km : 1,98 TND/km\n• 50–100 km : 1,71 TND/km\n• 100–250 km : 1,35 TND/km\n• 250+ km : 1,08 TND/km\n• Prix minimum : 14,40 TND\n• Multiplicateurs véhicule : Van ×1,875 · Minibus ×3,125 · Bus ×4,375\n• Suppléments : +15 % de nuit (21 h–6 h) et +10 % le week-end, cumulables\n• Aller-retour : la distance est doublée\n\nLe tarif au km est progressif : chaque tranche est facturée séparément. Le prix estimé vous est affiché avant confirmation.",
       },
       {
         id: "c4",
@@ -69,7 +69,25 @@ export const faqCategories: FaqCategory[] = [
         id: "c9",
         question: "Puis-je aussi envoyer des colis via TuniDrive ?",
         answer:
-          "Oui ! En plus des courses VTC, TuniDrive propose le transport international de colis et marchandises entre l'Europe et la Tunisie.\n\nConnectez-vous à votre espace client, onglet « Transport colis », puis déposez une demande de devis. Pour plus de détails, choisissez la catégorie « Transport de colis » ci-dessous.",
+          "Oui ! En plus des courses VTC, TuniDrive propose le transport international de colis et marchandises entre l'Europe et la Tunisie.\n\nConnectez-vous à votre espace client, ouvrez l'onglet « Expédier mes colis » et déposez une demande de devis. Vous suivez ensuite les offres reçues dans « Mes devis colis ».",
+      },
+      {
+        id: "c10",
+        question: "Y a-t-il des suppléments (nuit, week-end, aller-retour) ?",
+        answer:
+          "Oui, trois éléments peuvent modifier le prix :\n• Nuit (de 21 h à 6 h) : +15 %\n• Week-end (samedi et dimanche) : +10 %, cumulable avec le supplément de nuit\n• Aller-retour : la distance est comptée deux fois\n\nLe prix final, suppléments inclus, est affiché avant que vous confirmiez la réservation.",
+      },
+      {
+        id: "c11",
+        question: "Pourquoi ne puis-je pas réserver un van ou un minibus pour un trajet court ?",
+        answer:
+          "Pour les véhicules autres que le taxi, la distance aller minimale est de 20 km. En dessous, la réservation est bloquée : augmentez la distance du trajet ou choisissez le type « Taxi » pour les courses courtes.",
+      },
+      {
+        id: "c12",
+        question: "Puis-je choisir mon chauffeur ?",
+        answer:
+          "Oui. Après avoir saisi votre trajet, la liste des chauffeurs disponibles s'affiche avec leur véhicule et leur note : vous choisissez celui qui vous convient avant de confirmer.",
       },
     ],
   },
@@ -82,7 +100,7 @@ export const faqCategories: FaqCategory[] = [
         id: "p1",
         question: "Comment demander un devis pour un colis ?",
         answer:
-          "Créez un compte client ou connectez-vous, puis ouvrez l'onglet « Transport colis » dans votre tableau de bord.\n\nRenseignez la direction (Europe → Tunisie ou Tunisie → Europe), les adresses, la date souhaitée, la description de vos objets et ajoutez des photos ou factures si besoin. Votre demande est envoyée aux transporteurs correspondants.",
+          "Créez un compte client ou connectez-vous, puis ouvrez l'onglet « Expédier mes colis » dans votre tableau de bord.\n\nRenseignez la direction (Europe → Tunisie ou Tunisie → Europe), les adresses, la date souhaitée, la description de vos objets et ajoutez des photos ou factures si besoin. Votre demande est envoyée aux transporteurs correspondants ; leurs propositions apparaissent dans « Mes devis colis ».",
       },
       {
         id: "p2",
@@ -118,7 +136,7 @@ export const faqCategories: FaqCategory[] = [
         id: "p7",
         question: "Comment recevoir et répondre aux demandes (transporteur) ?",
         answer:
-          "Connectez-vous à votre espace chauffeur/transporteur. Si votre type d'activité inclut le transport de colis, l'onglet « Demandes colis » affiche les demandes compatibles avec vos disponibilités.\n\nVous proposez votre prix, un délai estimé et un message. Le client est notifié par email de votre proposition.",
+          "Connectez-vous à votre espace chauffeur/transporteur. Si votre type d'activité inclut le transport de colis, l'onglet « Mes devis de colis » affiche les demandes compatibles avec vos disponibilités.\n\nVous proposez votre prix, un délai estimé et un message. Le client est notifié par email de votre proposition.",
       },
       {
         id: "p8",
@@ -149,7 +167,7 @@ export const faqCategories: FaqCategory[] = [
         id: "d2",
         question: "Comment voir les courses disponibles ?",
         answer:
-          "Connectez-vous à votre espace chauffeur. Les courses disponibles dans votre zone apparaissent en temps réel dans votre tableau de bord. Vous recevez également des notifications push dès qu'une nouvelle course est proposée.",
+          "Connectez-vous à votre espace chauffeur. Les demandes des clients qui vous ont choisi apparaissent dans « Mes courses », section « Nouvelles demandes », et vous recevez une notification push.\n\nAcceptez ou refusez chaque demande depuis cette page.",
       },
       {
         id: "d3",
@@ -186,6 +204,12 @@ export const faqCategories: FaqCategory[] = [
         question: "Comment gérer ma disponibilité ?",
         answer:
           "Utilisez le calendrier de disponibilité dans votre tableau de bord pour indiquer vos créneaux de travail. Vous pouvez activer ou désactiver votre disponibilité à tout moment pour ne recevoir des courses que quand vous le souhaitez.",
+      },
+      {
+        id: "d9",
+        question: "Puis-je annuler une course acceptée ?",
+        answer:
+          "Oui, jusqu'à 24 h avant l'heure prévue, avec le bouton « Annuler » (ou « Refuser » pour une nouvelle demande). Passé ce délai, contactez le client par téléphone : son numéro est affiché dans la course.",
       },
     ],
   },

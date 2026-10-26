@@ -144,8 +144,8 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg">
+                <p className="text-sm text-danger-600">{error}</p>
               </div>
             )}
 

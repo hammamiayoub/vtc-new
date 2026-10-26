@@ -123,8 +123,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         <div className="p-8">
           {success ? (
             <div className="text-center">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle size={40} className="text-green-600" />
+              <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle size={40} className="text-success-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 {en ? 'Email sent' : 'Email envoyé !'}
@@ -170,6 +170,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   </div>
                   <input
                     type="email"
+                    autoComplete="email"
+                    inputMode="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={en ? 'Your email address' : 'Votre adresse email'}
@@ -179,8 +181,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 </div>
 
                 {error && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                    <p className="text-sm text-red-600">{translateSignupMessage(error, locale)}</p>
+                  <div className="p-4 bg-danger-50 border border-danger-200 rounded-xl">
+                    <p className="text-sm text-danger-600">{translateSignupMessage(error, locale)}</p>
                   </div>
                 )}
 
