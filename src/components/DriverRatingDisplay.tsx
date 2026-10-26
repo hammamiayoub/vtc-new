@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Skeleton } from './ui/Skeleton';
 import { Star, MessageSquare, User, TrendingUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Rating } from '../types';
@@ -111,9 +112,9 @@ export const DriverRatingDisplay: React.FC<DriverRatingDisplayProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-gray-500">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
-        <span className="text-sm">Chargement des notes...</span>
+      <div role="status" aria-label="Chargement des notes" className="flex items-center gap-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-16" />
       </div>
     );
   }

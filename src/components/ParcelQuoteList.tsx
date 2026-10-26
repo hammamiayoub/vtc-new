@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Package, ChevronRight, Loader2 } from 'lucide-react';
+import { Badge, type BadgeTone } from './ui/Badge';
+import { SkeletonList } from './ui/Skeleton';
+import { Package, ChevronRight } from 'lucide-react';
 import { fetchClientParcelRequests, directionLabel, statusLabel } from '../utils/parcelService';
 import type { ParcelQuoteRequest } from '../types';
 import { useLocale } from '../i18n/locale';
@@ -10,13 +12,13 @@ interface ParcelQuoteListProps {
   refreshKey?: number;
 }
 
-const statusColors: Record<ParcelQuoteRequest['status'], string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  quoted: 'bg-blue-100 text-blue-800',
-  accepted: 'bg-green-100 text-green-800',
-  completed: 'bg-emerald-100 text-emerald-800',
-  cancelled: 'bg-gray-100 text-gray-600',
-  expired: 'bg-red-100 text-red-700',
+const statusTones: Record<ParcelQuoteRequest['status'], BadgeTone> = {
+  pending: 'warning',
+  quoted: 'info',
+  accepted: 'success',
+  completed: 'success',
+  cancelled: 'neutral',
+  expired: 'danger',
 };
 
 export const ParcelQuoteList: React.FC<ParcelQuoteListProps> = ({
@@ -47,9 +49,7 @@ export const ParcelQuoteList: React.FC<ParcelQuoteListProps> = ({
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="animate-spin text-gray-400" size={32} />
-      </div>
+      <SkeletonList count={3} />
     );
   }
 
@@ -76,9 +76,7 @@ export const ParcelQuoteList: React.FC<ParcelQuoteListProps> = ({
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[req.status]}`}>
-                  {statusLabel(req.status, locale)}
-                </span>
+                <Badge tone={statusTones[req.status]}>{statusLabel(req.status, locale)}</Badge>
                 <span className="text-xs text-gray-500">{directionLabel(req.direction, locale)}</span>
               </div>
               <p className="text-sm text-gray-900 truncate">
@@ -87,7 +85,7 @@ export const ParcelQuoteList: React.FC<ParcelQuoteListProps> = ({
               <p className="text-xs text-gray-500 mt-1">
                 {en ? 'Preferred date: ' : 'Date souhaitée : '}{new Date(req.desiredDate).toLocaleDateString(dateLocale)}
                 {req.proposals && req.proposals.length > 0 && (
-                  <span className="ml-2 text-blue-600">
+                  <span className="ml-2 text-gray-700">
                     · {req.proposals.length} {en ? (req.proposals.length > 1 ? 'offers' : 'offer') : `proposition${req.proposals.length > 1 ? 's' : ''}`}
                   </span>
                 )}

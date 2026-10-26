@@ -116,8 +116,8 @@ export const RatingModal: React.FC<RatingModalProps> = ({
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={32} className="text-green-600" />
+          <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={32} className="text-success-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             {en ? 'Thank you for your review!' : 'Merci pour votre avis !'}
@@ -138,7 +138,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
           </div>
           <Button
             onClick={handleClose}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-success-600 hover:bg-success-700 text-white"
           >
             {en ? 'Close' : 'Fermer'}
           </Button>
@@ -154,8 +154,8 @@ export const RatingModal: React.FC<RatingModalProps> = ({
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <Star className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                <Star className="w-6 h-6 text-gray-700" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{en ? 'Rate your driver' : 'Noter votre chauffeur'}</h2>
@@ -236,7 +236,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
                 onChange={(e) => setComment(e.target.value)}
                 rows={4}
                 placeholder={en ? 'Share your experience with this driver...' : 'Partagez votre expérience avec ce chauffeur...'}
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
                 maxLength={500}
               />
               <div className="text-xs text-gray-500 mt-1">
@@ -249,7 +249,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
               <Button
                 type="submit"
                 disabled={rating === 0 || isSubmitting}
-                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                className="flex-1 bg-black hover:bg-gray-800 text-white"
               >
                 {isSubmitting ? (
                   <>

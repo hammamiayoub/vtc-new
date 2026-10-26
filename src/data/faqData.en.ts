@@ -10,19 +10,19 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'c1',
         question: 'How do I book a ride?',
         answer:
-          'Sign in to your rider space, then click Book a ride. Enter your pickup address, destination and vehicle type. Confirm the booking: a driver is assigned and you receive a notification.',
+          'Sign in to your rider space and open the New booking tab. Enter your pickup address, destination, date and vehicle type. The estimated price appears, followed by the list of available drivers: pick the one you like and confirm.\n\nThe driver then has to accept the ride; you are notified as soon as they do.',
       },
       {
         id: 'c2',
         question: 'How do I cancel or change a booking?',
         answer:
-          'From your dashboard, open the ride in My rides. Select Cancel or contact support. Cancel as early as you can so the driver is not left waiting.',
+          'From My bookings, open the ride and click Cancel. Online cancellation is possible up to 24 hours before the scheduled time, while the ride is pending or accepted.\n\nAfter that, contact the driver directly (their number is shown on the ride) or support. To change the time or address, cancel and book again, or write to us.',
       },
       {
         id: 'c3',
         question: 'How much does a ride cost?',
         answer:
-          'TuniDrive fares include:\n• Pickup fee by driver distance: 10 TND (< 10 km), 20 TND (10–30 km), 30 TND (30–50 km), 50 TND (50 km+)\n• 0–15 km: 1.53 TND/km\n• 15–50 km: 1.98 TND/km\n• 50–100 km: 1.71 TND/km\n• 100–250 km: 1.35 TND/km\n• 250+ km: 1.08 TND/km\n• Minimum price: 14.40 TND\n• Vehicle multipliers: Van ×1.875 · Minibus ×3.125 · Bus ×4.375\n\nThe per-km rate is progressive. The estimated price is shown before you confirm.',
+          'TuniDrive fares include:\n• Pickup fee by driver distance: 10 TND (< 10 km), 20 TND (10–30 km), 30 TND (30–50 km), 50 TND (50 km+)\n• 0–15 km: 1.53 TND/km\n• 15–50 km: 1.98 TND/km\n• 50–100 km: 1.71 TND/km\n• 100–250 km: 1.35 TND/km\n• 250+ km: 1.08 TND/km\n• Minimum price: 14.40 TND\n• Vehicle multipliers: Van ×1.875 · Minibus ×3.125 · Bus ×4.375\n• Surcharges: +15% at night (9 pm–6 am) and +10% on weekends, cumulative\n• Return trip: the distance is doubled\n\nThe per-km rate is progressive: each band is charged separately. The estimated price is shown before you confirm.',
       },
       {
         id: 'c4',
@@ -58,7 +58,25 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'c9',
         question: 'Can I also send parcels with TuniDrive?',
         answer:
-          'Yes. Besides private rides, TuniDrive offers international parcel and goods transport between Europe and Tunisia.\n\nSign in, open Parcel transport, and submit a quote request.',
+          'Yes. Besides private rides, TuniDrive offers international parcel and goods transport between Europe and Tunisia.\n\nSign in, open the Ship parcels tab and submit a quote request. You then follow the offers you receive in Parcel quotes.',
+      },
+      {
+        id: 'c10',
+        question: 'Are there surcharges (night, weekend, return trip)?',
+        answer:
+          'Yes, three things can change the price:\n• Night (9 pm to 6 am): +15%\n• Weekend (Saturday and Sunday): +10%, cumulative with the night surcharge\n• Return trip: the distance is counted twice\n\nThe final price, surcharges included, is shown before you confirm the booking.',
+      },
+      {
+        id: 'c11',
+        question: 'Why can\'t I book a van or minibus for a short trip?',
+        answer:
+          'For vehicles other than Taxi, the minimum one-way distance is 20 km. Below that, the booking is blocked: increase the trip distance or choose Taxi for short rides.',
+      },
+      {
+        id: 'c12',
+        question: 'Can I choose my driver?',
+        answer:
+          'Yes. After you enter your trip, the list of available drivers appears with their vehicle and rating: you pick the one you like before confirming.',
       },
     ],
   },
@@ -71,7 +89,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'p1',
         question: 'How do I request a parcel quote?',
         answer:
-          'Create a rider account or sign in, then open Parcel transport in your dashboard.\n\nSet the direction (Europe → Tunisia or Tunisia → Europe), the addresses, the date, a description of your items, and add photos or invoices if you have them. The request is sent to matching carriers.',
+          'Create a rider account or sign in, then open the Ship parcels tab in your dashboard.\n\nSet the direction (Europe → Tunisia or Tunisia → Europe), the addresses, the date, a description of your items, and add photos or invoices if you have them. The request is sent to matching carriers; their offers appear in Parcel quotes.',
       },
       {
         id: 'p2',
@@ -107,7 +125,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'p7',
         question: 'How do carriers reply to requests?',
         answer:
-          'Sign in to the driver/carrier space. If your activity includes parcels, the Parcel requests tab lists requests that match your availability.\n\nYou propose a price, an estimated time and a message. The client is notified by email.',
+          'Sign in to the driver/carrier space. If your activity includes parcels, the Parcel quotes tab lists requests that match your availability.\n\nYou propose a price, an estimated time and a message. The client is notified by email.',
       },
       {
         id: 'p8',
@@ -138,7 +156,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'd2',
         question: 'How do I see available rides?',
         answer:
-          'Sign in to the driver space. Available rides in your area appear on the dashboard. You also receive a notification when a new ride is offered.',
+          'Sign in to the driver space. Requests from clients who chose you appear in My rides, under New requests, and you receive a push notification.\n\nAccept or decline each request from that page.',
       },
       {
         id: 'd3',
@@ -175,6 +193,12 @@ export const faqCategoriesEn: FaqCategory[] = [
         question: 'How do I manage my availability?',
         answer:
           'Use the availability calendar on the dashboard to set your working slots. You can turn availability on or off at any time.',
+      },
+      {
+        id: 'd9',
+        question: 'Can I cancel a ride I accepted?',
+        answer:
+          'Yes, up to 24 hours before the scheduled time, with the Cancel button (or Decline for a new request). After that, call the client: their number is shown on the ride.',
       },
     ],
   },

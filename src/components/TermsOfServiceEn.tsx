@@ -31,8 +31,8 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-xl shadow-sm p-8">
           <div className="text-center mb-12">
-            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FileText size={40} className="text-blue-600" />
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FileText size={40} className="text-gray-700" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Terms of use
@@ -64,8 +64,8 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FileText size={24} className="text-blue-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <FileText size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">1. Purpose</h2>
               </div>
@@ -75,16 +75,16 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
               </p>
 
               <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-900 mb-2">Customers:</h4>
-                  <p className="text-blue-800">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Customers:</h4>
+                  <p className="text-gray-700">
                     anyone who books a private-hire trip or submits a parcel-transport quote request through the website or the app.
                   </p>
                 </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-green-900 mb-2">Partner drivers and carriers:</h4>
-                  <p className="text-green-800">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Partner drivers and carriers:</h4>
+                  <p className="text-gray-700">
                     independent professionals registered on the platform according to their activity:
                     passenger transport (private hire), international parcel transport, or both. They offer their
                     services and prices independently.
@@ -95,34 +95,34 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Users size={24} className="text-purple-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Users size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">2. Creating an account</h2>
               </div>
 
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Signup is free for customers.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">
                     When signing up, the professional chooses an activity type (passenger transport or parcel transport).
                     That choice can later be changed from the profile.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">For drivers and carriers, signup may be subject to a subscription fee or to specific conditions (stated at registration).</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">The user agrees to provide information that is accurate, up to date and complete.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Each user is responsible for keeping their login details confidential and for any activity carried out from their account.</span>
                 </li>
               </ul>
@@ -130,27 +130,27 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Car size={24} className="text-green-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Car size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">3. Using the service</h2>
               </div>
 
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Customers can search for, book and follow a trip through the platform.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Drivers receive booking requests and may accept or decline them.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">A booking confirmation is sent to both parties (customer and driver) by email and/or SMS.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Trips must be carried out in compliance with Tunisian and international transport rules.</span>
                 </li>
               </ul>
@@ -217,30 +217,30 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <CreditCard size={24} className="text-yellow-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <CreditCard size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">5. Fares and payment</h2>
               </div>
 
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">The trip price is shown to the customer before the booking is confirmed.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Payment is made directly between the customer and the driver, unless stated otherwise (online payment through the platform, if available).</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">
                     For parcel quotes, the price shown in the carrier&apos;s offer is the accepted quote;
                     payment terms are agreed directly between the customer and the carrier, unless the platform states otherwise.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Drivers and carriers may be charged a monthly subscription to use the platform.</span>
                 </li>
               </ul>
@@ -248,26 +248,26 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <AlertTriangle size={24} className="text-red-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <AlertTriangle size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">6. Cancellation</h2>
               </div>
 
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-red-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">The customer and the driver may cancel a private-hire booking up to 24 hours before the scheduled pickup time.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-red-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">
                     For parcel quote requests, cancellation or withdrawal before an offer is accepted can be done
                     from the customer account; after acceptance, the parties agree the cancellation terms between themselves.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-red-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">A late or repeated cancellation may lead to penalties or to suspension of the account.</span>
                 </li>
               </ul>
@@ -275,53 +275,53 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <Shield size={24} className="text-indigo-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Shield size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">7. User obligations</h2>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-900 mb-3">For customers:</h4>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3">For customers:</h4>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2"></div>
-                      <span className="text-blue-800 text-sm">Treat drivers and their vehicles with respect.</span>
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">Treat drivers and their vehicles with respect.</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2"></div>
-                      <span className="text-blue-800 text-sm">Do not use the platform for fraudulent purposes.</span>
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">Do not use the platform for fraudulent purposes.</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2"></div>
-                      <span className="text-blue-800 text-sm">For parcel shipments: provide an accurate description of the contents and comply with the applicable customs rules.</span>
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">For parcel shipments: provide an accurate description of the contents and comply with the applicable customs rules.</span>
                     </li>
                   </ul>
                 </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-green-900 mb-3">For drivers (passenger transport):</h4>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3">For drivers (passenger transport):</h4>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2"></div>
-                      <span className="text-green-800 text-sm">Hold an operating card or an authorisation to transport passengers.</span>
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">Hold an operating card or an authorisation to transport passengers.</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2"></div>
-                      <span className="text-green-800 text-sm">Have insurance that covers passenger transport.</span>
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">Have insurance that covers passenger transport.</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2"></div>
-                      <span className="text-green-800 text-sm">Provide a vehicle in good condition that meets safety standards.</span>
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">Provide a vehicle in good condition that meets safety standards.</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2"></div>
-                      <span className="text-green-800 text-sm">Comply with the applicable legal and tax obligations.</span>
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">Comply with the applicable legal and tax obligations.</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2"></div>
-                      <span className="text-green-800 text-sm">Respect the times and routes agreed with customers.</span>
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">Respect the times and routes agreed with customers.</span>
                     </li>
                   </ul>
                 </div>
@@ -352,8 +352,8 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-12">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center shadow-sm">
-                  <AlertTriangle size={26} className="text-orange-600" />
+                <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center shadow-sm">
+                  <AlertTriangle size={26} className="text-gray-700" />
                 </div>
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900">8. Liability</h2>
@@ -361,23 +361,23 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-200 rounded-2xl shadow-sm p-8">
-                <h3 className="text-lg font-semibold text-orange-700 mb-5">Liability principles</h3>
+              <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-2xl shadow-sm p-8">
+                <h3 className="text-lg font-semibold text-gray-700 mb-5">Liability principles</h3>
 
                 <ul className="space-y-5">
                   <li className="flex items-start gap-3">
                     <div className="mt-1.5">
-                      <div className="w-2.5 h-2.5 bg-orange-600 rounded-full"></div>
+                      <div className="w-2.5 h-2.5 bg-gray-900 rounded-full"></div>
                     </div>
                     <p className="text-gray-800 leading-relaxed">
-                      <strong className="text-orange-800">TuniDrive.net</strong> acts only as a
+                      <strong className="text-gray-700">TuniDrive.net</strong> acts only as a
                       <strong> technical intermediary </strong> that connects customers with independent drivers or carriers.
                     </p>
                   </li>
 
                   <li className="flex items-start gap-3">
                     <div className="mt-1.5">
-                      <div className="w-2.5 h-2.5 bg-orange-600 rounded-full"></div>
+                      <div className="w-2.5 h-2.5 bg-gray-900 rounded-full"></div>
                     </div>
                     <p className="text-gray-800 leading-relaxed">
                       TuniDrive does not carry passengers or parcels, and it does not manage the service itself.
@@ -388,7 +388,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
                   <li className="flex items-start gap-3">
                     <div className="mt-1.5">
-                      <div className="w-2.5 h-2.5 bg-orange-600 rounded-full"></div>
+                      <div className="w-2.5 h-2.5 bg-gray-900 rounded-full"></div>
                     </div>
                     <p className="text-gray-800 leading-relaxed">
                       Each driver or carrier is <strong>solely responsible</strong> for their services towards customers and acts independently.
@@ -397,7 +397,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
                   <li className="flex items-start gap-3">
                     <div className="mt-1.5">
-                      <div className="w-2.5 h-2.5 bg-orange-600 rounded-full"></div>
+                      <div className="w-2.5 h-2.5 bg-gray-900 rounded-full"></div>
                     </div>
                     <p className="text-gray-800 leading-relaxed">
                       Services are performed under the <strong>exclusive responsibility</strong> of the partner professionals, who must hold
@@ -413,8 +413,8 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <Users size={24} className="text-red-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Users size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">9. Suspension or closure of an account</h2>
               </div>
@@ -425,15 +425,15 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-red-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">A breach of these terms.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-red-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Fraudulent or abusive use of the platform.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-red-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">False information provided at signup.</span>
                 </li>
               </ul>
@@ -441,14 +441,14 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Shield size={24} className="text-purple-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Shield size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">10. Personal data</h2>
               </div>
 
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <p className="text-purple-800">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-gray-700">
                   Using the platform involves the collection and processing of personal data.
                   How that data is handled is described in our{' '}
                   <Link to={href('/privacy-policy')} className="font-semibold underline underline-offset-2">
@@ -481,8 +481,8 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Calendar size={24} className="text-blue-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Calendar size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">12. Changes to these terms</h2>
               </div>
@@ -499,8 +499,8 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <Scale size={24} className="text-indigo-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Scale size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">13. Governing law</h2>
               </div>
@@ -517,8 +517,8 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Mail size={24} className="text-green-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Mail size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">14. Contact</h2>
               </div>
@@ -527,9 +527,9 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 For any question about these terms of use:
               </p>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                <Mail size={32} className="text-green-600 mx-auto mb-3" />
-                <p className="text-xl font-semibold text-green-900">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                <Mail size={32} className="text-gray-700 mx-auto mb-3" />
+                <p className="text-xl font-semibold text-gray-900">
                   support@tunidrive.net
                 </p>
               </div>

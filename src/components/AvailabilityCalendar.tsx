@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Skeleton } from './ui/Skeleton';
 import {
   Calendar,
   Clock,
@@ -401,8 +402,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
         </div>
 
         {/* Aide / Tutoriel */}
-        <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-4 mb-4 space-y-2 text-sm">
-          <h4 className="font-semibold flex items-center gap-2 text-blue-950">
+        <div className="bg-gray-50 border border-gray-200 text-gray-900 rounded-lg p-4 mb-4 space-y-2 text-sm">
+          <h4 className="font-semibold flex items-center gap-2 text-gray-900">
             <span role="img" aria-label="aide">ℹ️</span>
             Tutoriel saisie des disponibilités
           </h4>
@@ -452,7 +453,15 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
 
         {/* Grille du calendrier — PLEINE LARGEUR */}
         {loading ? (
-          <div className="p-6 text-center text-gray-500">Chargement des disponibilités…</div>
+          <div
+            role="status"
+            aria-label="Chargement des disponibilités"
+            className="grid grid-cols-7 gap-1 sm:gap-2 w-full"
+          >
+            {days.map((_, index) => (
+              <Skeleton key={index} className="min-h-[2.5rem] sm:min-h-[3rem] w-full" />
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-7 gap-1 sm:gap-2 w-full">
             {days.map((day, index) => {
@@ -470,15 +479,15 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                     relative p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200 min-h-[2.5rem] sm:min-h-[3rem] w-full
                     ${day.isCurrentMonth ? 'bg-gray-50 hover:bg-gray-100' : 'bg-white text-gray-400'}
                     ${isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    ${isCurrentDay && day.isCurrentMonth ? 'bg-blue-100 font-semibold' : ''}
-                    ${hasAvailabilities && day.isCurrentMonth ? 'bg-green-50' : ''}
+                    ${isCurrentDay && day.isCurrentMonth ? 'bg-gray-100 font-semibold' : ''}
+                    ${hasAvailabilities && day.isCurrentMonth ? 'bg-success-50' : ''}
                     ${isSelected ? 'ring-2 ring-gray-700 bg-gray-200' : ''}
                   `}
                 >
                   <span className="block">{day.date.getDate()}</span>
                   {hasAvailabilities && (
                     <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-success-500 rounded-full"></div>
                     </div>
                   )}
                 </button>

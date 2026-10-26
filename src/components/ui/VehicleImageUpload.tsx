@@ -84,7 +84,7 @@ export const VehicleImageUpload: React.FC<VehicleImageUploadProps> = ({
       <div
         className={`relative w-full h-48 rounded-xl border-2 border-dashed transition-all duration-200 ${
           dragOver 
-            ? 'border-blue-500 bg-blue-50' 
+            ? 'border-gray-900 bg-gray-50' 
             : 'border-gray-300 bg-gray-50 hover:border-gray-400'
         } ${loading ? 'opacity-50' : ''}`}
         onDragOver={(e) => {
@@ -114,7 +114,7 @@ export const VehicleImageUpload: React.FC<VehicleImageUploadProps> = ({
               <div className="absolute top-2 right-2 flex gap-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-colors"
+                  className="p-2 bg-black hover:bg-gray-800 text-white rounded-lg shadow-lg transition-colors"
                   title="Changer la photo"
                 >
                   <Camera size={16} />
@@ -122,7 +122,7 @@ export const VehicleImageUpload: React.FC<VehicleImageUploadProps> = ({
                 {onImageDelete && (
                   <button
                     onClick={handleDelete}
-                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-colors"
+                    className="p-2 bg-danger-600 hover:bg-danger-700 text-white rounded-lg shadow-lg transition-colors"
                     title="Supprimer la photo"
                   >
                     <Trash2 size={16} />
@@ -152,10 +152,10 @@ export const VehicleImageUpload: React.FC<VehicleImageUploadProps> = ({
 
         {/* Zone de drop */}
         {dragOver && (
-          <div className="absolute inset-0 bg-blue-500 bg-opacity-20 rounded-xl flex items-center justify-center border-2 border-dashed border-blue-500">
+          <div className="absolute inset-0 bg-gray-900 bg-opacity-20 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-900">
             <div className="text-center">
-              <Upload size={32} className="text-blue-600 mx-auto mb-2" />
-              <p className="text-blue-600 font-medium">Déposer l'image du véhicule</p>
+              <Upload size={32} className="text-gray-700 mx-auto mb-2" />
+              <p className="text-gray-700 font-medium">Déposer l'image du véhicule</p>
             </div>
           </div>
         )}

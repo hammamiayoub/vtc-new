@@ -1,4 +1,5 @@
 import React from 'react';
+import { Badge } from './ui/Badge';
 import { MapPin, Navigation, Package, User, Phone, MessageSquare, Globe, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import type { DriverAcceptedParcelTrip } from '../types';
@@ -33,15 +34,13 @@ export const DriverParcelTripCard: React.FC<DriverParcelTripCardProps> = ({
               Transport colis
             </span>
             {variant === 'active' ? (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                <Globe size={12} />
+              <Badge tone="info" icon={Globe}>
                 À livrer
-              </span>
+              </Badge>
             ) : (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                <CheckCircle size={12} />
+              <Badge tone="success" icon={CheckCircle}>
                 Livraison effectuée
-              </span>
+              </Badge>
             )}
             <span className="text-sm text-gray-500">
               Date souhaitée :{' '}
@@ -58,15 +57,15 @@ export const DriverParcelTripCard: React.FC<DriverParcelTripCardProps> = ({
 
           <div className="space-y-2">
             <div className="flex items-start gap-2">
-              <MapPin size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
+              <MapPin size={16} className="text-success-600 flex-shrink-0 mt-0.5" />
               <span className="font-medium text-gray-900">{request.departureAddress}</span>
             </div>
             <div className="flex items-start gap-2">
-              <Navigation size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <Navigation size={16} className="text-danger-600 flex-shrink-0 mt-0.5" />
               <span className="font-medium text-gray-900">{request.arrivalAddress}</span>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-              <span className="font-bold text-green-600">
+              <span className="font-bold text-success-600">
                 {trip.price} {trip.currency}
               </span>
               {trip.estimatedDeliveryDate && (
@@ -109,35 +108,35 @@ export const DriverParcelTripCard: React.FC<DriverParcelTripCardProps> = ({
       </div>
 
       {request.clients && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-          <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+          <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
             <User size={16} />
             Informations client
           </h4>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="font-medium text-blue-900">
+              <p className="font-medium text-gray-900">
                 {request.clients.first_name} {request.clients.last_name}
               </p>
               {request.clients.phone && (
-                <p className="text-sm text-blue-700">Tél: {request.clients.phone}</p>
+                <p className="text-sm text-gray-600">Tél: {request.clients.phone}</p>
               )}
               {request.clients.email && (
-                <p className="text-sm text-blue-700">{request.clients.email}</p>
+                <p className="text-sm text-gray-600">{request.clients.email}</p>
               )}
             </div>
             {request.clients.phone && variant === 'active' && (
               <div className="flex gap-2">
                 <a
                   href={`tel:${request.clients.phone}`}
-                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="p-2 bg-success-600 text-white rounded-lg hover:bg-success-700 transition-colors"
                   title="Appeler le client"
                 >
                   <Phone size={16} />
                 </a>
                 <a
                   href={`sms:${request.clients.phone}`}
-                  className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="p-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
                   title="Envoyer un SMS"
                 >
                   <MessageSquare size={16} />

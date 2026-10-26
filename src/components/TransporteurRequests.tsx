@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { SkeletonList } from './ui/Skeleton';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Package, Loader2, ChevronDown, ChevronUp, Send } from 'lucide-react';
@@ -88,12 +89,12 @@ export const TransporteurRequests: React.FC<TransporteurRequestsProps> = ({
 
     if (existing) {
       return (
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm font-medium text-blue-900">Votre proposition envoyée</p>
-          <p className="text-lg font-bold text-blue-800 mt-1">
+        <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <p className="text-sm font-medium text-gray-900">Votre proposition envoyée</p>
+          <p className="text-lg font-bold text-gray-700 mt-1">
             {existing.price} {existing.currency}
           </p>
-          {existing.message && <p className="text-sm text-blue-700 mt-1">{existing.message}</p>}
+          {existing.message && <p className="text-sm text-gray-600 mt-1">{existing.message}</p>}
         </div>
       );
     }
@@ -110,17 +111,17 @@ export const TransporteurRequests: React.FC<TransporteurRequestsProps> = ({
             step="0.01"
             min={1}
             {...register('price')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base"
             placeholder={`Montant en ${request.currency}`}
           />
-          {errors.price && <p className="text-xs text-red-600 mt-1">{errors.price.message}</p>}
+          {errors.price && <p className="text-xs text-danger-600 mt-1">{errors.price.message}</p>}
         </div>
         <div>
           <label className="block text-xs text-gray-600 mb-1">Date de livraison estimée</label>
           <input
             type="date"
             {...register('estimatedDeliveryDate')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base"
           />
         </div>
         <div>
@@ -128,7 +129,7 @@ export const TransporteurRequests: React.FC<TransporteurRequestsProps> = ({
           <textarea
             {...register('message')}
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base"
             placeholder="Conditions, délais, remarques…"
           />
         </div>
@@ -146,9 +147,7 @@ export const TransporteurRequests: React.FC<TransporteurRequestsProps> = ({
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="animate-spin text-gray-400" size={32} />
-      </div>
+      <SkeletonList count={3} />
     );
   }
 

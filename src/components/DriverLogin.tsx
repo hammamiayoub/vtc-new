@@ -120,6 +120,8 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
               </div>
               <input
                 type="email"
+                autoComplete="email"
+                inputMode="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={en ? 'Email address' : 'Adresse email'}
@@ -134,6 +136,7 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={en ? 'Password' : 'Mot de passe'}
@@ -174,8 +177,8 @@ export const DriverLogin: React.FC<DriverLoginProps> = ({ onBack, onSignup, onLo
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm text-red-600">{translateSignupMessage(error, locale)}</p>
+              <div className="p-4 bg-danger-50 border border-danger-200 rounded-xl">
+                <p className="text-sm text-danger-600">{translateSignupMessage(error, locale)}</p>
               </div>
             )}
 

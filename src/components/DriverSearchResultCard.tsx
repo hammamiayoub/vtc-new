@@ -166,11 +166,11 @@ export function DriverSearchResultCard({
             )}
 
             {estimatedPrice != null && (
-              <p className="mt-2 text-sm font-bold text-green-700">~{estimatedPrice} TND</p>
+              <p className="mt-2 text-sm font-bold text-success-700">~{estimatedPrice} TND</p>
             )}
 
             {isNearby && (
-              <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+              <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-success-100 text-success-800 rounded-full text-xs font-medium">
                 <MapPin size={12} />
                 {en ? 'Nearby driver' : 'Chauffeur proche'}
               </div>

@@ -39,7 +39,7 @@ export const SignupCountryPhoneFields: React.FC<SignupCountryPhoneFieldsProps> =
   watch,
   countryFieldName = 'country',
   phoneFieldName = 'phone',
-  focusRingClass = 'focus:ring-2 focus:ring-purple-500',
+  focusRingClass = 'focus:ring-2 focus:ring-gray-900',
 }) => {
   const { locale } = useLocale();
   const en = locale === 'en';
@@ -59,7 +59,7 @@ export const SignupCountryPhoneFields: React.FC<SignupCountryPhoneFieldsProps> =
             id={countryFieldName}
             {...register(countryFieldName)}
             className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none ${focusRingClass} transition-all ${
-              errors[countryFieldName] ? 'border-red-500' : 'border-gray-300'
+              errors[countryFieldName] ? 'border-danger-500' : 'border-gray-300'
             }`}
           >
             {SIGNUP_COUNTRIES.map((country) => (
@@ -70,7 +70,7 @@ export const SignupCountryPhoneFields: React.FC<SignupCountryPhoneFieldsProps> =
           </select>
         </div>
         {errors[countryFieldName] && (
-          <p className="mt-2 text-sm text-red-600">{translateSignupMessage(String(errors[countryFieldName]?.message), locale)}</p>
+          <p className="mt-2 text-sm text-danger-600">{translateSignupMessage(String(errors[countryFieldName]?.message), locale)}</p>
         )}
       </div>
 
@@ -95,12 +95,12 @@ export const SignupCountryPhoneFields: React.FC<SignupCountryPhoneFieldsProps> =
               }
             }}
             className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none ${focusRingClass} transition-all ${
-              errors[phoneFieldName] ? 'border-red-500' : 'border-gray-300'
+              errors[phoneFieldName] ? 'border-danger-500' : 'border-gray-300'
             }`}
           />
         </div>
         {errors[phoneFieldName] && (
-          <p className="mt-2 text-sm text-red-600">{translateSignupMessage(String(errors[phoneFieldName]?.message), locale)}</p>
+          <p className="mt-2 text-sm text-danger-600">{translateSignupMessage(String(errors[phoneFieldName]?.message), locale)}</p>
         )}
       </div>
     </>

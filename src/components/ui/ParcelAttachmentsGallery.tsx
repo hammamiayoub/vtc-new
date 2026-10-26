@@ -48,12 +48,12 @@ export const ParcelAttachmentsGallery: React.FC<ParcelAttachmentsGalleryProps> =
         key={p.id}
         type="button"
         onClick={() => openLightbox(p)}
-        className={`relative group rounded-lg border border-gray-200 overflow-hidden bg-gray-50 hover:ring-2 hover:ring-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${thumbClassName}`}
+        className={`relative group rounded-lg border border-gray-200 overflow-hidden bg-gray-50 hover:ring-2 hover:ring-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 ${thumbClassName}`}
         title={p.documentType === 'invoice' ? 'Agrandir la facture' : 'Agrandir la photo'}
       >
         {isPdf ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-2 text-gray-600">
-            <FileText size={28} className="text-red-600 mb-1" />
+            <FileText size={28} className="text-danger-600 mb-1" />
             <span className="text-[10px] font-medium text-center leading-tight">{en ? 'Invoice PDF' : 'Facture PDF'}</span>
           </div>
         ) : (
@@ -130,7 +130,7 @@ export const ParcelAttachmentsGallery: React.FC<ParcelAttachmentsGalleryProps> =
               href={lightbox.photoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 text-sm text-blue-300 hover:text-blue-200 underline"
+              className="mt-4 text-sm text-gray-300 hover:text-white underline"
             >
               Ouvrir dans un nouvel onglet
             </a>

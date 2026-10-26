@@ -108,7 +108,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
                 : "TuniDrive utilise des cookies pour le fonctionnement du site, vos préférences de session et, avec votre accord, la mesure d'audience et la publicité. Consultez notre "}
               <Link
                 to={href('/privacy-policy')}
-                className="text-blue-600 hover:text-blue-800 underline underline-offset-2 font-medium"
+                className="text-gray-900 hover:text-gray-600 underline underline-offset-2 font-medium"
               >
                 {en ? 'privacy policy' : 'politique de confidentialité'}
               </Link>

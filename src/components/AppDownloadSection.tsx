@@ -52,7 +52,7 @@ export const AppDownloadSection: React.FC<AppDownloadSectionProps> = ({ compact 
           <ul className={`space-y-3 ${compact ? '' : 'text-left max-w-md mx-auto'}`}>
             {APP_FEATURES.map((feature) => (
               <li key={feature} className="flex items-start gap-3 text-sm sm:text-base text-gray-700">
-                <CheckCircle size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle size={18} className="text-success-600 flex-shrink-0 mt-0.5" />
                 <span>{feature}</span>
               </li>
             ))}

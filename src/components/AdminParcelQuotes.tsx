@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Package, Loader2 } from 'lucide-react';
+import { SkeletonList } from './ui/Skeleton';
+import { Package } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { directionLabel, statusLabel, expireOldParcelRequests } from '../utils/parcelService';
 import type { ParcelQuoteRequest } from '../types';
@@ -57,9 +58,7 @@ export const AdminParcelQuotes: React.FC<AdminParcelQuotesProps> = ({ refreshKey
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="animate-spin text-gray-400" size={32} />
-      </div>
+      <SkeletonList count={3} />
     );
   }
 
@@ -91,7 +90,7 @@ export const AdminParcelQuotes: React.FC<AdminParcelQuotesProps> = ({ refreshKey
             {req.clients && ` · Client : ${req.clients.first_name} ${req.clients.last_name}`}
           </p>
           {req.proposals && req.proposals.length > 0 && (
-            <p className="text-sm text-blue-600 mt-2">
+            <p className="text-sm text-gray-700 mt-2">
               {req.proposals.length} proposition(s)
             </p>
           )}

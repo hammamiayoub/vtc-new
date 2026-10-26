@@ -247,29 +247,29 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6">
         <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-lg w-full text-center">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={40} className="text-green-600" />
+          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={40} className="text-success-600" />
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">{en ? 'Signup complete' : 'Inscription réussie'}</h1>
 
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-lg text-left">
+          <div className="bg-gray-50 border-l-4 border-gray-400 p-6 mb-8 rounded-r-lg text-left">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <Mail className="h-6 w-6 text-blue-600 mt-1" />
+                <Mail className="h-6 w-6 text-gray-700 mt-1" />
               </div>
               <div className="ml-3">
-                <h3 className="text-lg font-semibold text-blue-800 mb-3">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">
                   {en ? 'Check your inbox' : 'Vérifiez votre boîte email'}
                 </h3>
-                <p className="text-blue-700 mb-4 leading-relaxed">
+                <p className="text-gray-600 mb-4 leading-relaxed">
                   {en
                     ? 'We sent a confirmation email to your address. '
                     : 'Nous avons envoyé un email de confirmation à votre adresse. '}
                   <strong>{en ? 'Click the link to activate your partner account.' : 'Cliquez sur le lien pour activer votre compte partenaire.'}</strong>
                 </p>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-yellow-800 text-sm font-medium">
+                <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
+                  <p className="text-warning-800 text-sm font-medium">
                     <strong>{en ? 'Important:' : 'Important :'}</strong>{' '}
                     {en
                       ? 'Also check your spam folder if the email does not arrive in the next few minutes.'
@@ -363,8 +363,8 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-800 text-sm">{te(error ?? undefined)}</p>
+                <div className="bg-danger-50 border border-danger-200 rounded-lg p-4">
+                  <p className="text-danger-800 text-sm">{te(error ?? undefined)}</p>
                 </div>
               )}
 
@@ -410,7 +410,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   })}
                 </div>
                 {errors.activityType && (
-                  <p className="mt-2 text-sm text-red-600">{te(errors.activityType.message)}</p>
+                  <p className="mt-2 text-sm text-danger-600">{te(errors.activityType.message)}</p>
                 )}
               </div>
 
@@ -424,11 +424,11 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                     type="text"
                     placeholder={en ? 'First name' : 'Prénom'}
                     className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                      errors.firstName ? 'border-red-500' : 'border-gray-300'
+                      errors.firstName ? 'border-danger-500' : 'border-gray-300'
                     }`}
                   />
                   {errors.firstName && (
-                    <p className="mt-2 text-sm text-red-600">{te(errors.firstName.message)}</p>
+                    <p className="mt-2 text-sm text-danger-600">{te(errors.firstName.message)}</p>
                   )}
                 </div>
 
@@ -441,11 +441,11 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                     type="text"
                     placeholder={en ? 'Last name' : 'Nom'}
                     className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                      errors.lastName ? 'border-red-500' : 'border-gray-300'
+                      errors.lastName ? 'border-danger-500' : 'border-gray-300'
                     }`}
                   />
                   {errors.lastName && (
-                    <p className="mt-2 text-sm text-red-600">{te(errors.lastName.message)}</p>
+                    <p className="mt-2 text-sm text-danger-600">{te(errors.lastName.message)}</p>
                   )}
                 </div>
               </div>
@@ -459,11 +459,11 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   type="email"
                   placeholder={en ? 'Email address' : 'Adresse email'}
                   className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
+                    errors.email ? 'border-danger-500' : 'border-gray-300'
                   }`}
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">{te(errors.email.message)}</p>
+                  <p className="mt-2 text-sm text-danger-600">{te(errors.email.message)}</p>
                 )}
               </div>
 
@@ -498,7 +498,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   type={showPassword ? 'text' : 'password'}
                   placeholder={en ? 'Password' : 'Mot de passe'}
                   className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
+                    errors.password ? 'border-danger-500' : 'border-gray-300'
                   }`}
                 />
                 <button
@@ -513,7 +513,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   )}
                 </button>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{te(errors.password.message)}</p>
+                  <p className="mt-2 text-sm text-danger-600">{te(errors.password.message)}</p>
                 )}
               </div>
 
@@ -533,7 +533,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder={en ? 'Confirm password' : 'Confirmer le mot de passe'}
                   className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                    errors.confirmPassword ? 'border-danger-500' : 'border-gray-300'
                   }`}
                 />
                 <button
@@ -548,21 +548,21 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                   )}
                 </button>
                 {errors.confirmPassword && (
-                  <p className="mt-2 text-sm text-red-600">{te(errors.confirmPassword.message)}</p>
+                  <p className="mt-2 text-sm text-danger-600">{te(errors.confirmPassword.message)}</p>
                 )}
               </div>
 
             {/* Directive légale pour les chauffeurs */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h4 className="text-yellow-900 font-semibold mb-2">
+            <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
+              <h4 className="text-warning-900 font-semibold mb-2">
                 {en ? 'Responsibilities of independent drivers' : 'Responsabilités et obligations des chauffeurs indépendants'}
               </h4>
-              <p className="text-yellow-900 text-sm mb-2">
+              <p className="text-warning-900 text-sm mb-2">
                 {en
                   ? 'Transport services are carried out entirely under the responsibility of independent drivers, who:'
                   : 'Les prestations de transport sont entièrement exécutées sous la responsabilité des chauffeurs indépendants, lesquels :'}
               </p>
-              <ul className="list-disc pl-5 text-yellow-900 text-sm space-y-1">
+              <ul className="list-disc pl-5 text-warning-900 text-sm space-y-1">
                 <li>
                   {en
                     ? 'must hold every legal authorisation required to transport passengers for a fee (licence, operating permit, insurance, and so on) under Tunisian regulations;'
@@ -573,7 +573,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                     ? 'They alone are responsible for safety, vehicle compliance and the highway code.'
                     : 'Ils assument seuls les obligations liées à la sécurité, la conformité des véhicules et le respect du code de la route.'}
                 </li>
-                <li className="text-yellow-900 font-semibold mb-2">
+                <li className="text-warning-900 font-semibold mb-2">
                 {en
                   ? 'By using TuniDrive.net, users acknowledge that the platform does not operate the transport or the vehicles, and is not liable for incidents, delays, damage or offences related to the transport service.'
                   : 'En utilisant TuniDrive.net, les utilisateurs reconnaissent expressément que la plateforme n’assure ni le transport, ni l’exploitation de véhicules, et qu’elle ne peut être tenue responsable des incidents, retards, dommages ou infractions liés à la prestation de transport.'}

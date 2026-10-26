@@ -83,8 +83,8 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
   if (submitSuccess) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle size={40} className="text-green-600" />
+        <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle size={40} className="text-success-600" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
           Profil complété !
@@ -110,7 +110,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
         {/* Informations personnelles */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Phone className="w-5 h-5 text-blue-600" />
+            <Phone className="w-5 h-5 text-gray-700" />
             Informations personnelles
           </h3>
           <div className="grid gap-6">
@@ -129,12 +129,12 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
                     setValue('phone', normalized, { shouldValidate: true });
                   }
                 }}
-                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                  errors.phone ? 'border-red-500' : 'border-gray-300'
+                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+                  errors.phone ? 'border-danger-500' : 'border-gray-300'
                 }`}
               />
               {errors.phone && (
-                <p className="mt-2 text-sm text-red-600">{errors.phone.message}</p>
+                <p className="mt-2 text-sm text-danger-600">{errors.phone.message}</p>
               )}
             </div>
 
@@ -153,12 +153,12 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
                 {...register('licenseNumber')}
                 type="text"
                 placeholder="Numéro de permis de conduire"
-                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                  errors.licenseNumber ? 'border-red-500' : 'border-gray-300'
+                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+                  errors.licenseNumber ? 'border-danger-500' : 'border-gray-300'
                 }`}
               />
               {errors.licenseNumber && (
-                <p className="mt-2 text-sm text-red-600">{errors.licenseNumber.message}</p>
+                <p className="mt-2 text-sm text-danger-600">{errors.licenseNumber.message}</p>
               )}
             </div>
           </div>
@@ -169,7 +169,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
           <select
             value={driverType}
             onChange={(e) => setDriverType(e.target.value as 'vtc' | 'transporteur' | 'both')}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
           >
             {DRIVER_ACTIVITY_PROFILE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>

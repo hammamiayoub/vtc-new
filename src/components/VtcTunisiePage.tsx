@@ -215,7 +215,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
                     ]
                 ).map((line) => (
                   <li key={line} className="flex items-start gap-2">
-                    <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle size={16} className="text-success-500 mt-0.5 flex-shrink-0" />
                     {line}
                   </li>
                 ))}

@@ -121,7 +121,7 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
           </div>
 
           {hasPendingQuote() && (
-            <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
               {en
                 ? 'The quote from the homepage will be applied automatically after you sign in.'
                 : "Un devis calculé sur l'accueil sera repris automatiquement après connexion."}
@@ -137,6 +137,8 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
               </div>
               <input
                 type="email"
+                autoComplete="email"
+                inputMode="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={en ? 'Email address' : 'Adresse email'}
@@ -151,6 +153,7 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={en ? 'Password' : 'Mot de passe'}
@@ -190,8 +193,8 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm text-red-600">{translateSignupMessage(error, locale)}</p>
+              <div className="p-4 bg-danger-50 border border-danger-200 rounded-xl">
+                <p className="text-sm text-danger-600">{translateSignupMessage(error, locale)}</p>
               </div>
             )}
 

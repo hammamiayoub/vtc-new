@@ -28,6 +28,24 @@
   .uber-card {
     @apply bg-white rounded-xl border border-surface-border transition-shadow duration-200 hover:shadow-card;
   }
+
+  /* Anneau de focus uniforme, visible au clavier uniquement */
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2;
+  }
+
+  /* Zone tactile minimale de 48px */
+  .touch-target {
+    @apply min-h-[48px] min-w-[48px];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer,
+  .animate-fade-in,
+  .animate-slide-up {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {

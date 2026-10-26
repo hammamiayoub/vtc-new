@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BookingStatusBadge } from './ui/StatusBadge';
 import { 
   CheckCircle, 
   MapPin, 
@@ -131,42 +132,10 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-            <Clock size={16} />
-            {en ? 'Waiting for a driver' : "En attente d'acceptation"}
-          </span>
-        );
-      case 'accepted':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-            <CheckCircle size={16} />
-            {en ? 'Accepted by the driver' : 'Acceptée par le chauffeur'}
-          </span>
-        );
-      case 'in_progress':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-            <Car size={16} />
-            {en ? 'Ride in progress' : 'Course en cours'}
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-            {status}
-          </span>
-        );
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
       </div>
     );
   }
@@ -189,17 +158,17 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
         <div className="mb-8">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-600 hover:text-purple-600 mb-6 transition-colors group"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors group"
           >
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             {en ? 'Back to overview' : 'Retour au tableau de bord'}
           </button>
 
           <div className="text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle size={40} className="text-orange-600" />
+            <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle size={40} className="text-success-600" />
             </div>
-            <h1 className="text-3xl font-bold text-orange-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {en ? 'Booking waiting for confirmation!' : 'Réservation en attente de confirmation !'}
             </h1>
             <p className="text-gray-600 text-lg">
@@ -219,7 +188,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 {en ? 'Booking' : 'Réservation'} #{booking.id.slice(0, 8)}
               </p>
             </div>
-            {getStatusBadge(booking.status)}
+            {<BookingStatusBadge status={booking.status} size="md" labels={{ accepted: en ? 'Accepted by the driver' : 'Acceptée par le chauffeur', in_progress: en ? 'Ride in progress' : 'Course en cours' }} />}
           </div>
         </div>
 
@@ -227,7 +196,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           {/* Détails de la course */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-purple-600" />
+              <MapPin className="w-5 h-5 text-gray-900" />
               {en ? 'Ride details' : 'Détails de la course'}
             </h3>
 
@@ -235,7 +204,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               {/* Trajet */}
               <div>
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mt-2"></div>
+                  <div className="w-3 h-3 bg-success-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">{en ? 'Pickup' : 'Point de départ'}</p>
                     <p className="font-medium text-gray-900">{booking.pickup_address}</p>
@@ -243,7 +212,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <div className="w-3 h-3 bg-red-500 rounded-full mt-2"></div>
+                  <div className="w-3 h-3 bg-danger-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">{en ? 'Destination' : 'Destination'}</p>
                     <p className="font-medium text-gray-900">{booking.destination_address}</p>
@@ -255,7 +224,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Clock size={16} className="text-blue-600" />
+                    <Clock size={16} className="text-gray-700" />
                     <span className="text-sm text-gray-600">{en ? 'Scheduled time' : 'Heure prévue'}</span>
                   </div>
                   <p className="font-semibold text-gray-900">
@@ -272,7 +241,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Navigation size={16} className="text-purple-600" />
+                    <Navigation size={16} className="text-gray-900" />
                     <span className="text-sm text-gray-600">Distance</span>
                   </div>
                   <p className="font-semibold text-gray-900">{booking.distance_km} km</p>
@@ -280,14 +249,14 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               </div>
 
               {/* Prix */}
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-medium text-purple-900">{en ? 'Total fare' : 'Prix total'}</span>
-                  <span className="text-2xl font-bold text-purple-600">
+                  <span className="text-lg font-medium text-gray-900">{en ? 'Total fare' : 'Prix total'}</span>
+                  <span className="text-2xl font-bold text-gray-900">
                     {booking.price_tnd} TND
                   </span>
                 </div>
-                <p className="text-sm text-purple-700 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   {en
                     ? `Pickup fee by driver distance (${getDriverPickupFareSummaryText()}) + progressive per-km fare`
                     : `Prise en charge variable (${getDriverPickupFareSummaryText()}) + tarif progressif au km`}
@@ -300,19 +269,19 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 
                 {/* Affichage des suppléments s'ils existent */}
                 {priceSurcharges && (priceSurcharges.isNightTime || priceSurcharges.isWeekend) && (
-                  <div className="mt-3 pt-3 border-t border-purple-300">
-                    <p className="text-xs font-semibold text-purple-900 mb-2">{en ? 'Extras included:' : 'Suppléments inclus:'}</p>
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <p className="text-xs font-semibold text-gray-900 mb-2">{en ? 'Extras included:' : 'Suppléments inclus:'}</p>
                     <div className="space-y-1">
                       {priceSurcharges.isNightTime && (
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-purple-800">{en ? 'Night trip' : 'Trajet de nuit'}</span>
-                          <span className="font-semibold text-purple-900">+{priceSurcharges.nightSurchargePercent}%</span>
+                          <span className="text-gray-700">{en ? 'Night trip' : 'Trajet de nuit'}</span>
+                          <span className="font-semibold text-gray-900">+{priceSurcharges.nightSurchargePercent}%</span>
                         </div>
                       )}
                       {priceSurcharges.isWeekend && (
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-purple-800">{en ? 'Weekend' : 'Week-end'}</span>
-                          <span className="font-semibold text-purple-900">+{priceSurcharges.weekendSurchargePercent}%</span>
+                          <span className="text-gray-700">{en ? 'Weekend' : 'Week-end'}</span>
+                          <span className="font-semibold text-gray-900">+{priceSurcharges.weekendSurchargePercent}%</span>
                         </div>
                       )}
                     </div>
@@ -338,7 +307,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           {/* Informations du chauffeur */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-600" />
+              <User className="w-5 h-5 text-gray-700" />
               {driver ? (en ? 'Your driver' : 'Votre chauffeur') : (en ? 'Driver' : 'Chauffeur')}
             </h3>
 
@@ -353,8 +322,8 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User size={32} className="text-blue-600" />
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                      <User size={32} className="text-gray-700" />
                     </div>
                   )}
                   <div>
@@ -367,18 +336,18 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
                 {/* Contact */}
                 {driver.phone && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Phone size={20} className="text-blue-600" />
+                        <Phone size={20} className="text-gray-700" />
                         <div>
-                          <p className="text-sm text-blue-700">{en ? 'Phone' : 'Téléphone'}</p>
-                          <p className="font-semibold text-blue-900">{driver.phone}</p>
+                          <p className="text-sm text-gray-600">{en ? 'Phone' : 'Téléphone'}</p>
+                          <p className="font-semibold text-gray-900">{driver.phone}</p>
                         </div>
                       </div>
                       <button
                         onClick={() => copyPhoneNumber(driver.phone!)}
-                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                         title={en ? 'Copy number' : 'Copier le numéro'}
                       >
                         {phonecopied ? <Check size={20} /> : <Copy size={20} />}
@@ -430,7 +399,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   {driver.phone && (
                     <a
                       href={`tel:${driver.phone}`}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <Phone size={20} />
                       {en ? 'Call the driver' : 'Appeler le chauffeur'}
@@ -439,7 +408,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   
                   <a
                     href={`sms:${driver.phone || ''}`}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <MessageSquare size={20} />
                     {en ? 'Send a text' : 'Envoyer un SMS'}
@@ -471,8 +440,8 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             {booking.status === 'pending' && (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-orange-600">1</span>
+                  <div className="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-warning-600">1</span>
                   </div>
                   <p className="text-gray-700">
                     <strong>{en ? 'In progress:' : 'En cours:'}</strong> {en ? 'Waiting for the driver to confirm' : 'Confirmation par le chauffeur'}
@@ -492,16 +461,16 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             {booking.status === 'accepted' && (
               <>
                 <div className="flex items-center gap-3 opacity-50">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <CheckCircle size={16} className="text-green-600" />
+                  <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center">
+                    <CheckCircle size={16} className="text-success-600" />
                   </div>
                   <p className="text-gray-500">
                     <strong>{en ? 'Done:' : 'Terminé:'}</strong> {en ? 'Driver found and confirmed' : 'Chauffeur trouvé et confirmé'}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-blue-600">2</span>
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-gray-700">2</span>
                   </div>
                   <p className="text-gray-700">
                     <strong>{en ? 'In progress:' : 'En cours:'}</strong> {en ? 'Getting ready for pickup' : 'Préparation pour la prise en charge'}
@@ -521,11 +490,11 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
         </div>
 
         {/* Informations importantes */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mt-8">
-          <h3 className="text-lg font-semibold text-yellow-900 mb-3">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mt-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">
             {en ? 'Important information' : 'Informations importantes'}
           </h3>
-          <ul className="space-y-2 text-yellow-800">
+          <ul className="space-y-2 text-gray-700">
             {en ? (
               <>
                 <li>• Be ready 5 minutes before the scheduled time</li>

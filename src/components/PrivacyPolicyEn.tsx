@@ -28,8 +28,8 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-xl shadow-sm p-8">
           <div className="text-center mb-12">
-            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Shield size={40} className="text-blue-600" />
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Shield size={40} className="text-gray-700" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Privacy policy
@@ -51,8 +51,8 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Eye size={24} className="text-green-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Eye size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">1. Data we collect</h2>
               </div>
@@ -108,8 +108,8 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <FileText size={24} className="text-purple-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <FileText size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">2. Why we use the data</h2>
               </div>
@@ -120,35 +120,35 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Create and manage your user account.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Connect customers with partner drivers and carriers.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Manage parcel quote requests, match them to availability and compare offers.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Follow private-hire bookings and keep a history of transport requests.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Allow contact details to be exchanged between the customer and the carrier after a quote is accepted.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Improve the quality of our services and personalise the user experience.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Communicate with you (booking notifications, emails, SMS).</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Meet our legal obligations and prevent fraud or misuse.</span>
                 </li>
               </ul>
@@ -156,8 +156,8 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Users size={24} className="text-orange-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Users size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">3. Sharing data</h2>
               </div>
@@ -167,27 +167,27 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
               </p>
 
               <div className="space-y-4">
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-orange-900 mb-2">Partner drivers and carriers:</h4>
-                  <p className="text-orange-800">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Partner drivers and carriers:</h4>
+                  <p className="text-gray-700">
                     only the data needed for the service: for a private-hire trip (name, phone, addresses);
                     for a parcel quote (details of the request, and contact details after the customer accepts the quote).
                   </p>
                 </div>
 
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-orange-900 mb-2">Technical providers:</h4>
-                  <p className="text-orange-800">hosting, email/SMS delivery, secure payment.</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Technical providers:</h4>
+                  <p className="text-gray-700">hosting, email/SMS delivery, secure payment.</p>
                 </div>
 
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-orange-900 mb-2">Competent authorities:</h4>
-                  <p className="text-orange-800">only when required by law or by a court.</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Competent authorities:</h4>
+                  <p className="text-gray-700">only when required by law or by a court.</p>
                 </div>
               </div>
 
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
-                <p className="text-red-800 font-semibold">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                <p className="text-gray-700 font-semibold">
                   We never sell your personal data to third parties.
                 </p>
               </div>
@@ -195,8 +195,8 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Calendar size={24} className="text-blue-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Calendar size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">4. How long we keep data</h2>
               </div>
@@ -223,8 +223,8 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Lock size={24} className="text-green-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Lock size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">5. Security</h2>
               </div>
@@ -234,30 +234,30 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
               </p>
 
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                  <Lock size={32} className="text-green-600 mx-auto mb-2" />
-                  <h4 className="font-semibold text-green-900 mb-1">Encryption</h4>
-                  <p className="text-sm text-green-800">SSL/TLS communications</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                  <Lock size={32} className="text-gray-700 mx-auto mb-2" />
+                  <h4 className="font-semibold text-gray-900 mb-1">Encryption</h4>
+                  <p className="text-sm text-gray-700">SSL/TLS communications</p>
                 </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                  <Shield size={32} className="text-green-600 mx-auto mb-2" />
-                  <h4 className="font-semibold text-green-900 mb-1">Secure storage</h4>
-                  <p className="text-sm text-green-800">Servers in Tunisia/EU</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                  <Shield size={32} className="text-gray-700 mx-auto mb-2" />
+                  <h4 className="font-semibold text-gray-900 mb-1">Secure storage</h4>
+                  <p className="text-sm text-gray-700">Servers in Tunisia/EU</p>
                 </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                  <Users size={32} className="text-green-600 mx-auto mb-2" />
-                  <h4 className="font-semibold text-green-900 mb-1">Restricted access</h4>
-                  <p className="text-sm text-green-800">Authorised staff only</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                  <Users size={32} className="text-gray-700 mx-auto mb-2" />
+                  <h4 className="font-semibold text-gray-900 mb-1">Restricted access</h4>
+                  <p className="text-sm text-gray-700">Authorised staff only</p>
                 </div>
               </div>
             </div>
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Eye size={24} className="text-yellow-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Eye size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">6. Cookies</h2>
               </div>
@@ -268,15 +268,15 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
               <ul className="space-y-2 mb-4">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Make browsing and sign-in easier.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Remember your preferences.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Analyse how the site is used so we can improve our services.</span>
                 </li>
               </ul>
@@ -289,8 +289,8 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <Shield size={24} className="text-indigo-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Shield size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">7. Your rights</h2>
               </div>
@@ -300,29 +300,29 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
               </p>
 
               <div className="grid md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-indigo-900 mb-2">Access</h4>
-                  <p className="text-indigo-800 text-sm">know which data is collected.</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Access</h4>
+                  <p className="text-gray-700 text-sm">know which data is collected.</p>
                 </div>
 
-                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-indigo-900 mb-2">Correction</h4>
-                  <p className="text-indigo-800 text-sm">correct information that is inaccurate.</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Correction</h4>
+                  <p className="text-gray-700 text-sm">correct information that is inaccurate.</p>
                 </div>
 
-                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-indigo-900 mb-2">Deletion</h4>
-                  <p className="text-indigo-800 text-sm">ask for your personal data to be deleted.</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Deletion</h4>
+                  <p className="text-gray-700 text-sm">ask for your personal data to be deleted.</p>
                 </div>
 
-                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-indigo-900 mb-2">Objection</h4>
-                  <p className="text-indigo-800 text-sm">refuse certain processing (for example marketing).</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Objection</h4>
+                  <p className="text-gray-700 text-sm">refuse certain processing (for example marketing).</p>
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-blue-800">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-gray-700">
                   <strong>To exercise your rights, contact us at:</strong> support@tunidrive.net
                 </p>
               </div>
@@ -380,8 +380,8 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Mail size={24} className="text-green-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Mail size={24} className="text-gray-700" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">10. Contact</h2>
               </div>
@@ -390,9 +390,9 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 For any question or request about your personal data, you can write to us at:
               </p>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                <Mail size={32} className="text-green-600 mx-auto mb-3" />
-                <p className="text-xl font-semibold text-green-900">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                <Mail size={32} className="text-gray-700 mx-auto mb-3" />
+                <p className="text-xl font-semibold text-gray-900">
                   support@tunidrive.net
                 </p>
               </div>

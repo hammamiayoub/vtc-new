@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { BookingStatusBadge, DriverStatusBadge } from './ui/StatusBadge';
 import { 
   Users, 
   Car, 
@@ -1548,91 +1549,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     onLogout();
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <CheckCircle size={12} />
-            Actif
-          </span>
-        );
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-            <Clock size={12} />
-            En attente
-          </span>
-        );
-      case 'rejected':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <XCircle size={12} />
-            Rejeté
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-            <AlertTriangle size={12} />
-            Inconnu
-          </span>
-        );
-    }
-  };
-
   const getDriverActivityBadge = (driverType?: Driver['driverType']) => (
     <span className={driverActivityBadgeClasses(driverType || 'vtc')} title={driverActivityLabel(driverType || 'vtc')}>
       {driverActivityShortLabel(driverType || 'vtc')}
     </span>
   );
-
-  const getBookingStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <CheckCircle size={12} />
-            Terminée
-          </span>
-        );
-      case 'cancelled':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <XCircle size={12} />
-            Annulée
-          </span>
-        );
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-            <Clock size={12} />
-            En attente
-          </span>
-        );
-      case 'accepted':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <CheckCircle size={12} />
-            Acceptée
-          </span>
-        );
-      case 'in_progress':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-            <Clock size={12} />
-            En cours
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-            <AlertTriangle size={12} />
-            Inconnu
-          </span>
-        );
-    }
-  };
 
   const pendingDrivers = drivers.filter(d => d.status === 'pending');
   const activeDrivers = drivers.filter(d => d.status === 'active');
@@ -1863,7 +1784,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       isActive
                         ? 'bg-white/20 text-white'
                         : hasAttention
-                          ? 'bg-orange-100 text-orange-700'
+                          ? 'bg-warning-100 text-warning-700'
                           : 'bg-gray-100 text-gray-600'
                     }`}
                   >
@@ -1871,7 +1792,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </span>
                   )}
                   {hasAttention && !isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" aria-hidden />
+                    <span className="w-1.5 h-1.5 rounded-full bg-warning-500 flex-shrink-0" aria-hidden />
                   )}
                 </button>
               );
@@ -1911,7 +1832,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Clock size={20} className="sm:w-6 sm:h-6 text-orange-600" />
+                    <Clock size={20} className="sm:w-6 sm:h-6 text-warning-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En attente</h3>
@@ -1943,7 +1864,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <TrendingUp size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                    <TrendingUp size={20} className="sm:w-6 sm:h-6 text-success-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Revenus</h3>
@@ -1969,7 +1890,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-success-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Actifs (payés)</h3>
@@ -1983,7 +1904,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Clock size={20} className="sm:w-6 sm:h-6 text-orange-600" />
+                    <Clock size={20} className="sm:w-6 sm:h-6 text-warning-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En attente</h3>
@@ -2028,7 +1949,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-success-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Disponibles</h3>
@@ -2092,7 +2013,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Clock size={20} className="sm:w-6 sm:h-6 text-orange-600" />
+                    <Clock size={20} className="sm:w-6 sm:h-6 text-warning-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En attente</h3>
@@ -2108,7 +2029,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-success-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Actifs</h3>
@@ -2124,7 +2045,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <XCircle size={20} className="sm:w-6 sm:h-6 text-red-600" />
+                    <XCircle size={20} className="sm:w-6 sm:h-6 text-danger-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Rejetés</h3>
@@ -2150,7 +2071,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Clock size={20} className="sm:w-6 sm:h-6 text-orange-600" />
+                    <Clock size={20} className="sm:w-6 sm:h-6 text-warning-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">En attente</h3>
@@ -2174,7 +2095,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Package size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                    <Package size={20} className="sm:w-6 sm:h-6 text-success-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Acceptées / livrées</h3>
@@ -2212,7 +2133,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                    <CheckCircle size={20} className="sm:w-6 sm:h-6 text-success-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Terminées</h3>
@@ -2224,7 +2145,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
@@ -2246,12 +2167,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 space-y-3">
               {reassignNotice && (
-                <div className="flex items-start justify-between gap-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
+                <div className="flex items-start justify-between gap-3 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-sm text-success-900">
                   <span>{reassignNotice}</span>
                   <button
                     type="button"
                     onClick={() => setReassignNotice(null)}
-                    className="text-green-800 hover:text-green-950"
+                    className="text-success-800 hover:text-success-950"
                     aria-label="Fermer"
                   >
                     <XCircle size={16} />
@@ -2324,9 +2245,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           <h3 className="text-sm sm:text-base font-semibold text-gray-900">
                             Réservation #{booking.id.slice(-8)}
                           </h3>
-                          {getBookingStatusBadge(booking.status)}
+                          {<BookingStatusBadge status={booking.status} labels={{ pending: 'En attente', accepted: 'Acceptée', in_progress: 'En cours', completed: 'Terminée', cancelled: 'Annulée' }} />}
                           {booking.isReturnTrip && (
-                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                            <span className="text-xs bg-warning-100 text-warning-800 px-2 py-1 rounded-full">
                               Aller-retour
                             </span>
                           )}
@@ -2419,7 +2340,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           <Button
                             onClick={() => openCancelBookingModal(booking)}
                             size="sm"
-                            className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 mt-1"
+                            className="bg-danger-600 hover:bg-danger-700 text-white flex items-center gap-2 mt-1"
                           >
                             <XCircle size={16} />
                             Annuler
@@ -2454,7 +2375,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <Button
                           onClick={() => openCancelBookingModal(booking)}
                           size="sm"
-                          className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                          className="w-full bg-danger-600 hover:bg-danger-700 text-white flex items-center justify-center gap-2"
                         >
                           <XCircle size={16} />
                           Annuler la réservation
@@ -2546,7 +2467,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             </span>
                           )}
                           {subscription.billingPeriod === 'yearly' && (
-                            <p className="text-[10px] text-green-600 mt-0.5 font-medium">-10%</p>
+                            <p className="text-[10px] text-success-600 mt-0.5 font-medium">-10%</p>
                           )}
                         </div>
                       </td>
@@ -2561,7 +2482,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             {getBillingPeriodLabel(subscription.billingPeriod)} ({getSubscriptionDurationLabel(subscription.billingPeriod)})
                           </p>
                           {subscription.paymentStatus === 'pending' && (
-                            <p className="text-[10px] text-orange-700 font-medium mt-1">
+                            <p className="text-[10px] text-warning-700 font-medium mt-1">
                               {getSubscriptionDurationLabel(subscription.billingPeriod)} à compter de la validation
                             </p>
                           )}
@@ -2584,15 +2505,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <td className="px-3 py-3">
                         <div className="text-xs">
                         {subscription.paymentStatus === 'paid' ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-success-100 text-success-800">
                             Payé
                           </span>
                         ) : subscription.paymentStatus === 'pending' ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-warning-100 text-warning-800">
                             En attente
                           </span>
                         ) : subscription.paymentStatus === 'failed' ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-danger-100 text-danger-800">
                             Échoué
                           </span>
                         ) : (
@@ -2617,13 +2538,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                                 {subscription.daysRemaining}j
                               </p>
                               {subscription.daysRemaining <= 7 && subscription.daysRemaining > 0 && (
-                                <p className="text-[10px] text-orange-600 font-medium">
+                                <p className="text-[10px] text-warning-600 font-medium">
                                   ⚠️ Bientôt
                                 </p>
                               )}
                             </>
                           ) : (
-                            <div className="text-red-600">
+                            <div className="text-danger-600">
                               <p className="font-semibold text-xs">Expiré</p>
                               <p className="text-[10px]">
                                 -{Math.abs(subscription.daysRemaining || 0)}j
@@ -2636,11 +2557,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       {/* Statut */}
                       <td className="px-3 py-3">
                         {subscription.status === 'active' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-success-100 text-success-800">
                             Actif
                           </span>
                         ) : subscription.status === 'expired' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-danger-100 text-danger-800">
                             Expiré
                           </span>
                         ) : (
@@ -2663,7 +2584,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           {subscription.paymentStatus === 'pending' && (
                             <button
                               onClick={() => setSelectedSubscription(subscription)}
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              className="p-1.5 text-success-600 hover:bg-success-50 rounded-lg transition-colors"
                               title="Valider le paiement"
                             >
                               <CheckCircle size={14} />
@@ -2729,11 +2650,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <div className="bg-gray-50 rounded-lg p-2.5">
                         <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Paiement</p>
                         {subscription.paymentStatus === 'paid' ? (
-                          <span className="text-[10px] sm:text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                          <span className="text-[10px] sm:text-xs bg-success-100 text-success-800 px-2 py-1 rounded-full font-medium">
                             Payé
                           </span>
                         ) : (
-                          <span className="text-[10px] sm:text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-medium">
+                          <span className="text-[10px] sm:text-xs bg-warning-100 text-warning-800 px-2 py-1 rounded-full font-medium">
                             En attente
                           </span>
                         )}
@@ -2755,7 +2676,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         {getBillingPeriodLabel(subscription.billingPeriod)} — {getSubscriptionDurationLabel(subscription.billingPeriod)}
                       </p>
                       {subscription.paymentStatus === 'pending' && (
-                        <p className="text-[10px] sm:text-xs text-orange-700 font-medium mt-1">
+                        <p className="text-[10px] sm:text-xs text-warning-700 font-medium mt-1">
                           En attente de validation du paiement
                         </p>
                       )}
@@ -2828,7 +2749,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
 
             {vehiclesFetchError && (
-              <div className="mx-4 sm:mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="mx-4 sm:mx-6 mt-4 rounded-lg border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
                 {vehiclesFetchError}
               </div>
             )}
@@ -2924,7 +2845,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       {/* Statut chauffeur */}
                       <td className="px-3 py-3">
                         {vehicle.driver ? (
-                          getStatusBadge(vehicle.driver.status)
+                          <DriverStatusBadge status={vehicle.driver.status} />
                         ) : (
                           <span className="text-gray-500 italic text-xs">N/A</span>
                         )}
@@ -2936,8 +2857,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 ? (
                             <>
                               <div className="flex items-center gap-1.5 mb-1">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                <span className="font-bold text-green-700">
+                                <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
+                                <span className="font-bold text-success-700">
                                   {vehicle.availabilityCount}
                                 </span>
                                 <span className="text-[10px] text-gray-500">créneau{vehicle.availabilityCount > 1 ? 'x' : ''}</span>
@@ -2963,7 +2884,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                                 <XCircle size={12} className="text-gray-400" />
                                 <span className="text-gray-500 text-[10px] font-medium">Aucun créneau</span>
                               </div>
-                              <span className="text-[9px] text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">
+                              <span className="text-[9px] text-warning-600 bg-warning-50 px-1.5 py-0.5 rounded">
                                 ⚠️ Action requise
                               </span>
                             </div>
@@ -2977,7 +2898,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 && (
                             <button
                               onClick={() => fetchAllAvailabilities(vehicle)}
-                              className="p-2 text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-colors flex-shrink-0"
+                              className="p-2 text-success-600 hover:bg-success-50 active:bg-success-100 rounded-lg transition-colors flex-shrink-0"
                               title="Voir toutes les disponibilités"
                             >
                               <Calendar size={18} />
@@ -3044,7 +2965,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 && (
                           <button
                             onClick={() => fetchAllAvailabilities(vehicle)}
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            className="p-2 text-success-600 hover:bg-success-50 rounded-lg transition-colors"
                             title="Voir toutes les disponibilités"
                           >
                             <Calendar size={16} />
@@ -3077,7 +2998,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             </p>
                             <div className="mt-1 flex flex-wrap items-center gap-1">
                             {getDriverActivityBadge(vehicle.driver.driverType)}
-                            {getStatusBadge(vehicle.driver.status)}
+                            {<DriverStatusBadge status={vehicle.driver.status} />}
                             </div>
                           </>
                         ) : (
@@ -3087,16 +3008,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Disponibilités</p>
                         {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 ? (
-                          <div className="bg-green-50 rounded-lg p-2 border border-green-200">
+                          <div className="bg-success-50 rounded-lg p-2 border border-success-200">
                             <div className="flex items-center gap-2 mb-1">
-                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                              <span className="text-base font-bold text-green-700">
+                              <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
+                              <span className="text-base font-bold text-success-700">
                                 {vehicle.availabilityCount}
                             </span>
-                              <span className="text-xs text-green-600">créneau{vehicle.availabilityCount > 1 ? 'x' : ''}</span>
+                              <span className="text-xs text-success-600">créneau{vehicle.availabilityCount > 1 ? 'x' : ''}</span>
                             </div>
                             {vehicle.upcomingAvailabilities && vehicle.upcomingAvailabilities.length > 0 && (
-                              <p className="text-[10px] text-green-600 font-medium">
+                              <p className="text-[10px] text-success-600 font-medium">
                                 Prochain: {new Date(vehicle.upcomingAvailabilities[0].date + 'T00:00:00').toLocaleDateString('fr-FR', { 
                                   day: '2-digit', 
                                   month: 'short' 
@@ -3105,12 +3026,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             )}
                           </div>
                         ) : (
-                          <div className="bg-orange-50 rounded-lg p-2 border border-orange-200">
+                          <div className="bg-warning-50 rounded-lg p-2 border border-warning-200">
                             <div className="flex items-center gap-2 mb-1">
-                              <XCircle size={14} className="text-orange-600" />
-                              <span className="text-sm font-medium text-orange-700">Aucun créneau</span>
+                              <XCircle size={14} className="text-warning-600" />
+                              <span className="text-sm font-medium text-warning-700">Aucun créneau</span>
                             </div>
-                            <p className="text-[10px] text-orange-600 mt-1">Action requise</p>
+                            <p className="text-[10px] text-warning-600 mt-1">Action requise</p>
                           </div>
                         )}
                       </div>
@@ -3130,7 +3051,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
                             let badgeText = '';
                             if (daysDiff === 0) {
-                              badgeColor = 'bg-green-50 text-green-700 border-green-200';
+                              badgeColor = 'bg-success-50 text-success-700 border-success-200';
                               badgeText = "Aujourd'hui";
                             } else if (daysDiff === 1) {
                               badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -3179,7 +3100,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     {vehicle.availabilityCount !== undefined && vehicle.availabilityCount > 0 && (
                       <button
                         onClick={() => fetchAllAvailabilities(vehicle)}
-                        className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 active:from-green-800 active:to-blue-800 text-white rounded-lg transition-colors text-sm font-semibold shadow-md"
+                        className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-success-600 to-blue-600 hover:from-success-700 hover:to-blue-700 active:from-success-800 active:to-blue-800 text-white rounded-lg transition-colors text-sm font-semibold shadow-md"
                       >
                         <Calendar size={18} />
                         <span>Voir toutes les disponibilités</span>
@@ -3366,13 +3287,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] text-gray-500">Gains:</span>
-                          <span className="font-semibold text-green-600 text-[10px]">
+                          <span className="font-semibold text-success-600 text-[10px]">
                             {(driver.totalEarnings || 0).toFixed(0)} TND
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] text-gray-500">Annulées:</span>
-                          <span className="font-semibold text-red-600">
+                          <span className="font-semibold text-danger-600">
                             {(driver.cancelledByDriver || 0) + (driver.cancelledByClient || 0)}
                           </span>
                         </div>
@@ -3381,7 +3302,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     
                     {/* Statut */}
                     <td className="px-3 py-3">
-                      {getStatusBadge(driver.status)}
+                      {<DriverStatusBadge status={driver.status} />}
                     </td>
                     
                     {/* Inscription */}
@@ -3415,7 +3336,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             <button
                               onClick={() => updateDriverStatus(driver.id, 'active')}
                               disabled={actionLoading === driver.id}
-                              className="p-1.5 text-green-600 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50"
+                              className="p-1.5 text-success-600 hover:bg-success-100 rounded-lg transition-colors disabled:opacity-50"
                               title="Approuver"
                             >
                               <UserCheck size={14} />
@@ -3423,7 +3344,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             <button
                               onClick={() => requestDriverStatusChange(driver, 'rejected')}
                               disabled={actionLoading === driver.id}
-                              className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                              className="p-1.5 text-danger-600 hover:bg-danger-100 rounded-lg transition-colors disabled:opacity-50"
                               title="Rejeter"
                             >
                               <XCircle size={14} />
@@ -3435,7 +3356,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           <button
                             onClick={() => requestDriverStatusChange(driver, 'pending')}
                             disabled={actionLoading === driver.id}
-                            className="p-1.5 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors disabled:opacity-50"
+                            className="p-1.5 text-warning-600 hover:bg-warning-100 rounded-lg transition-colors disabled:opacity-50"
                             title="Suspendre"
                           >
                             <Clock size={14} />
@@ -3476,7 +3397,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       {getDriverActivityBadge(driver.driverType)}
-                      {getStatusBadge(driver.status)}
+                      {<DriverStatusBadge status={driver.status} />}
                       <button
                         onClick={() => setSelectedDriver(driver)}
                         className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -3519,13 +3440,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-gray-500 mb-1">Gains</p>
-                      <p className="text-lg font-semibold text-green-600">
+                      <p className="text-lg font-semibold text-success-600">
                         {(driver.totalEarnings || 0).toFixed(0)} TND
                       </p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-gray-500 mb-1">Annulées</p>
-                      <p className="text-lg font-semibold text-red-600">
+                      <p className="text-lg font-semibold text-danger-600">
                         {(driver.cancelledByDriver || 0) + (driver.cancelledByClient || 0)}
                       </p>
                     </div>
@@ -3541,14 +3462,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           <button
                             onClick={() => updateDriverStatus(driver.id, 'active')}
                             disabled={actionLoading === driver.id}
-                            className="px-3 py-1 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                            className="px-3 py-1 text-xs bg-success-600 text-white rounded-lg hover:bg-success-700 disabled:opacity-50"
                           >
                             Approuver
                           </button>
                           <button
                             onClick={() => requestDriverStatusChange(driver, 'rejected')}
                             disabled={actionLoading === driver.id}
-                            className="px-3 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                            className="px-3 py-1 text-xs bg-danger-600 text-white rounded-lg hover:bg-danger-700 disabled:opacity-50"
                           >
                             Rejeter
                           </button>
@@ -3559,7 +3480,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <button
                           onClick={() => requestDriverStatusChange(driver, 'pending')}
                           disabled={actionLoading === driver.id}
-                          className="px-3 py-1 text-xs bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                          className="px-3 py-1 text-xs bg-warning-600 text-white rounded-lg hover:bg-warning-700 disabled:opacity-50"
                         >
                           Suspendre
                         </button>
@@ -3675,13 +3596,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-gray-500">Terminées:</span>
-                            <span className="font-semibold text-green-600">
+                            <span className="font-semibold text-success-600">
                               {client.completedBookings}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-gray-500">Annulées:</span>
-                            <span className="font-semibold text-red-600">
+                            <span className="font-semibold text-danger-600">
                               {client.cancelledBookings}
                             </span>
                           </div>
@@ -3693,13 +3614,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <div className="text-xs space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-gray-500">Dépensé:</span>
-                            <span className="font-semibold text-green-600 text-[10px]">
+                            <span className="font-semibold text-success-600 text-[10px]">
                               {client.totalSpent.toFixed(0)} TND
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-gray-500">En attente:</span>
-                            <span className="font-semibold text-orange-600">
+                            <span className="font-semibold text-warning-600">
                               {client.pendingBookings}
                             </span>
                           </div>
@@ -3789,19 +3710,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       <div className="text-center">
                         <p className="text-xs text-gray-500 mb-1">Dépensé</p>
-                        <p className="text-lg font-semibold text-green-600">
+                        <p className="text-lg font-semibold text-success-600">
                           {client.totalSpent.toFixed(0)} TND
                         </p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-gray-500 mb-1">Annulées</p>
-                        <p className="text-lg font-semibold text-red-600">
+                        <p className="text-lg font-semibold text-danger-600">
                           {client.cancelledBookings}
                         </p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-gray-500 mb-1">En attente</p>
-                        <p className="text-lg font-semibold text-orange-600">
+                        <p className="text-lg font-semibold text-warning-600">
                           {client.pendingBookings}
                         </p>
                       </div>
@@ -4001,14 +3922,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Statistiques des courses</h4>
                 <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <div className="bg-green-50 rounded-lg p-4">
+                  <div className="bg-success-50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <CheckCircle size={20} className="text-green-600" />
+                      <div className="w-10 h-10 bg-success-100 rounded-full flex items-center justify-center">
+                        <CheckCircle size={20} className="text-success-600" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Courses terminées</p>
-                        <p className="text-2xl font-bold text-green-600">
+                        <p className="text-2xl font-bold text-success-600">
                           {selectedDriver.completedBookings || 0}
                         </p>
                       </div>
@@ -4032,27 +3953,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="bg-red-50 rounded-lg p-4">
+                  <div className="bg-danger-50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                        <XCircle size={20} className="text-red-600" />
+                      <div className="w-10 h-10 bg-danger-100 rounded-full flex items-center justify-center">
+                        <XCircle size={20} className="text-danger-600" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Annulées par chauffeur</p>
-                        <p className="text-xl font-bold text-red-600">
+                        <p className="text-xl font-bold text-danger-600">
                           {selectedDriver.cancelledByDriver || 0}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-orange-50 rounded-lg p-4">
+                  <div className="bg-warning-50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                        <XCircle size={20} className="text-orange-600" />
+                      <div className="w-10 h-10 bg-warning-100 rounded-full flex items-center justify-center">
+                        <XCircle size={20} className="text-warning-600" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Annulées par client</p>
-                        <p className="text-xl font-bold text-orange-600">
+                        <p className="text-xl font-bold text-warning-600">
                           {selectedDriver.cancelledByClient || 0}
                         </p>
                       </div>
@@ -4080,7 +4001,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-600">Statut actuel:</span>
-                    {getStatusBadge(selectedDriver.status)}
+                    {<DriverStatusBadge status={selectedDriver.status} />}
                   </div>
                   
                   <div className="flex gap-2">
@@ -4098,7 +4019,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <Button
                           onClick={() => requestDriverStatusChange(selectedDriver, 'rejected')}
                           loading={actionLoading === selectedDriver.id}
-                          className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                          className="bg-danger-600 hover:bg-danger-700 text-white flex items-center gap-2"
                           size="sm"
                         >
                           <XCircle size={16} />
@@ -4111,7 +4032,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <Button
                         onClick={() => requestDriverStatusChange(selectedDriver, 'pending')}
                         loading={actionLoading === selectedDriver.id}
-                        className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2"
+                        className="bg-warning-600 hover:bg-warning-700 text-white flex items-center gap-2"
                         size="sm"
                       >
                         <Clock size={16} />
@@ -4185,7 +4106,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 return (
               <div className={`rounded-xl border-2 p-4 ${
                 isPending
-                  ? 'border-orange-200 bg-orange-50'
+                  ? 'border-warning-200 bg-warning-50'
                   : 'border-purple-200 bg-purple-50'
               }`}>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
@@ -4201,10 +4122,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </p>
                 {isPending && (
                   <>
-                    <p className="text-sm text-orange-800 font-medium mt-2">
+                    <p className="text-sm text-warning-800 font-medium mt-2">
                       La période complète ({getSubscriptionDurationLabel(selectedSubscription.billingPeriod)}) démarre à la date de validation du paiement (aujourd&apos;hui), et non à la date de la demande.
                     </p>
-                    <p className="text-xs text-orange-700 mt-2">
+                    <p className="text-xs text-warning-700 mt-2">
                       Demande créée le {new Date(selectedSubscription.createdAt).toLocaleDateString('fr-FR')} — dates indicatives initiales :{' '}
                       {formatSubscriptionPeriodRange(selectedSubscription.startDate, selectedSubscription.endDate, { short: true })}
                     </p>
@@ -4233,19 +4154,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         </span>
                       )}
                       {selectedSubscription.billingPeriod === 'yearly' && (
-                        <span className="text-xs text-green-600 font-bold">-10% 🎉</span>
+                        <span className="text-xs text-success-600 font-bold">-10% 🎉</span>
                       )}
                     </div>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Statut</p>
                     {selectedSubscription.status === 'active' ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-success-100 text-success-800">
                         <CheckCircle size={14} />
                         Actif
                       </span>
                     ) : selectedSubscription.status === 'expired' ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-danger-100 text-danger-800">
                         <XCircle size={14} />
                         Expiré
                       </span>
@@ -4281,9 +4202,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <div className={`rounded-lg p-4 ${
                     selectedSubscription.daysRemaining !== undefined && selectedSubscription.daysRemaining >= 0
                       ? selectedSubscription.daysRemaining <= 7 
-                        ? 'bg-orange-50 border border-orange-200' 
-                        : 'bg-green-50 border border-green-200'
-                      : 'bg-red-50 border border-red-200'
+                        ? 'bg-warning-50 border border-warning-200' 
+                        : 'bg-success-50 border border-success-200'
+                      : 'bg-danger-50 border border-danger-200'
                   }`}>
                     <p className="text-sm text-gray-600 mb-1">Expiration</p>
                     <p className="font-semibold text-gray-900">{selectedSubscription.expirationStatus}</p>
@@ -4323,7 +4244,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <p className="text-sm text-gray-600 mb-1">Prix Total TTC</p>
                     <p className="text-3xl font-bold text-blue-600">{selectedSubscription.totalPriceTnd.toFixed(2)} TND</p>
                     {selectedSubscription.billingPeriod === 'yearly' && (
-                      <p className="text-sm text-green-600 mt-2 font-medium">
+                      <p className="text-sm text-success-600 mt-2 font-medium">
                         💰 Économie de {((30 * 1.19 * 12) - selectedSubscription.totalPriceTnd).toFixed(2)} TND vs mensuel
                       </p>
                     )}
@@ -4331,17 +4252,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Statut du paiement</p>
                     {selectedSubscription.paymentStatus === 'paid' ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-success-100 text-success-800">
                         <CheckCircle size={14} />
                         Payé
                       </span>
                     ) : selectedSubscription.paymentStatus === 'pending' ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-warning-100 text-warning-800">
                         <Clock size={14} />
                         En attente
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-danger-100 text-danger-800">
                         <XCircle size={14} />
                         {selectedSubscription.paymentStatus === 'failed' ? 'Échoué' : 'Remboursé'}
                       </span>
@@ -4439,25 +4360,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 });
 
                 return (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-orange-900 mb-3">Valider le paiement</h4>
+                <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-warning-900 mb-3">Valider le paiement</h4>
                   <div className="space-y-4">
-                    <p className="text-sm text-orange-800">
+                    <p className="text-sm text-warning-800">
                       Une fois le paiement reçu, validez l&apos;abonnement : la période sera recalculée automatiquement
                       à partir d&apos;aujourd&apos;hui pour garantir {getSubscriptionDurationLabel(selectedSubscription.billingPeriod)} complets.
                     </p>
-                    <div className="rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-gray-800">
-                      <span className="font-semibold text-green-900">Période qui sera activée :</span>
+                    <div className="rounded-lg border border-success-300 bg-success-50 p-3 text-sm text-gray-800">
+                      <span className="font-semibold text-success-900">Période qui sera activée :</span>
                       <p className="font-bold text-gray-900 mt-1">
                         {formatSubscriptionPeriodRange(activationPreview.startDate, activationPreview.endDate)}
                       </p>
-                      <p className="text-xs text-green-800 mt-1">
+                      <p className="text-xs text-success-800 mt-1">
                         {getBillingPeriodLabel(selectedSubscription.billingPeriod)} — {selectedSubscription.totalPriceTnd.toFixed(2)} TND TTC
                       </p>
                     </div>
 
                     {paymentValidationError && (
-                      <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                      <div className="flex items-start gap-2 p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">
                         <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
                         <span>{paymentValidationError}</span>
                       </div>
@@ -4493,7 +4414,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <Button
                         onClick={validateSubscriptionPayment}
                         loading={validatingPayment}
-                        className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                        className="bg-success-600 hover:bg-success-700 text-white flex items-center gap-2"
                       >
                         <CheckCircle size={18} />
                         {validatingPayment ? 'Validation...' : 'Valider le paiement'}
@@ -4554,7 +4475,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </div>
 
                     {extendError && (
-                      <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                      <div className="flex items-start gap-2 p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">
                         <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
                         <span>{extendError}</span>
                       </div>
@@ -4633,11 +4554,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  statusConfirm.newStatus === 'rejected' ? 'bg-red-100' : 'bg-orange-100'
+                  statusConfirm.newStatus === 'rejected' ? 'bg-danger-100' : 'bg-warning-100'
                 }`}>
                   <AlertTriangle
                     size={20}
-                    className={statusConfirm.newStatus === 'rejected' ? 'text-red-600' : 'text-orange-600'}
+                    className={statusConfirm.newStatus === 'rejected' ? 'text-danger-600' : 'text-warning-600'}
                   />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">
@@ -4672,8 +4593,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   loading={actionLoading === statusConfirm.driver.id}
                   className={`text-sm text-white ${
                     statusConfirm.newStatus === 'rejected'
-                      ? 'bg-red-600 hover:bg-red-700'
-                      : 'bg-orange-600 hover:bg-orange-700'
+                      ? 'bg-danger-600 hover:bg-danger-700'
+                      : 'bg-warning-600 hover:bg-warning-700'
                   }`}
                 >
                   {statusConfirm.newStatus === 'rejected' ? 'Confirmer le rejet' : 'Confirmer la suspension'}
@@ -4785,7 +4706,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               )}
 
               {reassignError && (
-                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="flex items-start gap-2 p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">
                   <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
                   <span>{reassignError}</span>
                 </div>
@@ -4814,8 +4735,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle size={20} className="text-red-600" />
+                <div className="w-10 h-10 bg-danger-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle size={20} className="text-danger-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Annuler la réservation</h3>
               </div>
@@ -4836,7 +4757,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
               <div>
                 <p className="text-sm font-medium text-gray-900 mb-3">
-                  Raison de l&apos;annulation <span className="text-red-600">*</span>
+                  Raison de l&apos;annulation <span className="text-danger-600">*</span>
                 </p>
                 <div className="space-y-2">
                   {DRIVER_BOOKING_CANCELLATION_REASONS.map((reason) => {
@@ -4860,13 +4781,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${
                           selected
-                            ? 'border-red-400 bg-red-50 text-red-900'
+                            ? 'border-danger-400 bg-danger-50 text-danger-900'
                             : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
-                        <ReasonIcon size={18} className={selected ? 'text-red-600' : 'text-gray-500'} />
+                        <ReasonIcon size={18} className={selected ? 'text-danger-600' : 'text-gray-500'} />
                         <span className="flex-1 text-sm font-medium">{reason.label}</span>
-                        {selected && <CheckCircle size={18} className="text-red-600 flex-shrink-0" />}
+                        {selected && <CheckCircle size={18} className="text-danger-600 flex-shrink-0" />}
                       </button>
                     );
                   })}
@@ -4876,7 +4797,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               {cancelReasonId === 'other' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Précisez la raison <span className="text-red-600">*</span>
+                    Précisez la raison <span className="text-danger-600">*</span>
                   </label>
                   <textarea
                     value={cancelCustomReason}
@@ -4885,7 +4806,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       setCancelBookingError(null);
                     }}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-danger-500 focus:border-transparent"
                     placeholder="Entrez votre raison..."
                   />
                 </div>
@@ -4896,7 +4817,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               </p>
 
               {cancelBookingError && (
-                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="flex items-start gap-2 p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">
                   <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
                   <span>{cancelBookingError}</span>
                 </div>
@@ -4911,7 +4832,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 onClick={handleCancelBooking}
                 loading={cancellingBooking}
                 disabled={!isCancelReasonValid}
-                className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-danger-600 hover:bg-danger-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cancellingBooking ? 'Annulation...' : 'Confirmer l\'annulation'}
               </Button>
@@ -4939,7 +4860,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
             <div className="p-6 space-y-4">
               {driverEditError && (
-                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="flex items-start gap-2 p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">
                   <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
                   <span>{driverEditError}</span>
                 </div>
@@ -5034,7 +4955,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
             <div className="p-6 space-y-4">
               {clientEditError && (
-                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="flex items-start gap-2 p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">
                   <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
                   <span>{clientEditError}</span>
                 </div>
@@ -5125,7 +5046,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
             <div className="p-6 space-y-4">
               {vehicleEditError && (
-                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="flex items-start gap-2 p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">
                   <AlertCircleIcon size={18} className="flex-shrink-0 mt-0.5" />
                   <span>{vehicleEditError}</span>
                 </div>
@@ -5379,7 +5300,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <p className="text-sm text-gray-600 mb-1">Statut</p>
-                      {getStatusBadge(selectedVehicle.driver.status)}
+                      {<DriverStatusBadge status={selectedVehicle.driver.status} />}
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <p className="text-sm text-gray-600 mb-1">Type d&apos;activité</p>
@@ -5397,12 +5318,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </h4>
                   {selectedVehicle.availabilityCount !== undefined && selectedVehicle.availabilityCount > 0 && (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-50 rounded-lg border border-green-200">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs sm:text-sm font-bold text-green-700">
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-success-50 rounded-lg border border-success-200">
+                        <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs sm:text-sm font-bold text-success-700">
                           {selectedVehicle.availabilityCount} créneau{selectedVehicle.availabilityCount > 1 ? 'x' : ''}
                     </span>
-                        <span className="text-[10px] sm:text-xs text-green-600 hidden sm:inline">sur 30 jours</span>
+                        <span className="text-[10px] sm:text-xs text-success-600 hidden sm:inline">sur 30 jours</span>
                       </div>
                       <button
                         onClick={() => fetchAllAvailabilities(selectedVehicle)}
@@ -5439,7 +5360,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           let badgeColor = 'bg-blue-100 text-blue-800';
                           if (daysDiff === 0) {
                             dateBadge = "Aujourd'hui";
-                            badgeColor = 'bg-green-100 text-green-800';
+                            badgeColor = 'bg-success-100 text-success-800';
                           } else if (daysDiff === 1) {
                             dateBadge = 'Demain';
                             badgeColor = 'bg-emerald-100 text-emerald-800';
@@ -5453,10 +5374,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           
                           return (
                             <div key={date} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                              <div className="bg-gradient-to-r from-green-50 to-blue-50 px-4 py-2.5 border-b border-gray-200">
+                              <div className="bg-gradient-to-r from-success-50 to-blue-50 px-4 py-2.5 border-b border-gray-200">
                                 <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                                    <Calendar size={18} className="text-green-600" />
+                                    <Calendar size={18} className="text-success-600" />
                           <div>
                                       <p className="font-semibold text-gray-900">
                                         {availDate.toLocaleDateString('fr-FR', {
@@ -5481,15 +5402,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                                   {availabilities.map((avail, idx) => (
                                     <div
                                       key={idx}
-                                      className="flex items-center justify-between p-2.5 bg-green-50 rounded-lg border border-green-100 hover:bg-green-100 transition-colors"
+                                      className="flex items-center justify-between p-2.5 bg-success-50 rounded-lg border border-success-100 hover:bg-success-100 transition-colors"
                                     >
                                       <div className="flex items-center gap-2">
-                                        <Clock size={14} className="text-green-600" />
+                                        <Clock size={14} className="text-success-600" />
                                         <span className="text-sm font-medium text-gray-900">
                                           {avail.startTime.slice(0, 5)} - {avail.endTime.slice(0, 5)}
                                         </span>
                                       </div>
-                                      <CheckCircle size={16} className="text-green-600" />
+                                      <CheckCircle size={16} className="text-success-600" />
                       </div>
                     ))}
                                 </div>
@@ -5518,8 +5439,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       Ce chauffeur n'a pas encore configuré ses disponibilités pour ce véhicule.
                     </p>
                       </div>
-                      <div className="mt-2 px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg">
-                        <p className="text-xs text-orange-700 font-medium">
+                      <div className="mt-2 px-4 py-2 bg-warning-50 border border-warning-200 rounded-lg">
+                        <p className="text-xs text-warning-700 font-medium">
                           ⚠️ Action requise : Le chauffeur doit ajouter des créneaux de disponibilité
                         </p>
                       </div>
@@ -5541,7 +5462,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       {vehicleForAvailabilities && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-0 sm:p-2 md:p-4 z-50">
           <div className="bg-white rounded-none sm:rounded-xl md:rounded-2xl shadow-xl max-w-5xl w-full h-full sm:h-auto max-h-[100vh] sm:max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 flex-shrink-0 bg-gradient-to-r from-green-50 to-blue-50">
+            <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 flex-shrink-0 bg-gradient-to-r from-success-50 to-blue-50">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
@@ -5578,9 +5499,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <div className="space-y-3 sm:space-y-4">
                   {/* Statistiques */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
-                    <div className="bg-green-50 rounded-lg p-2 sm:p-3 border border-green-200">
+                    <div className="bg-success-50 rounded-lg p-2 sm:p-3 border border-success-200">
                       <p className="text-[10px] sm:text-xs text-gray-600 mb-1 truncate">Total créneaux</p>
-                      <p className="text-xl sm:text-2xl font-bold text-green-700">{allAvailabilities.length}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-success-700">{allAvailabilities.length}</p>
                     </div>
                     <div className="bg-blue-50 rounded-lg p-2 sm:p-3 border border-blue-200">
                       <p className="text-[10px] sm:text-xs text-gray-600 mb-1 truncate">Jours uniques</p>
@@ -5600,9 +5521,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         }).length}
                       </p>
                     </div>
-                    <div className="bg-orange-50 rounded-lg p-2 sm:p-3 border border-orange-200">
+                    <div className="bg-warning-50 rounded-lg p-2 sm:p-3 border border-warning-200">
                       <p className="text-[10px] sm:text-xs text-gray-600 mb-1 truncate">Ce mois</p>
-                      <p className="text-xl sm:text-2xl font-bold text-orange-700">
+                      <p className="text-xl sm:text-2xl font-bold text-warning-700">
                         {allAvailabilities.filter(a => {
                           const date = new Date(a.date + 'T00:00:00');
                           const today = new Date();
@@ -5636,7 +5557,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         let badgeColor = 'bg-blue-100 text-blue-800';
                         if (daysDiff === 0) {
                           dateBadge = "Aujourd'hui";
-                          badgeColor = 'bg-green-100 text-green-800';
+                          badgeColor = 'bg-success-100 text-success-800';
                         } else if (daysDiff === 1) {
                           dateBadge = 'Demain';
                           badgeColor = 'bg-emerald-100 text-emerald-800';
@@ -5653,10 +5574,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         
                         return (
                           <div key={date} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                            <div className="bg-gradient-to-r from-green-50 to-blue-50 px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200">
+                            <div className="bg-gradient-to-r from-success-50 to-blue-50 px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200">
                               <div className="flex items-start sm:items-center justify-between flex-wrap gap-2">
                                 <div className="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                                  <Calendar size={18} className="sm:w-5 sm:h-5 text-green-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+                                  <Calendar size={18} className="sm:w-5 sm:h-5 text-success-600 flex-shrink-0 mt-0.5 sm:mt-0" />
                                   <div className="min-w-0 flex-1">
                                     <p className="font-semibold text-gray-900 text-xs sm:text-sm md:text-base">
                                       <span className="hidden sm:inline">
@@ -5692,15 +5613,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                                   .map((avail, idx) => (
                                     <div
                                       key={idx}
-                                      className="flex items-center justify-between p-2 sm:p-3 bg-green-50 rounded-lg border border-green-100 hover:bg-green-100 active:bg-green-200 transition-colors"
+                                      className="flex items-center justify-between p-2 sm:p-3 bg-success-50 rounded-lg border border-success-100 hover:bg-success-100 active:bg-success-200 transition-colors"
                                     >
                                       <div className="flex items-center gap-1.5 sm:gap-2">
-                                        <Clock size={14} className="sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+                                        <Clock size={14} className="sm:w-4 sm:h-4 text-success-600 flex-shrink-0" />
                                         <span className="text-xs sm:text-sm font-semibold text-gray-900">
                                           {avail.startTime.slice(0, 5)} - {avail.endTime.slice(0, 5)}
                                         </span>
                                       </div>
-                                      <CheckCircle size={14} className="sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+                                      <CheckCircle size={14} className="sm:w-4 sm:h-4 text-success-600 flex-shrink-0" />
                                     </div>
                                   ))}
                               </div>
@@ -5804,27 +5725,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-green-50 rounded-lg p-4">
+                  <div className="bg-success-50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <CheckCircle size={20} className="text-green-600" />
+                      <div className="w-10 h-10 bg-success-100 rounded-full flex items-center justify-center">
+                        <CheckCircle size={20} className="text-success-600" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Terminées</p>
-                        <p className="text-2xl font-bold text-green-600">
+                        <p className="text-2xl font-bold text-success-600">
                           {selectedClient.completedBookings}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-red-50 rounded-lg p-4">
+                  <div className="bg-danger-50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                        <XCircle size={20} className="text-red-600" />
+                      <div className="w-10 h-10 bg-danger-100 rounded-full flex items-center justify-center">
+                        <XCircle size={20} className="text-danger-600" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Annulées</p>
-                        <p className="text-2xl font-bold text-red-600">
+                        <p className="text-2xl font-bold text-danger-600">
                           {selectedClient.cancelledBookings}
                         </p>
                       </div>
@@ -5866,7 +5787,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                               <h5 className="font-medium text-gray-900">
                                 Course #{booking.id.slice(-8)}
                               </h5>
-                              {getBookingStatusBadge(booking.status)}
+                              {<BookingStatusBadge status={booking.status} labels={{ pending: 'En attente', accepted: 'Acceptée', in_progress: 'En cours', completed: 'Terminée', cancelled: 'Annulée' }} />}
                             </div>
                             <div className="grid md:grid-cols-2 gap-4 text-sm">
                               <div>
@@ -5888,7 +5809,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                                 <p className="text-gray-900 font-semibold">
                                   {booking.priceTnd} TND
                                   {booking.isReturnTrip && (
-                                    <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                                    <span className="ml-2 text-xs bg-warning-100 text-warning-800 px-2 py-1 rounded-full">
                                       Aller-retour
                                     </span>
                                   )}

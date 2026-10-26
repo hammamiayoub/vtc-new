@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
+import { Alert } from './ui/Alert';
 import AddressAutocomplete from './AddressAutocomplete';
 import {
   calculateDrivingDistance,
   calculatePrice,
+  roundFareUp,
   Coordinates,
   getProgressivePriceBreakdown,
   RIDE_DEFAULT_PICKUP_FARE_TND,
@@ -24,7 +26,8 @@ interface HomeBookingWidgetProps {
 }
 
 function formatTnd(amount: number, locale: 'fr' | 'en'): string {
-  const value = amount.toFixed(2);
+  // Montants entiers sans décimales (« 252 TND », « 10 TND »), sinon deux décimales.
+  const value = amount.toFixed(Number.isInteger(amount) ? 0 : 2);
   return `${locale === 'en' ? value : value.replace('.', ',')} TND`;
 }
 
@@ -151,7 +154,8 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
         return;
       }
 
-      const price = calculatePrice(distance, 'sedan');
+      // Même règle que le formulaire de réservation : prix arrondi au dinar supérieur
+      const price = roundFareUp(calculatePrice(distance, 'sedan'));
       setDistanceKm(distance);
       setEstimatedPrice(price);
 
@@ -180,8 +184,8 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
   const breakdown = distanceKm !== null ? getProgressivePriceBreakdown(distanceKm) : null;
 
   return (
-    <div className="uber-card shadow-card p-6 sm:p-8">
-      <p className="text-sm font-semibold text-gray-900 mb-1">{en ? 'Book now' : 'Réserver maintenant'}</p>
+    <div className="uber-card rounded-card shadow-card p-6 sm:p-8">
+      <h2 className="text-heading-md text-gray-900">{en ? 'Where to?' : 'Où allez-vous ?'}</h2>
       {pickupHighlighted && (
         <p className="text-sm text-gray-600 mb-3" role="status">
           {en ? 'Enter the pickup place to start.' : 'Indiquez le lieu de prise en charge pour commencer.'}
@@ -192,8 +196,8 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
         <AddressAutocomplete
           className={
             pickupHighlighted
-              ? 'rounded-lg ring-2 ring-black ring-offset-2 transition-shadow'
-              : 'rounded-lg transition-shadow'
+              ? 'rounded-xl ring-2 ring-black ring-offset-2 transition-shadow'
+              : 'rounded-xl transition-shadow'
           }
           inputId="home-pickup-address"
           value={pickupAddress}
@@ -209,7 +213,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
           }}
           placeholder={en ? 'Pickup location' : 'Lieu de prise en charge'}
           countries="tn"
-          inputClassName="w-full pl-10 pr-4 py-3.5 rounded-lg bg-surface-muted border border-surface-border focus:ring-2 focus:ring-gray-900 focus:border-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+          inputClassName="w-full pl-10 pr-4 h-14 rounded-xl bg-surface-muted border border-transparent focus:bg-white focus:ring-2 focus:ring-gray-900 focus:border-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
         />
 
         <AddressAutocomplete
@@ -227,20 +231,20 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
           }}
           placeholder={en ? 'Destination' : 'Destination'}
           countries="tn"
-          inputClassName="w-full pl-10 pr-4 py-3.5 rounded-lg bg-surface-muted border border-surface-border focus:ring-2 focus:ring-gray-900 focus:border-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+          inputClassName="w-full pl-10 pr-4 h-14 rounded-xl bg-surface-muted border border-transparent focus:bg-white focus:ring-2 focus:ring-gray-900 focus:border-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
         />
       </div>
 
       {autocompleteHint && !error && (
-        <p className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2" role="status">
+        <Alert tone="warning" className="mt-3">
           {autocompleteHint}
-        </p>
+        </Alert>
       )}
 
       {error && (
-        <p className="mt-3 text-sm text-red-600" role="alert">
+        <Alert tone="danger" className="mt-3">
           {error}
-        </p>
+        </Alert>
       )}
 
       {!estimatedPrice && (
@@ -275,8 +279,8 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
           </p>
           <p className="text-xs text-gray-500 mb-4">
             {en
-              ? `Indicative fare, excluding extras (night, weekend), vehicle choice (van, minibus…) and the driver’s distance to pickup (${getDriverPickupFareSummaryText()}).`
-              : `Tarif indicatif hors suppléments (nuit, week-end), hors choix de véhicule (van, minibus…) et hors distance du chauffeur (${getDriverPickupFareSummaryText()}).`}
+              ? `Indicative fare, rounded up to the next dinar, excluding extras (night, weekend), vehicle choice (van, minibus…) and the driver’s distance to pickup (${getDriverPickupFareSummaryText()}).`
+              : `Tarif indicatif arrondi au dinar supérieur, hors suppléments (nuit, week-end), hors choix de véhicule (van, minibus…) et hors distance du chauffeur (${getDriverPickupFareSummaryText()}).`}
           </p>
 
           <div className="rounded-lg bg-white border border-surface-border p-4 mb-4">

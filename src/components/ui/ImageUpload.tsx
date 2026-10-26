@@ -73,7 +73,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       <div
         className={`relative w-32 h-32 mx-auto rounded-full border-4 transition-all duration-200 ${
           dragOver 
-            ? 'border-blue-500 bg-blue-50' 
+            ? 'border-gray-900 bg-gray-50' 
             : 'border-gray-300 bg-gray-50 hover:border-gray-400'
         } ${loading ? 'opacity-50' : ''}`}
         onDragOver={(e) => {
@@ -106,7 +106,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={loading}
-          className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg transition-colors disabled:opacity-50"
+          className="absolute bottom-0 right-0 w-10 h-10 bg-black hover:bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg transition-colors disabled:opacity-50"
           title={en ? 'Change photo' : 'Changer la photo'}
         >
           <Camera size={16} />
@@ -115,10 +115,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       {/* Zone de drop */}
       {dragOver && (
-        <div className="absolute inset-0 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center border-2 border-dashed border-blue-500">
+        <div className="absolute inset-0 bg-gray-900 bg-opacity-20 rounded-full flex items-center justify-center border-2 border-dashed border-gray-900">
           <div className="text-center">
-            <Upload size={24} className="text-blue-600 mx-auto mb-2" />
-            <p className="text-sm text-blue-600 font-medium">{en ? 'Drop the image' : "Déposer l'image"}</p>
+            <Upload size={24} className="text-gray-700 mx-auto mb-2" />
+            <p className="text-sm text-gray-700 font-medium">{en ? 'Drop the image' : "Déposer l'image"}</p>
           </div>
         </div>
       )}

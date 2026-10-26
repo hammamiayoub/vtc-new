@@ -211,7 +211,7 @@ export const ParcelTransportPage: React.FC = () => {
                   : ['Envoi de cartons, effets personnels ou cadeaux', 'Transport de marchandises volumineuses', 'Photos et factures pour un devis précis', 'Comparaison de plusieurs propositions de prix']
                 ).map((item) => (
                   <li key={item} className="flex items-start gap-2">
-                    <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <CheckCircle size={16} className="text-success-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     {item}
                   </li>
                 ))}
@@ -237,7 +237,7 @@ export const ParcelTransportPage: React.FC = () => {
                   : ['Demandes filtrées selon vos disponibilités', 'Proposition libre en EUR ou TND', 'Visibilité sur les trajets Europe ↔ Tunisie', 'Compatible avec une activité VTC']
                 ).map((item) => (
                   <li key={item} className="flex items-start gap-2">
-                    <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <CheckCircle size={16} className="text-success-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     {item}
                   </li>
                 ))}

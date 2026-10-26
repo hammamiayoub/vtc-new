@@ -217,29 +217,29 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
-          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-            <CheckCircle size={48} className="text-green-600" />
+          <div className="w-24 h-24 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <CheckCircle size={48} className="text-success-600" />
           </div>
           
           <h1 className="text-3xl font-bold text-gray-900 mb-6">{en ? 'Signup complete' : 'Inscription réussie'}</h1>
           
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-lg">
+          <div className="bg-gray-50 border-l-4 border-gray-400 p-6 mb-8 rounded-r-lg">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <Mail className="h-6 w-6 text-blue-600 mt-1" />
+                <Mail className="h-6 w-6 text-gray-700 mt-1" />
               </div>
               <div className="ml-3 text-left">
-                <h3 className="text-lg font-semibold text-blue-800 mb-3">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">
                   {en ? 'Check your inbox' : 'Vérifiez votre boîte email'}
                 </h3>
-                <p className="text-blue-700 mb-4 leading-relaxed">
+                <p className="text-gray-600 mb-4 leading-relaxed">
                   {en
                     ? 'We sent a confirmation email to your address. '
                     : 'Nous avons envoyé un email de confirmation à votre adresse. '}
                   <strong>{en ? 'Click the link in the email to activate your account.' : "Cliquez sur le lien dans l'email pour activer votre compte."}</strong>
                 </p>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-yellow-800 text-sm font-medium">
+                <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
+                  <p className="text-warning-800 text-sm font-medium">
                     <strong>{en ? 'Important:' : 'Important :'}</strong>{' '}
                     {en
                       ? 'Also check your spam folder if the email does not arrive in the next few minutes.'
@@ -319,7 +319,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             </div>
 
             {hasPendingQuote() && (
-              <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+              <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
                 {en
                   ? 'Your homepage quote will be kept after you confirm your email and sign in.'
                   : "Votre devis depuis l'accueil sera repris après confirmation de l'email et connexion."}
@@ -330,10 +330,10 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
             {/* Affichage des erreurs */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                  <p className="text-red-800 text-sm font-medium">{te(error ?? undefined)}</p>
+                  <AlertCircle className="w-5 h-5 text-danger-600 flex-shrink-0" />
+                  <p className="text-danger-800 text-sm font-medium">{te(error ?? undefined)}</p>
                 </div>
               </div>
             )}
@@ -351,10 +351,10 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                     placeholder={en ? 'First name' : 'Prénom'}
                     autoComplete="given-name"
                     className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                      errors.firstName ? 'border-red-500' : 'border-gray-300'
+                      errors.firstName ? 'border-danger-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.firstName && <p className="mt-2 text-sm text-red-600">{te(errors.firstName.message)}</p>}
+                  {errors.firstName && <p className="mt-2 text-sm text-danger-600">{te(errors.firstName.message)}</p>}
                 </div>
 
                 <div className="relative">
@@ -367,10 +367,10 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                     placeholder={en ? 'Last name' : 'Nom'}
                     autoComplete="family-name"
                     className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                      errors.lastName ? 'border-red-500' : 'border-gray-300'
+                      errors.lastName ? 'border-danger-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.lastName && <p className="mt-2 text-sm text-red-600">{te(errors.lastName.message)}</p>}
+                  {errors.lastName && <p className="mt-2 text-sm text-danger-600">{te(errors.lastName.message)}</p>}
                 </div>
               </div>
 
@@ -386,10 +386,10 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   autoComplete="email"
                   inputMode="email"
                   className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
+                    errors.email ? 'border-danger-500' : 'border-gray-300'
                   }`}
                 />
-                {errors.email && <p className="mt-2 text-sm text-red-600">{te(errors.email.message)}</p>}
+                {errors.email && <p className="mt-2 text-sm text-danger-600">{te(errors.email.message)}</p>}
               </div>
 
               <SignupCountryPhoneFields
@@ -425,7 +425,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   placeholder={en ? 'Password' : 'Mot de passe'}
                   autoComplete="new-password"
                   className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
+                    errors.password ? 'border-danger-500' : 'border-gray-300'
                   }`}
                 />
                 <button
@@ -436,7 +436,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                 >
                   {showPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
                 </button>
-                {errors.password && <p className="mt-2 text-sm text-red-600">{te(errors.password.message)}</p>}
+                {errors.password && <p className="mt-2 text-sm text-danger-600">{te(errors.password.message)}</p>}
               </div>
 
               {/* Indicateur de force */}
@@ -455,7 +455,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   placeholder={en ? 'Confirm password' : 'Confirmer le mot de passe'}
                   autoComplete="new-password"
                   className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                    errors.confirmPassword ? 'border-danger-500' : 'border-gray-300'
                   }`}
                 />
                 <button
@@ -467,7 +467,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   {showConfirmPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
                 </button>
                 {errors.confirmPassword && (
-                  <p className="mt-2 text-sm text-red-600">{te(errors.confirmPassword.message)}</p>
+                  <p className="mt-2 text-sm text-danger-600">{te(errors.confirmPassword.message)}</p>
                 )}
               </div>
 

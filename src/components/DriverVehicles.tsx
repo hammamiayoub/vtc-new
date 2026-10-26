@@ -267,7 +267,7 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
       <p className="text-xs text-gray-500 mb-4">Ajoutez vos véhicules et gérez leurs informations et leurs photos.</p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>
+        <div className="mb-4 p-3 rounded-lg bg-danger-50 border border-danger-200 text-sm text-danger-700">{error}</div>
       )}
 
       {/* Formulaire d'ajout */}
@@ -370,11 +370,11 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
               type="checkbox"
               checked={form.isVip}
               onChange={(e) => setForm({ ...form, isVip: e.target.checked })}
-              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+              className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
             />
             Véhicule VIP
           </label>
-          <p className="text-[11px] text-purple-700">
+          <p className="text-[11px] text-gray-700">
             Le mode VIP augmente le prix des courses ×2.5.
           </p>
         </div>
@@ -419,7 +419,7 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                           type="button"
                           onClick={() => handleDeletePhoto(v)}
                           disabled={uploadingId === v.id}
-                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-500/90 hover:bg-red-500 text-white rounded-md text-xs font-medium transition-all shadow-sm disabled:opacity-50"
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-danger-500/90 hover:bg-danger-500 text-white rounded-md text-xs font-medium transition-all shadow-sm disabled:opacity-50"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -449,7 +449,7 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                 
                 {/* Badge "Actif" */}
                 {v.is_primary && (
-                  <div className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] sm:text-xs px-2 py-1 rounded-full shadow-lg font-semibold flex items-center gap-1">
+                  <div className="absolute top-2 right-2 bg-warning-500 text-white text-[10px] sm:text-xs px-2 py-1 rounded-full shadow-lg font-semibold flex items-center gap-1">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
@@ -470,29 +470,29 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
               <div className="flex-1 min-w-0 w-full">
                 {editingId === v.id ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 min-w-0 w-full">
-                    <input className="w-full border rounded-md px-2 py-1.5 text-sm h-9" value={editForm[v.id]?.make || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], make: e.target.value } })} placeholder="Marque" />
-                    <input className="w-full border rounded-md px-2 py-1.5 text-sm h-9" value={editForm[v.id]?.model || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], model: e.target.value } })} placeholder="Modèle" />
-                    <select className="w-full border rounded-md px-2 py-1.5 text-sm h-9" value={editForm[v.id]?.year ?? ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], year: parseInt(e.target.value || '0', 10) } })}>
+                    <input className="w-full border rounded-md px-2 py-1.5 text-base h-9" value={editForm[v.id]?.make || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], make: e.target.value } })} placeholder="Marque" />
+                    <input className="w-full border rounded-md px-2 py-1.5 text-base h-9" value={editForm[v.id]?.model || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], model: e.target.value } })} placeholder="Modèle" />
+                    <select className="w-full border rounded-md px-2 py-1.5 text-base h-9" value={editForm[v.id]?.year ?? ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], year: parseInt(e.target.value || '0', 10) } })}>
                       <option value="">Année</option>
                       {yearOptions.map((year) => (
                         <option key={year} value={year}>{year}</option>
                       ))}
                     </select>
-                    <select className="w-full border rounded-md px-2 py-1.5 text-sm h-9" value={editForm[v.id]?.color || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], color: e.target.value } })}>
+                    <select className="w-full border rounded-md px-2 py-1.5 text-base h-9" value={editForm[v.id]?.color || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], color: e.target.value } })}>
                       <option value="">Couleur</option>
                       {colorOptions.map((color) => (
                         <option key={color} value={color}>{color}</option>
                       ))}
                     </select>
-                    <select className="w-full border rounded-md px-2 py-1.5 text-sm h-9" value={editForm[v.id]?.seats ?? ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], seats: parseInt(e.target.value || '0', 10) } })}>
+                    <select className="w-full border rounded-md px-2 py-1.5 text-base h-9" value={editForm[v.id]?.seats ?? ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], seats: parseInt(e.target.value || '0', 10) } })}>
                       <option value="">Places</option>
                       {seatOptions.map((seats) => (
                         <option key={seats} value={seats}>{seats}</option>
                       ))}
                     </select>
                     <div className="grid grid-cols-2 gap-2">
-                      <input className="w-full border rounded-md px-2 py-1.5 text-sm h-9" value={editForm[v.id]?.licensePlate || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], licensePlate: e.target.value.toUpperCase() } })} placeholder="Plaque" />
-                      <select className="w-full border rounded-md px-2 py-1.5 text-sm h-9" value={editForm[v.id]?.type || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], type: e.target.value as Vehicle['type'] } })}>
+                      <input className="w-full border rounded-md px-2 py-1.5 text-base h-9" value={editForm[v.id]?.licensePlate || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], licensePlate: e.target.value.toUpperCase() } })} placeholder="Plaque" />
+                      <select className="w-full border rounded-md px-2 py-1.5 text-base h-9" value={editForm[v.id]?.type || ''} onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], type: e.target.value as Vehicle['type'] } })}>
                         <option value="">Type</option>
                         <option value="sedan">Berline</option>
                         <option value="pickup">Pickup</option>
@@ -511,7 +511,7 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                         checked={!!editForm[v.id]?.isVip}
                         onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], isVip: e.target.checked } })}
                       />
-                      <label htmlFor={`vip-${v.id}`} className="text-xs text-purple-700">
+                      <label htmlFor={`vip-${v.id}`} className="text-xs text-gray-700">
                         VIP (prix ×2.5)
                       </label>
                     </div>
@@ -530,13 +530,13 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                         <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-800 border border-gray-200">{v.licensePlate}</span>
                       )}
                       {v.type && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">{getVehicleTypeLabel(v.type)}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200">{getVehicleTypeLabel(v.type)}</span>
                       )}
                       {v.isVip && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">VIP</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-900 text-white">VIP</span>
                       )}
                       {v.seats && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">{v.seats} places</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-success-50 text-success-700 border border-success-200">{v.seats} places</span>
                       )}
                     </div>
                     <div className="text-xs sm:text-sm text-gray-600 mt-1">
@@ -550,7 +550,7 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
               <div className={`${editingId === v.id ? 'w-full justify-end mt-2' : 'self-stretch sm:self-auto'} flex items-center gap-2 flex-wrap` }>
                 {editingId === v.id ? (
                   <>
-                    <Button type="button" onClick={() => saveEdit(v.id)} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white whitespace-nowrap w-full sm:w-auto">
+                    <Button type="button" onClick={() => saveEdit(v.id)} className="flex items-center gap-2 bg-success-600 hover:bg-success-700 text-white whitespace-nowrap w-full sm:w-auto">
                       <CheckCircle size={16} />
                       Enregistrer
                     </Button>
@@ -564,7 +564,7 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                       <Edit size={16} />
                       Modifier
                     </Button>
-                    <Button type="button" variant="outline" onClick={() => handleDelete(v.id)} className="flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50 whitespace-nowrap w-full sm:w-auto">
+                    <Button type="button" variant="outline" onClick={() => handleDelete(v.id)} className="flex items-center gap-2 border-danger-300 text-danger-600 hover:bg-danger-50 whitespace-nowrap w-full sm:w-auto">
                       <Trash2 size={16} />
                       Supprimer
                     </Button>

@@ -24,7 +24,6 @@ import { TrustSignals } from './TrustSignals';
 import { ReviewsCarousel } from './ReviewsCarousel';
 import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
-import { focusHomeBookingForm } from '../utils/focusHomeBooking';
 import { useLocale } from '../i18n/locale';
 import { RevealSection } from './ui/RevealSection';
 
@@ -125,10 +124,6 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const faqItems = en ? vtcSeoFaqItemsEn : vtcSeoFaqItems;
 
-  const scrollToBooking = () => {
-    focusHomeBookingForm();
-  };
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const flagKey = 'td_app_modal_shown_session';
@@ -145,15 +140,15 @@ export const HomePage: React.FC<HomePageProps> = ({
     <div className="min-h-screen bg-white">
       <AppDownloadModal isOpen={isDownloadOpen} onClose={() => setIsDownloadOpen(false)} />
       <main>
-        {/* Hero — style Uber */}
+        {/* Hero — style Uber : le formulaire de réservation est l'élément principal */}
         <section className="bg-white">
-          <div className="page-container py-12 lg:py-20">
-            <div className="lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
-              <div className="mb-10 lg:mb-0">
-                <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold text-gray-900 leading-[1.1] tracking-tight mb-6">
+          <div className="page-container py-10 sm:py-14 lg:py-24">
+            <div className="grid gap-8 lg:grid-cols-2 lg:gap-x-16 lg:gap-y-6">
+              <div className="lg:col-start-1 lg:row-start-1 lg:self-end">
+                <h1 className="text-display-md sm:text-display-lg xl:text-display-xl text-gray-900 mb-5">
                   {en ? 'Go wherever you want with TuniDrive' : 'Allez où vous voulez avec TuniDrive'}
                 </h1>
-                <p className="text-lg text-gray-600 leading-relaxed mb-4">
+                <p className="text-body-lg text-ink-muted max-w-xl">
                   {en ? (
                     <>
                       Book a <strong>private driver</strong>, a <strong>taxi</strong> or an{' '}
@@ -166,49 +161,43 @@ export const HomePage: React.FC<HomePageProps> = ({
                     </>
                   )}
                 </p>
-                <TrustSignals variant="bar" className="mb-6 justify-start" />
-                <p className="text-base text-gray-500 mb-6">
-                  <Link to={href('/vtc-tunisie')} className="underline underline-offset-2 hover:text-gray-900">
-                    {en ? 'Explore private driver services in Tunisia' : 'Découvrir nos services VTC en Tunisie'}
-                  </Link>
-                </p>
-                <div className="hidden lg:grid grid-cols-2 gap-3 w-full max-w-xl">
-                  <Button size="md" onClick={scrollToBooking} className="rounded-full w-full px-4">
-                    {en ? 'Book a ride' : 'Réserver une course'}
-                    <ArrowRight size={18} className="ml-2 shrink-0" />
-                  </Button>
-                  <Button size="md" variant="outline" onClick={onGetStarted} className="rounded-full w-full px-4">
-                    {en ? 'Become a driver' : 'Devenir chauffeur'}
-                  </Button>
-                  <Button size="md" variant="outline" onClick={onDriverLogin} className="rounded-full w-full px-4">
-                    {en ? 'Driver login' : 'Connexion chauffeur'}
-                  </Button>
-                  <Button size="md" variant="outline" onClick={onClientLogin} className="rounded-full w-full px-4">
-                    {en ? 'Rider login' : 'Connexion client'}
-                  </Button>
-                </div>
               </div>
 
-              <div id="reserver" className="scroll-mt-24">
+              <div
+                id="reserver"
+                className="scroll-mt-24 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-center"
+              >
                 <HomeBookingWidget
                   onClientLogin={onClientLogin}
                   onClientSignup={onClientSignup}
                 />
               </div>
 
-              <div className="grid lg:hidden grid-cols-2 gap-3 mt-8">
-                <Button size="md" onClick={scrollToBooking} className="rounded-full w-full px-3 text-sm">
-                  {en ? 'Book a ride' : 'Réserver une course'}
-                </Button>
-                <Button size="md" variant="outline" onClick={onGetStarted} className="rounded-full w-full px-3 text-sm">
-                  {en ? 'Become a driver' : 'Devenir chauffeur'}
-                </Button>
-                <Button size="md" variant="outline" onClick={onDriverLogin} className="rounded-full w-full px-3 text-sm">
-                  {en ? 'Driver login' : 'Connexion chauffeur'}
-                </Button>
-                <Button size="md" variant="outline" onClick={onClientLogin} className="rounded-full w-full px-3 text-sm">
-                  {en ? 'Rider login' : 'Connexion client'}
-                </Button>
+              <div className="lg:col-start-1 lg:row-start-2 lg:self-start">
+                <TrustSignals variant="bar" className="mb-6 justify-start" />
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-body-sm font-medium">
+                  <button
+                    type="button"
+                    onClick={onGetStarted}
+                    className="focus-ring inline-flex items-center gap-1.5 rounded-md text-gray-900 underline underline-offset-4 hover:text-ink-muted"
+                  >
+                    {en ? 'Become a driver' : 'Devenir chauffeur'}
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onDriverLogin}
+                    className="focus-ring rounded-md text-ink-muted hover:text-gray-900"
+                  >
+                    {en ? 'Driver login' : 'Connexion chauffeur'}
+                  </button>
+                  <Link
+                    to={href('/vtc-tunisie')}
+                    className="focus-ring rounded-md text-ink-muted hover:text-gray-900"
+                  >
+                    {en ? 'Private driver services in Tunisia' : 'Nos services VTC en Tunisie'}
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -482,10 +471,10 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { webp: '/van.webp', png: '/van.png', alt: en ? 'Group van' : 'Van de transport collectif', title: en ? 'Shared van' : 'Van collectif', desc: en ? 'Group transport for up to 8 people.' : 'Transport de groupe jusqu\'à 8 personnes.', cap: en ? 'Up to 8 passengers' : 'Jusqu\'à 8 passagers', icon: Users, color: 'from-blue-500 to-blue-600' },
-                { webp: '/bus.webp', png: '/bus.png', alt: en ? 'Coach' : 'Bus de transport', title: en ? 'Coach' : 'Bus de transport', desc: en ? 'Long-distance trips and large groups.' : 'Trajets longue distance et grands groupes.', cap: en ? 'Up to 50 passengers' : 'Jusqu\'à 50 passagers', icon: Bus, color: 'from-green-500 to-green-600' },
-                { webp: '/utilitaire.webp', png: '/utilitaire.png', alt: en ? 'Utility vehicle' : 'Véhicule utilitaire', title: en ? 'Utility vehicle' : 'Véhicule utilitaire', desc: en ? 'Goods transport and moving.' : 'Transport de marchandises et déménagement.', cap: en ? 'Goods transport' : 'Transport de marchandises', icon: Truck, color: 'from-orange-500 to-orange-600' },
-                { webp: '/limousine.webp', png: '/limousine.png', alt: en ? 'Luxury vehicle' : 'Véhicule de luxe', title: en ? 'Luxury vehicle' : 'Véhicule de luxe', desc: en ? 'Premium service for special occasions.' : 'Service premium pour occasions spéciales.', cap: en ? 'Premium service' : 'Service premium', icon: Crown, color: 'from-purple-500 to-purple-600' },
+                { webp: '/van.webp', png: '/van.png', alt: en ? 'Group van' : 'Van de transport collectif', title: en ? 'Shared van' : 'Van collectif', desc: en ? 'Group transport for up to 8 people.' : 'Transport de groupe jusqu\'à 8 personnes.', cap: en ? 'Up to 8 passengers' : 'Jusqu\'à 8 passagers', icon: Users, color: 'from-gray-700 to-gray-900' },
+                { webp: '/bus.webp', png: '/bus.png', alt: en ? 'Coach' : 'Bus de transport', title: en ? 'Coach' : 'Bus de transport', desc: en ? 'Long-distance trips and large groups.' : 'Trajets longue distance et grands groupes.', cap: en ? 'Up to 50 passengers' : 'Jusqu\'à 50 passagers', icon: Bus, color: 'from-gray-700 to-gray-900' },
+                { webp: '/utilitaire.webp', png: '/utilitaire.png', alt: en ? 'Utility vehicle' : 'Véhicule utilitaire', title: en ? 'Utility vehicle' : 'Véhicule utilitaire', desc: en ? 'Goods transport and moving.' : 'Transport de marchandises et déménagement.', cap: en ? 'Goods transport' : 'Transport de marchandises', icon: Truck, color: 'from-gray-700 to-gray-900' },
+                { webp: '/limousine.webp', png: '/limousine.png', alt: en ? 'Luxury vehicle' : 'Véhicule de luxe', title: en ? 'Luxury vehicle' : 'Véhicule de luxe', desc: en ? 'Premium service for special occasions.' : 'Service premium pour occasions spéciales.', cap: en ? 'Premium service' : 'Service premium', icon: Crown, color: 'from-gray-700 to-gray-900' },
               ].map(({ webp, png, alt, title, desc, cap, icon: Icon, color }) => (
                 <div key={title} className="group uber-card overflow-hidden">
                   <div className="relative h-44 overflow-hidden">

@@ -51,7 +51,7 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
               <button
                 type="button"
                 onClick={() => removeItem(index)}
-                className="text-red-500 hover:text-red-700 p-1"
+                className="text-danger-500 hover:text-danger-700 p-1"
                 aria-label={en ? 'Remove item' : "Supprimer l'objet"}
               >
                 <Trash2 size={16} />
@@ -66,7 +66,7 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
                 type="text"
                 value={item.name}
                 onChange={(e) => updateItem(index, 'name', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
                 placeholder={en ? 'e.g. boxes, furniture…' : 'Ex: Cartons, meubles…'}
               />
             </div>
@@ -77,7 +77,7 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
                 min={1}
                 value={item.quantity}
                 onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value, 10) || 1)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
               />
             </div>
             <div>
@@ -90,7 +90,7 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
                 onChange={(e) =>
                   updateItem(index, 'weightKg', e.target.value ? parseFloat(e.target.value) : undefined as unknown as number)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
                 placeholder={en ? 'Optional' : 'Optionnel'}
               />
             </div>
@@ -104,7 +104,7 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
                 onChange={(e) =>
                   updateItem(index, 'volumeM3', e.target.value ? parseFloat(e.target.value) : undefined as unknown as number)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
                 placeholder={en ? 'Optional' : 'Optionnel'}
               />
             </div>
@@ -112,7 +112,7 @@ export const ParcelItemsInput: React.FC<ParcelItemsInputProps> = ({ items, onCha
         </div>
       ))}
 
-      {errors && <p className="text-sm text-red-600">{errors}</p>}
+      {errors && <p className="text-sm text-danger-600">{errors}</p>}
     </div>
   );
 };

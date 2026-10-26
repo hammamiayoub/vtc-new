@@ -2,18 +2,19 @@ import React from 'react';
 import { cn } from '../../utils/cn';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
+  fullWidth?: boolean;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', loading, children, disabled, ...props }, ref) => {
+  ({ className, variant = 'primary', size = 'md', loading, fullWidth, children, disabled, ...props }, ref) => {
     return (
       <button
         className={cn(
           'inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200',
-          'focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed',
+          'focus-ring active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100',
           {
             'bg-black text-white hover:bg-gray-800 focus:ring-gray-500 disabled:bg-gray-300': 
               variant === 'primary',
@@ -23,12 +24,15 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               variant === 'outline',
             'text-gray-900 hover:bg-gray-100 focus:ring-gray-500': 
               variant === 'ghost',
+            'bg-danger-600 text-white hover:bg-danger-700 disabled:bg-gray-300':
+              variant === 'danger',
           },
           {
             'h-10 px-4 text-sm': size === 'sm',
             'h-12 px-6 text-base': size === 'md',
             'h-14 px-8 text-lg': size === 'lg',
           },
+          fullWidth && 'w-full',
           loading && 'opacity-50 cursor-not-allowed',
           className
         )}
@@ -38,7 +42,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && (
           <svg
-            className="animate-spin -ml-1 mr-3 h-5 w-5 text-current"
+            className={cn('animate-spin h-5 w-5 text-current', children && '-ml-1 mr-3')}
+            aria-hidden="true"
             fill="none"
             viewBox="0 0 24 24"
           >
