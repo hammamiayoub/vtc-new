@@ -248,7 +248,6 @@ async function requestIllustration(apiKey: string, model: string, prompt: string
   if (model === 'dall-e-3') {
     body.size = '1792x1024'
     body.quality = 'hd'
-    body.response_format = 'b64_json'
   } else {
     body.size = '1536x1024'
     body.quality = 'high'
@@ -272,8 +271,17 @@ async function requestIllustration(apiKey: string, model: string, prompt: string
 
   const payload = await response.json()
   const encoded = payload?.data?.[0]?.b64_json
-  if (typeof encoded !== 'string' || !encoded) throw new Error(`Image ${model} vide.`)
-  const bytes = decodeBase64(encoded)
+  const imageUrl = payload?.data?.[0]?.url
+  let bytes: Uint8Array
+  if (typeof encoded === 'string' && encoded) {
+    bytes = decodeBase64(encoded)
+  } else if (typeof imageUrl === 'string' && imageUrl) {
+    const download = await fetch(imageUrl)
+    if (!download.ok) throw new Error(`Téléchargement image ${model} ${download.status}.`)
+    bytes = new Uint8Array(await download.arrayBuffer())
+  } else {
+    throw new Error(`Image ${model} vide.`)
+  }
   if (bytes.byteLength > 5 * 1024 * 1024) throw new Error('Image trop lourde pour le blog.')
   const jpeg = model !== 'dall-e-3'
   return {
@@ -349,17 +357,20 @@ async function uploadIllustration(
   ].join(' ')
 
   let image: { bytes: Uint8Array; contentType: string; ext: string } | null = null
-  let lastError = 'Illustration impossible.'
-  for (const model of ['gpt-image-1', 'dall-e-3']) {
+  const errors: string[] = []
+  const configured = Deno.env.get('BLOG_IMAGE_MODEL')
+  const models = [...new Set([configured, 'gpt-image-2.5-flare', 'gpt-image-2.5-sunburst'].filter((m): m is string => Boolean(m)))]
+  for (const model of models) {
     try {
       image = await requestIllustration(apiKey, model, prompt.slice(0, 3900))
       break
     } catch (error) {
-      lastError = error instanceof Error ? error.message : lastError
-      console.error(lastError)
+      const message = error instanceof Error ? error.message : 'Illustration impossible.'
+      errors.push(message)
+      console.error(message)
     }
   }
-  if (!image) throw new Error(lastError)
+  if (!image) throw new Error(errors.join(' | ') || 'Illustration impossible.')
 
   const path = `auto-v2-${crypto.randomUUID()}.${image.ext}`
   const { error } = await admin.storage.from('blog-images').upload(path, image.bytes, {
