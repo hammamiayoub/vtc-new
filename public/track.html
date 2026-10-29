@@ -8,335 +8,51 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Suivi de course - TuniDrive</title>
   <style>
+    :root { --ink: #0b0b0c; --mint: #bfe8dc; --mint-deep: #0b5d4b; --muted: #9ca3af; --line: #26272a; }
     html, body { height: 100%; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif; background: #0b0b0b; color: #fff; }
-    #header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; }
-    #status { font-size: 13px; opacity: 0.85; }
-    #map { position: absolute; top: 52px; bottom: 0; left: 0; right: 0; }
-    .pill { padding: 6px 10px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 999px; font-size: 12px; color: #cfcfcf; }
-    .brand { font-weight: 700; letter-spacing: 0.3px; }
-    .badge { padding: 4px 8px; border-radius: 8px; font-size: 12px; border: 1px solid #2a2a2a; background: #111; color: #aaa; }
-    .badge.live { color: #bfe8dc; border-color: #1f4d40; }
-    .badge.warn { color: #fcd34d; border-color: #5b4a12; }
-    .badge.end { color: #fca5a5; border-color: #5b1f1f; }
-    #message { position: absolute; top: 52px; bottom: 0; left: 0; right: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; font-size: 16px; line-height: 1.5; color: #cfcfcf; background: #0b0b0b; z-index: 900; }
-    a { color: #61dafb; text-decoration: none; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif; background: var(--ink); color: #fff; }
+    #map { position: absolute; inset: 0; }
+
+    #topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; padding-top: max(12px, env(safe-area-inset-top)); pointer-events: none; }
+    .brand { pointer-events: auto; font-weight: 800; letter-spacing: 0.2px; font-size: 14px; background: rgba(11,11,12,0.88); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; backdrop-filter: blur(8px); }
+    #status { pointer-events: auto; font-size: 12px; font-weight: 700; padding: 8px 12px; border-radius: 999px; background: rgba(11,11,12,0.88); border: 1px solid var(--line); color: var(--muted); backdrop-filter: blur(8px); }
+    #status.live { color: var(--mint); border-color: #1f4d40; }
+    #status.warn { color: #fcd34d; border-color: #5b4a12; }
+    #status.end  { color: #fca5a5; border-color: #5b1f1f; }
+
+    #panel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; background: var(--ink); border-top: 1px solid var(--line); border-radius: 22px 22px 0 0; padding: 16px 20px; padding-bottom: max(18px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 14px; }
+    #eta { flex: 1; min-width: 0; }
+    #etaValue { font-size: 34px; line-height: 38px; font-weight: 800; letter-spacing: -0.8px; }
+    #etaUnit { font-size: 14px; font-weight: 700; color: var(--muted); margin-left: 4px; }
+    #etaSub { font-size: 13px; color: #d1d5db; margin-top: 2px; }
+    #distance { display: none; align-items: center; background: var(--mint); color: var(--mint-deep); font-weight: 800; font-size: 13px; padding: 7px 12px; border-radius: 999px; white-space: nowrap; }
+    #recenter { position: fixed; right: 16px; bottom: 120px; z-index: 1000; width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 20px; display: none; align-items: center; justify-content: center; cursor: pointer; }
+
+    #message { position: fixed; inset: 0; z-index: 1500; display: none; align-items: center; justify-content: center; text-align: center; padding: 28px; font-size: 16px; line-height: 1.5; color: #d1d5db; background: var(--ink); }
   </style>
 </head>
 <body>
-  <div id="header">
-    <div class="brand">TuniDrive • Suivi de course</div>
-    <div id="status" class="badge" role="status" aria-live="polite">Initialisation…</div>
-  </div>
   <div id="map"></div>
+
+  <div id="topbar">
+    <div class="brand">TuniDrive</div>
+    <div id="status" role="status" aria-live="polite">Initialisation…</div>
+  </div>
+
+  <button id="recenter" type="button" aria-label="Recentrer la carte">◎</button>
+
+  <div id="panel">
+    <div id="eta">
+      <div><span id="etaValue">—</span><span id="etaUnit">min</span></div>
+      <div id="etaSub">Localisation du chauffeur…</div>
+    </div>
+    <div id="distance"></div>
+  </div>
+
   <div id="message"></div>
 
   <script src="./track-config.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script>
-    const POLL_INTERVAL_MS = 10000;
-    const STALE_AFTER_MS = 30000;
-    const RESUBSCRIBE_DELAY_MS = 5000;
-    // Même format que les jetons générés par l'application et la base.
-    const TOKEN_PATTERN = /^[A-Za-z0-9]{16,64}$/;
-
-    let map;
-    let vehicleMarker;
-    let supa;
-    let channel = null;
-    let pollTimer = null;
-    let resubscribeTimer = null;
-    let ended = false;
-    let lastTs = 0;
-    let lastPosition = null;
-    let arrivedAt = null;
-
-    const token = new URLSearchParams(window.location.search).get('token');
-
-    function setStatus(text, kind) {
-      const el = document.getElementById('status');
-      el.textContent = text;
-      el.className = 'badge' + (kind ? ' ' + kind : '');
-    }
-
-    function showMessage(text) {
-      const el = document.getElementById('message');
-      el.textContent = text;
-      el.style.display = 'flex';
-    }
-
-    function formatAge(ms) {
-      const s = Math.round(ms / 1000);
-      if (s < 60) return 'il y a ' + s + ' s';
-      return 'il y a ' + Math.round(s / 60) + ' min';
-    }
-
-    async function loadConfig() {
-      try {
-        const resp = await fetch('/.netlify/functions/public-config', { cache: 'no-store' });
-        if (resp.ok) {
-          const json = await resp.json();
-          if (json && json.VITE_SUPABASE_URL && json.VITE_SUPABASE_ANON_KEY) {
-            return {
-              supabaseUrl: json.VITE_SUPABASE_URL,
-              supabaseAnonKey: json.VITE_SUPABASE_ANON_KEY,
-              googleMapsApiKey: json.VITE_GOOGLE_MAPS_API_KEY,
-            };
-          }
-        }
-      } catch (e) {
-        console.warn('Configuration publique indisponible, utilisation du fallback.');
-      }
-
-      if (window.TRACK_CONFIG && window.TRACK_CONFIG.supabaseUrl && window.TRACK_CONFIG.supabaseAnonKey) {
-        return {
-          supabaseUrl: window.TRACK_CONFIG.supabaseUrl,
-          supabaseAnonKey: window.TRACK_CONFIG.supabaseAnonKey,
-          googleMapsApiKey: window.TRACK_CONFIG.googleMapsApiKey,
-        };
-      }
-
-      return null;
-    }
-
-    function vehicleIcon(heading) {
-      return {
-        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-        scale: 6,
-        fillColor: '#4285F4',
-        fillOpacity: 1,
-        strokeColor: '#ffffff',
-        strokeWeight: 2,
-        rotation: heading || 0,
-      };
-    }
-
-    function updateMarker(lat, lng, heading) {
-      const position = { lat, lng };
-
-      if (!vehicleMarker) {
-        vehicleMarker = new google.maps.Marker({
-          position,
-          map,
-          title: 'Véhicule',
-          icon: vehicleIcon(heading),
-        });
-        map.setCenter(position);
-        map.setZoom(15);
-      } else {
-        vehicleMarker.setPosition(position);
-        if (typeof heading === 'number') vehicleMarker.setIcon(vehicleIcon(heading));
-      }
-    }
-
-    function renderStatus() {
-      if (ended) return;
-      if (!lastPosition) {
-        setStatus('En direct • en attente de position…', 'live');
-        return;
-      }
-      const age = Date.now() - lastTs;
-      const speedKmh = typeof lastPosition.speed === 'number' ? (lastPosition.speed * 3.6).toFixed(0) : null;
-      if (arrivedAt) {
-        setStatus('Votre chauffeur est arrivé', 'live');
-      } else if (age > STALE_AFTER_MS) {
-        setStatus('Dernière position ' + formatAge(age), 'warn');
-      } else {
-        setStatus('En direct' + (speedKmh !== null ? ' • ' + speedKmh + ' km/h' : ''), 'live');
-      }
-    }
-
-    // Applique une position venue du broadcast ou de la base, en ignorant les plus anciennes.
-    function applyPosition(lat, lng, heading, speed, ts) {
-      if (typeof lat !== 'number' || typeof lng !== 'number') return;
-      const parsed = ts ? Date.parse(ts) : Date.now();
-      const stamp = Number.isFinite(parsed) ? parsed : Date.now();
-      if (stamp < lastTs) return;
-      lastTs = stamp;
-      lastPosition = { lat, lng, heading: heading || 0, speed };
-      updateMarker(lat, lng, heading);
-      renderStatus();
-    }
-
-    function endTracking(status) {
-      ended = true;
-      clearInterval(pollTimer);
-      clearTimeout(resubscribeTimer);
-      if (channel) {
-        supa.removeChannel(channel);
-        channel = null;
-      }
-      if (status === 'cancelled') {
-        setStatus('Course annulée', 'end');
-        showMessage('Cette course a été annulée.');
-      } else {
-        setStatus('Course terminée', 'end');
-        showMessage('Cette course est terminée. Merci d’avoir voyagé avec TuniDrive.');
-      }
-    }
-
-    // Dernière position en base : couvre l'ouverture de la page et le chauffeur en arrière-plan.
-    async function pollPosition() {
-      if (ended) return;
-      try {
-        const { data, error } = await supa.rpc('get_tracking_position', { p_token: token });
-        if (error) {
-          if (!lastPosition) setStatus('Connexion au suivi…', 'warn');
-          return;
-        }
-        if (!data) {
-          // Jeton inconnu : lien invalide, ou course déjà clôturée (le jeton est alors supprimé).
-          if (lastPosition) endTracking('completed');
-          else {
-            ended = true;
-            clearInterval(pollTimer);
-            setStatus('Suivi indisponible', 'end');
-            showMessage('Ce lien de suivi n’est plus valide : la course est terminée ou le lien est incorrect.');
-          }
-          return;
-        }
-        if (data.status === 'completed' || data.status === 'cancelled') {
-          endTracking(data.status);
-          return;
-        }
-        if (data.arrived_at) arrivedAt = data.arrived_at;
-        if (typeof data.lat === 'number') {
-          applyPosition(data.lat, data.lng, data.heading, data.speed, data.ts);
-        } else {
-          renderStatus();
-        }
-      } catch (e) {
-        console.warn('Lecture de la position impossible.');
-      }
-    }
-
-    function scheduleResubscribe() {
-      if (ended || resubscribeTimer) return;
-      resubscribeTimer = setTimeout(() => {
-        resubscribeTimer = null;
-        if (channel) {
-          supa.removeChannel(channel);
-          channel = null;
-        }
-        subscribeToTracking();
-      }, RESUBSCRIBE_DELAY_MS);
-    }
-
-    function subscribeToTracking() {
-      channel = supa.channel('tracking:' + token, { config: { broadcast: { self: false } } });
-
-      channel.on('broadcast', { event: 'position' }, (payload) => {
-        const { lat, lng, heading, speed, ts } = payload?.payload || {};
-        applyPosition(lat, lng, heading, speed, ts);
-      });
-
-      channel.subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          if (!lastPosition) setStatus('En direct • en attente de position…', 'live');
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          if (!ended) setStatus('Reconnexion…', 'warn');
-          scheduleResubscribe();
-        }
-      });
-    }
-
-    async function loadGoogleMapsScript(apiKey) {
-      return new Promise((resolve, reject) => {
-        if (window.google && window.google.maps) {
-          resolve();
-          return;
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(apiKey) + '&callback=initGoogleMaps';
-        script.async = true;
-        script.defer = true;
-
-        window.initGoogleMaps = () => resolve();
-        script.onerror = () => reject(new Error('Impossible de charger Google Maps'));
-
-        document.head.appendChild(script);
-      });
-    }
-
-    async function initMap() {
-      if (!token || !TOKEN_PATTERN.test(token)) {
-        setStatus('Lien de suivi invalide', 'end');
-        showMessage('Ce lien de suivi est incomplet ou incorrect. Ouvrez-le de nouveau depuis la notification reçue.');
-        return;
-      }
-
-      const cfg = await loadConfig();
-      if (!cfg) {
-        setStatus('Configuration manquante.', 'end');
-        return;
-      }
-
-      if (!cfg.googleMapsApiKey) {
-        setStatus('Clé API Google Maps manquante.', 'end');
-        return;
-      }
-
-      try {
-        await loadGoogleMapsScript(cfg.googleMapsApiKey);
-      } catch (error) {
-        setStatus('Erreur: Impossible de charger Google Maps', 'end');
-        return;
-      }
-
-      map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 36.8065, lng: 10.1815 }, // Tunis par défaut
-        zoom: 12,
-        styles: [
-          {
-            featureType: 'all',
-            elementType: 'geometry.fill',
-            stylers: [{ color: '#2d3748' }]
-          },
-          {
-            featureType: 'water',
-            elementType: 'geometry.fill',
-            stylers: [{ color: '#1a365d' }]
-          },
-          {
-            featureType: 'road',
-            elementType: 'geometry.fill',
-            stylers: [{ color: '#4a5568' }]
-          },
-          {
-            featureType: 'poi',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#a0aec0' }]
-          }
-        ]
-      });
-
-      if (!window.supabase) {
-        setStatus('Erreur: Supabase non chargé', 'end');
-        return;
-      }
-
-      supa = window.supabase.createClient(
-        cfg.supabaseUrl,
-        cfg.supabaseAnonKey,
-        { realtime: { params: { eventsPerSecond: 10 } } }
-      );
-
-      setStatus('Connexion au suivi…');
-      supa.realtime.connect();
-      subscribeToTracking();
-
-      await pollPosition();
-      if (!ended) {
-        pollTimer = setInterval(pollPosition, POLL_INTERVAL_MS);
-        // Rafraîchit le libellé « Dernière position il y a … » entre deux lectures.
-        setInterval(renderStatus, 5000);
-      }
-    }
-
-    initMap().catch(() => {
-      setStatus('Erreur d’initialisation', 'end');
-    });
-  </script>
+  <script src="./vendor/supabase-js-2.57.0.umd.js"></script>
+  <script src="./track.js"></script>
 </body>
 </html>

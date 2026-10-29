@@ -1,0 +1,58 @@
+[1mdiff --git a/supabase/functions/publish-daily-blog/index.ts b/supabase/functions/publish-daily-blog/index.ts[m
+[1mindex f55160f..e81c02a 100644[m
+[1m--- a/supabase/functions/publish-daily-blog/index.ts[m
+[1m+++ b/supabase/functions/publish-daily-blog/index.ts[m
+[36m@@ -248,7 +248,6 @@[m [masync function requestIllustration(apiKey: string, model: string, prompt: string[m
+   if (model === 'dall-e-3') {[m
+     body.size = '1792x1024'[m
+     body.quality = 'hd'[m
+[31m-    body.response_format = 'b64_json'[m
+   } else {[m
+     body.size = '1536x1024'[m
+     body.quality = 'high'[m
+[36m@@ -272,8 +271,17 @@[m [masync function requestIllustration(apiKey: string, model: string, prompt: string[m
+ [m
+   const payload = await response.json()[m
+   const encoded = payload?.data?.[0]?.b64_json[m
+[31m-  if (typeof encoded !== 'string' || !encoded) throw new Error(`Image ${model} vide.`)[m
+[31m-  const bytes = decodeBase64(encoded)[m
+[32m+[m[32m  const imageUrl = payload?.data?.[0]?.url[m
+[32m+[m[32m  let bytes: Uint8Array[m
+[32m+[m[32m  if (typeof encoded === 'string' && encoded) {[m
+[32m+[m[32m    bytes = decodeBase64(encoded)[m
+[32m+[m[32m  } else if (typeof imageUrl === 'string' && imageUrl) {[m
+[32m+[m[32m    const download = await fetch(imageUrl)[m
+[32m+[m[32m    if (!download.ok) throw new Error(`Téléchargement image ${model} ${download.status}.`)[m
+[32m+[m[32m    bytes = new Uint8Array(await download.arrayBuffer())[m
+[32m+[m[32m  } else {[m
+[32m+[m[32m    throw new Error(`Image ${model} vide.`)[m
+[32m+[m[32m  }[m
+   if (bytes.byteLength > 5 * 1024 * 1024) throw new Error('Image trop lourde pour le blog.')[m
+   const jpeg = model !== 'dall-e-3'[m
+   return {[m
+[36m@@ -349,17 +357,20 @@[m [masync function uploadIllustration([m
+   ].join(' ')[m
+ [m
+   let image: { bytes: Uint8Array; contentType: string; ext: string } | null = null[m
+[31m-  let lastError = 'Illustration impossible.'[m
+[31m-  for (const model of ['gpt-image-1', 'dall-e-3']) {[m
+[32m+[m[32m  const errors: string[] = [][m
+[32m+[m[32m  const configured = Deno.env.get('BLOG_IMAGE_MODEL')[m
+[32m+[m[32m  const models = [...new Set([configured, 'gpt-image-2.5-flare', 'gpt-image-2.5-sunburst'].filter((m): m is string => Boolean(m)))][m
+[32m+[m[32m  for (const model of models) {[m
+     try {[m
+       image = await requestIllustration(apiKey, model, prompt.slice(0, 3900))[m
+       break[m
+     } catch (error) {[m
+[31m-      lastError = error instanceof Error ? error.message : lastError[m
+[31m-      console.error(lastError)[m
+[32m+[m[32m      const message = error instanceof Error ? error.message : 'Illustration impossible.'[m
+[32m+[m[32m      errors.push(message)[m
+[32m+[m[32m      console.error(message)[m
+     }[m
+   }[m
+[31m-  if (!image) throw new Error(lastError)[m
+[32m+[m[32m  if (!image) throw new Error(errors.join(' | ') || 'Illustration impossible.')[m
+ [m
+   const path = `auto-v2-${crypto.randomUUID()}.${image.ext}`[m
+   const { error } = await admin.storage.from('blog-images').upload(path, image.bytes, {[m
