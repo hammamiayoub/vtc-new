@@ -2,7 +2,10 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Le jeton de suivi est dans l'URL : on évite qu'il fuite via le Referer et l'indexation. -->
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
   <title>Suivi de course - TuniDrive</title>
   <style>
     html, body { height: 100%; margin: 0; padding: 0; }
@@ -13,57 +16,67 @@
     .pill { padding: 6px 10px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 999px; font-size: 12px; color: #cfcfcf; }
     .brand { font-weight: 700; letter-spacing: 0.3px; }
     .badge { padding: 4px 8px; border-radius: 8px; font-size: 12px; border: 1px solid #2a2a2a; background: #111; color: #aaa; }
+    .badge.live { color: #bfe8dc; border-color: #1f4d40; }
+    .badge.warn { color: #fcd34d; border-color: #5b4a12; }
+    .badge.end { color: #fca5a5; border-color: #5b1f1f; }
+    #message { position: absolute; top: 52px; bottom: 0; left: 0; right: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; font-size: 16px; line-height: 1.5; color: #cfcfcf; background: #0b0b0b; z-index: 900; }
     a { color: #61dafb; text-decoration: none; }
   </style>
 </head>
 <body>
   <div id="header">
     <div class="brand">TuniDrive • Suivi de course</div>
-    <div id="status" class="badge">Initialisation…</div>
+    <div id="status" class="badge" role="status" aria-live="polite">Initialisation…</div>
   </div>
   <div id="map"></div>
+  <div id="message"></div>
 
   <script src="./track-config.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    console.log('🚀 Script de tracking démarré');
-    
+    const POLL_INTERVAL_MS = 10000;
+    const STALE_AFTER_MS = 30000;
+    const RESUBSCRIBE_DELAY_MS = 5000;
+    // Même format que les jetons générés par l'application et la base.
+    const TOKEN_PATTERN = /^[A-Za-z0-9]{16,64}$/;
+
     let map;
     let vehicleMarker;
-    let lastPosition = null;
     let supa;
     let channel = null;
+    let pollTimer = null;
+    let resubscribeTimer = null;
+    let ended = false;
+    let lastTs = 0;
+    let lastPosition = null;
+    let arrivedAt = null;
 
-    // Vérifier immédiatement le token
     const token = new URLSearchParams(window.location.search).get('token');
-    console.log('🔍 Token trouvé:', token);
-    
-    if (!token) {
-      console.error('❌ Aucun token trouvé dans l\'URL');
-      document.getElementById('status').textContent = 'Aucun token de suivi fourni.';
-      alert('Paramètre manquant: ?token=...');
-    } else {
-      console.log('✅ Token valide, démarrage de l\'initialisation...');
+
+    function setStatus(text, kind) {
+      const el = document.getElementById('status');
+      el.textContent = text;
+      el.className = 'badge' + (kind ? ' ' + kind : '');
     }
 
-    function setStatus(text) {
-      console.log('📝 Changement de statut:', text);
-      document.getElementById('status').textContent = text;
+    function showMessage(text) {
+      const el = document.getElementById('message');
+      el.textContent = text;
+      el.style.display = 'flex';
     }
 
-    function getQueryParam(name) {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(name);
+    function formatAge(ms) {
+      const s = Math.round(ms / 1000);
+      if (s < 60) return 'il y a ' + s + ' s';
+      return 'il y a ' + Math.round(s / 60) + ' min';
     }
 
     async function loadConfig() {
-      console.log('🔍 Tentative de chargement depuis Netlify Function...');
       try {
         const resp = await fetch('/.netlify/functions/public-config', { cache: 'no-store' });
         if (resp.ok) {
           const json = await resp.json();
           if (json && json.VITE_SUPABASE_URL && json.VITE_SUPABASE_ANON_KEY) {
-            console.log('✅ Configuration trouvée via Netlify Function');
             return {
               supabaseUrl: json.VITE_SUPABASE_URL,
               supabaseAnonKey: json.VITE_SUPABASE_ANON_KEY,
@@ -72,103 +85,157 @@
           }
         }
       } catch (e) {
-        console.warn('⚠️ Netlify public-config indisponible, utilisation du fallback:', e);
+        console.warn('Configuration publique indisponible, utilisation du fallback.');
       }
-      
+
       if (window.TRACK_CONFIG && window.TRACK_CONFIG.supabaseUrl && window.TRACK_CONFIG.supabaseAnonKey) {
-        console.log('✅ Configuration trouvée via window.TRACK_CONFIG');
         return {
           supabaseUrl: window.TRACK_CONFIG.supabaseUrl,
           supabaseAnonKey: window.TRACK_CONFIG.supabaseAnonKey,
           googleMapsApiKey: window.TRACK_CONFIG.googleMapsApiKey,
         };
       }
-      
-      console.log('❌ Aucune configuration trouvée');
+
       return null;
+    }
+
+    function vehicleIcon(heading) {
+      return {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 6,
+        fillColor: '#4285F4',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+        rotation: heading || 0,
+      };
     }
 
     function updateMarker(lat, lng, heading) {
       const position = { lat, lng };
-      
+
       if (!vehicleMarker) {
-        // Créer le marqueur avec icône personnalisée
         vehicleMarker = new google.maps.Marker({
-          position: position,
-          map: map,
+          position,
+          map,
           title: 'Véhicule',
-          icon: {
-            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            scale: 6,
-            fillColor: '#4285F4',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-            rotation: heading || 0
-          }
+          icon: vehicleIcon(heading),
         });
-        
-        // Centrer la carte sur la position
         map.setCenter(position);
         map.setZoom(15);
       } else {
-        // Mettre à jour la position et la rotation
         vehicleMarker.setPosition(position);
-        if (heading !== undefined) {
-          vehicleMarker.setIcon({
-            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            scale: 6,
-            fillColor: '#4285F4',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-            rotation: heading
-          });
-        }
+        if (typeof heading === 'number') vehicleMarker.setIcon(vehicleIcon(heading));
       }
-      
-      lastPosition = { lat, lng, heading: heading || 0 };
+    }
+
+    function renderStatus() {
+      if (ended) return;
+      if (!lastPosition) {
+        setStatus('En direct • en attente de position…', 'live');
+        return;
+      }
+      const age = Date.now() - lastTs;
+      const speedKmh = typeof lastPosition.speed === 'number' ? (lastPosition.speed * 3.6).toFixed(0) : null;
+      if (arrivedAt) {
+        setStatus('Votre chauffeur est arrivé', 'live');
+      } else if (age > STALE_AFTER_MS) {
+        setStatus('Dernière position ' + formatAge(age), 'warn');
+      } else {
+        setStatus('En direct' + (speedKmh !== null ? ' • ' + speedKmh + ' km/h' : ''), 'live');
+      }
+    }
+
+    // Applique une position venue du broadcast ou de la base, en ignorant les plus anciennes.
+    function applyPosition(lat, lng, heading, speed, ts) {
+      if (typeof lat !== 'number' || typeof lng !== 'number') return;
+      const parsed = ts ? Date.parse(ts) : Date.now();
+      const stamp = Number.isFinite(parsed) ? parsed : Date.now();
+      if (stamp < lastTs) return;
+      lastTs = stamp;
+      lastPosition = { lat, lng, heading: heading || 0, speed };
+      updateMarker(lat, lng, heading);
+      renderStatus();
+    }
+
+    function endTracking(status) {
+      ended = true;
+      clearInterval(pollTimer);
+      clearTimeout(resubscribeTimer);
+      if (channel) {
+        supa.removeChannel(channel);
+        channel = null;
+      }
+      if (status === 'cancelled') {
+        setStatus('Course annulée', 'end');
+        showMessage('Cette course a été annulée.');
+      } else {
+        setStatus('Course terminée', 'end');
+        showMessage('Cette course est terminée. Merci d’avoir voyagé avec TuniDrive.');
+      }
+    }
+
+    // Dernière position en base : couvre l'ouverture de la page et le chauffeur en arrière-plan.
+    async function pollPosition() {
+      if (ended) return;
+      try {
+        const { data, error } = await supa.rpc('get_tracking_position', { p_token: token });
+        if (error) {
+          if (!lastPosition) setStatus('Connexion au suivi…', 'warn');
+          return;
+        }
+        if (!data) {
+          // Jeton inconnu : lien invalide, ou course déjà clôturée (le jeton est alors supprimé).
+          if (lastPosition) endTracking('completed');
+          else {
+            ended = true;
+            clearInterval(pollTimer);
+            setStatus('Suivi indisponible', 'end');
+            showMessage('Ce lien de suivi n’est plus valide : la course est terminée ou le lien est incorrect.');
+          }
+          return;
+        }
+        if (data.status === 'completed' || data.status === 'cancelled') {
+          endTracking(data.status);
+          return;
+        }
+        if (data.arrived_at) arrivedAt = data.arrived_at;
+        if (typeof data.lat === 'number') {
+          applyPosition(data.lat, data.lng, data.heading, data.speed, data.ts);
+        } else {
+          renderStatus();
+        }
+      } catch (e) {
+        console.warn('Lecture de la position impossible.');
+      }
+    }
+
+    function scheduleResubscribe() {
+      if (ended || resubscribeTimer) return;
+      resubscribeTimer = setTimeout(() => {
+        resubscribeTimer = null;
+        if (channel) {
+          supa.removeChannel(channel);
+          channel = null;
+        }
+        subscribeToTracking();
+      }, RESUBSCRIBE_DELAY_MS);
     }
 
     function subscribeToTracking() {
-      const token = getQueryParam('token');
-      console.log('🔍 Token dans subscribeToTracking:', token);
-      if (!token) {
-        setStatus('Aucun token de suivi fourni.');
-        alert('Paramètre manquant: ?token=...');
-        return;
-      }
-
-      console.log('🔍 Début de la souscription au canal...');
-      setStatus('Connexion au canal…');
-      const channelName = `tracking:${token}`;
-      channel = supa.channel(channelName, { config: { broadcast: { self: false } } });
+      channel = supa.channel('tracking:' + token, { config: { broadcast: { self: false } } });
 
       channel.on('broadcast', { event: 'position' }, (payload) => {
-        const data = payload?.payload || {};
-        const { lat, lng, heading, speed, ts } = data;
-        if (typeof lat === 'number' && typeof lng === 'number') {
-          updateMarker(lat, lng, heading);
-          const speedKmh = typeof speed === 'number' ? (speed * 3.6).toFixed(0) : '—';
-          const time = ts ? new Date(ts).toLocaleTimeString() : '';
-          setStatus(`En direct • ${lat.toFixed(5)}, ${lng.toFixed(5)} • ${speedKmh} km/h ${time ? '• ' + time : ''}`);
-        }
+        const { lat, lng, heading, speed, ts } = payload?.payload || {};
+        applyPosition(lat, lng, heading, speed, ts);
       });
 
       channel.subscribe((status) => {
-        console.log('🔍 Statut de souscription:', status);
         if (status === 'SUBSCRIBED') {
-          setStatus('En direct • en attente de position…');
-          console.log('✅ Canal souscrit avec succès');
-        } else if (status === 'CHANNEL_ERROR') {
-          setStatus('Erreur de canal. Reconnexion…');
-          console.error('❌ Erreur de canal');
-        } else if (status === 'TIMED_OUT') {
-          setStatus('Délai dépassé. Reconnexion…');
-          console.warn('⚠️ Délai dépassé');
-        } else if (status === 'CLOSED') {
-          setStatus('Canal fermé. Tentative de reconnexion…');
-          console.warn('⚠️ Canal fermé');
+          if (!lastPosition) setStatus('En direct • en attente de position…', 'live');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          if (!ended) setStatus('Reconnexion…', 'warn');
+          scheduleResubscribe();
         }
       });
     }
@@ -181,54 +248,42 @@
         }
 
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initGoogleMaps`;
+        script.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(apiKey) + '&callback=initGoogleMaps';
         script.async = true;
         script.defer = true;
-        
-        window.initGoogleMaps = () => {
-          console.log('✅ Google Maps chargé avec succès');
-          resolve();
-        };
-        
-        script.onerror = () => {
-          console.error('❌ Erreur lors du chargement de Google Maps');
-          reject(new Error('Impossible de charger Google Maps'));
-        };
-        
+
+        window.initGoogleMaps = () => resolve();
+        script.onerror = () => reject(new Error('Impossible de charger Google Maps'));
+
         document.head.appendChild(script);
       });
     }
 
     async function initMap() {
-      console.log('🗺️ Initialisation de Google Maps...');
-      
-      // Charger la configuration d'abord
-      console.log('🔍 Chargement de la configuration...');
+      if (!token || !TOKEN_PATTERN.test(token)) {
+        setStatus('Lien de suivi invalide', 'end');
+        showMessage('Ce lien de suivi est incomplet ou incorrect. Ouvrez-le de nouveau depuis la notification reçue.');
+        return;
+      }
+
       const cfg = await loadConfig();
-      console.log('🔍 Configuration chargée:', cfg);
-      
       if (!cfg) {
-        setStatus('Configuration manquante.');
-        console.error('Aucune configuration disponible.');
+        setStatus('Configuration manquante.', 'end');
         return;
       }
 
       if (!cfg.googleMapsApiKey) {
-        setStatus('Clé API Google Maps manquante.');
-        console.error('VITE_GOOGLE_MAPS_API_KEY non configurée.');
+        setStatus('Clé API Google Maps manquante.', 'end');
         return;
       }
 
-      // Charger Google Maps avec la clé API
       try {
         await loadGoogleMapsScript(cfg.googleMapsApiKey);
       } catch (error) {
-        setStatus('Erreur: Impossible de charger Google Maps');
-        console.error('Erreur Google Maps:', error);
+        setStatus('Erreur: Impossible de charger Google Maps', 'end');
         return;
       }
-      
-      // Configuration de la carte
+
       map = new google.maps.Map(document.getElementById('map'), {
         center: { lat: 36.8065, lng: 10.1815 }, // Tunis par défaut
         zoom: 12,
@@ -256,10 +311,8 @@
         ]
       });
 
-      // Initialiser Supabase
       if (!window.supabase) {
-        setStatus('Erreur: Supabase non chargé');
-        console.error('window.supabase is undefined.');
+        setStatus('Erreur: Supabase non chargé', 'end');
         return;
       }
 
@@ -269,19 +322,20 @@
         { realtime: { params: { eventsPerSecond: 10 } } }
       );
 
-      // Se connecter et s'abonner
+      setStatus('Connexion au suivi…');
       supa.realtime.connect();
       subscribeToTracking();
+
+      await pollPosition();
+      if (!ended) {
+        pollTimer = setInterval(pollPosition, POLL_INTERVAL_MS);
+        // Rafraîchit le libellé « Dernière position il y a … » entre deux lectures.
+        setInterval(renderStatus, 5000);
+      }
     }
 
-    // Exposer initMap globalement pour le callback Google Maps
-    window.initMap = initMap;
-    
-    // Démarrer l'initialisation immédiatement
-    console.log('🚀 Démarrage de l\'initialisation...');
-    initMap().catch(error => {
-      console.error('❌ Erreur lors de l\'initialisation:', error);
-      setStatus('Erreur d\'initialisation: ' + error.message);
+    initMap().catch(() => {
+      setStatus('Erreur d’initialisation', 'end');
     });
   </script>
 </body>
