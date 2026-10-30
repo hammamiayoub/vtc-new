@@ -14,3 +14,17 @@
 
 /track.js
   Cache-Control: no-cache
+
+# Page de réinitialisation de mot de passe : le lien contient des jetons de récupération.
+# Mêmes réserves que ci-dessus : politique de contenu en mode « rapport » jusqu'au test réel.
+/reset-password.html
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Cache-Control: no-store
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+
+/reset-password.js
+  Cache-Control: no-cache
