@@ -16,7 +16,7 @@ import { CityInput } from './ui/CityInput';
 import { supabase } from '../lib/supabase';
 import { Driver, Client } from '../types';
 import { DRIVER_ACTIVITY_PROFILE_OPTIONS, driverActivityLabel } from '../utils/driverActivity';
-import { uploadProfileImage, deleteProfileImage } from '../utils/imageUpload';
+import { uploadProfileImage } from '../utils/imageUpload';
 import { useLocale } from '../i18n/locale';
 
 interface ProfileModalProps {
@@ -148,75 +148,30 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const handleDeleteProfile = async () => {
     setIsDeleting(true);
     try {
-      // Supprimer la photo de profil si elle existe
-      if (currentPhotoUrl) {
+      // Suppression côté serveur (données supprimées, réservations anonymisées, compte Auth supprimé)
+      const { data, error } = await supabase.functions.invoke('delete-account');
+
+      if (error || !data?.success) {
+        let message = en ? 'Error while deleting your account' : 'Erreur lors de la suppression du compte';
         try {
-          await deleteProfileImage(currentPhotoUrl, user.id, userType);
-        } catch (error) {
-          console.error('Erreur suppression photo:', error);
+          const body = await (error as { context?: Response } | null)?.context?.json();
+          if (body?.error) message = body.error;
+        } catch {
+          // corps illisible : message par défaut
         }
-      }
-
-      // Supprimer d'abord les données liées
-      if (userType === 'driver') {
-        // Supprimer les disponibilités
-        await supabase
-          .from('driver_availability')
-          .delete()
-          .eq('driver_id', user.id);
-        
-        // Mettre à jour les réservations (retirer l'assignation du chauffeur)
-        await supabase
-          .from('bookings')
-          .update({ driver_id: null, status: 'pending' })
-          .eq('driver_id', user.id);
-      } else {
-        // Supprimer les réservations du client
-        await supabase
-          .from('bookings')
-          .delete()
-          .eq('client_id', user.id);
-      }
-
-      // Marquer le profil comme supprimé au lieu de le supprimer complètement
-      const tableName = userType === 'driver' ? 'drivers' : 'clients';
-      const { error: profileError } = await supabase
-        .from(tableName)
-        .update({ 
-          status: 'deleted',
-          deleted_at: new Date().toISOString(),
-          email: `deleted_${Date.now()}_${user.email}` // Modifier l'email pour éviter les conflits
-        })
-        .eq('id', user.id);
-
-      if (profileError) {
-        console.error('Erreur lors de la suppression du profil:', profileError);
-        alert('Erreur lors de la suppression du profil');
+        alert(message);
         return;
       }
 
-      // Supprimer l'utilisateur Auth pour permettre la réinscription
-      try {
-        const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
-        if (authError) {
-          console.warn('⚠️ Impossible de supprimer le compte Auth:', authError);
-          // Continuer même si la suppression Auth échoue
-        } else {
-          console.log('✅ Compte Auth supprimé avec succès');
-        }
-      } catch (error) {
-        console.warn('⚠️ Erreur lors de la suppression du compte Auth:', error);
-        // Continuer même si la suppression Auth échoue
-      }
+      await supabase.auth.signOut({ scope: 'local' });
 
-      // Déconnecter l'utilisateur
-      await supabase.auth.signOut();
-      
-      alert('Votre profil a été supprimé avec succès. Vous avez été déconnecté.');
+      alert(en
+        ? 'Your account has been deleted. You have been signed out.'
+        : 'Votre compte a été supprimé. Vous avez été déconnecté.');
       onProfileDeleted();
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
-      alert('Une erreur est survenue lors de la suppression');
+      alert(en ? 'An error occurred during deletion' : 'Une erreur est survenue lors de la suppression');
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);

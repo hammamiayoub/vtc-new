@@ -230,7 +230,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 </p>
                 
                 <p className="text-gray-700">
-                  Vous pouvez demander la suppression de votre compte et de vos données à tout moment (voir section 7).
+                  Vous pouvez supprimer votre compte et vos données à tout moment depuis l'application (Profil → Supprimer le compte) ou sur https://tunidrive.net/delete-account. Le profil, les documents, les véhicules, les photos et le compte de connexion sont alors supprimés. Les réservations passées sont conservées sous forme anonymisée (sans lien avec votre identité) pour nos obligations comptables et légales.
                 </p>
               </div>
             </div>

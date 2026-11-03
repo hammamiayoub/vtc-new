@@ -216,7 +216,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 </p>
 
                 <p className="text-gray-700">
-                  You can ask for your account and your data to be deleted at any time (see section 7).
+                  You can delete your account and your data at any time from the app (Profile → Delete account) or at https://tunidrive.net/en/delete-account. Your profile, documents, vehicles, photos and sign-in account are then deleted. Past bookings are kept in anonymised form (with no link to your identity) for accounting and legal obligations.
                 </p>
               </div>
             </div>
