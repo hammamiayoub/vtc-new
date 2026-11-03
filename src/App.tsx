@@ -70,6 +70,9 @@ const AboutPage = lazy(() =>
 const PrivacyPolicyPage = lazy(() =>
   import('./components/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
 );
+const DeleteAccountPage = lazy(() =>
+  import('./components/DeleteAccountPage').then((m) => ({ default: m.DeleteAccountPage }))
+);
 const TermsOfServicePage = lazy(() =>
   import('./components/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage }))
 );
@@ -445,6 +448,22 @@ function App() {
           element={
             <Suspense fallback={<PageLoader fullScreen />}>
               <TermsOfServicePage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/delete-account"
+          element={
+            <Suspense fallback={<PageLoader fullScreen />}>
+              <DeleteAccountPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/en/delete-account"
+          element={
+            <Suspense fallback={<PageLoader fullScreen />}>
+              <DeleteAccountPage />
             </Suspense>
           }
         />

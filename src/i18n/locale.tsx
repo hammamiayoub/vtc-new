@@ -20,6 +20,7 @@ const ROUTE_PAIRS: { fr: string; en: string }[] = [
   { fr: '/reset-password', en: '/en/reset-password' },
   { fr: '/terms-of-service', en: '/en/terms-of-service' },
   { fr: '/privacy-policy', en: '/en/privacy-policy' },
+  { fr: '/delete-account', en: '/en/delete-account' },
   { fr: '/client-dashboard', en: '/en/client-dashboard' },
 ];
 
