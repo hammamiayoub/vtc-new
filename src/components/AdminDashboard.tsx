@@ -68,6 +68,7 @@ import {
   computeSubscriptionActivationDates,
   computeExtendedSubscriptionEndDate,
   getSubscriptionExtensionUnitLabel,
+  isSubscriptionEndPassed,
   type SubscriptionExtensionUnit,
 } from '../utils/subscriptionPeriod';
 
@@ -998,67 +999,65 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  /**
+   * Prévient le chauffeur par email (abonnement activé ou prolongé). L'Edge Function vérifie que l'appelant
+   * est un administrateur connecté et lit elle-même destinataire, nom et dates en base : on n'envoie que
+   * l'identifiant de l'abonnement. Renvoie false si l'email n'a pas pu partir.
+   */
   const notifyDriverSubscriptionEmail = async (payload: {
     type: 'activated' | 'extended';
-    driver: { email: string; firstName: string; lastName: string };
-    subscription: {
-      billingPeriod?: 'monthly' | 'yearly';
-      startDate?: string;
-      endDate: string;
-      totalPriceTnd?: number;
-      paymentReference?: string;
-      extension?: {
-        amount: number;
-        unit: SubscriptionExtensionUnit;
-        previousEndDate?: string;
-      };
+    subscriptionId: string;
+    extension?: {
+      amount: number;
+      unit: SubscriptionExtensionUnit;
+      previousEndDate?: string;
     };
-  }) => {
-    if (!payload.driver.email) {
-      console.warn('⚠️ Email chauffeur introuvable, notification abonnement non envoyée');
-      return;
-    }
-
+  }): Promise<boolean> => {
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        console.error('Email abonnement non envoyé : session administrateur introuvable');
+        return false;
+      }
+
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-driver-subscription-email`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          Authorization: `Bearer ${accessToken}`,
+          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           type: payload.type,
-          driver: {
-            email: payload.driver.email,
-            first_name: payload.driver.firstName,
-            last_name: payload.driver.lastName,
-          },
-          subscription: {
-            billing_period: payload.subscription.billingPeriod,
-            start_date: payload.subscription.startDate,
-            end_date: payload.subscription.endDate,
-            total_price_tnd: payload.subscription.totalPriceTnd,
-            payment_reference: payload.subscription.paymentReference,
-            extension: payload.subscription.extension
-              ? {
-                  amount: payload.subscription.extension.amount,
-                  unit: payload.subscription.extension.unit,
-                  previous_end_date: payload.subscription.extension.previousEndDate,
-                }
-              : undefined,
-          },
+          subscription_id: payload.subscriptionId,
+          extension: payload.extension
+            ? {
+                amount: payload.extension.amount,
+                unit: payload.extension.unit,
+                previous_end_date: payload.extension.previousEndDate,
+              }
+            : undefined,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        console.error('❌ Erreur envoi email abonnement:', errorData?.error || response.statusText);
-      } else {
-        await response.json();
+        console.error('Erreur envoi email abonnement:', errorData?.error || response.statusText);
+        return false;
       }
+      return true;
     } catch (emailError) {
-      console.error('❌ Erreur envoi email abonnement:', emailError);
+      console.error('Erreur envoi email abonnement:', emailError);
+      return false;
     }
+  };
+
+  const warnSubscriptionEmailFailed = () => {
+    window.alert(
+      "L'action a bien été enregistrée, mais l'email de confirmation n'a pas pu être envoyé au chauffeur. " +
+        "Prévenez-le directement (email ou WhatsApp)."
+    );
   };
 
   const validateSubscriptionPayment = async () => {
@@ -1123,23 +1122,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       setSubscriptions(prev => prev.map(s => (s.id === selectedSubscription.id ? { ...s, ...fullPatch } : s)));
       setSelectedSubscription(prev => (prev ? { ...prev, ...fullPatch } : prev));
 
-      if (selectedSubscription.driver) {
-        await notifyDriverSubscriptionEmail({
-          type: 'activated',
-          driver: {
-            email: selectedSubscription.driver.email,
-            firstName: selectedSubscription.driver.firstName,
-            lastName: selectedSubscription.driver.lastName,
-          },
-          subscription: {
-            billingPeriod: selectedSubscription.billingPeriod,
-            startDate: fullPatch.startDate,
-            endDate: fullPatch.endDate,
-            totalPriceTnd: selectedSubscription.totalPriceTnd,
-            paymentReference: fullPatch.paymentReference,
-          },
-        });
-      }
+      const emailSent = await notifyDriverSubscriptionEmail({
+        type: 'activated',
+        subscriptionId: selectedSubscription.id,
+      });
+      if (!emailSent) warnSubscriptionEmailFailed();
     } catch (e) {
       console.error('Erreur lors de la validation du paiement:', e);
       const msg = e instanceof Error ? e.message : 'Erreur lors de la validation du paiement.';
@@ -1220,24 +1207,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       setSelectedSubscription(prev => (prev ? { ...prev, ...fullPatch } : prev));
       setExtendForm(f => ({ ...f, note: '' }));
 
-      if (selectedSubscription.driver) {
-        await notifyDriverSubscriptionEmail({
-          type: 'extended',
-          driver: {
-            email: selectedSubscription.driver.email,
-            firstName: selectedSubscription.driver.firstName,
-            lastName: selectedSubscription.driver.lastName,
-          },
-          subscription: {
-            endDate: newEndDate,
-            extension: {
-              amount: extendForm.amount,
-              unit: extendForm.unit,
-              previousEndDate: result.previous_end_date ?? selectedSubscription.endDate,
-            },
-          },
-        });
-      }
+      const emailSent = await notifyDriverSubscriptionEmail({
+        type: 'extended',
+        subscriptionId: selectedSubscription.id,
+        extension: {
+          amount: extendForm.amount,
+          unit: extendForm.unit,
+          previousEndDate: String(result.previous_end_date ?? selectedSubscription.endDate).slice(0, 10),
+        },
+      });
+      if (!emailSent) warnSubscriptionEmailFailed();
     } catch (e) {
       console.error('Erreur lors de la prolongation:', e);
       const msg = e instanceof Error ? e.message : 'Erreur lors de la prolongation.';
@@ -4092,7 +4071,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         s.id !== selectedSubscription.id &&
                         s.paymentStatus === 'paid' &&
                         s.status === 'active' &&
-                        new Date(s.endDate) >= new Date()
+                        !isSubscriptionEndPassed(s.endDate)
                     )?.endDate ?? null
                   : null;
                 const activationPreview = isPending
@@ -4351,7 +4330,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     s.id !== selectedSubscription.id &&
                     s.paymentStatus === 'paid' &&
                     s.status === 'active' &&
-                    new Date(s.endDate) >= new Date()
+                    !isSubscriptionEndPassed(s.endDate)
                 )?.endDate ?? null;
                 const activationPreview = computeSubscriptionActivationDates({
                   billingPeriod: selectedSubscription.billingPeriod,

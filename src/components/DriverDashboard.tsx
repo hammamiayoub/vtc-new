@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TabBar } from './ui/TabBar';
+import { daysUntilSubscriptionEnd, isSubscriptionEndPassed } from '../utils/subscriptionPeriod';
+import { Alert } from './ui/Alert';
 import { Badge } from './ui/Badge';
 import { BookingStatusBadge } from './ui/StatusBadge';
 import { DashboardSkeleton } from './ui/Skeleton';
@@ -191,18 +193,11 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
     const hasActiveSubscription = subscriptionStatus.hasActiveSubscription;
     const remainingFree = subscriptionStatus.remainingFreeBookings ?? 0;
-    const lastEndDate = subscriptionStatus.lastPaidSubscriptionEnd
-      ? new Date(subscriptionStatus.lastPaidSubscriptionEnd)
-      : null;
-    const activeEndDate = subscriptionStatus.subscriptionEndDate
-      ? new Date(subscriptionStatus.subscriptionEndDate)
-      : null;
-    const now = new Date();
 
     const premiumExpired = subscriptionStatus.hadPaidSubscription && !hasActiveSubscription;
     const endDatePassed =
-      (activeEndDate && activeEndDate < now) ||
-      (lastEndDate && lastEndDate < now);
+      isSubscriptionEndPassed(subscriptionStatus.subscriptionEndDate) ||
+      isSubscriptionEndPassed(subscriptionStatus.lastPaidSubscriptionEnd);
     const noFreeRidesLeft = remainingFree <= 0;
     const shouldShow = premiumExpired || endDatePassed || noFreeRidesLeft;
 
@@ -1011,6 +1006,34 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           </div>
         )}
         
+        {/* Abonnement qui arrive à échéance : rappel visible dès 7 jours, avant l'email et le blocage */}
+        {driver && subscriptionStatus?.hasActiveSubscription && (() => {
+          const daysLeft = daysUntilSubscriptionEnd(subscriptionStatus.subscriptionEndDate);
+          if (daysLeft === null || daysLeft < 0 || daysLeft > 7) return null;
+          const when = daysLeft === 0 ? "aujourd'hui" : daysLeft === 1 ? 'demain' : `dans ${daysLeft} jours`;
+          return (
+            <Alert
+              tone="warning"
+              className="mb-6 sm:mb-8"
+              title={`Votre abonnement expire ${when}`}
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p>
+                  Renouvelez-le dès maintenant : la nouvelle période démarre à la fin de l'actuelle, vous ne perdez
+                  aucun jour. Sans abonnement actif, l'acceptation de nouvelles courses sera limitée.
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => setActiveTab('subscription')}
+                  className="flex-shrink-0 bg-black hover:bg-gray-800 text-white"
+                >
+                  Renouveler
+                </Button>
+              </div>
+            </Alert>
+          );
+        })()}
+
         {/* Profile Completion Alert */}
         {needsProfileCompletion && !showProfileForm && activeTab === 'dashboard' && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">

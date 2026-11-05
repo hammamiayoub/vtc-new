@@ -5,8 +5,13 @@ import { supabase } from '../lib/supabase';
 import {
   getBillingPeriodLabel,
   getSubscriptionDurationLabel,
+  isSubscriptionEndPassed,
   type SubscriptionBillingPeriod,
 } from '../utils/subscriptionPeriod';
+
+/** Coordonnées bancaires affichées ET copiées : une seule source pour que les deux ne divergent jamais. */
+const BANK_BENEFICIARY = 'TuniDrive SARL';
+const BANK_IBAN = 'TN59 04 117 1850077170413 86';
 
 interface DriverSubscriptionProps {
   driverId: string;
@@ -33,6 +38,33 @@ interface PendingSubscriptionRequest {
   totalPriceTnd: number;
 }
 
+interface PeriodPricing {
+  price_tnd: number;
+  vat_percentage: number;
+  total_price_tnd: number;
+}
+
+const FALLBACK_PRICING: Record<BillingPeriod, PeriodPricing> = {
+  monthly: { price_tnd: 30, vat_percentage: 19, total_price_tnd: 35.7 },
+  yearly: { price_tnd: 324, vat_percentage: 19, total_price_tnd: 385.56 },
+};
+
+function parsePricing(data: unknown): Record<BillingPeriod, PeriodPricing> | null {
+  const read = (value: unknown): PeriodPricing | null => {
+    const v = value as Record<string, unknown> | null;
+    const price = Number(v?.price_tnd);
+    const vat = Number(v?.vat_percentage);
+    const total = Number(v?.total_price_tnd);
+    return [price, vat, total].every((n) => Number.isFinite(n) && n > 0)
+      ? { price_tnd: price, vat_percentage: vat, total_price_tnd: total }
+      : null;
+  };
+  const root = data as Record<string, unknown>;
+  const monthly = read(root?.monthly);
+  const yearly = read(root?.yearly);
+  return monthly && yearly ? { monthly, yearly } : null;
+}
+
 export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId }) => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,29 +77,36 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
   const [selectedBillingPeriod, setSelectedBillingPeriod] = useState<BillingPeriod>('monthly');
   const [showExpiredModal, setShowExpiredModal] = useState(false);
 
-  // Informations de paiement
-  const SUBSCRIPTION_PRICE_BASE_MONTHLY = 30.00;
-  const VAT_PERCENTAGE = 19.00;
-  const YEARLY_DISCOUNT = 0.10; // 10% de réduction
-  const BANK_ACCOUNT = "XXXX XXX XXX XXX XXX"; // Sera remplacé plus tard
+  // Tarif : la base est la seule source (fonction subscription_price_for) et c'est elle qui facture à la
+  // création de la demande. L'écran l'affiche tel quel ; ces valeurs de secours ne servent qu'à
+  // l'affichage si la lecture échoue, jamais à la facturation.
+  const [pricing, setPricing] = useState<Record<BillingPeriod, PeriodPricing>>(FALLBACK_PRICING);
 
-  // Calcul des prix selon la période
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc('get_subscription_pricing');
+      if (cancelled || error || !data) return;
+      const parsed = parsePricing(data);
+      if (parsed) setPricing(parsed);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const VAT_PERCENTAGE = pricing.monthly.vat_percentage;
+
+  // Prix affichés selon la période
   const calculatePrices = (billingPeriod: BillingPeriod) => {
-    let basePrice = SUBSCRIPTION_PRICE_BASE_MONTHLY;
-    
-    if (billingPeriod === 'yearly') {
-      // Prix annuel avec 10% de réduction
-      basePrice = (SUBSCRIPTION_PRICE_BASE_MONTHLY * 12) * (1 - YEARLY_DISCOUNT);
-    }
-    
-    const vatAmount = basePrice * VAT_PERCENTAGE / 100;
-    const totalPrice = basePrice + vatAmount;
-    const monthlyEquivalent = billingPeriod === 'yearly' ? totalPrice / 12 : totalPrice;
-    
+    const { price_tnd, total_price_tnd } = pricing[billingPeriod];
+    const vatAmount = total_price_tnd - price_tnd;
+    const monthlyEquivalent = billingPeriod === 'yearly' ? total_price_tnd / 12 : total_price_tnd;
+
     return {
-      basePrice: basePrice.toFixed(2),
+      basePrice: price_tnd.toFixed(2),
       vatAmount: vatAmount.toFixed(2),
-      totalPrice: totalPrice.toFixed(2),
+      totalPrice: total_price_tnd.toFixed(2),
       monthlyEquivalent: monthlyEquivalent.toFixed(2)
     };
   };
@@ -139,8 +178,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
           hasUsedFreeTrial: status.has_used_free_trial || false,
           subscriptionEndDate: status.subscription_end_date
         });
-        const now = new Date();
-        const hasExpiredDate = status.subscription_end_date ? new Date(status.subscription_end_date) < now : false;
+        const hasExpiredDate = isSubscriptionEndPassed(status.subscription_end_date);
         const isPremiumExpired = status.subscription_type === 'premium' && !status.has_active_subscription;
         if (hasExpiredDate || isPremiumExpired) {
           setShowExpiredModal(true);
@@ -198,51 +236,13 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
   };
 
   const handleSubscriptionRequest = async () => {
-    // Vérifier d'abord s'il n'existe pas déjà une demande en attente
-    const { data: existingRequest } = await supabase
-      .from('driver_subscriptions')
-      .select('id')
-      .eq('driver_id', driverId)
-      .eq('payment_status', 'pending')
-      .eq('status', 'active')
-      .maybeSingle();
-
-    if (existingRequest) {
-      alert('Vous avez déjà une demande d\'abonnement en cours de traitement. Veuillez effectuer le paiement avec les informations affichées ci-dessous.');
-      setShowPaymentInfo(true);
-      setHasPendingRequest(true);
-      return;
-    }
-
     setSubmittingRequest(true);
     try {
-      // Créer une nouvelle demande d'abonnement
-      const startDate = new Date();
-      const endDate = new Date();
-      
-      // Calculer la date de fin selon la période choisie
-      if (selectedBillingPeriod === 'yearly') {
-        endDate.setFullYear(endDate.getFullYear() + 1);
-      } else {
-        endDate.setMonth(endDate.getMonth() + 1);
-      }
-
-      const calculatedPrices = calculatePrices(selectedBillingPeriod);
-
-      const { error } = await supabase
-        .from('driver_subscriptions')
-        .insert({
-          driver_id: driverId,
-          start_date: startDate.toISOString().split('T')[0],
-          end_date: endDate.toISOString().split('T')[0],
-          subscription_type: 'premium',
-          billing_period: selectedBillingPeriod,
-          price_tnd: parseFloat(calculatedPrices.basePrice),
-          vat_percentage: VAT_PERCENTAGE,
-          total_price_tnd: parseFloat(calculatedPrices.totalPrice),
-          payment_status: 'pending',
-          status: 'active'
-        });
+      // Le serveur fixe le prix et les dates, refuse une seconde demande en attente et, si un abonnement
+      // payé est en cours, fait démarrer la nouvelle période à sa fin (aucun jour perdu).
+      const { data, error } = await supabase.rpc('request_driver_subscription', {
+        p_billing_period: selectedBillingPeriod,
+      });
 
       if (error) {
         console.error('Erreur création demande abonnement:', error);
@@ -250,10 +250,36 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
         return;
       }
 
+      const result = data as {
+        success: boolean;
+        reason?: string;
+        start_date?: string;
+        is_early_renewal?: boolean;
+      } | null;
+
+      if (!result?.success) {
+        if (result?.reason === 'already_pending') {
+          alert('Vous avez déjà une demande d\'abonnement en cours de traitement. Veuillez effectuer le paiement avec les informations affichées ci-dessous.');
+          setShowPaymentInfo(true);
+          setHasPendingRequest(true);
+          await checkPendingRequest();
+          return;
+        }
+        const messages: Record<string, string> = {
+          not_authenticated: 'Votre session a expiré. Reconnectez-vous puis réessayez.',
+          driver_not_found: 'Profil chauffeur introuvable. Contactez le support.',
+          duplicate_period: 'Une demande existe déjà pour cette période. Rechargez la page.',
+        };
+        alert(messages[result?.reason ?? ''] ?? 'Erreur lors de la création de la demande d\'abonnement. Veuillez réessayer.');
+        return;
+      }
+
       alert(
         `Demande d'abonnement créée avec succès !\n\n` +
         `Durée : ${getBillingPeriodLabel(selectedBillingPeriod)} (${getSubscriptionDurationLabel(selectedBillingPeriod)})\n\n` +
-        `La période exacte débutera à la validation de votre paiement par l'administration.\n\n` +
+        (result.is_early_renewal && result.start_date
+          ? `Votre renouvellement prendra effet le ${new Date(result.start_date + 'T00:00:00Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}, à la fin de votre abonnement actuel : vous ne perdez aucun jour.\n\n`
+          : `La période exacte débutera à la validation de votre paiement par l'administration.\n\n`) +
         `Veuillez effectuer le paiement et contacter l'administration avec votre référence de paiement.`
       );
       setShowPaymentInfo(true);
@@ -270,7 +296,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
 
   const copyBankAccount = async () => {
     try {
-      await navigator.clipboard.writeText(BANK_ACCOUNT);
+      await navigator.clipboard.writeText(BANK_IBAN);
       setBankAccountCopied(true);
       setTimeout(() => setBankAccountCopied(false), 2000);
     } catch (error) {
@@ -294,9 +320,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
   }
 
   const isPremium = subscriptionStatus.hasActiveSubscription || subscriptionStatus.subscriptionType === 'premium';
-  const isExpiredPremium = (subscriptionStatus.subscriptionEndDate
-    ? new Date(subscriptionStatus.subscriptionEndDate) < new Date()
-    : false) || (subscriptionStatus.subscriptionType === 'premium' && !subscriptionStatus.hasActiveSubscription);
+  const isExpiredPremium = isSubscriptionEndPassed(subscriptionStatus.subscriptionEndDate) || (subscriptionStatus.subscriptionType === 'premium' && !subscriptionStatus.hasActiveSubscription);
 
   return (
     <div className="space-y-6">
@@ -557,7 +581,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               <div className="flex items-baseline justify-between text-sm mb-3 text-success-700">
                 <span className="font-medium">Réduction annuelle (10%)</span>
                 <span className="font-bold">
-                  -{(parseFloat(calculatePrices('monthly').basePrice) * 12 * 0.10).toFixed(2)} TND
+                  -{(pricing.monthly.price_tnd * 12 - pricing.yearly.price_tnd).toFixed(2)} TND
                 </span>
               </div>
             )}
@@ -684,13 +708,13 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="text-gray-700 font-medium">Bénéficiaire :</span>
-                  <p className="text-gray-900">TuniDrive SARL</p>
+                  <p className="text-gray-900">{BANK_BENEFICIARY}</p>
                 </div>
                 <div>
                   <span className="text-gray-700 font-medium">Numéro de compte :</span>
                   <div className="flex items-center gap-2 mt-1">
                     <code className="bg-white px-3 py-2 rounded border border-gray-200 text-gray-900 font-mono flex-1">
-                      TN59 04 117 1850077170413 86
+                      {BANK_IBAN}
                     </code>
                     <button
                       onClick={copyBankAccount}

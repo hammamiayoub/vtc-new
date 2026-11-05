@@ -1,5 +1,39 @@
 export type SubscriptionBillingPeriod = 'monthly' | 'yearly';
 
+/**
+ * Date du jour au format AAAA-MM-JJ, en UTC : c'est la référence de CURRENT_DATE dans la base
+ * (Supabase tourne en UTC), donc celle qui décide réellement si un abonnement donne accès.
+ */
+export function todayDateString(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Vrai si la date de fin (colonne DATE, AAAA-MM-JJ) est strictement passée.
+ * La date de fin est inclusive, comme `end_date >= CURRENT_DATE` côté SQL : un abonnement qui finit
+ * aujourd'hui est encore valable. Comparer `new Date(end_date) < new Date()` le déclarait expiré dès
+ * minuit UTC du dernier jour.
+ */
+export function isSubscriptionEndPassed(endDate?: string | null): boolean {
+  if (!endDate) return false;
+  return endDate.slice(0, 10) < todayDateString();
+}
+
+function parseDateString(date: string): Date {
+  const [y, m, d] = date.slice(0, 10).split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+
+/**
+ * Jours restants avant la fin d'un abonnement : 0 = finit aujourd'hui, négatif = expiré.
+ * null si la date est inconnue. Même référence (UTC) que isSubscriptionEndPassed.
+ */
+export function daysUntilSubscriptionEnd(endDate?: string | null): number | null {
+  if (!endDate) return null;
+  const ms = parseDateString(endDate).getTime() - parseDateString(todayDateString()).getTime();
+  return Math.round(ms / 86_400_000);
+}
+
 const DATE_OPTS: Intl.DateTimeFormatOptions = {
   day: 'numeric',
   month: 'long',

@@ -1,279 +1,162 @@
+// Email envoyé au chauffeur après une action de l'administrateur : abonnement activé ou prolongé.
+//
+// SÉCURITÉ
+//   - Réservé aux administrateurs : le jeton de la session connectée (Authorization: Bearer <jeton>) doit
+//     appartenir à un utilisateur présent dans admin_users. La clé publique seule ne suffit plus.
+//   - L'appelant n'envoie plus ni destinataire ni contenu : seulement { type, subscription_id }.
+//     L'adresse, le nom et les dates sont lus en base. Impossible d'utiliser la fonction comme relais
+//     d'emails sous le domaine TuniDrive, même avec un compte admin.
+//   - Un seul email par événement : clé « activated:<date de fin> » / « extended:<date de fin> » réservée
+//     dans subscription_expiration_notifications (un double clic ne double pas l'envoi). Nouvel essai
+//     possible si l'envoi a échoué (la réservation est libérée). { "resend": true } force un renvoi.
+//
+// Corps JSON :
+//   { "type": "activated" | "extended",
+//     "subscription_id": "<uuid>",
+//     "extension": { "amount": 3, "unit": "months", "previous_end_date": "2026-11-05" }   // si extended
+//   }
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'npm:@supabase/supabase-js@2'
+import {
+  buildActivatedEmail,
+  buildExtendedEmail,
+  type ExtensionInfo,
+  type ExtensionUnit,
+} from '../_shared/subscriptionReminders.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>'
-const SUPPORT_EMAIL = 'support@tunidrive.net'
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const EXTENSION_UNITS: ExtensionUnit[] = ['days', 'months', 'years']
 
-type SubscriptionEmailType = 'activated' | 'extended'
-
-interface DriverInfo {
-  email: string
-  first_name: string
-  last_name: string
+function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
 }
 
-interface SubscriptionInfo {
-  billing_period?: 'monthly' | 'yearly'
-  start_date?: string
-  end_date: string
-  total_price_tnd?: number
-  payment_reference?: string
-  extension?: {
-    amount: number
-    unit: 'days' | 'months' | 'years'
-    previous_end_date?: string
-  }
-}
-
-function formatDateFr(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
-function getBillingPeriodLabel(period?: string): string {
-  if (period === 'yearly') return 'Annuel'
-  if (period === 'monthly') return 'Mensuel'
-  return 'Premium'
-}
-
-function getExtensionLabel(amount: number, unit: string): string {
-  const labels: Record<string, [string, string]> = {
-    days: ['jour', 'jours'],
-    months: ['mois', 'mois'],
-    years: ['an', 'ans'],
-  }
-  const [singular, plural] = labels[unit] ?? ['', unit]
-  return `${amount} ${amount > 1 ? plural : singular}`
-}
-
-function buildActivatedEmail(driver: DriverInfo, subscription: SubscriptionInfo): { subject: string; html: string } {
-  const periodLabel = getBillingPeriodLabel(subscription.billing_period)
-  const startDate = subscription.start_date ? formatDateFr(subscription.start_date) : null
-  const endDate = formatDateFr(subscription.end_date)
-
-  const subject = 'TuniDrive - Votre abonnement Premium est activé'
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background-color: #2563eb; padding: 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">TuniDrive</h1>
-        <p style="color: #dbeafe; margin: 10px 0 0 0;">Votre abonnement Premium est activé</p>
-      </div>
-
-      <div style="padding: 30px 20px;">
-        <h2 style="color: #333; margin-bottom: 20px;">Bonjour ${driver.first_name} ${driver.last_name},</h2>
-
-        <div style="background-color: #eff6ff; border: 2px solid #2563eb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #1d4ed8; margin-top: 0; margin-bottom: 15px;">✅ Paiement validé</h3>
-          <p style="color: #1e3a8a; font-size: 16px; line-height: 1.6; margin: 0;">
-            Votre abonnement Premium TuniDrive a été <strong>activé avec succès</strong>. Vous pouvez à nouveau accepter des courses sans limite.
-          </p>
-        </div>
-
-        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #1e293b; margin-top: 0; margin-bottom: 15px;">Détails de votre abonnement</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569; width: 140px;">Formule :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">Premium ${periodLabel}</td>
-            </tr>
-            ${startDate ? `
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569;">Début :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${startDate}</td>
-            </tr>
-            ` : ''}
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569;">Fin :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b; font-weight: bold;">${endDate}</td>
-            </tr>
-            ${subscription.total_price_tnd != null ? `
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569;">Montant TTC :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${subscription.total_price_tnd.toFixed(2)} TND</td>
-            </tr>
-            ` : ''}
-            ${subscription.payment_reference ? `
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold; color: #475569;">Référence :</td>
-              <td style="padding: 8px 0; color: #1e293b; font-family: monospace;">${subscription.payment_reference}</td>
-            </tr>
-            ` : ''}
-          </table>
-        </div>
-
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="https://tunidrive.net/driver-dashboard"
-             style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-            Accéder à mon tableau de bord
-          </a>
-        </div>
-
-        <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="color: #64748b; margin: 0; line-height: 1.6;">
-            Une question ? Contactez-nous : <strong>${SUPPORT_EMAIL}</strong>
-          </p>
-        </div>
-      </div>
-
-      <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-        <p style="margin: 0;">TuniDrive - Votre transport sur mesure</p>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-      </div>
-    </div>
-  `
-
-  return { subject, html }
-}
-
-function buildExtendedEmail(driver: DriverInfo, subscription: SubscriptionInfo): { subject: string; html: string } {
-  const endDate = formatDateFr(subscription.end_date)
-  const extension = subscription.extension
-  const extensionLabel = extension
-    ? getExtensionLabel(extension.amount, extension.unit)
-    : 'prolongation'
-  const previousEnd = extension?.previous_end_date
-    ? formatDateFr(extension.previous_end_date)
-    : null
-
-  const subject = 'TuniDrive - Votre abonnement Premium a été prolongé'
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background-color: #4f46e5; padding: 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">TuniDrive</h1>
-        <p style="color: #e0e7ff; margin: 10px 0 0 0;">Votre abonnement Premium a été prolongé</p>
-      </div>
-
-      <div style="padding: 30px 20px;">
-        <h2 style="color: #333; margin-bottom: 20px;">Bonjour ${driver.first_name} ${driver.last_name},</h2>
-
-        <div style="background-color: #eef2ff; border: 2px solid #4f46e5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #3730a3; margin-top: 0; margin-bottom: 15px;">📅 Prolongation confirmée</h3>
-          <p style="color: #312e81; font-size: 16px; line-height: 1.6; margin: 0;">
-            Votre abonnement Premium a été prolongé de <strong>${extensionLabel}</strong> par notre équipe.
-          </p>
-        </div>
-
-        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #1e293b; margin-top: 0; margin-bottom: 15px;">Nouvelle période</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            ${previousEnd ? `
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569; width: 140px;">Ancienne fin :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">${previousEnd}</td>
-            </tr>
-            ` : ''}
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold; color: #475569;">Nouvelle fin :</td>
-              <td style="padding: 8px 0; color: #4f46e5; font-weight: bold;">${endDate}</td>
-            </tr>
-          </table>
-        </div>
-
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="https://tunidrive.net/driver-dashboard"
-             style="background-color: #4f46e5; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-            Voir mon abonnement
-          </a>
-        </div>
-
-        <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="color: #64748b; margin: 0; line-height: 1.6;">
-            Une question ? Contactez-nous : <strong>${SUPPORT_EMAIL}</strong>
-          </p>
-        </div>
-      </div>
-
-      <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-        <p style="margin: 0;">TuniDrive - Votre transport sur mesure</p>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-      </div>
-    </div>
-  `
-
-  return { subject, html }
-}
-
-async function sendEmail(to: string, subject: string, html: string) {
-  if (!RESEND_API_KEY) {
-    throw new Error('Configuration email manquante: RESEND_API_KEY')
-  }
+async function sendEmail(to: string, subject: string, html: string): Promise<string | undefined> {
+  const apiKey = Deno.env.get('RESEND_API_KEY')
+  if (!apiKey) throw new Error('Configuration email manquante: RESEND_API_KEY')
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to: [to],
-      subject,
-      html,
-    }),
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
   })
-
   if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Erreur Resend ${response.status}: ${errorText}`)
+    throw new Error(`Erreur Resend ${response.status}: ${await response.text()}`)
   }
+  const result = await response.json()
+  return result?.id
+}
 
-  return response.json()
+function parseExtension(value: unknown): ExtensionInfo | null | 'invalid' {
+  if (value == null) return null
+  const e = value as Record<string, unknown>
+  const amount = Number(e.amount)
+  if (!Number.isInteger(amount) || amount < 1 || amount > 120) return 'invalid'
+  if (!EXTENSION_UNITS.includes(e.unit as ExtensionUnit)) return 'invalid'
+  const previous = e.previous_end_date
+  if (previous != null && !(typeof previous === 'string' && DATE_PATTERN.test(previous))) return 'invalid'
+  return { amount, unit: e.unit as ExtensionUnit, previous_end_date: (previous as string | null) ?? null }
 }
 
 serve(async (req) => {
-  console.log('🚀 Edge Function send-driver-subscription-email démarrée')
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method !== 'POST') return json({ success: false, error: 'method_not_allowed' }, 405)
 
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  )
+
+  // 1. Qui appelle ? Un administrateur connecté, et personne d'autre.
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '').trim()
+  if (!token) return json({ success: false, error: 'unauthorized' }, 401)
+
+  const { data: userData, error: userError } = await supabase.auth.getUser(token)
+  if (userError || !userData?.user) return json({ success: false, error: 'unauthorized' }, 401)
+
+  const { data: adminRow } = await supabase
+    .from('admin_users')
+    .select('id')
+    .eq('id', userData.user.id)
+    .maybeSingle()
+  if (!adminRow) return json({ success: false, error: 'forbidden' }, 403)
 
   try {
-    const { type, driver, subscription } = await req.json() as {
-      type: SubscriptionEmailType
-      driver: DriverInfo
-      subscription: SubscriptionInfo
+    // 2. Que demande-t-il ?
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>
+    const type = body.type
+    const subscriptionId = body.subscription_id
+    if (type !== 'activated' && type !== 'extended') {
+      return json({ success: false, error: 'Type invalide : "activated" ou "extended" attendu' }, 400)
+    }
+    if (typeof subscriptionId !== 'string' || !UUID_PATTERN.test(subscriptionId)) {
+      return json({ success: false, error: 'subscription_id invalide' }, 400)
+    }
+    const extension = parseExtension(body.extension)
+    if (extension === 'invalid') return json({ success: false, error: 'extension invalide' }, 400)
+
+    // 3. Les données viennent de la base, pas de l'appelant
+    const { data: sub, error: subError } = await supabase
+      .from('driver_subscriptions')
+      .select('id, driver_id, billing_period, start_date, end_date, total_price_tnd, payment_reference, payment_status')
+      .eq('id', subscriptionId)
+      .maybeSingle()
+    if (subError) throw new Error(subError.message)
+    if (!sub) return json({ success: false, error: 'Abonnement introuvable' }, 404)
+    if (sub.payment_status !== 'paid') {
+      return json({ success: false, error: 'Abonnement non payé : aucun email à envoyer' }, 409)
     }
 
-    if (!type || !['activated', 'extended'].includes(type)) {
-      throw new Error('Type invalide: type doit être "activated" ou "extended"')
+    const { data: driver } = await supabase
+      .from('drivers')
+      .select('email, first_name, last_name')
+      .eq('id', sub.driver_id)
+      .maybeSingle()
+    if (!driver?.email) return json({ success: false, error: 'Adresse email du chauffeur introuvable' }, 422)
+
+    const siteUrl = (Deno.env.get('SITE_URL') ?? 'https://tunidrive.net').replace(/\/+$/, '')
+    const message = type === 'activated'
+      ? buildActivatedEmail({ ...driver, ...sub }, siteUrl)
+      : buildExtendedEmail({ ...driver, end_date: sub.end_date }, extension, siteUrl)
+
+    // 4. Un seul email par événement
+    const key = `${type}:${sub.end_date}`
+    let claimed = false
+    if (body.resend !== true) {
+      const { data, error: claimError } = await supabase.rpc('claim_subscription_notification', {
+        p_subscription_id: sub.id,
+        p_driver_id: sub.driver_id,
+        p_key: key,
+        p_channel: 'email',
+      })
+      if (claimError) throw new Error(`claim: ${claimError.message}`)
+      if (!data) return json({ success: true, skipped: 'already_sent', type })
+      claimed = true
     }
 
-    if (!driver?.email || !driver?.first_name || !driver?.last_name) {
-      throw new Error('Informations chauffeur incomplètes')
+    try {
+      const emailId = await sendEmail(driver.email, message.subject, message.html)
+      return json({ success: true, type, emailId })
+    } catch (error) {
+      if (claimed) {
+        await supabase.rpc('release_subscription_notification', { p_subscription_id: sub.id, p_key: key })
+      }
+      throw error
     }
-
-    if (!subscription?.end_date) {
-      throw new Error('Date de fin d\'abonnement manquante')
-    }
-
-    const { subject, html } = type === 'activated'
-      ? buildActivatedEmail(driver, subscription)
-      : buildExtendedEmail(driver, subscription)
-
-    console.log(`📤 Envoi email abonnement (${type}) à:`, driver.email)
-    const result = await sendEmail(driver.email, subject, html)
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Email abonnement envoyé avec succès',
-        type,
-        driverEmail: driver.email,
-        emailId: result.id,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
-    )
   } catch (error) {
-    console.error('💥 Erreur dans send-driver-subscription-email:', error)
-    const message = error instanceof Error ? error.message : 'Erreur inconnue'
-    return new Response(
-      JSON.stringify({ success: false, error: message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 },
-    )
+    console.error('Erreur dans send-driver-subscription-email:', error)
+    return json({ success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' }, 500)
   }
 })

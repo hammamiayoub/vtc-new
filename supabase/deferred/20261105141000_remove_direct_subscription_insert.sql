@@ -1,0 +1,27 @@
+-- DIFFÉRÉE : à appliquer seulement quand TOUTES les applications créent leurs demandes d'abonnement
+-- avec request_driver_subscription (web : déjà fait ; Android et iOS : à faire).
+--
+-- Ce fichier est volontairement hors de supabase/migrations/ pour qu'un `supabase db push` ne
+-- l'exécute pas avant que les applications mobiles soient prêtes : l'appliquer trop tôt empêcherait
+-- leurs chauffeurs de demander un abonnement.
+--
+-- EFFET
+--   Retire la politique d'insertion directe sur driver_subscriptions. Avec la RLS activée et aucune
+--   politique d'insertion, un chauffeur ne peut plus créer de ligne lui-même : seul
+--   request_driver_subscription (SECURITY DEFINER) le peut, avec le prix et les dates calculés par la base.
+--   Cela ferme définitivement la faille du montant choisi par le chauffeur.
+--   Les administrateurs gardent leur accès complet (politique « Admins can manage all subscriptions »).
+--
+-- COMMENT L'ACTIVER
+--   1. Vérifier que les versions de production des applications mobiles appellent
+--      supabase.rpc('request_driver_subscription', { p_billing_period }).
+--   2. Copier ce fichier dans supabase/migrations/ (même nom) et l'appliquer.
+--
+-- VÉRIFICATION (session chauffeur, doit échouer avec « violates row-level security policy ») :
+--   insert into driver_subscriptions (driver_id, start_date, end_date, subscription_type,
+--     billing_period, payment_status, status)
+--   values (auth.uid(), current_date, current_date + 30, 'premium', 'monthly', 'pending', 'active');
+--
+-- RETOUR ARRIÈRE : supabase/rollbacks/20261105141000_remove_direct_subscription_insert.down.sql
+
+DROP POLICY IF EXISTS "Drivers can create subscription requests" ON public.driver_subscriptions;
