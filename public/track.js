@@ -7,8 +7,8 @@
   const POLL_INTERVAL_MS = 10000;
   const STALE_AFTER_MS = 30000;
   const RESUBSCRIBE_DELAY_MS = 5000;
-  const ROUTE_REFRESH_MS = 45000;
-  const ROUTE_REFRESH_DISTANCE_KM = 0.2;
+  const ROUTE_REFRESH_MS = 90000;
+  const ROUTE_REFRESH_DISTANCE_KM = 0.5;
   const AUTO_FIT_MS = 25000;
   const FALLBACK_SPEED_KMH = 30;
   // Même format que les jetons générés par l'application et la base.
