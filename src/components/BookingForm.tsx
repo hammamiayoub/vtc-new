@@ -605,32 +605,47 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       try {
         // Appel à l'Edge Function pour envoyer les emails
         if (clientData && driverData) {
-          console.log('🚀 Appel Edge Function resend-email...');
-          
-          const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resend-email`;
-          
-          const emailResponse = await fetch(functionUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              bookingData: booking,
-              clientData: clientData,
-              driverData: driverData
-            })
-          });
+          // send-booking-notification envoie les 3 emails (client, chauffeur, support)
+          // ET la notification push au chauffeur (drivers.push_token). Les identifiants
+          // sont nécessaires au push et à l'enrichissement des données côté serveur.
+          const callNotificationFunction = async (functionName: string, withIds: boolean) => {
+            const response = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  bookingData: booking,
+                  clientData: withIds ? { ...clientData, id: clientId } : clientData,
+                  driverData: withIds ? { ...driverData, id: selectedEntry.id } : driverData,
+                }),
+              }
+            );
+            const result = await response.json().catch(() => ({}));
+            return { ok: response.ok && result.success === true, result };
+          };
 
-          const emailResult = await emailResponse.json();
-          
-          if (emailResponse.ok && emailResult.success) {
-            console.log('✅ Emails envoyés avec succès:', emailResult.message);
-            console.log('📊 Détails:', emailResult.results);
+          console.log('🚀 Appel Edge Function send-booking-notification (emails + push chauffeur)...');
+          let notification = await callNotificationFunction('send-booking-notification', true)
+            .catch((e) => ({ ok: false, result: { error: String(e) } }));
+
+          if (notification.ok) {
+            console.log('✅ Notifications envoyées:', notification.result.message);
+            console.log('📊 Emails:', notification.result.results, '| Push chauffeur:', notification.result.push);
           } else {
-            console.error('❌ Erreur envoi emails:', emailResult.error);
-            console.error('📊 Détails:', emailResult.details || emailResult);
-            // Ne pas faire échouer la réservation si les emails échouent
+            // Secours : aucun email n'est parti, on retente avec l'ancienne fonction (emails seuls).
+            console.error('❌ send-booking-notification a échoué, secours resend-email:', notification.result?.error);
+            notification = await callNotificationFunction('resend-email', false)
+              .catch((e) => ({ ok: false, result: { error: String(e) } }));
+            if (notification.ok) {
+              console.log('✅ Emails envoyés via resend-email (sans push chauffeur)');
+            } else {
+              console.error('❌ Erreur envoi emails:', notification.result?.error);
+              // Ne pas faire échouer la réservation si les emails échouent
+            }
           }
         } else {
           console.warn('⚠️ Données client ou chauffeur manquantes pour l\'envoi d\'emails');
