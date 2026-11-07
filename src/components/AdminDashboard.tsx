@@ -22,9 +22,11 @@ import {
   MoreHorizontal,
   Search,
   FileText,
+  Star,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
 import { AdminBlogPosts } from './AdminBlogPosts';
+import { DriverRatingDisplay } from './DriverRatingDisplay';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import {
@@ -41,6 +43,8 @@ import {
   fetchAdminBookingStats,
   fetchAdminClientRows,
   fetchAdminDriverRows,
+  fetchAdminDriverRatingStats,
+  type AdminDriverRatingStats,
   fetchAdminParcelStatuses,
   fetchAdminSubscriptionRows,
   fetchAdminVehicleRows,
@@ -51,6 +55,8 @@ import {
   type BookingTotals,
 } from '../utils/adminDashboardData';
 import {
+  DRIVER_ACTIVITY_PROFILE_OPTIONS,
+  type DriverActivityValue,
   driverActivityBadgeClasses,
   driverActivityLabel,
   driverActivityShortLabel,
@@ -251,7 +257,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     phone: string;
     city: string;
     licenseNumber: string;
-  }>({ firstName: '', lastName: '', email: '', phone: '', city: '', licenseNumber: '' });
+    driverType: DriverActivityValue;
+  }>({ firstName: '', lastName: '', email: '', phone: '', city: '', licenseNumber: '', driverType: 'vtc' });
   const [savingDriver, setSavingDriver] = useState(false);
   const [driverEditError, setDriverEditError] = useState<string | null>(null);
   const [editingClient, setEditingClient] = useState<ClientWithBookings | null>(null);
@@ -300,6 +307,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState<AdminTabId>('drivers');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [driverRatings, setDriverRatings] = useState<Map<string, AdminDriverRatingStats>>(new Map());
   const [driverSearch, setDriverSearch] = useState('');
   const [driverStatusFilter, setDriverStatusFilter] = useState<'all' | 'pending' | 'active' | 'rejected'>('all');
   const [bookingSearch, setBookingSearch] = useState('');
@@ -426,6 +434,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         return [];
       }),
     ]);
+
+    fetchAdminDriverRatingStats()
+      .then(setDriverRatings)
+      .catch((error) => console.error('Erreur notes chauffeurs:', error));
 
     setBookingTotals(stats.totals);
     setDrivers(assembleAdminDrivers(driverRows, vehicleRows, stats));
@@ -558,7 +570,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       email: driver.email ?? '',
       phone: driver.phone ?? '',
       city: driver.city ?? '',
-      licenseNumber: driver.licenseNumber ?? ''
+      licenseNumber: driver.licenseNumber ?? '',
+      driverType: driver.driverType || 'vtc'
     });
     setEditingDriver(driver);
   };
@@ -586,7 +599,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           email: driverEditForm.email.trim(),
           phone: driverEditForm.phone.trim() || null,
           city: driverEditForm.city.trim() || null,
-          license_number: driverEditForm.licenseNumber.trim() || null
+          license_number: driverEditForm.licenseNumber.trim() || null,
+          driver_type: driverEditForm.driverType
         })
         .eq('id', editingDriver.id);
 
@@ -598,7 +612,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         email: driverEditForm.email.trim(),
         phone: driverEditForm.phone.trim() || undefined,
         city: driverEditForm.city.trim() || undefined,
-        licenseNumber: driverEditForm.licenseNumber.trim() || undefined
+        licenseNumber: driverEditForm.licenseNumber.trim() || undefined,
+        driverType: driverEditForm.driverType
       };
 
       setDrivers(prev => prev.map(d => (d.id === editingDriver.id ? { ...d, ...patch } : d)));
@@ -1385,6 +1400,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     } finally {
       setClientBookingsLoading(false);
     }
+  };
+
+  const renderDriverRating = (driverId: string) => {
+    const rating = driverRatings.get(driverId);
+    if (!rating || rating.totalRatings === 0) {
+      return <span className="text-xs text-gray-400 italic">Aucune note</span>;
+    }
+    const color =
+      rating.averageRating >= 4 ? 'text-success-600' : rating.averageRating >= 3 ? 'text-warning-600' : 'text-danger-600';
+    return (
+      <div className="text-xs">
+        <p className={`font-semibold flex items-center gap-1 ${color}`}>
+          <Star size={12} className="fill-current" />
+          {rating.averageRating.toFixed(1)}/5
+        </p>
+        <p className="text-[10px] text-gray-500">
+          {rating.totalRatings} avis
+        </p>
+      </div>
+    );
   };
 
   const requestDriverStatusChange = (driver: AdminDriver, newStatus: string) => {
@@ -3185,6 +3220,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     Performance
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Note
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Statut
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
@@ -3278,7 +3316,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         </div>
                       </div>
                     </td>
-                    
+
+                    {/* Note */}
+                    <td className="px-3 py-3">
+                      {renderDriverRating(driver.id)}
+                    </td>
+
                     {/* Statut */}
                     <td className="px-3 py-3">
                       {<DriverStatusBadge status={driver.status} />}
@@ -3408,6 +3451,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <p className="text-sm text-gray-500 italic">Non renseigné</p>
                       )}
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-xs text-gray-500">Note clients</p>
+                    {renderDriverRating(driver.id)}
                   </div>
 
                   <div className="grid grid-cols-3 gap-4 mb-4">
@@ -3974,6 +4022,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 </div>
               </div>
 
+              {/* Notes clients */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Notes et avis des clients</h4>
+                <DriverRatingDisplay driverId={selectedDriver.id} showDetails />
+              </div>
+
               {/* Status and Actions */}
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Statut et actions</h4>
@@ -4528,7 +4582,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       )}
 
       {statusConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[110]">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
@@ -4822,7 +4876,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Driver Edit Modal */}
       {editingDriver && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[110]">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -4900,6 +4954,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Activité</label>
+                  <select
+                    value={driverEditForm.driverType}
+                    onChange={(e) => setDriverEditForm(f => ({ ...f, driverType: e.target.value as DriverActivityValue }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {DRIVER_ACTIVITY_PROFILE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label} — {option.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -4917,7 +4985,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Client Edit Modal */}
       {editingClient && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[110]">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -5003,7 +5071,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Vehicle Edit Modal */}
       {editingVehicle && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[110]">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
