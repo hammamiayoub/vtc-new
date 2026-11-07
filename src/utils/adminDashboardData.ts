@@ -352,6 +352,30 @@ export async function fetchAdminDriverRows(): Promise<AdminDriverRow[]> {
   );
 }
 
+export interface AdminDriverRatingStats {
+  averageRating: number;
+  totalRatings: number;
+}
+
+/** Note moyenne et nombre d'avis par chauffeur (vue driver_rating_stats). */
+export async function fetchAdminDriverRatingStats(): Promise<Map<string, AdminDriverRatingStats>> {
+  const rows = await fetchAllPages<{
+    driver_id: string;
+    average_rating: number | string | null;
+    total_ratings: number | null;
+  }>(() =>
+    supabase.from('driver_rating_stats').select('driver_id, average_rating, total_ratings')
+  );
+  const map = new Map<string, AdminDriverRatingStats>();
+  for (const row of rows) {
+    map.set(row.driver_id, {
+      averageRating: Number(row.average_rating) || 0,
+      totalRatings: Number(row.total_ratings) || 0,
+    });
+  }
+  return map;
+}
+
 export async function fetchAdminClientRows(): Promise<AdminClientRow[]> {
   return fetchAllPages<AdminClientRow>(() =>
     supabase.from('clients').select(CLIENT_COLUMNS).order('created_at', { ascending: false })
