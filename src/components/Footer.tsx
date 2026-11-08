@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, MessageCircle, Facebook, Instagram } from 'lucide-react';
+import { Mail, MessageCircle, Facebook, Instagram, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AppStoreBadges } from './AppStoreBadges';
 import { Button } from './ui/Button';
@@ -162,6 +162,15 @@ export const Footer: React.FC<FooterProps> = () => {
                 aria-label="Instagram"
               >
                 <Instagram size={20} />
+              </a>
+              <a
+                href="https://www.linkedin.com/company/tunidrive"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+                aria-label="LinkedIn"
+              >
+                <Linkedin size={20} />
               </a>
               <a
                 href="https://www.tiktok.com/@tunidrive_tunisia"
