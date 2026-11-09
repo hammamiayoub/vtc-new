@@ -115,6 +115,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/client-login?account=confirmed`,
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
