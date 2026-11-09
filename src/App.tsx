@@ -15,6 +15,8 @@ import {
   resolveUserRole,
 } from './utils/resolveUserRole';
 import { LanguageSwitch, LocaleProvider, localizePath, splitLocalePath, useLocale } from './i18n/locale';
+import { EmailConfirmedNotice } from './components/EmailConfirmedNotice';
+import { readSignupCallback } from './utils/signupCallback';
 
 const DriverSignup = lazy(() =>
   import('./components/DriverSignup').then((m) => ({ default: m.DriverSignup }))
@@ -153,6 +155,7 @@ function RouteFallback() {
 
 function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | null }) {
   const [currentView, setCurrentView] = useState<View>('home');
+  const [signupCallback, setSignupCallback] = useState(readSignupCallback);
   const [authReady, setAuthReady] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const navigate = useNavigate();
@@ -191,6 +194,21 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
 
         if (error) {
           console.error('Erreur session:', error.message);
+        }
+
+        if (signupCallback) {
+          const url = new URL(window.location.href);
+          url.hash = '';
+          url.searchParams.delete('code');
+          url.searchParams.delete('account');
+          if (url.searchParams.get('type') === 'signup' || url.searchParams.get('type') === 'email') {
+            url.searchParams.delete('type');
+          }
+          const nextSearch = url.searchParams.toString();
+          window.history.replaceState({}, '', `${url.pathname}${nextSearch ? `?${nextSearch}` : ''}`);
+        }
+
+        if (error) {
           setAuthReady(true);
           return;
         }
@@ -364,15 +382,17 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
   };
 
   const showHeader =
-    currentView === 'home' ||
+    !signupCallback &&
+    (currentView === 'home' ||
     currentView === 'admin' ||
     currentView === 'parcel-transport' ||
     currentView === 'group-travel' ||
     currentView === 'vtc-tunisie' ||
     currentView === 'blog' ||
-    currentView === 'about';
+    currentView === 'about');
 
   const showLanguageOnAuth =
+    signupCallback !== null ||
     currentView === 'signup' ||
     currentView === 'client-signup' ||
     currentView === 'login' ||
@@ -389,8 +409,28 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
         </div>
       )}
       {showHeader && <Header currentView={currentView} />}
-      <Suspense fallback={<RouteFallback />}>{renderContent()}</Suspense>
-      {showChat && currentView !== 'admin' && currentView !== 'admin-dashboard' && (
+      <Suspense fallback={<RouteFallback />}>
+        {signupCallback ? (
+          <EmailConfirmedNotice
+            status={signupCallback}
+            onLogin={() => {
+              setSignupCallback(null);
+              navigate(href('/client-login'));
+            }}
+            onSignup={() => {
+              setSignupCallback(null);
+              navigate(href('/client-signup'));
+            }}
+            onOpenAccount={() => {
+              setSignupCallback(null);
+              navigate(href('/client-dashboard'));
+            }}
+          />
+        ) : (
+          renderContent()
+        )}
+      </Suspense>
+      {showChat && !signupCallback && currentView !== 'admin' && currentView !== 'admin-dashboard' && (
         <Suspense fallback={null}>
           <ChatWidget />
         </Suspense>
