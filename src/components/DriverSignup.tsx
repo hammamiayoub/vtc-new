@@ -124,7 +124,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         password: data.password,
         options: {
           // Rediriger vers l'application après confirmation
-          emailRedirectTo: `${window.location.origin}/driver-login`,
+          emailRedirectTo: `${window.location.origin}/driver-login?account=confirmed`,
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
