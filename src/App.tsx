@@ -197,6 +197,13 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
         }
 
         if (signupCallback) {
+          const userType = session?.user?.user_metadata?.user_type;
+          if (
+            (userType === 'driver' || userType === 'client') &&
+            signupCallback.audience !== userType
+          ) {
+            setSignupCallback({ ...signupCallback, audience: userType });
+          }
           const url = new URL(window.location.href);
           url.hash = '';
           url.searchParams.delete('code');
@@ -412,18 +419,21 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
       <Suspense fallback={<RouteFallback />}>
         {signupCallback ? (
           <EmailConfirmedNotice
-            status={signupCallback}
+            status={signupCallback.status}
             onLogin={() => {
+              const audience = signupCallback.audience;
               setSignupCallback(null);
-              navigate(href('/client-login'));
+              navigate(href(audience === 'driver' ? '/driver-login' : '/client-login'));
             }}
             onSignup={() => {
+              const audience = signupCallback.audience;
               setSignupCallback(null);
-              navigate(href('/client-signup'));
+              navigate(href(audience === 'driver' ? '/signup' : '/client-signup'));
             }}
             onOpenAccount={() => {
+              const audience = signupCallback.audience;
               setSignupCallback(null);
-              navigate(href('/client-dashboard'));
+              navigate(audience === 'driver' ? '/dashboard' : href('/client-dashboard'));
             }}
           />
         ) : (
