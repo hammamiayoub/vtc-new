@@ -71,7 +71,7 @@ export const TabBar: React.FC<TabBarProps> = ({ tabs, activeId, onChange, ariaLa
                   aria-current={active ? 'page' : undefined}
                   className={cn(
                     'focus-ring shrink-0 inline-flex items-center gap-2 min-h-[48px] py-4 px-3 sm:px-1 border-b-2',
-                    'text-sm sm:text-base font-medium whitespace-nowrap transition-colors',
+                    'text-sm sm:text-base font-medium whitespace-nowrap transition-colors duration-200 ease-out',
                     active
                       ? 'border-black text-black'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'

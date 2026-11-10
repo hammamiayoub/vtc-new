@@ -29,7 +29,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p className="mt-2 text-sm text-danger-600 font-medium">{error}</p>
+          <p className="mt-2 text-sm text-danger-600 font-medium animate-fade-in">{error}</p>
         )}
         {helperText && !error && (
           <p className="mt-2 text-sm text-gray-600">{helperText}</p>

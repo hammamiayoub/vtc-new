@@ -178,7 +178,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
                 {isMoreOpen && (
                   <div
                     role="menu"
-                    className="absolute left-0 top-full mt-2 w-48 overflow-hidden rounded-xl bg-white py-1 shadow-overlay animate-fade-in"
+                    className="absolute left-0 top-full mt-2 w-48 overflow-hidden rounded-xl bg-white py-1 shadow-overlay menu-pop"
                   >
                     <button
                       role="menuitem"
@@ -234,7 +234,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 flex flex-col bg-black animate-fade-in">
+        <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 flex flex-col bg-black menu-pop">
           <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-1">
             <button
               onClick={goToBooking}

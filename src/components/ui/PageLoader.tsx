@@ -10,7 +10,7 @@ export const PageLoader: React.FC<PageLoaderProps> = ({
   fullScreen = false,
 }) => (
   <div
-    className={`flex items-center justify-center ${
+    className={`flex items-center justify-center animate-fade-in ${
       fullScreen ? 'min-h-screen bg-gray-50' : 'min-h-[40vh] py-16'
     }`}
     role="status"
