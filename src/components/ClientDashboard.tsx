@@ -3,7 +3,7 @@ import { Badge } from './ui/Badge';
 import { TabBar } from './ui/TabBar';
 import { BookingStatusBadge } from './ui/StatusBadge';
 import { DashboardSkeleton, Skeleton, SkeletonRow } from './ui/Skeleton';
-import { MapPin, Clock, User, LogOut, UserCircle, Car, Plus, Package } from 'lucide-react';
+import { MapPin, Clock, User, LogOut, UserCircle, Car, Plus, Package, Phone, MessageSquare } from 'lucide-react';
 import { ParcelQuoteForm } from './ParcelQuoteForm';
 import { ParcelQuoteList } from './ParcelQuoteList';
 import { ParcelQuoteDetail } from './ParcelQuoteDetail';
@@ -762,7 +762,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
-                {bookings.map((booking) => (
+                {bookings.map((booking) => {
+                  const showDriverCard =
+                    (booking.status === 'accepted' ||
+                      booking.status === 'in_progress' ||
+                      booking.status === 'completed') &&
+                    !!booking.drivers;
+                  return (
                   <div key={booking.id} className="p-4 sm:p-6">
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -839,6 +845,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                           {en ? 'Booked on ' : 'Réservé le '}{new Date(booking.created_at).toLocaleDateString(dateLocale)}
                         </p>
                       </div>
+                      {!showDriverCard && (
                       <div className="lg:ml-4 flex-shrink-0">
                         {booking.drivers ? (
                           <div className="lg:text-right">
@@ -866,9 +873,49 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                           </div>
                         )}
                       </div>
+                      )}
                     </div>
+                    {showDriverCard && booking.drivers && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                        <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
+                          <User size={16} />
+                          {en ? 'Driver details' : 'Informations chauffeur'}
+                        </h4>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {booking.drivers.first_name} {booking.drivers.last_name}
+                            </p>
+                            {booking.drivers.phone && (
+                              <p className="text-sm text-gray-600">
+                                {en ? 'Tel:' : 'Tél:'} {booking.drivers.phone}
+                              </p>
+                            )}
+                          </div>
+                          {booking.drivers.phone && (
+                            <div className="flex gap-2">
+                              <a
+                                href={`tel:${booking.drivers.phone}`}
+                                className="focus-ring touch-target inline-flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                                title={en ? 'Call the driver' : 'Appeler le chauffeur'}
+                              >
+                                <Phone size={16} />
+                              </a>
+                              <a
+                                href={`sms:${booking.drivers.phone}`}
+                                className="focus-ring touch-target inline-flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                                title={en ? 'Send a text' : 'Envoyer un SMS'}
+                              >
+                                <MessageSquare size={16} />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

@@ -47,6 +47,7 @@ import { fetchRefusedDriverIds } from '../utils/booking/fetchRefusedDriverIds';
 import { mapSearchEntryToDriver } from '../utils/booking/mapSearchDriverToClient';
 import { DriverSearchFetchError, searchDriversForBooking } from '../utils/booking/searchDriversForBooking';
 import { DriverSearchResultCard } from './DriverSearchResultCard';
+import { formatVehicleType } from '../utils/vehicles';
 import type { PendingQuote } from '../utils/pendingQuote';
 import { useLocale } from '../i18n/locale';
 import { translateSignupMessage } from '../i18n/signupErrors';
@@ -98,6 +99,25 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableDrivers, setAvailableDrivers] = useState<Driver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const apply = () => {
+      const mobile = window.matchMedia('(max-width: 767px)').matches;
+      if (selectedDriver && mobile) {
+        root.style.setProperty('--td-selection-bar-offset', '11rem');
+      } else {
+        root.style.removeProperty('--td-selection-bar-offset');
+      }
+    };
+    apply();
+    const media = window.matchMedia('(max-width: 767px)');
+    media.addEventListener('change', apply);
+    return () => {
+      media.removeEventListener('change', apply);
+      root.style.removeProperty('--td-selection-bar-offset');
+    };
+  }, [selectedDriver]);
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
   const [estimatedDistance, setEstimatedDistance] = useState<number | null>(null);
   const [baseDistance, setBaseDistance] = useState<number | null>(null);
@@ -705,7 +725,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
 
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-0">
+    <div className={cn('max-w-4xl mx-auto px-4 sm:px-0', selectedDriver && 'max-md:pb-44')}>
       <div className="bg-white rounded-xl shadow-sm p-8">
         <div className="mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
@@ -1204,11 +1224,69 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             />
           </div>
 
+          {/* Rappel du chauffeur choisi, visible au moment de confirmer */}
+          {selectedDriverData && (
+            <div
+              className="max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-40 max-md:border-t max-md:border-gray-200 max-md:bg-white max-md:px-4 max-md:pt-3 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-md:shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:rounded-xl md:border-2 md:border-gray-900 md:bg-gray-50 md:p-4"
+              aria-live="polite"
+            >
+              <p className="text-xs font-medium text-gray-500 mb-2">
+                {en ? 'Selected driver' : 'Chauffeur choisi'}
+              </p>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                  {selectedDriverData.profilePhotoUrl ? (
+                    <img
+                      src={selectedDriverData.profilePhotoUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-5 h-5 text-gray-500" aria-hidden="true" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-gray-900 truncate">
+                    {selectedDriverData.firstName} {selectedDriverData.lastName}
+                  </p>
+                  <p className="text-sm text-gray-600 truncate">
+                    {selectedDriverData.vehicleInfo
+                      ? [selectedDriverData.vehicleInfo.make, selectedDriverData.vehicleInfo.model].filter(Boolean).join(' ')
+                        || formatVehicleType(selectedDriverData.vehicleInfo.type, locale)
+                      : (en ? 'Vehicle to be confirmed' : 'Véhicule à confirmer')}
+                    {estimatedPrice != null ? ` · ${estimatedPrice} TND` : ''}
+                  </p>
+                </div>
+                <CheckCircle className="w-5 h-5 text-gray-900 flex-shrink-0" aria-hidden="true" />
+              </div>
+              <Button
+                type="submit"
+                disabled={isSubmitting || !estimatedPrice || isShortTripBlockedForNonTaxi}
+                className="w-full md:hidden bg-black hover:bg-gray-800 text-white py-4 px-6 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    {en ? 'Booking…' : 'Réservation en cours...'}
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    {en ? `Confirm booking (${estimatedPrice} TND)` : `Confirmer la réservation (${estimatedPrice} TND)`}
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
           {/* Bouton de soumission */}
           <Button
             type="submit"
             disabled={isSubmitting || !selectedDriver || !estimatedPrice || isShortTripBlockedForNonTaxi}
-            className="w-full bg-black hover:bg-gray-800 text-white py-4 px-6 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className={cn(
+              'w-full bg-black hover:bg-gray-800 text-white py-4 px-6 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed',
+              selectedDriver && 'max-md:hidden',
+            )}
           >
             {isSubmitting ? (
               <>
