@@ -26,7 +26,11 @@
   }
 
   .uber-card {
-    @apply bg-white rounded-xl border border-surface-border transition-shadow duration-200 hover:shadow-card;
+    @apply bg-white rounded-xl border border-surface-border;
+    transition:
+      box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 200ms ease;
   }
 
   /* Anneau de focus uniforme, visible au clavier uniquement */
@@ -40,26 +44,79 @@
   }
 }
 
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes menu-pop {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes page-enter {
+  from { transform: translateY(8px); }
+  to { transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-shimmer,
   .animate-fade-in,
-  .animate-slide-up {
+  .animate-slide-up,
+  .menu-pop,
+  .page-enter {
     animation: none;
+  }
+
+  .reveal-section {
+    opacity: 1;
+    transform: none;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .reveal-section {
     opacity: 0;
-    transform: translateY(2rem);
+    transform: translateY(12px);
     transition:
-      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+      opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .reveal-section.is-visible {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  .page-enter {
+    animation: page-enter 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .menu-pop {
+    animation: menu-pop 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .uber-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+  }
+
+  .uber-card:active {
+    transform: translateY(0);
+  }
+
+  button:not(:disabled) {
+    transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: 180ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.98);
+  }
+
+  details > :not(summary) {
+    animation: fade-in 200ms ease-out;
   }
 }
 

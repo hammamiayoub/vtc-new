@@ -437,7 +437,9 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
             }}
           />
         ) : (
-          renderContent()
+          <div key={logicalPath} className="page-enter">
+            {renderContent()}
+          </div>
         )}
       </Suspense>
       {showChat && !signupCallback && currentView !== 'admin' && currentView !== 'admin-dashboard' && (

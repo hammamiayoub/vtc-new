@@ -2,7 +2,8 @@ import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Footer } from './Footer';
-import { SITE_URL } from '../utils/seo';
+import { SkeletonList } from './ui/Skeleton';
+import { applyBlogArticleSeo, removeJsonLd } from '../utils/seo';
 import {
   excerptFromContent,
   fetchPublishedBlogPostBySlug,
@@ -45,6 +46,7 @@ export const BlogPage: React.FC = () => {
   const en = locale === 'en';
   const slug = blogSlugFromPath(logicalPath);
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [listReady, setListReady] = useState(false);
   const [article, setArticle] = useState<BlogPost | null>(null);
   const [articleResolved, setArticleResolved] = useState(!slug);
 
@@ -54,6 +56,7 @@ export const BlogPage: React.FC = () => {
     if (!slug) {
       setArticle(null);
       setArticleResolved(true);
+      setListReady(false);
       void fetchPublishedBlogPosts()
         .then((rows) => {
           if (!cancelled) setPosts(rows);
@@ -61,6 +64,9 @@ export const BlogPage: React.FC = () => {
         .catch((err) => {
           console.error(err);
           if (!cancelled) setPosts([]);
+        })
+        .finally(() => {
+          if (!cancelled) setListReady(true);
         });
       return () => {
         cancelled = true;
@@ -92,24 +98,31 @@ export const BlogPage: React.FC = () => {
     loadSoroEmbed();
   }, [showSoro, location.pathname]);
 
-  useLayoutEffect(() => {
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      canonical.setAttribute('href', `${SITE_URL}${location.pathname}`);
-    }
-  }, [location.pathname]);
-
   useEffect(() => {
+    if (!slug) {
+      removeJsonLd('blog-posting');
+      return;
+    }
     if (!article) return;
-    document.title = `${article.title} | Blog TuniDrive`;
-  }, [article]);
+    applyBlogArticleSeo(
+      {
+        title: article.title,
+        description: excerptFromContent(article.content, 160),
+        imageUrl: article.image_url,
+        publishedAt: article.published_at,
+        updatedAt: article.updated_at,
+      },
+      locale,
+      logicalPath,
+    );
+  }, [article, locale, logicalPath, slug]);
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <main className="flex-1">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
           {article ? (
-            <article>
+            <article className="animate-fade-in">
               <Link
                 to={href('/blog')}
                 className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-6"
@@ -157,8 +170,10 @@ export const BlogPage: React.FC = () => {
                 </p>
               </header>
 
+              {!slug && !listReady && <SkeletonList count={3} className="mb-12" />}
+
               {posts.length > 0 && (
-                <section className="mb-12" aria-label={en ? 'TuniDrive articles' : 'Articles TuniDrive'}>
+                <section className="mb-12 animate-fade-in" aria-label={en ? 'TuniDrive articles' : 'Articles TuniDrive'}>
                   <div className="grid gap-6">
                     {posts.map((post) => (
                       <Link

@@ -14,7 +14,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       className={cn(
         'bg-white rounded-card border border-surface-border',
         interactive &&
-          'cursor-pointer transition-all duration-200 hover:shadow-card hover:-translate-y-0.5',
+          'cursor-pointer transition-all duration-200 ease-out-expo hover:shadow-card hover:-translate-y-0.5 motion-reduce:transform-none',
         {
           'p-0': padding === 'none',
           'p-4': padding === 'sm',

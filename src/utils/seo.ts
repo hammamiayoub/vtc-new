@@ -398,9 +398,82 @@ export const removeJsonLd = (id: string) => {
 };
 
 // Fonction pour mettre à jour les balises meta
+function isBlogArticlePath(logicalPath?: string): logicalPath is string {
+  return !!logicalPath && logicalPath.startsWith('/blog/') && logicalPath.length > '/blog/'.length;
+}
+
+export function blogArticleCanonicalPath(logicalPath: string, locale: Locale): string {
+  return locale === 'en' ? `/en${logicalPath}` : logicalPath;
+}
+
+/** Titre, description, URL canonique et données structurées d'un article. */
+export function applyBlogArticleSeo(
+  post: {
+    title: string;
+    description: string;
+    imageUrl?: string | null;
+    publishedAt?: string | null;
+    updatedAt?: string | null;
+  },
+  locale: Locale,
+  logicalPath: string,
+) {
+  const canonicalUrl = `${SITE_URL}${blogArticleCanonicalPath(logicalPath, locale)}`;
+  const title = `${post.title} | Blog TuniDrive`;
+  const image = post.imageUrl || DEFAULT_OG_IMAGE;
+
+  document.title = title;
+  setMetaContent('meta', 'name', 'description', post.description);
+  setMetaContent('meta', 'property', 'og:type', 'article');
+  setMetaContent('meta', 'property', 'og:url', canonicalUrl);
+  setMetaContent('meta', 'property', 'og:site_name', 'TuniDrive');
+  setMetaContent('meta', 'property', 'og:locale', locale === 'en' ? 'en_US' : 'fr_TN');
+  setMetaContent('meta', 'property', 'og:title', title);
+  setMetaContent('meta', 'property', 'og:description', post.description);
+  setMetaContent('meta', 'property', 'og:image', image);
+  setMetaContent('meta', 'property', 'twitter:card', 'summary_large_image');
+  setMetaContent('meta', 'property', 'twitter:url', canonicalUrl);
+  setMetaContent('meta', 'property', 'twitter:title', title);
+  setMetaContent('meta', 'property', 'twitter:description', post.description);
+  setMetaContent('meta', 'property', 'twitter:image', image);
+  setLinkRel(canonicalUrl);
+  setHreflang(logicalPath);
+
+  setJsonLd('blog-posting', {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.description,
+    inLanguage: 'fr',
+    mainEntityOfPage: canonicalUrl,
+    ...(post.publishedAt ? { datePublished: post.publishedAt } : {}),
+    ...(post.updatedAt ? { dateModified: post.updatedAt } : {}),
+    image,
+    author: { '@type': 'Organization', name: 'TuniDrive', url: SITE_URL },
+    publisher: {
+      '@type': 'Organization',
+      name: 'TuniDrive',
+      url: SITE_URL,
+      logo: { '@type': 'ImageObject', url: DEFAULT_OG_IMAGE },
+    },
+  });
+}
+
 export const updateSEO = (pageKey: string, locale: Locale = 'fr', logicalPath?: string) => {
   const seo = (locale === 'en' ? seoDataEn[pageKey] : undefined) ?? seoData[pageKey];
   if (!seo) return;
+
+  if (isBlogArticlePath(logicalPath)) {
+    const canonicalUrl = `${SITE_URL}${blogArticleCanonicalPath(logicalPath, locale)}`;
+    setLinkRel(canonicalUrl);
+    setMetaContent('meta', 'property', 'og:url', canonicalUrl);
+    setMetaContent('meta', 'property', 'twitter:url', canonicalUrl);
+    setHreflang(logicalPath);
+    removeJsonLd('faq-page');
+    return;
+  }
+
+  removeJsonLd('blog-posting');
 
   const canonicalUrl = seo.canonical
     ? `${SITE_URL}${seo.canonical}`
@@ -441,7 +514,7 @@ export const updateSEO = (pageKey: string, locale: Locale = 'fr', logicalPath?: 
   setMetaContent('meta', 'property', 'twitter:image', ogImage);
 
   setLinkRel(canonicalUrl);
-  if (logicalPath) setHreflang(logicalPath.startsWith('/blog/') ? '/blog' : logicalPath);
+  if (logicalPath) setHreflang(logicalPath);
 
   if (pageKey === 'parcel-transport') {
     setFaqJsonLd(getParcelFaqItems(locale));

@@ -21,7 +21,7 @@ export const Alert: React.FC<AlertProps> = ({ tone = 'info', title, className, c
   return (
     <div
       role={tone === 'danger' ? 'alert' : 'status'}
-      className={cn('flex gap-3 rounded-control border p-4 text-body-sm', box, className)}
+      className={cn('flex gap-3 rounded-control border p-4 text-body-sm animate-fade-in', box, className)}
       {...props}
     >
       <Icon className={cn('h-5 w-5 shrink-0 mt-0.5', iconClass)} aria-hidden="true" />
