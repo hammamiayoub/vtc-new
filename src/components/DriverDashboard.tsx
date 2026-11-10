@@ -1666,7 +1666,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
                               <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-success-600">{booking.pricetnd} TND</span>
+                              <span className="font-bold text-success-600">{booking.price_tnd} TND</span>
                             </div>
                           </div>
                         </div>
@@ -1700,6 +1700,44 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           )}
                         </div>
                       </div>
+                      {booking.clients && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                          <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
+                            <User size={16} />
+                            Informations client
+                          </h4>
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {booking.clients.first_name} {booking.clients.last_name}
+                              </p>
+                              {booking.clients.phone && (
+                                <p className="text-sm text-gray-600">
+                                  Tél: {booking.clients.phone}
+                                </p>
+                              )}
+                            </div>
+                            {booking.clients.phone && (
+                              <div className="flex gap-2">
+                                <a
+                                  href={`tel:${booking.clients.phone}`}
+                                  className="focus-ring touch-target inline-flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                                  title="Appeler le client"
+                                >
+                                  <Phone size={16} />
+                                </a>
+                                <a
+                                  href={`sms:${booking.clients.phone}`}
+                                  className="focus-ring touch-target inline-flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                                  title="Envoyer un SMS"
+                                >
+                                  <MessageSquare size={16} />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
