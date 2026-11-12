@@ -434,7 +434,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&countrycodes=tn`
       );
-
+      
       if (response.ok) {
         const data = await response.json();
         setValue('pickupAddress', data.display_name);
@@ -461,24 +461,24 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       );
       return;
     }
-
+    
     const scheduledTime = watch('scheduledTime');
     if (!scheduledTime) {
       setFormError('Veuillez d\'abord sélectionner une date et heure de départ');
       return;
     }
-
-    const selectedVehicleType = watch('vehicleType');
+    
+      const selectedVehicleType = watch('vehicleType');
     if (!selectedVehicleType) {
       setFormError('Veuillez sélectionner un type de véhicule');
-      return;
-    }
-
+        return;
+      }
+      
     setFormError(null);
     setIsSearchingDrivers(true);
     setShowDrivers(false);
     setSelectedDriver(null);
-    setAvailableDrivers([]);
+        setAvailableDrivers([]);
     setDriversSearchRefusalsExcluded(false);
 
     try {
@@ -632,13 +632,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             const response = await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`,
               {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  bookingData: booking,
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bookingData: booking,
                   clientData: withIds ? { ...clientData, id: clientId } : clientData,
                   driverData: withIds ? { ...driverData, id: selectedEntry.id } : driverData,
                 }),
@@ -664,7 +664,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               console.log('✅ Emails envoyés via resend-email (sans push chauffeur)');
             } else {
               console.error('❌ Erreur envoi emails:', notification.result?.error);
-              // Ne pas faire échouer la réservation si les emails échouent
+            // Ne pas faire échouer la réservation si les emails échouent
             }
           }
         } else {
@@ -959,16 +959,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                   {en ? 'Trip estimate' : 'Estimation du trajet'}
                 </h3>
 
-                {vipMultiplier > 1 && (
+              {vipMultiplier > 1 && (
                   <div className="mb-4 rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
                     {en ? (
                       <>This vehicle is marked <strong>VIP</strong>: the fare is higher than a standard vehicle.</>
                     ) : (
                       <>Ce véhicule est marqué <strong>VIP</strong> : le prix est plus élevé qu’un véhicule classique.</>
                     )}
-                  </div>
-                )}
-                {isShortTripBlockedForNonTaxi && (
+                </div>
+              )}
+              {isShortTripBlockedForNonTaxi && (
                   <div className="mb-4 flex items-start gap-2 rounded-lg border border-warning-300 bg-warning-50 px-4 py-3 text-sm text-warning-900">
                     <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-warning-600" />
                     <p>
@@ -978,12 +978,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                         </>
                       ) : (
                         <>
-                          La distance aller ({baseDistance} km) est inférieure à {SHORT_TRIP_NON_TAXI_WARNING_KM} km pour ce type de véhicule. Augmentez la distance du trajet ou choisissez le type <strong>Taxi</strong> pour les courses courtes.
+                    La distance aller ({baseDistance} km) est inférieure à {SHORT_TRIP_NON_TAXI_WARNING_KM} km pour ce type de véhicule. Augmentez la distance du trajet ou choisissez le type <strong>Taxi</strong> pour les courses courtes.
                         </>
                       )}
-                    </p>
-                  </div>
-                )}
+                  </p>
+                </div>
+              )}
 
                 <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
                   <div>
@@ -992,7 +992,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                       {watchIsReturnTrip && (en ? ' · with return' : ' · avec retour')}
                     </p>
                     <p className="text-4xl font-bold tracking-tight text-gray-900">{estimatedPrice} TND</p>
-                  </div>
+                </div>
                   <p className="flex items-center gap-2 pb-1 text-sm text-gray-600">
                     <Route size={16} className="text-gray-500" aria-hidden="true" />
                     {formatKm(estimatedDistance, en, 2)}
@@ -1018,16 +1018,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                     <p className="mb-2 text-sm text-gray-600">
                       {en ? 'Billed distance: ' : 'Distance facturée : '}
                       <span className="font-medium text-gray-900">
-                        {watchIsReturnTrip
+                            {watchIsReturnTrip
                           ? `${oneWayBillable.toFixed(0)} km × 2`
                           : formatKm(effectiveDistance, en, 0)}
-                      </span>
+                              </span>
                       {minimumDistanceApplied && (
                         <span className="mt-0.5 block text-xs text-gray-400">
                           {en
                             ? `Actual distance ${formatKm(rawOneWay, en)}: the ${oneWayBillable.toFixed(0)} km minimum applies to this vehicle.`
                             : `Distance réelle ${formatKm(rawOneWay, en)} : le minimum de ${oneWayBillable.toFixed(0)} km s’applique à ce véhicule.`}
-                        </span>
+                                </span>
                       )}
                     </p>
 
@@ -1051,7 +1051,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                           value={formatTnd(pricing.subtotal, en)}
                         />
                       )}
-                      {vehicleMultiplier > 1 && (
+                            {vehicleMultiplier > 1 && (
                         <DetailRow
                           label={`${en ? 'Vehicle' : 'Véhicule'} (${vehicleTypeName})`}
                           value={`×${String(vehicleMultiplier).replace('.', en ? '.' : ',')}`}
@@ -1091,12 +1091,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                         />
                       )}
                       <DetailRow strong label={en ? 'Total' : 'Total'} value={`${estimatedPrice} TND`} />
-                    </div>
-                  </div>
+                            </div>
+                          </div>
                 </details>
-              </div>
-            );
-          })()}
+                        </div>
+                      );
+                    })()}
 
           
           {/* Date et heure */}
@@ -1207,9 +1207,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                   })}
                 </div>
               )}
-            </div>
-          )}
-
+                        </div>
+                      )}
+                      
           {/* Notes optionnelles */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1239,13 +1239,13 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                     <img
                       src={selectedDriverData.profilePhotoUrl}
                       alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
                     <User className="w-5 h-5 text-gray-500" aria-hidden="true" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
+                          )}
+                        </div>
+                            <div className="min-w-0 flex-1">
                   <p className="font-semibold text-gray-900 truncate">
                     {selectedDriverData.firstName} {selectedDriverData.lastName}
                   </p>
@@ -1256,9 +1256,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                       : (en ? 'Vehicle to be confirmed' : 'Véhicule à confirmer')}
                     {estimatedPrice != null ? ` · ${estimatedPrice} TND` : ''}
                   </p>
-                </div>
+                          </div>
                 <CheckCircle className="w-5 h-5 text-gray-900 flex-shrink-0" aria-hidden="true" />
-              </div>
+                          </div>
               <Button
                 type="submit"
                 disabled={isSubmitting || !estimatedPrice || isShortTripBlockedForNonTaxi}

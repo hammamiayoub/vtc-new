@@ -17,6 +17,7 @@ import {
 import { LanguageSwitch, LocaleProvider, localizePath, splitLocalePath, useLocale } from './i18n/locale';
 import { EmailConfirmedNotice } from './components/EmailConfirmedNotice';
 import { readSignupCallback } from './utils/signupCallback';
+import { consumeAppSignInLink } from './utils/appSignIn';
 
 const DriverSignup = lazy(() =>
   import('./components/DriverSignup').then((m) => ({ default: m.DriverSignup }))
@@ -188,6 +189,9 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
 
     const bootstrapAuth = async () => {
       try {
+        // Lien de connexion ouvert depuis l'application mobile : session créée avant tout contrôle.
+        await consumeAppSignInLink();
+
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (cancelled) return;
