@@ -54,7 +54,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const [completingParcelRequestId, setCompletingParcelRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProfileForm, setShowProfileForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'vehicles' | 'bookings' | 'subscription' | 'parcel-requests'>('dashboard');
+  // `?tab=subscription` : ouverture directe depuis l'application mobile (« Suivi de souscription »).
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'availability' | 'vehicles' | 'bookings' | 'subscription' | 'parcel-requests'>(
+    () => (new URLSearchParams(window.location.search).get('tab') === 'subscription' ? 'subscription' : 'dashboard')
+  );
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<{
