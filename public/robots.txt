@@ -3,5 +3,8 @@ Allow: /
 
 Sitemap: https://tunidrive.net/sitemap.xml
 
+# Catalogue des ressources pour les agents (spécification ARD)
+Agentmap: https://tunidrive.net/.well-known/ard.json
+
 # Fichier d'aide pour les agents IA (convention llms.txt)
 # https://llmstxt.org/

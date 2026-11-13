@@ -17,7 +17,11 @@ function formatReviewDate(iso: string, locale: 'fr' | 'en'): string {
 
 function StarRating({ rating, en }: { rating: number; en: boolean }) {
   return (
-    <div className="flex items-center gap-0.5" aria-label={en ? `${rating} out of 5 stars` : `${rating} sur 5 étoiles`}>
+    <div
+      role="img"
+      className="flex items-center gap-0.5"
+      aria-label={en ? `${rating} out of 5 stars` : `${rating} sur 5 étoiles`}
+    >
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}

@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {
+      "identifier": "urn:air:tunidrive.net:guide",
+      "displayName": "TuniDrive",
+      "type": "application/llms-txt+markdown",
+      "url": "https://tunidrive.net/llms.txt",
+      "description": "Guide public de TuniDrive : VTC, chauffeur privé, transfert aéroport et transport de colis en Tunisie.",
+      "representativeQueries": [
+        "réserver un chauffeur privé en Tunisie",
+        "transfert aéroport Tunis-Carthage",
+        "transport de groupe pour un séjour en Tunisie",
+        "envoyer un colis entre l'Europe et la Tunisie"
+      ]
+    }
+  ]
+}

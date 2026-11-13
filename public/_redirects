@@ -3,6 +3,8 @@
 /sitemap.xml      /sitemap.xml      200
 /BingSiteAuth.xml /BingSiteAuth.xml 200
 /llms.txt         /llms.txt         200
+/.well-known/ard.json        /.well-known/ard.json        200
+/.well-known/ai-catalog.json /.well-known/ai-catalog.json 200
 /favicon.ico      /favicon.ico      200
 /tunidrive-logo.png  /tunidrive-logo.png  200
 
