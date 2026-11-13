@@ -28,6 +28,7 @@ import { useClientNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { AppDownloadModal } from './AppDownloadModal';
 import { LanguageSwitch, useLocale } from '../i18n/locale';
+import { isTuniDriveAppVisit } from '../utils/tunidriveApp';
 import {
   clearPendingQuote,
   getPendingQuote,
@@ -111,7 +112,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
     if (typeof window === 'undefined') return;
     const flagKey = 'td_app_modal_shown_session';
     const alreadyShown = window.sessionStorage.getItem(flagKey) === '1';
-    if (alreadyShown) return;
+    if (alreadyShown || isTuniDriveAppVisit()) return;
     const t = setTimeout(() => {
       setIsDownloadOpen(true);
       window.sessionStorage.setItem(flagKey, '1');

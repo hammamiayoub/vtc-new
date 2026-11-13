@@ -26,6 +26,7 @@ import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
 import { useLocale } from '../i18n/locale';
 import { RevealSection } from './ui/RevealSection';
+import { isTuniDriveAppVisit } from '../utils/tunidriveApp';
 
 interface HomePageProps {
   onGetStarted: () => void;
@@ -128,7 +129,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     if (typeof window === 'undefined') return;
     const flagKey = 'td_app_modal_shown_session';
     const alreadyShown = window.sessionStorage.getItem(flagKey) === '1';
-    if (alreadyShown) return;
+    if (alreadyShown || isTuniDriveAppVisit()) return;
     const t = setTimeout(() => {
       setIsDownloadOpen(true);
       window.sessionStorage.setItem(flagKey, '1');

@@ -27,6 +27,7 @@ import { Driver, Booking, DriverAcceptedParcelTrip } from '../types';
 import { fetchDriverAcceptedParcelTrips, completeParcelDelivery } from '../utils/parcelService';
 import { DriverParcelTripCard } from './DriverParcelTripCard';
 import { AppDownloadModal } from './AppDownloadModal';
+import { isTuniDriveAppVisit } from '../utils/tunidriveApp';
 
 interface DriverDashboardProps {
   onLogout: () => void;
@@ -123,7 +124,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     if (typeof window === 'undefined') return;
     const flagKey = 'td_app_modal_shown_session';
     const alreadyShown = window.sessionStorage.getItem(flagKey) === '1';
-    if (alreadyShown) return;
+    if (alreadyShown || isTuniDriveAppVisit()) return;
     const t = setTimeout(() => {
       setIsDownloadOpen(true);
       window.sessionStorage.setItem(flagKey, '1');
