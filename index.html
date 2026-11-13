@@ -44,6 +44,14 @@
         if (window.__tdThirdPartyLoaded) return;
         window.__tdThirdPartyLoaded = true;
 
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        gtag('js', new Date());
+
+        var gtmScript = document.createElement('script');
+        gtmScript.async = true;
+        gtmScript.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-NHMBCDFV';
+        document.head.appendChild(gtmScript);
+
         var gtagScript = document.createElement('script');
         gtagScript.async = true;
         gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17599907390';
