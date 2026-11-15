@@ -115,11 +115,11 @@ export const RatingModal: React.FC<RatingModalProps> = ({
   if (submitSuccess) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+        <div className="bg-white rounded-2xl shadow-card max-w-md w-full p-8 text-center">
           <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={32} className="text-success-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
             {en ? 'Thank you for your review!' : 'Merci pour votre avis !'}
           </h2>
           <p className="text-gray-600 mb-6">
@@ -149,7 +149,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-card max-w-lg w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -158,7 +158,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
                 <Star className="w-6 h-6 text-gray-700" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{en ? 'Rate your driver' : 'Noter votre chauffeur'}</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">{en ? 'Rate your driver' : 'Noter votre chauffeur'}</h2>
                 <p className="text-gray-600">{en ? 'Share your experience' : 'Partagez votre expérience'}</p>
               </div>
             </div>

@@ -31,7 +31,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Shield size={40} className="text-gray-700" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl font-semibold text-gray-900 mb-4">
               Privacy policy
             </h1>
             <p className="text-xl text-gray-600">
@@ -54,7 +54,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Eye size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">1. Data we collect</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">1. Data we collect</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -111,7 +111,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <FileText size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">2. Why we use the data</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">2. Why we use the data</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -159,7 +159,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Users size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">3. Sharing data</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">3. Sharing data</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -198,7 +198,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Calendar size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">4. How long we keep data</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">4. How long we keep data</h2>
               </div>
 
               <div className="space-y-4">
@@ -226,7 +226,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Lock size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">5. Security</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">5. Security</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -259,7 +259,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Eye size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">6. Cookies</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">6. Cookies</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -292,7 +292,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Shield size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">7. Your rights</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">7. Your rights</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -333,7 +333,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Package size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">8. Data related to parcel transport</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">8. Data related to parcel transport</h2>
               </div>
 
               <ul className="space-y-3">
@@ -365,7 +365,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <FileText size={24} className="text-gray-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">9. Changes to this policy</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">9. Changes to this policy</h2>
               </div>
 
               <div className="space-y-4">
@@ -383,7 +383,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Mail size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">10. Contact</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">10. Contact</h2>
               </div>
 
               <p className="text-gray-700 mb-4">

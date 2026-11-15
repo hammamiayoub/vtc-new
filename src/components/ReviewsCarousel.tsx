@@ -155,7 +155,7 @@ export const ReviewsCarousel: React.FC = () => {
                 key={`dot-${review.createdAt}-${index}`}
                 type="button"
                 onClick={() => goTo(index)}
-                className={`h-2 rounded-full transition-all ${
+                className={`h-2 rounded-full transition-[width,background-color] ${
                   index === activeIndex ? 'w-6 bg-gray-900' : 'w-2 bg-gray-300 hover:bg-gray-400'
                 }`}
                 aria-label={en ? `Go to review ${index + 1}` : `Aller à l'avis ${index + 1}`}

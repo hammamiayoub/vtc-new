@@ -21,7 +21,7 @@ export const LoginSelection: React.FC<LoginSelectionProps> = ({
 
   return (
     <div className="min-h-[100dvh] bg-gray-50 flex items-start sm:items-center justify-center p-4 sm:p-6 py-6 overflow-y-auto">
-      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden max-w-3xl w-full my-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-card overflow-hidden max-w-3xl w-full my-auto">
         <div className="p-5 sm:p-8 lg:p-10">
           <button
             onClick={onBack}
@@ -35,7 +35,7 @@ export const LoginSelection: React.FC<LoginSelectionProps> = ({
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <LogIn size={32} className="text-gray-700" />
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 mb-2 sm:mb-3 tracking-tight">
               {en ? 'Log in' : 'Connexion'}
             </h1>
             <p className="text-gray-600 text-base sm:text-lg">
@@ -45,7 +45,7 @@ export const LoginSelection: React.FC<LoginSelectionProps> = ({
 
           <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
             <div
-              className="border border-gray-200 rounded-2xl p-6 sm:p-8 hover:border-gray-400 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+              className="border border-gray-200 rounded-2xl p-6 sm:p-8 hover:border-gray-400 hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
               onClick={onClientLogin}
             >
               <div className="text-center">
@@ -68,7 +68,7 @@ export const LoginSelection: React.FC<LoginSelectionProps> = ({
             </div>
 
             <div
-              className="border border-gray-200 rounded-2xl p-6 sm:p-8 hover:border-gray-400 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+              className="border border-gray-200 rounded-2xl p-6 sm:p-8 hover:border-gray-400 hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
               onClick={onDriverLogin}
             >
               <div className="text-center">

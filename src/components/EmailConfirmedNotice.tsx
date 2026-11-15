@@ -36,7 +36,7 @@ export const EmailConfirmedNotice: React.FC<EmailConfirmedNoticeProps> = ({
 
   return (
     <div className="min-h-[100dvh] bg-gray-50 flex items-start sm:items-center justify-center p-4 sm:p-6 py-10">
-      <div className="bg-white rounded-2xl shadow-lg max-w-lg w-full p-6 sm:p-10 text-center">
+      <div className="bg-white rounded-2xl shadow-card max-w-lg w-full p-6 sm:p-10 text-center">
         <div
           className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 ${
             confirmed ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
@@ -44,7 +44,7 @@ export const EmailConfirmedNotice: React.FC<EmailConfirmedNoticeProps> = ({
         >
           {confirmed ? <CheckCircle size={32} aria-hidden="true" /> : <AlertCircle size={32} aria-hidden="true" />}
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4">
           {confirmed
             ? en
               ? 'Your account is confirmed'

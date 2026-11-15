@@ -19,7 +19,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            'flex h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base transition-all duration-200',
+            'flex h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base transition-colors duration-200',
             'placeholder:text-gray-500 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10',
             'disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-danger-500 focus:border-danger-500 focus:ring-danger-500/10',

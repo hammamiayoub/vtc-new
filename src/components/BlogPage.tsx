@@ -137,7 +137,7 @@ export const BlogPage: React.FC = () => {
                   className="w-full max-h-[420px] object-cover rounded-2xl mb-6"
                 />
               )}
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-3 tracking-tight">
                 {article.title}
               </h1>
               <div className="flex flex-wrap items-center gap-3 mb-8">
@@ -160,7 +160,7 @@ export const BlogPage: React.FC = () => {
           ) : (
             <>
               <header className="mb-8 text-center">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+                <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-3 tracking-tight">
                   Blog TuniDrive
                 </h1>
                 <p className="text-gray-600 max-w-2xl mx-auto">

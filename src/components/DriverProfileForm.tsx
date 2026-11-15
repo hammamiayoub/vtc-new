@@ -86,7 +86,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
         <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle size={40} className="text-success-600" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-4">
           Profil complété !
         </h2>
         <p className="text-gray-600 mb-6">
@@ -100,7 +100,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
   return (
     <div className="bg-white rounded-xl shadow-sm p-8">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
           Complétez votre profil
         </h2>
         <p className="text-gray-600">Ajoutez vos informations personnelles.</p>
@@ -129,7 +129,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
                     setValue('phone', normalized, { shouldValidate: true });
                   }
                 }}
-                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors ${
                   errors.phone ? 'border-danger-500' : 'border-gray-300'
                 }`}
               />
@@ -153,7 +153,7 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
                 {...register('licenseNumber')}
                 type="text"
                 placeholder="Numéro de permis de conduire"
-                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors ${
                   errors.licenseNumber ? 'border-danger-500' : 'border-gray-300'
                 }`}
               />

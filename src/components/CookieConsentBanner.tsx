@@ -70,7 +70,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
       aria-describedby="cookie-consent-description"
     >
       <div className="page-container pointer-events-auto">
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-card overflow-hidden">
           <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4 bg-gray-50 border-b border-gray-100">
             <div className="flex items-start gap-3 min-w-0">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-black flex items-center justify-center">
@@ -79,7 +79,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
               <div className="min-w-0">
                 <h2
                   id="cookie-consent-title"
-                  className="text-base sm:text-lg font-bold text-gray-900 leading-snug"
+                  className="text-base sm:text-lg font-semibold text-gray-900 leading-snug"
                 >
                   {en ? 'This site uses cookies' : 'Ce site utilise des cookies'}
                 </h2>

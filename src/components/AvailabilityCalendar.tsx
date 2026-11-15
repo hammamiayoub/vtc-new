@@ -476,7 +476,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ driv
                   onClick={() => handleDayClick(day)}
                   disabled={isPast}
                   className={`
-                    relative p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200 min-h-[2.5rem] sm:min-h-[3rem] w-full
+                    relative p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-colors duration-200 min-h-[2.5rem] sm:min-h-[3rem] w-full
                     ${day.isCurrentMonth ? 'bg-gray-50 hover:bg-gray-100' : 'bg-white text-gray-400'}
                     ${isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                     ${isCurrentDay && day.isCurrentMonth ? 'bg-gray-100 font-semibold' : ''}

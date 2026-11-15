@@ -65,7 +65,7 @@ export const DriverParcelTripCard: React.FC<DriverParcelTripCardProps> = ({
               <span className="font-medium text-gray-900">{request.arrivalAddress}</span>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-              <span className="font-bold text-success-600">
+              <span className="font-semibold text-success-600">
                 {trip.price} {trip.currency}
               </span>
               {trip.estimatedDeliveryDate && (

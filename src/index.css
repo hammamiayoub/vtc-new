@@ -10,6 +10,10 @@
   body {
     @apply font-sans text-gray-900 bg-white;
   }
+
+  ::selection {
+    @apply bg-brand-muted text-brand;
+  }
 }
 
 @layer components {
@@ -18,7 +22,7 @@
   }
 
   .page-heading {
-    @apply text-3xl sm:text-4xl font-bold tracking-tight text-gray-900;
+    @apply text-3xl sm:text-4xl font-semibold tracking-tight text-gray-900;
   }
 
   .page-subheading {

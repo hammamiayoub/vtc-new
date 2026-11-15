@@ -95,7 +95,7 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
 
   return (
     <div className="min-h-[100dvh] bg-gray-50 flex items-start sm:items-center justify-center p-4 sm:p-6 py-6 sm:py-8 overflow-y-auto">
-      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden max-w-md w-full my-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-card overflow-hidden max-w-md w-full my-auto">
         <div className="p-5 sm:p-8 lg:p-10">
           <button
             onClick={onBack}
@@ -110,7 +110,7 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
               <MapPin size={28} className="sm:hidden text-gray-700" />
               <MapPin size={36} className="hidden sm:block text-gray-700" />
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 mb-2 sm:mb-3 tracking-tight">
               {en ? 'Rider login' : 'Connexion client'}
             </h1>
             <p className="text-gray-600 text-base sm:text-lg">
@@ -142,7 +142,7 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={en ? 'Email address' : 'Adresse email'}
-                className="block w-full pl-10 pr-3 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
+                className="block w-full pl-10 pr-3 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-colors text-base"
                 required
               />
             </div>
@@ -157,7 +157,7 @@ export const ClientLogin: React.FC<ClientLoginProps> = ({ onBack, onSignup, onLo
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={en ? 'Password' : 'Mot de passe'}
-                className="block w-full pl-10 pr-12 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-base"
+                className="block w-full pl-10 pr-12 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-colors text-base"
                 required
               />
               <button

@@ -42,10 +42,10 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
       <section className="bg-gray-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="max-w-4xl">
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+            <p className="text-sm font-medium text-gray-500 mb-3">
               {en ? 'Tunisia · Private driver' : 'VTC Tunisie · Chauffeur privé'}
             </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-gray-900 mb-6 leading-tight tracking-tight">
               {en
                 ? 'Private driver in Tunisia — book online'
                 : 'VTC Tunisie — Réservez votre chauffeur privé en ligne'}
@@ -93,7 +93,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
       {/* Services ciblés SEO */}
       <RevealSection className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4 text-center">
             {en ? 'Private driver services in Tunisia' : 'Nos services VTC en Tunisie'}
           </h2>
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">
@@ -130,7 +130,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 justify-center mb-4">
             <Plane className="text-gray-700" size={28} />
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center">
+            <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 text-center">
               {en ? 'Airport transfer in Tunisia' : 'Transfert aéroport Tunisie'}
             </h2>
           </div>
@@ -178,7 +178,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Users className="text-gray-700" size={24} />
-                <h2 className="text-3xl font-bold text-gray-900">
+                <h2 className="text-3xl font-semibold text-gray-900">
                   {en ? 'Group transport in Tunisia' : 'Transport collectif Tunisie'}
                 </h2>
               </div>
@@ -222,7 +222,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
               </ul>
             </div>
             <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
                 {en ? 'Why book on TuniDrive?' : 'Pourquoi réserver sur TuniDrive ?'}
               </h2>
               <div className="space-y-5">
@@ -259,7 +259,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
       {/* FAQ visible (rich snippets) */}
       <RevealSection id="faq-vtc" className="py-16 md:py-20 bg-gray-50 border-t border-gray-100">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          <h2 className="text-3xl font-semibold text-gray-900 mb-8 text-center">
             {en ? 'Frequently asked questions — private driver' : 'Questions fréquentes — VTC & chauffeur privé'}
           </h2>
           <div className="space-y-4">
@@ -286,7 +286,7 @@ export const VtcTunisiePage: React.FC<VtcTunisiePageProps> = ({ onClientLogin })
       {/* CTA */}
       <RevealSection className="py-16 bg-black text-white">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
+          <h2 className="text-3xl font-semibold mb-4">
             {en ? 'Book your private driver now' : 'Réservez votre VTC ou votre chauffeur privé maintenant'}
           </h2>
           <p className="text-gray-300 mb-8">

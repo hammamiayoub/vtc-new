@@ -122,7 +122,7 @@ export const ParcelAttachmentsGallery: React.FC<ParcelAttachmentsGalleryProps> =
               <img
                 src={lightbox.photoUrl}
                 alt=""
-                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-overlay"
               />
             )}
 

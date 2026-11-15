@@ -181,7 +181,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
           <Package className="text-gray-700" size={20} />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900">
             {en ? 'International parcel transport' : 'Transport international de colis'}
           </h2>
           <p className="text-sm text-gray-600">

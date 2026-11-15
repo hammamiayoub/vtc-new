@@ -75,13 +75,13 @@ function smallTalk(query: string, en: boolean): string | null {
   if (q.length > 24) return null;
   if (/^(bonjour|bonsoir|salut|salam|coucou|hello|hi|hey|good morning|good evening)( .*)?$/.test(q)) {
     return en
-      ? 'Hello! How can I help you? Ask a question or pick a topic below.'
-      : 'Bonjour ! Comment puis-je vous aider ? Posez votre question ou choisissez un sujet ci-dessous.';
+      ? 'Hello. How can I help you? Ask a question or pick a topic below.'
+      : 'Bonjour. Comment puis-je vous aider ? Posez votre question ou choisissez un sujet ci-dessous.';
   }
   if (/^(merci|merci beaucoup|thanks|thank you|thx|chokran|shokran)( .*)?$/.test(q)) {
     return en
-      ? 'You are welcome! Is there anything else I can help with?'
-      : 'Avec plaisir ! Puis-je vous aider sur autre chose ?';
+      ? 'You’re welcome. Is there anything else I can help with?'
+      : 'Avec plaisir. Puis-je vous aider sur autre chose ?';
   }
   return null;
 }
@@ -140,7 +140,7 @@ export const ChatWidget: React.FC = () => {
 
   const greeting = en
     ? 'Hello, I am the TuniDrive assistant.\n\nAsk a question below (fares, airport, parcels, driver…) or choose a category.'
-    : "Bonjour ! Je suis l'assistant TuniDrive.\n\nPosez votre question ci-dessous (tarifs, aéroport, colis, chauffeur…) ou choisissez une catégorie.";
+    : "Bonjour. Je suis l'assistant TuniDrive.\n\nPosez votre question ci-dessous (tarifs, aéroport, colis, chauffeur…) ou choisissez une catégorie.";
 
   const [isOpen, setIsOpen] = useState(false);
   const [screen, setScreen] = useState<Screen>('categories');
@@ -363,8 +363,8 @@ export const ChatWidget: React.FC = () => {
     if (helpful) {
       botReply(
         en
-          ? 'Glad I could help! You can ask another question anytime.'
-          : "Ravi d'avoir pu vous aider ! Vous pouvez poser une autre question à tout moment.",
+          ? 'Glad I could help. You can ask another question anytime.'
+          : "Ravi d'avoir pu vous aider. Vous pouvez poser une autre question à tout moment.",
         undefined,
         350,
       );
@@ -421,7 +421,7 @@ export const ChatWidget: React.FC = () => {
         style={{ bottom: CHAT_FLOAT_BOTTOM }}
       >
         {!isOpen && showTeaser && (
-          <div className="relative max-w-[220px] animate-slide-up rounded-2xl border border-gray-200 bg-white py-2.5 pl-4 pr-9 text-sm text-gray-800 shadow-lg">
+          <div className="relative max-w-[220px] animate-slide-up rounded-2xl border border-gray-200 bg-white py-2.5 pl-4 pr-9 text-sm text-gray-800 shadow-card">
             <button
               type="button"
               onClick={() => setShowTeaser(false)}
@@ -438,7 +438,7 @@ export const ChatWidget: React.FC = () => {
         <button
           ref={launcherRef}
           onClick={isOpen ? handleClose : handleOpen}
-          className="focus-ring relative flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-xl transition-all duration-200 hover:scale-105 hover:bg-gray-800"
+          className="focus-ring relative flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-card transition-colors duration-200 hover:bg-gray-800"
           aria-label={isOpen ? (en ? 'Close chat' : 'Fermer le chat') : en ? 'Open help chat' : "Ouvrir le chat d'aide"}
           aria-expanded={isOpen}
         >
@@ -549,7 +549,7 @@ export const ChatWidget: React.FC = () => {
               <div className="mt-4 space-y-2">
                 {screen === 'categories' && (
                   <>
-                    <p className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    <p className="px-1 text-xs font-semibold text-gray-500">
                       {en ? 'Suggested for you' : 'Suggestions pour vous'}
                     </p>
                     {quickSuggestions.map((entry) => (
@@ -558,7 +558,7 @@ export const ChatWidget: React.FC = () => {
                         <ChevronRight size={14} className="flex-shrink-0 text-gray-400 group-hover:text-gray-600" />
                       </button>
                     ))}
-                    <p className="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    <p className="px-1 pt-2 text-xs font-semibold text-gray-500">
                       {en ? 'Browse by topic' : 'Parcourir par sujet'}
                     </p>
                     <div className="grid grid-cols-2 gap-2">
@@ -648,7 +648,7 @@ export const ChatWidget: React.FC = () => {
                     )}
                     {relatedEntries.length > 0 && (
                       <>
-                        <p className="px-1 pt-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <p className="px-1 pt-1 text-xs font-semibold text-gray-500">
                           {en ? 'Related questions' : 'Questions liées'}
                         </p>
                         {relatedEntries.map((entry) => (

@@ -217,12 +217,12 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
   if (submitSuccess) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
-          <div className="w-24 h-24 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+        <div className="bg-white rounded-2xl shadow-card p-8 max-w-lg w-full text-center">
+          <div className="w-24 h-24 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={48} className="text-success-600" />
           </div>
           
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">{en ? 'Signup complete' : 'Inscription réussie'}</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 mb-6">{en ? 'Signup complete' : 'Inscription réussie'}</h1>
           
           <div className="bg-gray-50 border-l-4 border-gray-400 p-6 mb-8 rounded-r-lg">
             <div className="flex items-start">
@@ -273,11 +273,11 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
 
   return (
     <div className="min-h-[100dvh] bg-gray-50 flex items-start sm:items-center justify-center p-4 sm:p-6 py-6 sm:py-8 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full my-auto">
+      <div className="bg-white rounded-2xl shadow-card overflow-hidden max-w-4xl w-full my-auto">
         <div className="flex flex-col lg:flex-row">
           {/* Avantages — au-dessus du formulaire sur mobile */}
           <div className="order-1 lg:order-2 lg:w-96 bg-black p-6 sm:p-8 lg:p-12 text-white">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">{en ? 'Rider benefits' : 'Avantages client'}</h2>
+            <h2 className="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8">{en ? 'Rider benefits' : 'Avantages client'}</h2>
             <div className="space-y-4 sm:space-y-6">
               {(en
                 ? ['Booking in a few clicks', 'Verified professional drivers', 'Transparent, competitive fares', 'Live tracking of your ride', '24/7 rider support']
@@ -311,7 +311,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             </button>
 
             <div className="mb-6 sm:mb-8">
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{en ? 'Create a rider account' : 'Créer un compte client'}</h1>
+              <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-2">{en ? 'Create a rider account' : 'Créer un compte client'}</h1>
               <p className="text-gray-600 text-base sm:text-lg">
                 {hasPendingQuote()
                   ? (en ? 'Finish your booking by creating an account' : 'Finalisez votre réservation en créant votre compte')
@@ -351,7 +351,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                     type="text"
                     placeholder={en ? 'First name' : 'Prénom'}
                     autoComplete="given-name"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors ${
                       errors.firstName ? 'border-danger-500' : 'border-gray-300'
                     }`}
                   />
@@ -367,7 +367,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                     type="text"
                     placeholder={en ? 'Last name' : 'Nom'}
                     autoComplete="family-name"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors ${
                       errors.lastName ? 'border-danger-500' : 'border-gray-300'
                     }`}
                   />
@@ -386,7 +386,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   placeholder={en ? 'Email address' : 'Adresse email'}
                   autoComplete="email"
                   inputMode="email"
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors ${
                     errors.email ? 'border-danger-500' : 'border-gray-300'
                   }`}
                 />
@@ -425,7 +425,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   type={showPassword ? 'text' : 'password'}
                   placeholder={en ? 'Password' : 'Mot de passe'}
                   autoComplete="new-password"
-                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors ${
                     errors.password ? 'border-danger-500' : 'border-gray-300'
                   }`}
                 />
@@ -455,7 +455,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder={en ? 'Confirm password' : 'Confirmer le mot de passe'}
                   autoComplete="new-password"
-                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors ${
                     errors.confirmPassword ? 'border-danger-500' : 'border-gray-300'
                   }`}
                 />

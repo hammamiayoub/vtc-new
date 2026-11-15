@@ -728,7 +728,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     <div className={cn('max-w-4xl mx-auto px-4 sm:px-0', selectedDriver && 'max-md:pb-44')}>
       <div className="bg-white rounded-xl shadow-sm p-8">
         <div className="mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">
             {en ? 'Book a ride' : 'Réserver une course'}
           </h2>
           
@@ -779,7 +779,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                   title={en ? 'Use my current location' : 'Utiliser ma position actuelle'}
                 >
                   {gettingLocation ? (
-                    <LocateFixed size={18} className="animate-pulse opacity-80" />
+                    <LocateFixed size={18} className="opacity-80" />
                   ) : (
                     <Target size={18} />
                   )}
@@ -839,7 +839,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             </label>
             <select
               {...register('vehicleType')}
-              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all appearance-none ${
+              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors appearance-none ${
                 errors.vehicleType ? 'border-danger-500' : 'border-gray-300'
               }`}
             >
@@ -879,7 +879,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               type="datetime-local"
               min={getMinDateTime()}
               disabled={isImmediateDeparture}
-              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all ${
+              className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors ${
                 errors.scheduledTime ? 'border-danger-500' : 'border-gray-300'
               }`}
             />
@@ -991,7 +991,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                       {en ? 'Estimated fare' : 'Prix estimé'}
                       {watchIsReturnTrip && (en ? ' · with return' : ' · avec retour')}
                     </p>
-                    <p className="text-4xl font-bold tracking-tight text-gray-900">{estimatedPrice} TND</p>
+                    <p className="text-4xl font-semibold tracking-tight text-gray-900">{estimatedPrice} TND</p>
                 </div>
                   <p className="flex items-center gap-2 pb-1 text-sm text-gray-600">
                     <Route size={16} className="text-gray-500" aria-hidden="true" />
@@ -1262,7 +1262,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               <Button
                 type="submit"
                 disabled={isSubmitting || !estimatedPrice || isShortTripBlockedForNonTaxi}
-                className="w-full md:hidden bg-black hover:bg-gray-800 text-white py-4 px-6 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full md:hidden bg-black hover:bg-gray-800 text-white py-4 px-6 rounded-full font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
@@ -1284,7 +1284,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             type="submit"
             disabled={isSubmitting || !selectedDriver || !estimatedPrice || isShortTripBlockedForNonTaxi}
             className={cn(
-              'w-full bg-black hover:bg-gray-800 text-white py-4 px-6 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed',
+              'w-full bg-black hover:bg-gray-800 text-white py-4 px-6 rounded-full font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
               selectedDriver && 'max-md:hidden',
             )}
           >

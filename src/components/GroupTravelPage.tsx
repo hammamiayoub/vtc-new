@@ -88,7 +88,7 @@ export const GroupTravelPage: React.FC = () => {
               <Users size={16} aria-hidden="true" />
               {en ? 'Groups coming from abroad' : 'Groupes venant de l\'étranger'}
             </span>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight leading-tight">
+            <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-6 tracking-tight leading-tight">
               {en
                 ? 'We organize transport for groups staying in Tunisia'
                 : 'Nous organisons les déplacements des groupes en séjour en Tunisie'}
@@ -128,7 +128,7 @@ export const GroupTravelPage: React.FC = () => {
       <RevealSection className="py-16 md:py-20" aria-labelledby="group-services-heading">
         <div className="page-container">
           <div className="text-center mb-12 max-w-3xl mx-auto">
-            <h2 id="group-services-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 id="group-services-heading" className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
               {en ? 'What is arranged for the group' : 'Ce qui est organisé pour le groupe'}
             </h2>
             <p className="text-lg text-gray-600">
@@ -154,7 +154,7 @@ export const GroupTravelPage: React.FC = () => {
       <RevealSection className="py-16 md:py-20 bg-gray-50" aria-labelledby="group-steps-heading">
         <div className="page-container">
           <div className="text-center mb-12">
-            <h2 id="group-steps-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 id="group-steps-heading" className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
               {en ? 'How a stay is set up' : 'Comment un séjour se met en place'}
             </h2>
           </div>
@@ -173,7 +173,7 @@ export const GroupTravelPage: React.FC = () => {
       <RevealSection className="py-16 md:py-20">
         <div className="page-container">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
               {en ? 'Tell us about the group' : 'Parlez-nous du groupe'}
             </h2>
             <p className="text-lg text-gray-600 mb-8">

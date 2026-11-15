@@ -96,7 +96,7 @@ export const ParcelTransportPage: React.FC = () => {
               <Globe size={16} aria-hidden="true" />
               {en ? 'Europe ↔ Tunisia' : 'Europe ↔ Tunisie'}
             </span>
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 tracking-tight leading-tight">
+            <h1 className="text-4xl md:text-6xl font-semibold text-gray-900 mb-6 tracking-tight leading-tight">
               {en
                 ? 'Parcel and goods transport between Europe and Tunisia'
                 : "Transport de colis et marchandises entre l'Europe et la Tunisie"}
@@ -142,7 +142,7 @@ export const ParcelTransportPage: React.FC = () => {
       <RevealSection className="py-16 md:py-20" aria-labelledby="parcel-corridors-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 id="parcel-corridors-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 id="parcel-corridors-heading" className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
               {en ? 'Routes we cover' : 'Trajets couverts'}
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -169,7 +169,7 @@ export const ParcelTransportPage: React.FC = () => {
       <RevealSection className="py-16 md:py-20 bg-gray-50" aria-labelledby="parcel-how-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 id="parcel-how-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 id="parcel-how-heading" className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
               {en ? 'How it works' : 'Comment ça marche ?'}
             </h2>
             <p className="text-lg text-gray-600">
@@ -184,7 +184,7 @@ export const ParcelTransportPage: React.FC = () => {
                 key={step.title}
                 className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
               >
-                <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black text-white font-bold mb-4">
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black text-white font-semibold mb-4">
                   {index + 1}
                 </span>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">{step.title}</h3>
@@ -257,7 +257,7 @@ export const ParcelTransportPage: React.FC = () => {
       <RevealSection className="py-16 md:py-20 bg-gray-50" aria-labelledby="parcel-faq-heading">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 id="parcel-faq-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 id="parcel-faq-heading" className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
               {en ? 'Frequently asked questions — parcels' : 'Questions fréquentes — transport de colis'}
             </h2>
             <p className="text-gray-600">
@@ -296,7 +296,7 @@ export const ParcelTransportPage: React.FC = () => {
 
       <RevealSection className="py-16 bg-black text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-semibold mb-4">
             {en ? 'Ready to ship your parcels?' : 'Prêt à expédier vos colis ?'}
           </h2>
           <p className="text-gray-300 mb-8 text-lg">
