@@ -29,6 +29,19 @@
     #recenter { position: fixed; right: 16px; bottom: 120px; z-index: 1000; width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 20px; display: none; align-items: center; justify-content: center; cursor: pointer; }
 
     #message { position: fixed; inset: 0; z-index: 1500; display: none; align-items: center; justify-content: center; text-align: center; padding: 28px; font-size: 16px; line-height: 1.5; color: #d1d5db; background: var(--ink); }
+
+    #share { position: fixed; right: 16px; bottom: 176px; z-index: 1000; width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--line); background: #fff; color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    #share[hidden], .shareBtn[hidden] { display: none; }
+    #share svg { width: 20px; height: 20px; }
+    #shareSheet { position: fixed; inset: 0; z-index: 1600; display: none; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0.55); }
+    #shareSheet.open { display: flex; }
+    #shareCard { width: 100%; max-width: 480px; background: var(--ink); border-top: 1px solid var(--line); border-radius: 22px 22px 0 0; padding: 18px 20px; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+    #shareCard h2 { margin: 0 0 4px; font-size: 17px; }
+    #shareCard p { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+    .shareBtn { display: flex; align-items: center; width: 100%; box-sizing: border-box; margin-top: 8px; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line); background: #17181a; color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; font-family: inherit; }
+    .shareBtn:hover, .shareBtn:focus-visible { border-color: var(--mint); }
+    #shareClose { justify-content: center; background: transparent; color: var(--muted); }
+    #shareFeedback { min-height: 18px; margin-top: 8px; font-size: 13px; color: var(--mint); text-align: center; }
   </style>
 </head>
 <body>
@@ -40,6 +53,24 @@
   </div>
 
   <button id="recenter" type="button" aria-label="Recentrer la carte">◎</button>
+
+  <button id="share" type="button" aria-label="Partager le suivi" aria-haspopup="dialog" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+  </button>
+
+  <div id="shareSheet" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+    <div id="shareCard">
+      <h2 id="shareTitle">Partager le suivi</h2>
+      <p>Les personnes qui reçoivent ce lien verront la position du chauffeur en direct.</p>
+      <a class="shareBtn" id="shareWhatsapp" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+      <a class="shareBtn" id="shareMessenger" target="_blank" rel="noopener noreferrer">Messenger</a>
+      <a class="shareBtn" id="shareSms">SMS</a>
+      <button class="shareBtn" id="shareNative" type="button" hidden>Autres applications…</button>
+      <button class="shareBtn" id="shareCopy" type="button">Copier le lien</button>
+      <div id="shareFeedback" role="status" aria-live="polite"></div>
+      <button class="shareBtn" id="shareClose" type="button">Fermer</button>
+    </div>
+  </div>
 
   <div id="panel">
     <div id="eta">

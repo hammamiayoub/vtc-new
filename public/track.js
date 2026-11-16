@@ -406,6 +406,69 @@
     });
   }
 
+  // ---- Partage du lien de suivi -------------------------------------------
+
+  function setupShare() {
+    const btn = $('share');
+    const sheet = $('shareSheet');
+    if (!btn || !sheet) return;
+
+    // Lien canonique : uniquement le jeton, sans autre paramètre ni fragment.
+    const url = window.location.origin + window.location.pathname + '?token=' + encodeURIComponent(token);
+    const text = 'Suivez ma course TuniDrive en direct :';
+    const feedback = $('shareFeedback');
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    $('shareWhatsapp').href = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url);
+    $('shareSms').href = 'sms:?&body=' + encodeURIComponent(text + ' ' + url);
+    // Le deep link Messenger n'existe que sur mobile ; sur ordinateur on laisse la copie du lien.
+    if (isMobile) {
+      $('shareMessenger').href = 'fb-messenger://share/?link=' + encodeURIComponent(url);
+    } else {
+      $('shareMessenger').hidden = true;
+      $('shareSms').hidden = true;
+    }
+
+    const nativeBtn = $('shareNative');
+    if (navigator.share) {
+      nativeBtn.hidden = false;
+      nativeBtn.addEventListener('click', () => {
+        navigator.share({ title: 'Suivi de course TuniDrive', text, url }).then(close, () => {});
+      });
+    }
+
+    $('shareCopy').addEventListener('click', async () => {
+      let ok = false;
+      try {
+        await navigator.clipboard.writeText(url);
+        ok = true;
+      } catch (e) {
+        const input = document.createElement('input');
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+        input.remove();
+      }
+      feedback.textContent = ok ? 'Lien copié' : 'Copie impossible, sélectionnez le lien manuellement';
+    });
+
+    function open() {
+      feedback.textContent = '';
+      sheet.classList.add('open');
+      $('shareClose').focus();
+    }
+    function close() {
+      sheet.classList.remove('open');
+      btn.focus();
+    }
+    btn.hidden = false;
+    btn.addEventListener('click', open);
+    $('shareClose').addEventListener('click', close);
+    sheet.addEventListener('click', (e) => { if (e.target === sheet) close(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheet.classList.contains('open')) close(); });
+  }
+
   // ---- Démarrage ----------------------------------------------------------
 
   async function init() {
@@ -414,6 +477,8 @@
       showMessage('Ce lien de suivi est incomplet ou incorrect. Ouvrez-le de nouveau depuis la notification reçue.');
       return;
     }
+
+    setupShare();
 
     const cfg = await loadConfig();
     if (!cfg) {
