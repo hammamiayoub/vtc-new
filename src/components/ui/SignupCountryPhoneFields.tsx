@@ -58,7 +58,7 @@ export const SignupCountryPhoneFields: React.FC<SignupCountryPhoneFieldsProps> =
           <select
             id={countryFieldName}
             {...register(countryFieldName)}
-            className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none ${focusRingClass} transition-all ${
+            className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none ${focusRingClass} transition-colors ${
               errors[countryFieldName] ? 'border-danger-500' : 'border-gray-300'
             }`}
           >
@@ -94,7 +94,7 @@ export const SignupCountryPhoneFields: React.FC<SignupCountryPhoneFieldsProps> =
                 setValue(phoneFieldName, normalized, { shouldValidate: true });
               }
             }}
-            className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none ${focusRingClass} transition-all ${
+            className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none ${focusRingClass} transition-colors ${
               errors[phoneFieldName] ? 'border-danger-500' : 'border-gray-300'
             }`}
           />

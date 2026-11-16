@@ -34,7 +34,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FileText size={40} className="text-gray-700" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl font-semibold text-gray-900 mb-4">
               Terms of use
             </h1>
             <p className="text-xl text-gray-600">
@@ -67,7 +67,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <FileText size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">1. Purpose</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">1. Purpose</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -98,7 +98,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Users size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">2. Creating an account</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">2. Creating an account</h2>
               </div>
 
               <ul className="space-y-3">
@@ -133,7 +133,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Car size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">3. Using the service</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">3. Using the service</h2>
               </div>
 
               <ul className="space-y-3">
@@ -161,7 +161,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Package size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">4. International transport of parcels and goods</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">4. International transport of parcels and goods</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -220,7 +220,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <CreditCard size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">5. Fares and payment</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">5. Fares and payment</h2>
               </div>
 
               <ul className="space-y-3">
@@ -251,7 +251,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <AlertTriangle size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">6. Cancellation</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">6. Cancellation</h2>
               </div>
 
               <ul className="space-y-3">
@@ -278,7 +278,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Shield size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">7. User obligations</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">7. User obligations</h2>
               </div>
 
               <div className="space-y-6">
@@ -356,12 +356,12 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                   <AlertTriangle size={26} className="text-gray-700" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">8. Liability</h2>
+                  <h2 className="text-3xl font-semibold text-gray-900">8. Liability</h2>
                   <p className="text-sm text-gray-500 mt-1">Legal framework for use of the TuniDrive.net platform</p>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-2xl shadow-sm p-8">
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl shadow-sm p-8">
                 <h3 className="text-lg font-semibold text-gray-700 mb-5">Liability principles</h3>
 
                 <ul className="space-y-5">
@@ -416,7 +416,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Users size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">9. Suspension or closure of an account</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">9. Suspension or closure of an account</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -444,7 +444,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Shield size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">10. Personal data</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">10. Personal data</h2>
               </div>
 
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -464,7 +464,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <FileText size={24} className="text-gray-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">11. Intellectual property</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">11. Intellectual property</h2>
               </div>
 
               <ul className="space-y-3">
@@ -484,7 +484,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Calendar size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">12. Changes to these terms</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">12. Changes to these terms</h2>
               </div>
 
               <div className="space-y-4">
@@ -502,7 +502,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Scale size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">13. Governing law</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">13. Governing law</h2>
               </div>
 
               <div className="space-y-4">
@@ -520,7 +520,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Mail size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">14. Contact</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">14. Contact</h2>
               </div>
 
               <p className="text-gray-700 mb-4">

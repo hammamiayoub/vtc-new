@@ -35,9 +35,9 @@ export default {
       },
       fontSize: {
         // [taille, { hauteur de ligne, espacement des lettres, graisse }]
-        'display-xl': ['4rem', { lineHeight: '1.05', letterSpacing: '-0.03em', fontWeight: '700' }],
-        'display-lg': ['3rem', { lineHeight: '1.1', letterSpacing: '-0.025em', fontWeight: '700' }],
-        'display-md': ['2.25rem', { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '700' }],
+        'display-xl': ['4rem', { lineHeight: '1.05', letterSpacing: '-0.03em', fontWeight: '600' }],
+        'display-lg': ['3rem', { lineHeight: '1.1', letterSpacing: '-0.025em', fontWeight: '600' }],
+        'display-md': ['2.25rem', { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '600' }],
         'heading-lg': ['1.75rem', { lineHeight: '1.25', letterSpacing: '-0.015em', fontWeight: '600' }],
         'heading-md': ['1.375rem', { lineHeight: '1.3', letterSpacing: '-0.01em', fontWeight: '600' }],
         'heading-sm': ['1.125rem', { lineHeight: '1.4', fontWeight: '600' }],

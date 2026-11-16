@@ -36,7 +36,7 @@ interface DriverDashboardProps {
 /** Pastille d'étape du parcours chauffeur : validée (coche verte), en cours (noire) ou à venir (grise). */
 const StepMarker: React.FC<{ n: number; state: 'done' | 'current' | 'todo' }> = ({ n, state }) => (
   <div
-    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
       state === 'done'
         ? 'bg-success-600 text-white'
         : state === 'current'
@@ -925,7 +925,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           <div className="flex justify-between items-center h-16 sm:h-20">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">TuniDrive</h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white tracking-tight">TuniDrive</h1>
                 <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">Espace Chauffeur</p>
               </div>
             </div>
@@ -947,7 +947,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
               >
                 <UserCircle size={22} />
               </button>
-              <Button onClick={handleLogout} className="flex items-center gap-1 sm:gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base px-2 sm:px-4">
+              <Button onClick={handleLogout} className="flex items-center gap-1 sm:gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base px-2 sm:px-4">
                 <LogOut size={14} className="sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Déconnexion</span>
               </Button>
@@ -988,7 +988,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 <AlertCircle className="text-warning-700" size={24} />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-warning-900 mb-2">
+                <h3 className="text-xl font-semibold text-warning-900 mb-2">
                   Courses gratuites épuisées
                 </h3>
                 <p className="text-warning-800 mb-4">
@@ -1078,10 +1078,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           <>
             {showExpiredSubscriptionModal && (
               <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-                <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+                <div className="bg-white rounded-2xl shadow-overlay max-w-lg w-full p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <AlertCircle className="w-6 h-6 text-danger-600" />
-                    <h3 className="text-xl font-bold text-gray-900">Abonnement expiré</h3>
+                    <h3 className="text-xl font-semibold text-gray-900">Abonnement expiré</h3>
                   </div>
                   <p className="text-gray-700">{subscriptionModalMessage}</p>
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -1128,7 +1128,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   </div>
                 )}
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
                     Bienvenue, {driver?.firstName} {driver?.lastName}
                   </h2>
                   <p className="text-sm sm:text-base text-gray-600">Tableau de bord chauffeur</p>
@@ -1201,7 +1201,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       <p className="text-sm text-gray-600">À traiter</p>
                     </div>
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">{pendingBookings.length}</p>
+                  <p className="text-2xl sm:text-3xl font-semibold text-gray-900">{pendingBookings.length}</p>
                   {pendingBookings.length > 0 && (
                     <p className="text-xs sm:text-sm text-gray-700 font-medium mt-1">
                       {pendingBookings.length} course{pendingBookings.length > 1 ? 's' : ''} en attente
@@ -1219,7 +1219,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                       <p className="text-sm text-gray-600">Total</p>
                     </div>
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">{completedBookings.length}</p>
+                  <p className="text-2xl sm:text-3xl font-semibold text-gray-900">{completedBookings.length}</p>
                   <p className="text-xs sm:text-sm text-gray-700 font-medium mt-1">
                     {totalEarnings.toFixed(2)} TND gagnés
                   </p>
@@ -1385,7 +1385,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {!showProfileForm && activeTab === 'subscription' && driver && (
           <div className="w-full">
             <div className="mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">
                 Gestion de l'abonnement
               </h2>
               <p className="text-gray-600">
@@ -1400,7 +1400,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {!showProfileForm && activeTab === 'parcel-requests' && driver && (
           <div className="w-full">
             <div className="mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">
                 Demandes de transport de colis
               </h2>
               <p className="text-gray-600">
@@ -1471,7 +1471,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
                               <span>{booking.distanceKm} km</span>
-                              <span className="font-bold text-success-600">{booking.price_tnd} TND</span>
+                              <span className="font-semibold text-success-600">{booking.price_tnd} TND</span>
                             </div>
                             {booking.notes && (
                               <div className="bg-gray-50 rounded-lg p-3 mt-2">
@@ -1615,7 +1615,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                           </div>
                           <div>
                             <span className="text-gray-600">Prix:</span>
-                            <span className="ml-2 font-bold text-success-600">{booking.price_tnd} TND</span>
+                            <span className="ml-2 font-semibold text-success-600">{booking.price_tnd} TND</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Réservé le:</span>
@@ -1670,7 +1670,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
                               <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-success-600">{booking.price_tnd} TND</span>
+                              <span className="font-semibold text-success-600">{booking.price_tnd} TND</span>
                             </div>
                           </div>
                         </div>
@@ -1809,7 +1809,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
                               <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-success-600">{booking.price_tnd} TND</span>
+                              <span className="font-semibold text-success-600">{booking.price_tnd} TND</span>
                             </div>
                           </div>
                         </div>
@@ -1909,7 +1909,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
                               <span>{booking.distance_km} km</span>
-                              <span className="font-bold text-success-600">{booking.price_tnd} TND</span>
+                              <span className="font-semibold text-success-600">{booking.price_tnd} TND</span>
                             </div>
                           </div>
                         </div>

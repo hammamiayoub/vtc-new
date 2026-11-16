@@ -29,7 +29,7 @@ export const PlaceSuggestionList: React.FC<PlaceSuggestionListProps> = ({
     <ul
       id={listId}
       role="listbox"
-      className="absolute z-[80] left-0 right-0 mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+      className="absolute z-[80] left-0 right-0 mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white shadow-card"
     >
       {items.map((item, index) => (
         <li key={item.id} role="presentation">

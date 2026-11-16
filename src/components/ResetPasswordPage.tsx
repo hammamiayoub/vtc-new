@@ -121,11 +121,11 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
   if (success) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-2xl shadow-card p-8 max-w-md w-full text-center">
           <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-success-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl font-semibold text-gray-900 mb-4">
             {en ? 'Password updated' : 'Mot de passe mis à jour !'}
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
@@ -140,7 +140,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-md w-full">
+      <div className="bg-white rounded-2xl shadow-card overflow-hidden max-w-md w-full">
         <div className="p-8">
           <button
             onClick={onBack}
@@ -154,7 +154,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Lock size={36} className="text-gray-700" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">
+            <h1 className="text-3xl font-semibold text-gray-900 mb-3">
               {en ? 'New password' : 'Nouveau mot de passe'}
             </h1>
             <p className="text-gray-600">
@@ -175,7 +175,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={en ? 'New password' : 'Nouveau mot de passe'}
-                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all"
+                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
                 required
               />
               <button
@@ -207,7 +207,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder={en ? 'Confirm the new password' : 'Confirmer le nouveau mot de passe'}
-                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all"
+                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
                 required
               />
               <button

@@ -80,7 +80,7 @@ export const TrustSignals: React.FC<TrustSignalsProps> = ({
   if (variant === 'bar') {
     return (
       <div
-        className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-600 ${className}`}
+        className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-600 ${className}`}
       >
         {items.slice(0, 4).map(({ icon: Icon, label }) => (
           <span key={label} className="inline-flex items-center gap-1.5">

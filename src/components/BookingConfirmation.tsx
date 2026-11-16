@@ -14,6 +14,7 @@ import {
   Check
 } from 'lucide-react';
 import { Button } from './ui/Button';
+import { RouteLine } from './ui/RouteLine';
 import { supabase } from '../lib/supabase';
 import { Booking, Driver } from '../types';
 import { getPricePerKm, calculateSurcharges, PriceSurcharges, getDriverPickupFareSummaryText } from '../utils/geolocation';
@@ -144,7 +145,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">{en ? 'Booking not found' : 'Réservation introuvable'}</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">{en ? 'Booking not found' : 'Réservation introuvable'}</h2>
           <Button onClick={onBack}>{en ? 'Back to overview' : 'Retour au tableau de bord'}</Button>
         </div>
       </div>
@@ -168,7 +169,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle size={40} className="text-success-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-semibold text-gray-900 mb-2">
               {en ? 'Booking waiting for confirmation!' : 'Réservation en attente de confirmation !'}
             </h1>
             <p className="text-gray-600 text-lg">
@@ -202,23 +203,10 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
             <div className="space-y-6">
               {/* Trajet */}
-              <div>
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-3 h-3 bg-success-500 rounded-full mt-2"></div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">{en ? 'Pickup' : 'Point de départ'}</p>
-                    <p className="font-medium text-gray-900">{booking.pickup_address}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="w-3 h-3 bg-danger-500 rounded-full mt-2"></div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">{en ? 'Destination' : 'Destination'}</p>
-                    <p className="font-medium text-gray-900">{booking.destination_address}</p>
-                  </div>
-                </div>
-              </div>
+              <RouteLine
+                from={{ label: booking.pickup_address, meta: en ? 'Pickup' : 'Point de départ' }}
+                to={{ label: booking.destination_address, meta: en ? 'Destination' : 'Destination' }}
+              />
 
               {/* Heure et distance */}
               <div className="grid grid-cols-2 gap-4">
@@ -252,7 +240,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-medium text-gray-900">{en ? 'Total fare' : 'Prix total'}</span>
-                  <span className="text-2xl font-bold text-gray-900">
+                  <span className="text-2xl font-semibold text-gray-900">
                     {booking.price_tnd} TND
                   </span>
                 </div>
@@ -441,7 +429,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               <>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-warning-600">1</span>
+                    <span className="text-sm font-semibold text-warning-600">1</span>
                   </div>
                   <p className="text-gray-700">
                     <strong>{en ? 'In progress:' : 'En cours:'}</strong> {en ? 'Waiting for the driver to confirm' : 'Confirmation par le chauffeur'}
@@ -449,7 +437,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </div>
                 <div className="flex items-center gap-3 opacity-50">
                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-gray-400">3</span>
+                    <span className="text-sm font-semibold text-gray-400">3</span>
                   </div>
                   <p className="text-gray-500">
                     {en ? 'Pickup at the scheduled time' : "Prise en charge à l'heure prévue"}
@@ -470,7 +458,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-gray-700">2</span>
+                    <span className="text-sm font-semibold text-gray-700">2</span>
                   </div>
                   <p className="text-gray-700">
                     <strong>{en ? 'In progress:' : 'En cours:'}</strong> {en ? 'Getting ready for pickup' : 'Préparation pour la prise en charge'}
@@ -478,7 +466,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </div>
                 <div className="flex items-center gap-3 opacity-50">
                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-gray-400">3</span>
+                    <span className="text-sm font-semibold text-gray-400">3</span>
                   </div>
                   <p className="text-gray-500">
                     {en ? 'Pickup at the scheduled time' : "Prise en charge à l'heure prévue"}

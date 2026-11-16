@@ -36,7 +36,7 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
     <div className={`space-y-3 ${className}`}>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-gray-700">{en ? 'Password strength' : 'Force du mot de passe'}</span>
-        <span className={`text-sm font-bold ${getStrengthColor()}`}>
+        <span className={`text-sm font-semibold ${getStrengthColor()}`}>
           {getStrengthText()}
         </span>
       </div>
@@ -45,7 +45,7 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
         {requirements.map((_, index) => (
           <div
             key={index}
-            className={`h-2 rounded-full transition-all duration-300 ${
+            className={`h-2 rounded-full transition-[width] duration-300 ${
               index < strength ? getStrengthColor().replace('text-', 'bg-') : 'bg-gray-200'
             }`}
           />

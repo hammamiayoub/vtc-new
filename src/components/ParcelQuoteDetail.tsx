@@ -97,7 +97,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
         <div className="flex items-start gap-3 mb-4">
           <Package className="text-gray-700 mt-1" size={22} />
           <div>
-            <h2 className="text-lg font-bold text-gray-900">{en ? 'Parcel transport request' : 'Demande de transport de colis'}</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{en ? 'Parcel transport request' : 'Demande de transport de colis'}</h2>
             <p className="text-sm text-gray-500">{directionLabel(request.direction, locale)} · {statusLabel(request.status, locale)}</p>
           </div>
         </div>
@@ -155,7 +155,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
             <CheckCircle className="text-emerald-600" size={20} />
             <h3 className="font-semibold text-emerald-900">{en ? 'Delivered' : 'Livraison effectuée'}</h3>
           </div>
-          <p className="text-lg font-bold text-emerald-800 mb-2">
+          <p className="text-lg font-semibold text-emerald-800 mb-2">
             {acceptedProposal.price} {acceptedProposal.currency}
           </p>
           {request.completedAt && (
@@ -177,7 +177,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
             <CheckCircle className="text-success-600" size={20} />
             <h3 className="font-semibold text-success-900">{en ? 'Offer accepted — delivery in progress' : 'Offre acceptée — livraison en cours'}</h3>
           </div>
-          <p className="text-lg font-bold text-success-800 mb-3">
+          <p className="text-lg font-semibold text-success-800 mb-3">
             {acceptedProposal.price} {acceptedProposal.currency}
           </p>
           {acceptedProposal.drivers && (
@@ -227,7 +227,7 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-xl font-semibold text-gray-900">
                       {proposal.price} {proposal.currency}
                     </p>
                     {proposal.drivers && (

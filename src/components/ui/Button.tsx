@@ -13,7 +13,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(
-          'inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200 ease-out-expo',
+          'inline-flex items-center justify-center rounded-full font-semibold transition-colors duration-200 ease-out-expo',
           'focus-ring active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100',
           'motion-reduce:transition-none motion-reduce:active:scale-100',
           {

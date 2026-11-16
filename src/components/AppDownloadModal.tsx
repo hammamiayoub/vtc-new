@@ -48,7 +48,7 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
       aria-labelledby="app-download-banner-title"
     >
       <div className="page-container pointer-events-auto">
-        <div className="bg-black text-white rounded-2xl shadow-xl border border-gray-800 overflow-hidden">
+        <div className="bg-black text-white rounded-2xl shadow-card border border-gray-800 overflow-hidden">
           <div className="px-4 py-4 sm:px-5 sm:py-5 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -58,7 +58,7 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
                 <div className="min-w-0">
                   <h2
                     id="app-download-banner-title"
-                    className="text-base sm:text-lg font-bold leading-snug pr-2"
+                    className="text-base sm:text-lg font-semibold leading-snug pr-2"
                   >
                     {en ? 'Download the TuniDrive app' : "Téléchargez l'application TuniDrive"}
                   </h2>

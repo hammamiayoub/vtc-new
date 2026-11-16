@@ -26,7 +26,7 @@ export const AppDownloadSection: React.FC<AppDownloadSectionProps> = ({ compact 
                 Application mobile
               </div>
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+                <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-4 tracking-tight">
                   Téléchargez l&apos;application TuniDrive
                 </h2>
                 <p className="text-lg text-gray-600 leading-relaxed">

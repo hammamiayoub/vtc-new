@@ -93,10 +93,10 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onClientLogin, onClientSig
         <section className="bg-surface-muted border-b border-surface-border">
           <div className="page-container py-14 md:py-20">
             <div className="max-w-3xl">
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              <p className="text-sm font-semibold text-gray-500 mb-3">
                 {en ? 'About' : 'À propos'}
               </p>
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight mb-6">
+              <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 leading-tight tracking-tight mb-6">
                 {en ? 'How does TuniDrive work?' : 'Comment fonctionne TuniDrive ?'}
               </h1>
               <p className="page-subheading">

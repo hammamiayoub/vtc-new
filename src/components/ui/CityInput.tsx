@@ -249,7 +249,7 @@ export const CityInput: React.FC<CityInputProps> = ({
           role="combobox"
           aria-expanded={open}
           aria-autocomplete="list"
-          className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed ${
+          className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed ${
             error ? 'border-danger-500' : 'border-gray-300'
           }`}
         />

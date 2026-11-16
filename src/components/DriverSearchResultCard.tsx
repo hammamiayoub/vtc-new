@@ -51,14 +51,14 @@ export function DriverSearchResultCard({
           onSelect();
         }
       }}
-      className={`self-start w-full border-2 rounded-xl overflow-hidden cursor-pointer transition-all ${
+      className={`self-start w-full border-2 rounded-xl overflow-hidden cursor-pointer transition-colors ${
         selected
           ? 'border-gray-900 bg-gray-50 shadow-sm'
           : 'border-gray-200 hover:border-gray-300 bg-white'
       }`}
     >
       <div className={`relative w-full h-32 sm:h-36 ${
-        usesSedanPlaceholder ? 'bg-white' : 'bg-gradient-to-br from-gray-100 to-gray-200'
+        usesSedanPlaceholder ? 'bg-white' : 'bg-gray-100'
       }`}>
         <img
           src={vehicleVisualSrc}
@@ -166,7 +166,7 @@ export function DriverSearchResultCard({
             )}
 
             {estimatedPrice != null && (
-              <p className="mt-2 text-sm font-bold text-success-700">~{estimatedPrice} TND</p>
+              <p className="mt-2 text-sm font-semibold text-success-700">~{estimatedPrice} TND</p>
             )}
 
             {isNearby && (

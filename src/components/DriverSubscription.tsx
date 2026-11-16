@@ -326,10 +326,10 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
     <div className="space-y-6">
       {showExpiredModal && isExpiredPremium && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+          <div className="bg-white rounded-2xl shadow-overlay max-w-lg w-full p-6 space-y-4">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-6 h-6 text-danger-600" />
-              <h3 className="text-xl font-bold text-gray-900">Abonnement expiré</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Abonnement expiré</h3>
             </div>
             <p className="text-gray-700">
               {subscriptionStatus.subscriptionEndDate
@@ -376,7 +376,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               </div>
             )}
             <div>
-               <h3 className={`text-xl font-bold ${isPremium ? 'text-white' : 'text-gray-900'}`}>
+               <h3 className={`text-xl font-semibold ${isPremium ? 'text-white' : 'text-gray-900'}`}>
                  {isPremium ? 'Abonnement Premium' : 'Compte Gratuit'}
                </h3>
                <p className={`text-sm ${isPremium ? 'text-white/90' : 'text-gray-600'}`}>
@@ -399,7 +399,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             <span className={`text-sm ${isPremium ? 'text-white/90' : 'text-gray-600'}`}>
               {isPremium ? 'Courses acceptées' : 'Courses gratuites utilisées'}
             </span>
-             <span className={`text-2xl font-bold ${isPremium ? 'text-white' : 'text-gray-900'}`}>
+             <span className={`text-2xl font-semibold ${isPremium ? 'text-white' : 'text-gray-900'}`}>
                {subscriptionStatus.lifetimeAcceptedBookings}
                {!isPremium && <span className="text-sm font-normal"> / 2</span>}
              </span>
@@ -409,7 +409,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             <>
                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                  <div 
-                   className="bg-gray-900 h-2 rounded-full transition-all duration-300"
+                   className="bg-gray-900 h-2 rounded-full transition-[width] duration-300"
                    style={{ width: `${Math.min(100, (subscriptionStatus.lifetimeAcceptedBookings / 2) * 100)}%` }}
                  ></div>
                </div>
@@ -464,7 +464,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               <Unlock size={24} className="text-white" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-2">
                 Passez au Premium
               </h3>
               <p className="text-gray-700">
@@ -481,7 +481,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setSelectedBillingPeriod('monthly')}
-                className={`relative p-4 border-2 rounded-lg transition-all ${
+                className={`relative p-4 border-2 rounded-lg transition-colors ${
                   selectedBillingPeriod === 'monthly'
                     ? 'border-gray-900 bg-gray-50'
                     : 'border-gray-200 bg-white hover:border-gray-300'
@@ -489,7 +489,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               >
                 <div className="text-center">
                   <p className="font-semibold text-gray-900 mb-1">Mensuel</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-semibold text-gray-900">
                     {calculatePrices('monthly').totalPrice} TND
                   </p>
                   <p className="text-xs text-gray-500 mt-1">par mois</p>
@@ -503,20 +503,20 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
 
               <button
                 onClick={() => setSelectedBillingPeriod('yearly')}
-                className={`relative p-4 border-2 rounded-lg transition-all ${
+                className={`relative p-4 border-2 rounded-lg transition-colors ${
                   selectedBillingPeriod === 'yearly'
                     ? 'border-gray-900 bg-gray-50'
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
                 <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-success-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  <span className="bg-success-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
                     -10%
                   </span>
                 </div>
                 <div className="text-center">
                   <p className="font-semibold text-gray-900 mb-1">Annuel</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-semibold text-gray-900">
                     {calculatePrices('yearly').totalPrice} TND
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -569,7 +569,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                 {selectedBillingPeriod === 'yearly' ? 'Prix annuel' : 'Prix mensuel'}
               </span>
               <div className="text-right">
-                <span className="text-3xl font-bold text-gray-900">{prices.basePrice} TND</span>
+                <span className="text-3xl font-semibold text-gray-900">{prices.basePrice} TND</span>
                 <span className="text-sm text-gray-600 ml-1">HT</span>
               </div>
             </div>
@@ -580,7 +580,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             {selectedBillingPeriod === 'yearly' && (
               <div className="flex items-baseline justify-between text-sm mb-3 text-success-700">
                 <span className="font-medium">Réduction annuelle (10%)</span>
-                <span className="font-bold">
+                <span className="font-semibold">
                   -{(pricing.monthly.price_tnd * 12 - pricing.yearly.price_tnd).toFixed(2)} TND
                 </span>
               </div>
@@ -588,7 +588,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             <div className="border-t border-gray-200 pt-3">
               <div className="flex items-baseline justify-between mb-1">
                 <span className="text-gray-900 font-semibold">Total TTC</span>
-                <span className="text-2xl font-bold text-gray-900">{prices.totalPrice} TND</span>
+                <span className="text-2xl font-semibold text-gray-900">{prices.totalPrice} TND</span>
               </div>
               {selectedBillingPeriod === 'yearly' && (
                 <p className="text-xs text-gray-500 text-right">
@@ -631,10 +631,10 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                     </p>
                     {pendingRequest && (
                       <div className="mt-3 rounded-lg border border-warning-200 bg-white p-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-warning-900 mb-1">
+                        <p className="text-xs font-semibold text-warning-900 mb-1">
                           Durée souscrite
                         </p>
-                        <p className="text-sm font-bold text-gray-900">
+                        <p className="text-sm font-semibold text-gray-900">
                           {getBillingPeriodLabel(pendingRequest.billingPeriod)} — {getSubscriptionDurationLabel(pendingRequest.billingPeriod)} — {pendingRequest.totalPriceTnd.toFixed(2)} TND TTC
                         </p>
                         <p className="text-xs text-gray-600 mt-2">
@@ -679,17 +679,17 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
       {/* Informations de paiement */}
       {showPaymentInfo && (
         <div className="bg-white border border-surface-border rounded-xl p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Info className="text-gray-700" size={24} />
             Informations de paiement
           </h3>
 
           {pendingRequest && (
             <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-900 mb-1">
+              <p className="text-xs font-semibold text-gray-900 mb-1">
                 Durée souscrite (en attente de validation)
               </p>
-              <p className="text-base font-bold text-gray-900">
+              <p className="text-base font-semibold text-gray-900">
                 {getBillingPeriodLabel(pendingRequest.billingPeriod)} — {getSubscriptionDurationLabel(pendingRequest.billingPeriod)}
               </p>
               <p className="text-sm text-gray-700 mt-1">
@@ -727,7 +727,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                 </div>
                 <div>
                   <span className="text-gray-700 font-medium">Montant :</span>
-                  <p className="text-gray-900 font-bold">{prices.totalPrice} TND</p>
+                  <p className="text-gray-900 font-semibold">{prices.totalPrice} TND</p>
                   {selectedBillingPeriod === 'yearly' && (
                     <p className="text-xs text-gray-600 mt-1">Abonnement annuel avec 10% de réduction</p>
                   )}
@@ -760,14 +760,14 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                     href={`https://wa.me/21628528477?text=${encodeURIComponent(`Bonjour, je souhaite valider mon abonnement Premium ${selectedBillingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'}.\n\nRéférence : ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}\n\nJ'ai effectué le paiement de ${prices.totalPrice} TND.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-lg"
+                    className="flex items-center justify-center gap-2 bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-card"
                   >
                     <MessageCircle size={16} />
                     WhatsApp
                   </a>
                   <a
                     href={`mailto:support@tunidrive.net?subject=Validation%20Abonnement%20Premium%20${selectedBillingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'}%20-%20ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}&body=Bonjour,%0D%0A%0D%0AJe souhaite valider mon abonnement Premium ${selectedBillingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'}.%0D%0A%0D%0ARéférence : ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}%0D%0A%0D%0AJ'ai effectué le paiement de ${prices.totalPrice} TND par virement bancaire.%0D%0A%0D%0ANuméro de référence du paiement : __________%0D%0A%0D%0ACi-joint la preuve de paiement.%0D%0A%0D%0ACordialement`}
-                    className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-lg"
+                    className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-card"
                   >
                     <Mail size={16} />
                     Email

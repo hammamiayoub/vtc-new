@@ -119,14 +119,14 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+      <div className="bg-white rounded-2xl shadow-card max-w-md w-full">
         <div className="p-8">
           {success ? (
             <div className="text-center">
               <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle size={40} className="text-success-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                 {en ? 'Email sent' : 'Email envoyé !'}
               </h2>
               <p className="text-gray-600 mb-6 leading-relaxed">
@@ -146,7 +146,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
           ) : (
             <>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-semibold text-gray-900">
                   {en ? 'Forgot password' : 'Mot de passe oublié'}
                 </h2>
                 <button
@@ -175,7 +175,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={en ? 'Your email address' : 'Votre adresse email'}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-colors"
                     required
                   />
                 </div>

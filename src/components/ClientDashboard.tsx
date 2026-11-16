@@ -486,7 +486,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
           <div className="flex justify-between items-center h-16 sm:h-20">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">TuniDrive</h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white tracking-tight">TuniDrive</h1>
                 <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">
                   {en ? 'Rider account' : 'Espace Client'}
                 </p>
@@ -511,7 +511,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
               >
                 <UserCircle size={22} />
               </button>
-              <Button onClick={handleLogout} className="flex items-center gap-1 sm:gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base px-2 sm:px-4">
+              <Button onClick={handleLogout} className="flex items-center gap-1 sm:gap-2 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base px-2 sm:px-4">
                 <LogOut size={14} className="sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">{en ? 'Log out' : 'Déconnexion'}</span>
               </Button>
@@ -597,7 +597,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                   </div>
                 )}
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
                     {en ? 'Welcome' : 'Bienvenue'}, {client?.firstName} {client?.lastName}
                   </h2>
                   <p className="text-sm sm:text-base text-gray-600">
@@ -643,7 +643,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                 {bookingsLoading ? (
                   <Skeleton className="h-7 w-10 mb-2" />
                 ) : (
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{bookings.length}</p>
+                  <p className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">{bookings.length}</p>
                 )}
                 <p className="text-sm text-gray-500">{en ? 'Booked rides' : 'Courses réservées'}</p>
               </div>
@@ -785,7 +785,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
                               minute: '2-digit'
                             })}
                           </span>
-                          <span className="font-bold text-gray-900 text-sm sm:text-base">{booking.price_tnd} TND</span>
+                          <span className="font-semibold text-gray-900 text-sm sm:text-base">{booking.price_tnd} TND</span>
                         </div>
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">

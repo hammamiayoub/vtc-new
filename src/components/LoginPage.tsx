@@ -44,8 +44,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onSignup, onLoginS
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-md w-full">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-card overflow-hidden max-w-md w-full">
         <div className="p-8">
           <button
             onClick={onBack}
@@ -56,7 +56,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onSignup, onLoginS
           </button>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-semibold text-gray-900 mb-2">
               Connexion chauffeur
             </h1>
             <p className="text-gray-600">
@@ -76,7 +76,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onSignup, onLoginS
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Adresse email"
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors"
                 required
               />
             </div>
@@ -91,7 +91,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onSignup, onLoginS
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mot de passe"
-                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all"
+                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-colors"
                 required
               />
               <button

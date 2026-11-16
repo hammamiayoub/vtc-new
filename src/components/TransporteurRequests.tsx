@@ -91,7 +91,7 @@ export const TransporteurRequests: React.FC<TransporteurRequestsProps> = ({
       return (
         <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
           <p className="text-sm font-medium text-gray-900">Votre proposition envoyée</p>
-          <p className="text-lg font-bold text-gray-700 mt-1">
+          <p className="text-lg font-semibold text-gray-700 mt-1">
             {existing.price} {existing.currency}
           </p>
           {existing.message && <p className="text-sm text-gray-600 mt-1">{existing.message}</p>}

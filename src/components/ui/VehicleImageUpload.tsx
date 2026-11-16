@@ -82,7 +82,7 @@ export const VehicleImageUpload: React.FC<VehicleImageUploadProps> = ({
   return (
     <div className={`relative ${className}`}>
       <div
-        className={`relative w-full h-48 rounded-xl border-2 border-dashed transition-all duration-200 ${
+        className={`relative w-full h-48 rounded-xl border-2 border-dashed transition-colors duration-200 ${
           dragOver 
             ? 'border-gray-900 bg-gray-50' 
             : 'border-gray-300 bg-gray-50 hover:border-gray-400'
@@ -114,7 +114,7 @@ export const VehicleImageUpload: React.FC<VehicleImageUploadProps> = ({
               <div className="absolute top-2 right-2 flex gap-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2 bg-black hover:bg-gray-800 text-white rounded-lg shadow-lg transition-colors"
+                  className="p-2 bg-black hover:bg-gray-800 text-white rounded-lg shadow-card transition-colors"
                   title="Changer la photo"
                 >
                   <Camera size={16} />
@@ -122,7 +122,7 @@ export const VehicleImageUpload: React.FC<VehicleImageUploadProps> = ({
                 {onImageDelete && (
                   <button
                     onClick={handleDelete}
-                    className="p-2 bg-danger-600 hover:bg-danger-700 text-white rounded-lg shadow-lg transition-colors"
+                    className="p-2 bg-danger-600 hover:bg-danger-700 text-white rounded-lg shadow-card transition-colors"
                     title="Supprimer la photo"
                   >
                     <Trash2 size={16} />

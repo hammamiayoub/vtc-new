@@ -125,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
             <button
               type="button"
               onClick={() => go('/')}
-              className="focus-ring rounded-md text-xl font-bold text-white tracking-tight truncate min-w-0 hover:opacity-90 transition-opacity"
+              className="focus-ring rounded-md text-xl font-semibold text-white tracking-tight truncate min-w-0 hover:opacity-90 transition-opacity"
             >
               TuniDrive
             </button>

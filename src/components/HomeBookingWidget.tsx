@@ -267,10 +267,10 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
 
       {estimatedPrice !== null && distanceKm !== null && (
         <div className="mt-5 rounded-xl bg-surface-muted border border-surface-border p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+          <p className="text-xs font-semibold text-gray-500 mb-2">
             {en ? 'Sedan / taxi estimate (from)' : 'Estimation berline / taxi (à partir de)'}
           </p>
-          <p className="text-3xl font-bold text-gray-900 mb-1">{money(estimatedPrice)}</p>
+          <p className="text-3xl font-semibold text-gray-900 mb-1">{money(estimatedPrice)}</p>
           <p className="text-sm text-gray-600 mb-3">
             {en ? 'About' : "Trajet d'environ"} <strong>{distanceKm.toFixed(1)} km</strong>
             {breakdown && (

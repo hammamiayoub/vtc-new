@@ -79,7 +79,7 @@ export const TabBar: React.FC<TabBarProps> = ({ tabs, activeId, onChange, ariaLa
                 >
                   {tab.label}
                   {!!tab.alertCount && tab.alertCount > 0 && (
-                    <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-danger-600 px-1.5 py-0.5 text-xs font-bold leading-none text-white">
+                    <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-danger-600 px-1.5 py-0.5 text-xs font-semibold leading-none text-white">
                       {tab.alertCount}
                     </span>
                   )}

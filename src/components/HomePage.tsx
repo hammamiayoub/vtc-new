@@ -21,6 +21,7 @@ import { Footer } from './Footer';
 import { AppDownloadModal } from './AppDownloadModal';
 import { HomeBookingWidget } from './HomeBookingWidget';
 import { TrustSignals } from './TrustSignals';
+import { HomeRideCard } from './HomeRideCard';
 import { ReviewsCarousel } from './ReviewsCarousel';
 import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
@@ -56,7 +57,7 @@ function VehiclePicture({
         decoding="async"
         width={800}
         height={600}
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        className="w-full h-full object-cover transition-opacity duration-300"
         onError={(e) => {
           const target = e.currentTarget as HTMLImageElement;
           target.style.display = 'none';
@@ -172,6 +173,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   onClientLogin={onClientLogin}
                   onClientSignup={onClientSignup}
                 />
+                <HomeRideCard className="mt-6" />
               </div>
 
               <div className="lg:col-start-1 lg:row-start-2 lg:self-start">
@@ -237,7 +239,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <div className="page-container">
             <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
               <div>
-                <p className="text-sm font-semibold text-gray-500 mb-3">
+                <p className="text-sm font-semibold text-brand mb-3">
                   {en ? 'From abroad' : 'Depuis l\'étranger'}
                 </p>
                 <h2 className="page-heading mb-4">
@@ -338,7 +340,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <ul className="space-y-2 text-gray-600 text-sm">
                     {items.map((item) => (
                       <li key={item} className="flex items-start gap-2">
-                        <CheckCircle size={16} className="text-gray-900 mt-0.5 flex-shrink-0" />
+                        <CheckCircle size={16} className="text-brand mt-0.5 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
@@ -401,7 +403,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <ul className="space-y-2 text-gray-600 text-sm">
                     {items.map((item) => (
                       <li key={item} className="flex items-start gap-2">
-                        <CheckCircle size={16} className="text-gray-900 mt-0.5 flex-shrink-0" />
+                        <CheckCircle size={16} className="text-brand mt-0.5 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
@@ -574,7 +576,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         <RevealSection className="py-16 bg-white">
           <div className="page-container">
             <div className="max-w-6xl mx-auto bg-black rounded-2xl p-10 sm:p-14 text-center text-white border border-gray-800">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
+              <h2 className="text-3xl sm:text-4xl font-semibold mb-4 tracking-tight">
                 {en ? 'Drive when you want and earn on your own terms' : 'Conduisez quand vous voulez, générez des revenus sur mesure'}
               </h2>
               <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">

@@ -38,7 +38,7 @@ export const Section: React.FC<SectionProps> = ({
           {eyebrow && (
             <p
               className={cn(
-                'mb-3 text-body-sm font-semibold uppercase tracking-wider',
+                'mb-3 text-body-sm font-semibold',
                 tone === 'dark' ? 'text-gray-400' : 'text-ink-subtle'
               )}
             >
