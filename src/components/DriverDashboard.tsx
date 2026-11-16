@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { TabBar } from './ui/TabBar';
+import { BottomNav } from './ui/BottomNav';
 import { daysUntilSubscriptionEnd, isSubscriptionEndPassed } from '../utils/subscriptionPeriod';
 import { Alert } from './ui/Alert';
 import { Badge } from './ui/Badge';
 import { BookingStatusBadge } from './ui/StatusBadge';
 import { DashboardSkeleton } from './ui/Skeleton';
-import { User, Car, Clock, MapPin, LogOut, UserCircle, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare, FileText, Package, Check, ChevronDown, Lightbulb } from 'lucide-react';
+import { User, Car, Clock, MapPin, LogOut, UserCircle, Bell, AlertCircle, Navigation, Phone, CheckCircle, XCircle, MessageSquare, FileText, Package, Check, ChevronDown, Lightbulb, Home, ClipboardList, CalendarDays, CreditCard } from 'lucide-react';
 import { TransporteurRequests } from './TransporteurRequests';
 import { Button } from './ui/Button';
 import { DriverProfileForm } from './DriverProfileForm';
@@ -27,7 +28,7 @@ import { Driver, Booking, DriverAcceptedParcelTrip } from '../types';
 import { fetchDriverAcceptedParcelTrips, completeParcelDelivery } from '../utils/parcelService';
 import { DriverParcelTripCard } from './DriverParcelTripCard';
 import { AppDownloadModal } from './AppDownloadModal';
-import { isTuniDriveAppVisit } from '../utils/tunidriveApp';
+import { useAppDownloadPrompt } from '../hooks/useAppDownloadPrompt';
 
 interface DriverDashboardProps {
   onLogout: () => void;
@@ -70,7 +71,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     lastPaidSubscriptionEnd?: string | null;
     hadPaidSubscription?: boolean;
   } | null>(null);
-  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const appDownloadPrompt = useAppDownloadPrompt();
   const [showExpiredSubscriptionModal, setShowExpiredSubscriptionModal] = useState(false);
 
   // Hook pour les notifications
@@ -119,18 +120,6 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     fetchDriverData();
   }, []);
 
-  // Show app download modal once per session (first load/refresh only)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const flagKey = 'td_app_modal_shown_session';
-    const alreadyShown = window.sessionStorage.getItem(flagKey) === '1';
-    if (alreadyShown || isTuniDriveAppVisit()) return;
-    const t = setTimeout(() => {
-      setIsDownloadOpen(true);
-      window.sessionStorage.setItem(flagKey, '1');
-    }, 600);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     if (driver?.id) {
@@ -917,8 +906,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     : 'Vous avez utilisé vos 2 courses gratuites. Souscrivez à l\'abonnement Premium pour continuer à recevoir des courses.';
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <AppDownloadModal isOpen={isDownloadOpen} onClose={() => setIsDownloadOpen(false)} />
+    <div className="flex flex-col min-h-screen bg-gray-50 pb-[var(--td-bottom-nav-offset,0px)]">
+      <AppDownloadModal isOpen={appDownloadPrompt.isOpen} onClose={appDownloadPrompt.close} />
       {/* Header */}
       <header className="bg-black border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -958,6 +947,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
       {/* Navigation Tabs */}
       <TabBar
+        className="hidden md:block"
         ariaLabel="Sections du tableau de bord"
         activeId={activeTab}
         onChange={handleTabChange}
@@ -1937,6 +1927,28 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
 
       {/* Footer */}
       <Footer />
+
+      {/* Navigation mobile : remplace la barre d'onglets du haut sous md.
+          Les devis de colis passent avant les disponibilités pour les transporteurs. */}
+      <BottomNav
+        ariaLabel="Sections du tableau de bord"
+        moreLabel="Plus"
+        activeId={activeTab}
+        onChange={handleTabChange}
+        items={[
+          { id: 'dashboard', label: 'Accueil', icon: Home },
+          { id: 'bookings', label: 'Courses', icon: ClipboardList, alertCount: pendingBookings.length },
+          {
+            id: 'parcel-requests',
+            label: 'Colis',
+            icon: Package,
+            hidden: !(driver?.driverType === 'transporteur' || driver?.driverType === 'both'),
+          },
+          { id: 'availability', label: 'Dispos', icon: CalendarDays },
+          { id: 'vehicles', label: 'Véhicules', icon: Car },
+          { id: 'subscription', label: 'Abonnement', icon: CreditCard },
+        ]}
+      />
     </div>
   );
 };

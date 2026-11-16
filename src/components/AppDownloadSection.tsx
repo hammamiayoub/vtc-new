@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle, Smartphone } from 'lucide-react';
+import { AppStoreBadges } from './AppStoreBadges';
 
 const APP_FEATURES = [
   'Inscription simple et gratuite',
@@ -58,38 +59,7 @@ export const AppDownloadSection: React.FC<AppDownloadSectionProps> = ({ compact 
             ))}
           </ul>
 
-          <div
-            className={
-              compact
-                ? 'flex flex-col sm:flex-row gap-3 sm:gap-4 pt-1'
-                : 'flex flex-col sm:flex-row gap-4 justify-center items-center'
-            }
-          >
-            <a
-              href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex justify-center hover:opacity-90 transition-opacity"
-            >
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-                alt="Disponible sur Google Play"
-                className="h-11 sm:h-12 w-auto"
-              />
-            </a>
-            <a
-              href="https://apps.apple.com/fr/app/tunidrive/id6753982765"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex justify-center hover:opacity-90 transition-opacity"
-            >
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
-                alt="Télécharger sur l'App Store"
-                className="h-11 sm:h-12 w-auto"
-              />
-            </a>
-          </div>
+          <AppStoreBadges className={compact ? 'pt-1' : 'justify-center'} />
         </div>
       </div>
     </div>

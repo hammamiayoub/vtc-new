@@ -18,6 +18,9 @@ import {
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 import { cn } from '../utils/cn';
+import { BookingSteps } from './ui/BookingSteps';
+import { resolveCurrentPickup } from '../utils/currentPickup';
+import { toLocalDateTimeInputValue } from '../utils/dateTimeInput';
 import { bookingSchema } from '../utils/validation';
 import { BookingFormData, Driver } from '../types';
 import { supabase } from '../lib/supabase';
@@ -31,14 +34,12 @@ import {
   getBillableOneWayDistanceKm,
   getProgressivePriceBreakdown,
   SHORT_TRIP_NON_TAXI_WARNING_KM,
-  getCurrentPosition,
   getCityCoordinates,
   Coordinates,
   PriceSurcharges
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { analytics } from '../utils/analytics';
-import { findNearbyFrequentPlace, loadFrequentPlaces } from '../utils/frequentPlaces';
 import { computeLongRangeApproachSurchargeTnd } from '../utils/ridePricing';
 import { searchRadiusKmForVehicleType } from '../utils/driverSearchDistance';
 import { MAX_DRIVERS_TO_SHOW } from '../utils/booking/bookingSearchConstants';
@@ -233,6 +234,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     setValue('pickupAddress', initialQuote.pickupAddress, { shouldValidate: true });
     setValue('destinationAddress', initialQuote.destinationAddress, { shouldValidate: true });
     setValue('vehicleType', initialQuote.vehicleType ?? 'sedan', { shouldValidate: true });
+    if (initialQuote.scheduledTime && new Date(initialQuote.scheduledTime).getTime() > Date.now()) {
+      setValue('scheduledTime', initialQuote.scheduledTime, { shouldValidate: true });
+    }
     setBaseDistance(initialQuote.distanceKm);
     setEstimatedDistance(initialQuote.distanceKm);
     setEstimatedPrice(initialQuote.estimatedPrice);
@@ -310,9 +314,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   // Départ immédiat : verrouiller la date/heure sur maintenant
   useEffect(() => {
     if (!isImmediateDeparture) return;
-    const now = new Date();
-    const nowValue = now.toISOString().slice(0, 16);
-    setValue('scheduledTime', nowValue, { shouldValidate: true });
+    setValue('scheduledTime', toLocalDateTimeInputValue(new Date()), { shouldValidate: true });
   }, [isImmediateDeparture, setValue]);
 
   // Calcul automatique de la distance et du prix avec coordonnées Google Maps
@@ -416,31 +418,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   const useCurrentLocation = async () => {
     setGettingLocation(true);
     try {
-      const position = await getCurrentPosition();
-      const nearby = findNearbyFrequentPlace(
-        await loadFrequentPlaces(),
-        position.latitude,
-        position.longitude,
-        ['tn']
-      );
-      if (nearby) {
-        setValue('pickupAddress', nearby.label);
-        setPickupAddressValue(nearby.label);
-        setPickupCoords({ latitude: nearby.latitude, longitude: nearby.longitude });
-        return;
-      }
-
-      // Un seul géocodage, au moment où la position est confirmée.
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&countrycodes=tn`
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        setValue('pickupAddress', data.display_name);
-        setPickupAddressValue(data.display_name);
-        setPickupCoords(position);
-      }
+      const pickup = await resolveCurrentPickup();
+      setValue('pickupAddress', pickup.label);
+      setPickupAddressValue(pickup.label);
+      setPickupCoords(pickup.coords);
     } catch (error) {
       console.error('Erreur lors de la géolocalisation:', error);
       setFormError('Impossible d\'obtenir votre position. Veuillez saisir l\'adresse manuellement.');
@@ -720,7 +701,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   const getMinDateTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 30); // Minimum 30 minutes à l'avance
-    return now.toISOString().slice(0, 16);
+    return toLocalDateTimeInputValue(now);
   };
 
 
@@ -738,6 +719,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           <p className="text-sm sm:text-base text-gray-600">
             {en ? 'Enter the details of your trip in Tunisia' : 'Renseignez les détails de votre trajet en Tunisie'}
           </p>
+
+          {restoredFromQuote && initialQuote && <BookingSteps current={3} className="mt-6 max-w-md" />}
 
           {restoredFromQuote && initialQuote && (
             <div className="mt-4 rounded-lg border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-800 flex items-start gap-2">
@@ -1227,7 +1210,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           {/* Rappel du chauffeur choisi, visible au moment de confirmer */}
           {selectedDriverData && (
             <div
-              className="max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-40 max-md:border-t max-md:border-gray-200 max-md:bg-white max-md:px-4 max-md:pt-3 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-md:shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:rounded-xl md:border-2 md:border-gray-900 md:bg-gray-50 md:p-4"
+              className="max-md:fixed max-md:inset-x-0 max-md:bottom-[var(--td-bottom-nav-offset,0px)] max-md:z-40 max-md:border-t max-md:border-gray-200 max-md:bg-white max-md:px-4 max-md:pt-3 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-md:shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:rounded-xl md:border-2 md:border-gray-900 md:bg-gray-50 md:p-4"
               aria-live="polite"
             >
               <p className="text-xs font-medium text-gray-500 mb-2">

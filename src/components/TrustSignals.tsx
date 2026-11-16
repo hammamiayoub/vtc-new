@@ -8,6 +8,8 @@ type TrustSignalsVariant = 'compact' | 'bar' | 'grid';
 interface TrustSignalsProps {
   variant?: TrustSignalsVariant;
   className?: string;
+  /** Variante « grid » : nombre maximal d'éléments affichés (tous par défaut). */
+  limit?: number;
 }
 
 function buildTrustItems(stats: PlatformStats, en: boolean) {
@@ -55,6 +57,7 @@ function buildTrustItems(stats: PlatformStats, en: boolean) {
 export const TrustSignals: React.FC<TrustSignalsProps> = ({
   variant = 'compact',
   className = '',
+  limit,
 }) => {
   const { locale } = useLocale();
   const en = locale === 'en';
@@ -95,7 +98,7 @@ export const TrustSignals: React.FC<TrustSignalsProps> = ({
   if (variant === 'grid') {
     return (
       <ul className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${className}`}>
-        {items.map(({ icon: Icon, label }) => (
+        {items.slice(0, limit).map(({ icon: Icon, label }) => (
           <li key={label} className="flex items-start gap-2 text-sm text-gray-700">
             <Icon size={16} className="text-gray-900 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <span>{label}</span>

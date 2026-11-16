@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Badge } from './ui/Badge';
 import { TabBar } from './ui/TabBar';
+import { BottomNav } from './ui/BottomNav';
 import { BookingStatusBadge } from './ui/StatusBadge';
 import { DashboardSkeleton, Skeleton, SkeletonRow } from './ui/Skeleton';
-import { MapPin, Clock, User, LogOut, UserCircle, Car, Plus, Package, Phone, MessageSquare } from 'lucide-react';
+import { MapPin, Clock, User, LogOut, UserCircle, Car, Plus, Package, Phone, MessageSquare, Home, ClipboardList, FileText } from 'lucide-react';
 import { ParcelQuoteForm } from './ParcelQuoteForm';
 import { ParcelQuoteList } from './ParcelQuoteList';
 import { ParcelQuoteDetail } from './ParcelQuoteDetail';
@@ -28,7 +29,7 @@ import { useClientNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { AppDownloadModal } from './AppDownloadModal';
 import { LanguageSwitch, useLocale } from '../i18n/locale';
-import { isTuniDriveAppVisit } from '../utils/tunidriveApp';
+import { useAppDownloadPrompt } from '../hooks/useAppDownloadPrompt';
 import {
   clearPendingQuote,
   getPendingQuote,
@@ -62,7 +63,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedBookingForRating, setSelectedBookingForRating] = useState<Booking | null>(null);
   const [ratedBookings, setRatedBookings] = useState<Set<string>>(new Set());
-  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const appDownloadPrompt = useAppDownloadPrompt();
 
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead, refreshNotifications } = useClientNotifications(client?.id || '');
@@ -107,18 +108,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
     fetchClientData();
   }, []);
 
-  // Show app download modal once per session (first load/refresh only)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const flagKey = 'td_app_modal_shown_session';
-    const alreadyShown = window.sessionStorage.getItem(flagKey) === '1';
-    if (alreadyShown || isTuniDriveAppVisit()) return;
-    const t = setTimeout(() => {
-      setIsDownloadOpen(true);
-      window.sessionStorage.setItem(flagKey, '1');
-    }, 600);
-    return () => clearTimeout(t);
-  }, []);
 
   // Dernière requête lancée : une réponse plus ancienne qui arrive en retard ne doit pas écraser la liste.
   const bookingsRequestRef = useRef(0);
@@ -478,8 +467,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AppDownloadModal isOpen={isDownloadOpen} onClose={() => setIsDownloadOpen(false)} />
+    <div className="min-h-screen bg-gray-50 pb-[var(--td-bottom-nav-offset,0px)]">
+      <AppDownloadModal isOpen={appDownloadPrompt.isOpen} onClose={appDownloadPrompt.close} />
       {/* Header */}
       <header className="bg-black border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -522,6 +511,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
       {/* Navigation Tabs */}
       <TabBar
+        className="hidden md:block"
         ariaLabel={en ? 'Dashboard sections' : 'Sections du tableau de bord'}
         activeId={activeTab}
         onChange={handleTabChange}
@@ -950,6 +940,21 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
 
       {/* Footer */}
       <Footer />
+
+      {/* Navigation mobile : remplace la barre d'onglets du haut sous md */}
+      <BottomNav
+        ariaLabel={en ? 'Dashboard sections' : 'Sections du tableau de bord'}
+        moreLabel={en ? 'More' : 'Plus'}
+        activeId={activeTab}
+        onChange={handleTabChange}
+        items={[
+          { id: 'dashboard', label: en ? 'Home' : 'Accueil', icon: Home },
+          { id: 'bookings', label: en ? 'Rides' : 'Courses', icon: ClipboardList },
+          { id: 'new-booking', label: en ? 'Book' : 'Réserver', icon: Plus, primary: true },
+          { id: 'new-parcel', label: en ? 'Parcel' : 'Colis', icon: Package },
+          { id: 'parcel-requests', label: en ? 'Quotes' : 'Devis', icon: FileText },
+        ]}
+      />
     </div>
   );
 };

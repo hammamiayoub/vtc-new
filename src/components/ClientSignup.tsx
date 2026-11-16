@@ -11,6 +11,7 @@ import { ClientSignupFormData } from '../types';
 import type { SignupCountryCode } from '../utils/signupCountries';
 import { supabase } from '../lib/supabase';
 import { hasPendingQuote } from '../utils/pendingQuote';
+import { BookingSteps } from './ui/BookingSteps';
 import { TrustSignals } from './TrustSignals';
 import { useLocale } from '../i18n/locale';
 import { translateSignupMessage } from '../i18n/signupErrors';
@@ -320,7 +321,8 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
             </div>
 
             {hasPendingQuote() && (
-              <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+              <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 text-sm text-gray-700">
+                <BookingSteps current={2} className="mb-3" />
                 {en
                   ? 'Your homepage quote will be kept after you confirm your email and sign in.'
                   : "Votre devis depuis l'accueil sera repris après confirmation de l'email et connexion."}

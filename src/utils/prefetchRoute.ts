@@ -8,9 +8,9 @@ const ROUTE_IMPORTS: Record<string, () => Promise<unknown>> = {
   '/transport-groupes-tunisie': () => import('../components/GroupTravelPage'),
   '/signup': () => import('../components/DriverSignup'),
   '/client-signup': () => import('../components/ClientSignup'),
-  '/login': () => import('../components/LoginSelection'),
-  '/driver-login': () => import('../components/DriverLogin'),
-  '/client-login': () => import('../components/ClientLogin'),
+  '/login': () => import('../components/LoginScreen'),
+  '/driver-login': () => import('../components/LoginScreen'),
+  '/client-login': () => import('../components/LoginScreen'),
 };
 
 export function prefetchRoute(path: string): void {
