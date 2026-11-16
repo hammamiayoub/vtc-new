@@ -43,7 +43,7 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
     <div
       ref={bannerRef}
       className="fixed left-0 right-0 z-[90] p-4 pointer-events-none"
-      style={{ bottom: 'var(--td-bottom-banner-offset, 1rem)' }}
+      style={{ bottom: 'calc(var(--td-bottom-banner-offset, 1rem) + var(--td-bottom-nav-offset, 0px))' }}
       role="region"
       aria-labelledby="app-download-banner-title"
     >

@@ -18,6 +18,7 @@ import { LanguageSwitch, LocaleProvider, localizePath, splitLocalePath, useLocal
 import { EmailConfirmedNotice } from './components/EmailConfirmedNotice';
 import { readSignupCallback } from './utils/signupCallback';
 import { consumeAppSignInLink } from './utils/appSignIn';
+import { clearPendingQuote } from './utils/pendingQuote';
 
 const DriverSignup = lazy(() =>
   import('./components/DriverSignup').then((m) => ({ default: m.DriverSignup }))
@@ -25,14 +26,8 @@ const DriverSignup = lazy(() =>
 const ClientSignup = lazy(() =>
   import('./components/ClientSignup').then((m) => ({ default: m.ClientSignup }))
 );
-const LoginSelection = lazy(() =>
-  import('./components/LoginSelection').then((m) => ({ default: m.LoginSelection }))
-);
-const DriverLogin = lazy(() =>
-  import('./components/DriverLogin').then((m) => ({ default: m.DriverLogin }))
-);
-const ClientLogin = lazy(() =>
-  import('./components/ClientLogin').then((m) => ({ default: m.ClientLogin }))
+const LoginScreen = lazy(() =>
+  import('./components/LoginScreen').then((m) => ({ default: m.LoginScreen }))
 );
 const DriverDashboard = lazy(() =>
   import('./components/DriverDashboard').then((m) => ({ default: m.DriverDashboard }))
@@ -283,6 +278,8 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
   const handleLogout = async () => {
     try {
       setCurrentView('home');
+      // Le devis en attente ne doit pas être repris par un autre compte sur le même appareil.
+      clearPendingQuote();
       await supabase.auth.signOut();
       navigate(href('/'), { replace: true });
     } catch (error) {
@@ -306,40 +303,21 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
         return <DriverSignup onBack={() => navigate(href('/'))} />;
       case 'client-signup':
         return <ClientSignup onBack={() => navigate(href('/'))} />;
+      case 'login':
       case 'login-selection':
-        return (
-          <LoginSelection
-            onBack={() => navigate(href('/'))}
-            onDriverLogin={() => navigate(href('/driver-login'))}
-            onClientLogin={() => navigate(href('/client-login'))}
-          />
-        );
+      case 'client-login':
       case 'driver-login':
         return (
-          <DriverLogin
-            onBack={() => navigate(href('/login'))}
-            onSignup={() => navigate(href('/signup'))}
-            onLoginSuccess={() => {
-              navigate('/dashboard');
+          <LoginScreen
+            role={currentView === 'driver-login' ? 'driver' : 'client'}
+            onRoleChange={(role) =>
+              navigate(href(role === 'driver' ? '/driver-login' : '/client-login'), { replace: true })
+            }
+            onSignup={(role) => navigate(href(role === 'driver' ? '/signup' : '/client-signup'))}
+            onLoginSuccess={(role) => {
+              if (role === 'driver') navigate('/dashboard');
+              else navigate(href('/client-dashboard'));
             }}
-          />
-        );
-      case 'client-login':
-        return (
-          <ClientLogin
-            onBack={() => navigate(href('/'))}
-            onSignup={() => navigate(href('/client-signup'))}
-            onLoginSuccess={() => {
-              navigate(href('/client-dashboard'));
-            }}
-          />
-        );
-      case 'login':
-        return (
-          <LoginSelection
-            onBack={() => navigate(href('/'))}
-            onDriverLogin={() => navigate(href('/driver-login'))}
-            onClientLogin={() => navigate(href('/client-login'))}
           />
         );
       case 'dashboard':
@@ -392,6 +370,11 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
     }
   };
 
+  // Les trois adresses de connexion partagent un même écran : le garder monté d'un onglet à
+  // l'autre conserve l'email déjà saisi et évite de rejouer l'animation d'entrée.
+  const isLoginPath =
+    logicalPath === '/login' || logicalPath === '/client-login' || logicalPath === '/driver-login';
+
   const showHeader =
     !signupCallback &&
     (currentView === 'home' ||
@@ -441,7 +424,7 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
             }}
           />
         ) : (
-          <div key={logicalPath} className="page-enter">
+          <div key={isLoginPath ? 'login' : logicalPath} className="page-enter">
             {renderContent()}
           </div>
         )}

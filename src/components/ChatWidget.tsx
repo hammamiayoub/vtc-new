@@ -39,9 +39,9 @@ const OPENED_KEY = 'td_chat_opened';
 
 /** Au-dessus des bannières cookies + téléchargement app (variables CSS sur :root) */
 const CHAT_FLOAT_BOTTOM =
-  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + var(--td-selection-bar-offset, 0px) + 1.5rem)';
+  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + var(--td-selection-bar-offset, 0px) + var(--td-bottom-nav-offset, 0px) + 1.5rem)';
 const CHAT_PANEL_BOTTOM =
-  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + var(--td-selection-bar-offset, 0px) + 4.5rem)';
+  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + var(--td-selection-bar-offset, 0px) + var(--td-bottom-nav-offset, 0px) + 4.5rem)';
 
 function readSession(key: string): boolean {
   try {
@@ -188,6 +188,8 @@ export const ChatWidget: React.FC = () => {
   useEffect(() => {
     if (readSession(TEASER_KEY) || readSession(OPENED_KEY)) return;
     const show = window.setTimeout(() => {
+      // Pas de bulle par-dessus la bannière de l'application : un seul message à la fois.
+      if (document.documentElement.style.getPropertyValue('--td-app-download-offset')) return;
       setShowTeaser(true);
       writeSession(TEASER_KEY);
     }, 4000);

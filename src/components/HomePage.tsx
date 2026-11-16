@@ -1,11 +1,7 @@
 import React from 'react';
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Car,
-  Clock,
-  Shield,
-  Star,
   ArrowRight,
   CheckCircle,
   Users,
@@ -13,21 +9,21 @@ import {
   Bus,
   Crown,
   Package,
-  Globe,
   Plane,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Footer } from './Footer';
 import { AppDownloadModal } from './AppDownloadModal';
+import { AppStoreBadges } from './AppStoreBadges';
 import { HomeBookingWidget } from './HomeBookingWidget';
 import { TrustSignals } from './TrustSignals';
-import { HomeRideCard } from './HomeRideCard';
+import { focusHomeBookingForm } from '../utils/focusHomeBooking';
 import { ReviewsCarousel } from './ReviewsCarousel';
 import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
 import { useLocale } from '../i18n/locale';
 import { RevealSection } from './ui/RevealSection';
-import { isTuniDriveAppVisit } from '../utils/tunidriveApp';
+import { useAppDownloadPrompt } from '../hooks/useAppDownloadPrompt';
 
 interface HomePageProps {
   onGetStarted: () => void;
@@ -38,12 +34,12 @@ interface HomePageProps {
 
 function VehiclePicture({
   webp,
-  png,
+  jpg,
   alt,
   fallback,
 }: {
   webp: string;
-  png: string;
+  jpg: string;
   alt: string;
   fallback: React.ReactNode;
 }) {
@@ -51,12 +47,12 @@ function VehiclePicture({
     <picture>
       <source srcSet={webp} type="image/webp" />
       <img
-        src={png}
+        src={jpg}
         alt={alt}
         loading="lazy"
         decoding="async"
         width={800}
-        height={600}
+        height={533}
         className="w-full h-full object-cover transition-opacity duration-300"
         onError={(e) => {
           const target = e.currentTarget as HTMLImageElement;
@@ -79,9 +75,9 @@ const serviceOffers = [
     titleEn: 'Private ride',
     description: 'Réservez un chauffeur privé en quelques clics pour vos trajets en Tunisie.',
     descriptionEn: 'Book a private driver in a few clicks for trips across Tunisia.',
-    href: '/client-login',
-    cta: 'Réserver',
-    ctaEn: 'Book',
+    href: null,
+    cta: 'Voir le prix',
+    ctaEn: 'See the price',
   },
   {
     icon: Plane,
@@ -123,30 +119,22 @@ export const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const { locale, href } = useLocale();
   const en = locale === 'en';
-  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const navigate = useNavigate();
+  const appDownloadPrompt = useAppDownloadPrompt();
   const faqItems = en ? vtcSeoFaqItemsEn : vtcSeoFaqItems;
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const flagKey = 'td_app_modal_shown_session';
-    const alreadyShown = window.sessionStorage.getItem(flagKey) === '1';
-    if (alreadyShown || isTuniDriveAppVisit()) return;
-    const t = setTimeout(() => {
-      setIsDownloadOpen(true);
-      window.sessionStorage.setItem(flagKey, '1');
-    }, 600);
-    return () => clearTimeout(t);
-  }, []);
 
   return (
     <div className="min-h-screen bg-white">
-      <AppDownloadModal isOpen={isDownloadOpen} onClose={() => setIsDownloadOpen(false)} />
+      <AppDownloadModal isOpen={appDownloadPrompt.isOpen} onClose={appDownloadPrompt.close} />
       <main>
         {/* Hero — style Uber : le formulaire de réservation est l'élément principal */}
         <section className="bg-white">
           <div className="page-container py-10 sm:py-14 lg:py-24">
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-x-16 lg:gap-y-6">
-              <div className="lg:col-start-1 lg:row-start-1 lg:self-end">
+            {/* Trois blocs pour l'ordre mobile (texte, formulaire, réassurance) ; sur grand écran
+                le formulaire occupe la colonne de droite, aligné en haut avec le titre. */}
+            <div className="grid gap-8 lg:grid-cols-2 lg:grid-rows-[auto_1fr] lg:gap-x-16 lg:gap-y-8">
+              <div className="lg:col-start-1 lg:row-start-1">
                 <h1 className="text-display-md sm:text-display-lg xl:text-display-xl text-gray-900 mb-5">
                   {en ? 'Go wherever you want with TuniDrive' : 'Allez où vous voulez avec TuniDrive'}
                 </h1>
@@ -167,46 +155,40 @@ export const HomePage: React.FC<HomePageProps> = ({
 
               <div
                 id="reserver"
-                className="scroll-mt-24 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-center"
+                className="scroll-mt-24 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-start"
               >
                 <HomeBookingWidget
                   onClientLogin={onClientLogin}
                   onClientSignup={onClientSignup}
                 />
-                <HomeRideCard className="mt-6" />
               </div>
 
-              <div className="lg:col-start-1 lg:row-start-2 lg:self-start">
-                <TrustSignals variant="bar" className="mb-6 justify-start" />
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-body-sm font-medium">
+              <div className="lg:col-start-1 lg:row-start-2 lg:self-start max-w-xl">
+                <TrustSignals variant="grid" limit={4} className="border-t border-surface-border pt-6 gap-x-6" />
+                <p className="mt-6 text-body-sm text-ink-muted">
+                  {en ? 'Are you a driver?' : 'Vous êtes chauffeur ?'}{' '}
                   <button
                     type="button"
                     onClick={onGetStarted}
-                    className="focus-ring inline-flex items-center gap-1.5 rounded-md text-gray-900 underline underline-offset-4 hover:text-ink-muted"
+                    className="focus-ring rounded-md font-semibold text-gray-900 underline underline-offset-4 hover:text-ink-muted"
                   >
-                    {en ? 'Become a driver' : 'Devenir chauffeur'}
-                    <ArrowRight size={16} aria-hidden="true" />
+                    {en ? 'Drive with TuniDrive' : 'Devenir chauffeur'}
                   </button>
+                  <span aria-hidden="true"> · </span>
                   <button
                     type="button"
                     onClick={onDriverLogin}
-                    className="focus-ring rounded-md text-ink-muted hover:text-gray-900"
+                    className="focus-ring rounded-md font-medium text-gray-900 hover:underline underline-offset-4"
                   >
-                    {en ? 'Driver login' : 'Connexion chauffeur'}
+                    {en ? 'Log in' : 'Se connecter'}
                   </button>
-                  <Link
-                    to={href('/vtc-tunisie')}
-                    className="focus-ring rounded-md text-ink-muted hover:text-gray-900"
-                  >
-                    {en ? 'Private driver services in Tunisia' : 'Nos services VTC en Tunisie'}
-                  </Link>
-                </div>
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Services — carrousel de cartes type Uber */}
+        {/* Services */}
         <RevealSection className="py-16 bg-surface-muted">
           <div className="page-container">
             <div className="text-center mb-10 max-w-3xl mx-auto">
@@ -215,278 +197,96 @@ export const HomePage: React.FC<HomePageProps> = ({
               </h2>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {serviceOffers.map(({ icon: Icon, title, titleEn, description, descriptionEn, href: offerHref, cta, ctaEn }) => (
-                <Link
-                  key={title}
-                  to={href(offerHref)}
-                  className="uber-card p-6 flex flex-col h-full group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center mb-4">
-                    <Icon size={20} />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{en ? titleEn : title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed flex-1">{en ? descriptionEn : description}</p>
-                  <span className="mt-4 text-sm font-semibold text-gray-900 group-hover:underline">
-                    {en ? ctaEn : cta} →
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </RevealSection>
-
-        <RevealSection id="groupes-tunisie" className="py-16 md:py-20 bg-white border-y border-[#d5e4e4]">
-          <div className="page-container">
-            <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
-              <div>
-                <p className="text-sm font-semibold text-brand mb-3">
-                  {en ? 'From abroad' : 'Depuis l\'étranger'}
-                </p>
-                <h2 className="page-heading mb-4">
-                  {en
-                    ? 'Transport for groups'
-                    : 'Transport de groupes'}
-                </h2>
-                <p className="page-subheading mb-6">
-                  {en
-                    ? 'Families, agencies and groups of friends landing for a stay: TuniDrive organizes their movements on the ground — airport welcome, hotel transfers, trips between cities and the return.'
-                    : 'Familles, agences et groupes d\'amis qui arrivent pour un séjour : TuniDrive organise leurs déplacements sur place — accueil à l\'aéroport, transferts hôtel, trajets entre villes et retour.'}
-                </p>
-                <Link
-                  to={href('/transport-groupes-tunisie')}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 hover:underline"
-                >
-                  {en ? 'See group transport' : 'Voir le transport de groupes'}
-                  <ArrowRight size={16} aria-hidden="true" />
-                </Link>
-              </div>
-              <ul className="uber-card p-8 space-y-4">
-                {(en
-                  ? [
-                      'Pickup at Tunis-Carthage, Enfidha, Monastir or Djerba',
-                      'Van, minibus or bus sized to the group',
-                      'The stay programme is arranged before arrival',
-                    ]
-                  : [
-                      'Prise en charge à Tunis-Carthage, Enfidha, Monastir ou Djerba',
-                      'Van, minibus ou bus selon la taille du groupe',
-                      'Le programme du séjour est préparé avant l\'arrivée',
-                    ]
-                ).map((item) => (
-                  <li key={item} className="flex gap-3 text-sm text-gray-700">
-                    <Users size={18} className="text-gray-900 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </RevealSection>
-
-        {/* Transport VTC */}
-        <RevealSection id="transport-vtc" className="py-16 md:py-20 bg-surface-muted">
-          <div className="page-container">
-            <div className="max-w-5xl mx-auto space-y-10">
-              <div className="text-center">
-                <h2 className="page-heading mb-4">
-                  {en ? 'Passenger transport & private hire in Tunisia' : 'Transport de personnes & VTC en Tunisie'}
-                </h2>
-                <p className="page-subheading max-w-3xl mx-auto">
-                  {en
-                    ? 'Book a private driver for trips in Tunisia. Sedan, taxi, van, minibus or luxury vehicle.'
-                    : 'Réservez un chauffeur privé ou un VTC pour vos déplacements en Tunisie. Berline, taxi, van, minibus ou véhicule de luxe.'}
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-4">
-                {[
-                  { icon: Plane, label: en ? 'Airport transfer in Tunisia' : 'Transfert aéroport Tunisie', href: '/vtc-tunisie#transfert-aeroport-tunisie' },
-                  { icon: Car, label: en ? 'Book a taxi / driver' : 'Réserver taxi / chauffeur', href: '/client-login' },
-                  { icon: Users, label: en ? 'Groups from abroad' : 'Groupes venant de l\'étranger', href: '/transport-groupes-tunisie' },
-                ].map(({ icon: Icon, label, href: itemHref }) => (
-                  <Link
-                    key={label}
-                    to={href(itemHref)}
-                    className="flex items-center gap-3 uber-card p-4 text-sm font-medium text-gray-800"
-                  >
-                    <Icon size={20} className="text-gray-600 flex-shrink-0" />
-                    {label}
+              {serviceOffers.map(({ icon: Icon, title, titleEn, description, descriptionEn, href: offerHref, cta, ctaEn }) => {
+                const content = (
+                  <>
+                    <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center mb-4">
+                      <Icon size={20} aria-hidden="true" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{en ? titleEn : title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed flex-1">{en ? descriptionEn : description}</p>
+                    <span className="mt-4 text-sm font-semibold text-gray-900 group-hover:underline">
+                      {en ? ctaEn : cta} →
+                    </span>
+                  </>
+                );
+                const cardClass = 'focus-ring uber-card p-6 flex flex-col h-full group text-left';
+                // Sans lien : la carte ramène au formulaire de réservation en haut de page.
+                return offerHref ? (
+                  <Link key={title} to={href(offerHref)} className={cardClass}>
+                    {content}
                   </Link>
-                ))}
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-              {[
-                {
-                  icon: Users,
-                  title: en ? 'For riders' : 'Pour les clients',
-                  items: en
-                    ? ['Book your ride in a few clicks', 'Transparent fare shown before you confirm', 'Verified partner drivers']
-                    : ['Réservez votre course en quelques clics', 'Tarif transparent communiqué avant validation', 'Chauffeurs partenaires vérifiés'],
-                },
-                {
-                  icon: Car,
-                  title: en ? 'For drivers' : 'Pour les chauffeurs',
-                  items: en
-                    ? ['Receive requests that match your availability', 'Manage your vehicles and schedule', 'Grow your private-hire activity']
-                    : ['Recevez des demandes selon vos disponibilités', 'Gérez vos véhicules et votre planning', 'Développez votre activité VTC'],
-                },
-              ].map(({ icon: Icon, title, items }) => (
-                <div key={title} className="uber-card p-8">
-                  <div className="w-10 h-10 bg-surface-muted rounded-full flex items-center justify-center mb-4">
-                    <Icon className="text-gray-700" size={20} />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{title}</h3>
-                  <ul className="space-y-2 text-gray-600 text-sm">
-                    {items.map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <CheckCircle size={16} className="text-brand mt-0.5 flex-shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" onClick={onClientLogin} className="rounded-full">
-                  {en ? 'Book a ride' : 'Réserver une course'}
-                  <ArrowRight size={20} className="ml-2" />
-                </Button>
-                <Button size="lg" variant="outline" onClick={onGetStarted} className="rounded-full">
-                  {en ? 'Become a partner driver' : 'Devenir chauffeur partenaire'}
-                </Button>
-              </div>
+                ) : (
+                  <button key={title} type="button" onClick={focusHomeBookingForm} className={cardClass}>
+                    {content}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </RevealSection>
 
-        {/* Transport colis */}
-        <RevealSection id="transport-colis" className="py-16 bg-white">
+        {/* Transport VTC : étapes de réservation + véhicules */}
+        <RevealSection id="transport-vtc" className="scroll-mt-20 py-16 md:py-20 bg-white">
           <div className="page-container">
-            <div className="text-center mb-12 max-w-3xl mx-auto">
-              <span className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full text-xs font-semibold text-gray-700 border border-surface-border mb-4">
-                <Globe size={14} />
-                Europe ↔ Tunisie
-              </span>
-              <h2 className="page-heading mb-4">{en ? 'Parcel and goods transport' : 'Transport de colis et marchandises'}</h2>
+            <div className="text-center max-w-3xl mx-auto mb-10">
+              <h2 className="page-heading mb-4">
+                {en ? 'Passenger transport & private hire in Tunisia' : 'Transport de personnes & VTC en Tunisie'}
+              </h2>
               <p className="page-subheading">
                 {en
-                  ? 'Submit a quote request: qualified carriers send their prices, you compare and confirm online.'
-                  : 'Déposez une demande de devis : les transporteurs qualifiés vous proposent leurs tarifs, vous comparez et validez en ligne.'}
+                  ? 'Book a private driver for trips in Tunisia. Sedan, taxi, van, minibus or luxury vehicle.'
+                  : 'Réservez un chauffeur privé ou un VTC pour vos déplacements en Tunisie. Berline, taxi, van, minibus ou véhicule de luxe.'}
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mb-12">
-              {[
-                {
-                  icon: Package,
-                  title: en ? 'For clients' : 'Pour les clients',
-                  items: en
-                    ? ['Describe your shipment (addresses, date, photos)', 'Receive several price offers', 'Choose the best offer']
-                    : ['Décrivez votre envoi (adresses, date, photos)', 'Recevez plusieurs propositions de prix', 'Choisissez la meilleure offre'],
-                },
-                {
-                  icon: Truck,
-                  title: en ? 'For carriers' : 'Pour les transporteurs',
-                  items: en
-                    ? ['Receive requests that match your routes', 'Propose your price in EUR or TND', 'Exchange contact details after acceptance']
-                    : ['Recevez les demandes correspondant à vos trajets', 'Proposez votre tarif en EUR ou TND', 'Échangez vos coordonnées après acceptation'],
-                },
-              ].map(({ icon: Icon, title, items }) => (
-                <div key={title} className="uber-card p-8">
-                  <div className="w-10 h-10 bg-surface-muted rounded-full flex items-center justify-center mb-4">
-                    <Icon className="text-gray-700" size={20} />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{title}</h3>
-                  <ul className="space-y-2 text-gray-600 text-sm">
-                    {items.map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <CheckCircle size={16} className="text-brand mt-0.5 flex-shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button size="lg" onClick={onClientLogin} className="rounded-full">
-                {en ? 'Request a parcel quote' : 'Demander un devis colis'}
-                <ArrowRight size={20} className="ml-2" />
-              </Button>
-              <Link
-                to={href('/transport-colis-europe-tunisie')}
-                className="text-sm font-semibold text-gray-700 hover:text-gray-900 underline-offset-4 hover:underline"
-              >
-                {en ? 'Learn more' : 'En savoir plus'}
-              </Link>
-            </div>
-          </div>
-        </RevealSection>
-
-        {/* Pourquoi TuniDrive */}
-        <RevealSection className="py-16 bg-surface-muted">
-          <div className="page-container">
-            <div className="text-center mb-12 max-w-2xl mx-auto">
-              <h2 className="page-heading mb-4">{en ? 'Why choose TuniDrive?' : 'Pourquoi choisir TuniDrive ?'}</h2>
-              <p className="page-subheading">
-                {en
-                  ? 'Passenger rides, international parcels and bulky goods'
-                  : 'Courses de personnes, colis internationaux et marchandises volumineuses'}
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { icon: Shield, title: en ? 'Safety first' : 'Sécurité maximale', description: en ? 'Verified drivers and full insurance' : 'Chauffeurs vérifiés et assurance complète' },
-                { icon: Clock, title: en ? 'On time' : 'Ponctualité garantie', description: en ? 'Instant booking and live tracking' : 'Réservation instantanée et suivi en temps réel' },
-                { icon: Star, title: en ? 'Premium service' : 'Service premium', description: en ? 'Comfortable vehicles and 24/7 support' : 'Véhicules confortables et support 24/7' },
-                { icon: Car, title: en ? 'Transparent fares' : 'Tarifs transparents', description: en ? 'A clear fare grid based on distance' : 'Grille tarifaire claire selon la distance' },
-              ].map(({ icon: Icon, title, description }) => (
-                <div key={title} className="uber-card p-6 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-surface-muted rounded-full mb-4">
-                    <Icon size={22} className="text-gray-700" />
-                  </div>
+            <ol className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto mb-12">
+              {(en
+                ? [
+                    { title: 'Enter your trip', text: 'Pickup and destination: the estimated fare is shown right away, no account needed.' },
+                    { title: 'Choose your driver', text: 'Create a free account, then pick the vehicle and the verified driver that suit you.' },
+                    { title: 'Confirm', text: 'The price is confirmed before departure and your driver picks you up at the agreed time.' },
+                  ]
+                : [
+                    { title: 'Indiquez votre trajet', text: "Départ et destination : le tarif estimé s'affiche tout de suite, sans compte." },
+                    { title: 'Choisissez votre chauffeur', text: 'Créez un compte gratuit, puis choisissez le véhicule et le chauffeur vérifié qui vous conviennent.' },
+                    { title: 'Confirmez', text: "Le prix est confirmé avant le départ et votre chauffeur vient vous chercher à l'heure convenue." },
+                  ]
+              ).map(({ title, text }, index) => (
+                <li key={title} className="rounded-xl bg-surface-muted p-6">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-sm font-semibold text-white mb-4">
+                    {index + 1}
+                  </span>
                   <h3 className="text-base font-semibold text-gray-900 mb-2">{title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
-                </div>
+                  <p className="text-sm text-gray-600 leading-relaxed">{text}</p>
+                </li>
               ))}
-            </div>
-          </div>
-        </RevealSection>
+            </ol>
 
-        <ReviewsCarousel />
-
-        {/* Véhicules */}
-        <RevealSection className="py-16 bg-surface-muted">
-          <div className="page-container">
-            <div className="text-center mb-12 max-w-3xl mx-auto">
-              <h2 className="page-heading mb-4">{en ? 'Our transport services' : 'Nos services de transport'}</h2>
-              <p className="page-subheading">
-                {en
-                  ? 'A full range of vehicles for your trips and for goods transport'
-                  : 'Une gamme complète de véhicules pour vos trajets et le transport de marchandises'}
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Véhicules : défilement horizontal au doigt sur mobile, grille à partir de md */}
+            <div
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 py-1 scroll-px-4 sm:-mx-6 sm:px-6 sm:scroll-px-6 md:mx-0 md:px-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible lg:grid-cols-4"
+              role="list"
+              aria-label={en ? 'Available vehicles' : 'Véhicules disponibles'}
+            >
               {[
-                { webp: '/van.webp', png: '/van.png', alt: en ? 'Group van' : 'Van de transport collectif', title: en ? 'Shared van' : 'Van collectif', desc: en ? 'Group transport for up to 8 people.' : 'Transport de groupe jusqu\'à 8 personnes.', cap: en ? 'Up to 8 passengers' : 'Jusqu\'à 8 passagers', icon: Users, color: 'from-gray-700 to-gray-900' },
-                { webp: '/bus.webp', png: '/bus.png', alt: en ? 'Coach' : 'Bus de transport', title: en ? 'Coach' : 'Bus de transport', desc: en ? 'Long-distance trips and large groups.' : 'Trajets longue distance et grands groupes.', cap: en ? 'Up to 50 passengers' : 'Jusqu\'à 50 passagers', icon: Bus, color: 'from-gray-700 to-gray-900' },
-                { webp: '/utilitaire.webp', png: '/utilitaire.png', alt: en ? 'Utility vehicle' : 'Véhicule utilitaire', title: en ? 'Utility vehicle' : 'Véhicule utilitaire', desc: en ? 'Goods transport and moving.' : 'Transport de marchandises et déménagement.', cap: en ? 'Goods transport' : 'Transport de marchandises', icon: Truck, color: 'from-gray-700 to-gray-900' },
-                { webp: '/limousine.webp', png: '/limousine.png', alt: en ? 'Luxury vehicle' : 'Véhicule de luxe', title: en ? 'Luxury vehicle' : 'Véhicule de luxe', desc: en ? 'Premium service for special occasions.' : 'Service premium pour occasions spéciales.', cap: en ? 'Premium service' : 'Service premium', icon: Crown, color: 'from-gray-700 to-gray-900' },
-              ].map(({ webp, png, alt, title, desc, cap, icon: Icon, color }) => (
-                <div key={title} className="group uber-card overflow-hidden">
+                { webp: '/van.webp', jpg: '/van.jpg', alt: en ? 'Group van' : 'Van de transport collectif', title: en ? 'Shared van' : 'Van collectif', desc: en ? 'Group transport for up to 8 people.' : "Transport de groupe jusqu'à 8 personnes.", cap: en ? 'Up to 8 passengers' : "Jusqu'à 8 passagers", icon: Users },
+                { webp: '/bus.webp', jpg: '/bus.jpg', alt: en ? 'Coach' : 'Bus de transport', title: en ? 'Coach' : 'Bus de transport', desc: en ? 'Long-distance trips and large groups.' : 'Trajets longue distance et grands groupes.', cap: en ? 'Up to 50 passengers' : "Jusqu'à 50 passagers", icon: Bus },
+                { webp: '/utilitaire.webp', jpg: '/utilitaire.jpg', alt: en ? 'Utility vehicle' : 'Véhicule utilitaire', title: en ? 'Utility vehicle' : 'Véhicule utilitaire', desc: en ? 'Goods transport and moving.' : 'Transport de marchandises et déménagement.', cap: en ? 'Goods transport' : 'Transport de marchandises', icon: Truck },
+                { webp: '/limousine.webp', jpg: '/limousine.jpg', alt: en ? 'Luxury vehicle' : 'Véhicule de luxe', title: en ? 'Luxury vehicle' : 'Véhicule de luxe', desc: en ? 'Premium service for special occasions.' : 'Service premium pour occasions spéciales.', cap: en ? 'Premium service' : 'Service premium', icon: Crown },
+              ].map(({ webp, jpg, alt, title, desc, cap, icon: Icon }) => (
+                <div
+                  key={title}
+                  role="listitem"
+                  className="uber-card overflow-hidden snap-start shrink-0 w-[78%] sm:w-[46%] md:w-auto"
+                >
                   <div className="relative h-44 overflow-hidden">
                     <VehiclePicture
                       webp={webp}
-                      png={png}
+                      jpg={jpg}
                       alt={alt}
                       fallback={
-                        <div className={`absolute inset-0 bg-gradient-to-br ${color} flex items-center justify-center`} style={{ display: 'none' }}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center" style={{ display: 'none' }}>
                           <Icon size={56} className="text-white opacity-90" />
                         </div>
                       }
@@ -501,11 +301,113 @@ export const HomePage: React.FC<HomePageProps> = ({
               ))}
             </div>
 
-            <div className="text-center mt-12">
-              <Button size="lg" onClick={onClientLogin} className="rounded-full">
-                {en ? 'See all vehicles' : 'Voir tous les véhicules'}
-                <ArrowRight size={20} className="ml-2" />
+            <div className="text-center mt-10">
+              <Button size="lg" onClick={focusHomeBookingForm} className="rounded-full">
+                {en ? 'See the price of my trip' : 'Voir le prix de mon trajet'}
+                <ArrowRight size={20} className="ml-2" aria-hidden="true" />
               </Button>
+            </div>
+          </div>
+        </RevealSection>
+
+        {/* Groupes */}
+        <RevealSection id="groupes-tunisie" className="scroll-mt-20 py-16 md:py-20 bg-surface-muted">
+          <div className="page-container">
+            <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
+              <div>
+                <p className="text-sm font-semibold text-brand mb-3">
+                  {en ? 'From abroad' : "Depuis l'étranger"}
+                </p>
+                <h2 className="page-heading mb-4">{en ? 'Transport for groups' : 'Transport de groupes'}</h2>
+                <p className="page-subheading mb-6">
+                  {en
+                    ? 'Families, agencies and groups of friends landing for a stay: TuniDrive organizes their movements on the ground — airport welcome, hotel transfers, trips between cities and the return.'
+                    : "Familles, agences et groupes d'amis qui arrivent pour un séjour : TuniDrive organise leurs déplacements sur place — accueil à l'aéroport, transferts hôtel, trajets entre villes et retour."}
+                </p>
+                <Link
+                  to={href('/transport-groupes-tunisie')}
+                  className="focus-ring rounded-md inline-flex items-center gap-2 text-sm font-semibold text-gray-900 hover:underline"
+                >
+                  {en ? 'See group transport' : 'Voir le transport de groupes'}
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+              <ul className="rounded-xl border border-surface-border bg-white p-8 space-y-4">
+                {(en
+                  ? [
+                      'Pickup at Tunis-Carthage, Enfidha, Monastir or Djerba',
+                      'Van, minibus or bus sized to the group',
+                      'The stay programme is arranged before arrival',
+                    ]
+                  : [
+                      'Prise en charge à Tunis-Carthage, Enfidha, Monastir ou Djerba',
+                      'Van, minibus ou bus selon la taille du groupe',
+                      "Le programme du séjour est préparé avant l'arrivée",
+                    ]
+                ).map((item) => (
+                  <li key={item} className="flex gap-3 text-sm text-gray-700">
+                    <Users size={18} className="text-gray-900 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </RevealSection>
+
+        <ReviewsCarousel />
+
+        {/* Transport colis (côté expéditeur) */}
+        <RevealSection id="transport-colis" className="scroll-mt-20 py-16 md:py-20 bg-surface-muted">
+          <div className="page-container">
+            <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
+              <ol className="order-2 lg:order-1 rounded-xl border border-surface-border bg-white p-8 space-y-4">
+                {(en
+                  ? ['Describe your shipment (addresses, date, photos)', 'Receive several price offers from carriers', 'Compare and choose the best offer online']
+                  : ['Décrivez votre envoi (adresses, date, photos)', 'Recevez plusieurs propositions de prix des transporteurs', 'Comparez et choisissez la meilleure offre en ligne']
+                ).map((item, index) => (
+                  <li key={item} className="flex gap-3 text-sm text-gray-700">
+                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <span className="pt-0.5">{item}</span>
+                  </li>
+                ))}
+              </ol>
+              <div className="order-1 lg:order-2">
+                <p className="inline-flex items-center gap-2 text-sm font-semibold text-brand mb-3">
+                  <Package size={16} aria-hidden="true" />
+                  Europe ↔ {en ? 'Tunisia' : 'Tunisie'}
+                </p>
+                <h2 className="page-heading mb-4">{en ? 'Parcel and goods transport' : 'Transport de colis et marchandises'}</h2>
+                <p className="page-subheading mb-6">
+                  {en
+                    ? 'Submit a quote request: qualified carriers send their prices, you compare and confirm online.'
+                    : 'Déposez une demande de devis : les transporteurs qualifiés vous proposent leurs tarifs, vous comparez et validez en ligne.'}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                  <Button size="lg" onClick={onClientSignup} className="rounded-full">
+                    {en ? 'Request a parcel quote' : 'Demander un devis colis'}
+                    <ArrowRight size={20} className="ml-2" aria-hidden="true" />
+                  </Button>
+                  <Link
+                    to={href('/transport-colis-europe-tunisie')}
+                    className="focus-ring rounded-md text-center text-sm font-semibold text-gray-700 hover:text-gray-900 underline-offset-4 hover:underline"
+                  >
+                    {en ? 'Learn more' : 'En savoir plus'}
+                  </Link>
+                </div>
+                <p className="mt-3 text-sm text-ink-muted">
+                  {en ? 'A free account is needed to submit a request.' : 'Un compte gratuit est nécessaire pour déposer une demande.'}{' '}
+                  <button
+                    type="button"
+                    onClick={onClientLogin}
+                    className="focus-ring rounded-md underline underline-offset-2 hover:text-gray-900"
+                  >
+                    {en ? 'I already have an account' : "J'ai déjà un compte"}
+                  </button>
+                </p>
+              </div>
             </div>
           </div>
         </RevealSection>
@@ -520,38 +422,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                   ? 'Book rides, request parcel quotes and manage every trip from the TuniDrive app.'
                   : "Réservez vos courses, demandez des devis colis et gérez tous vos transports depuis l'app TuniDrive."}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <a
-                  href="https://play.google.com/store/apps/details?id=com.tunidrive.mobile"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                >
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-                    alt={en ? 'Get it on Google Play' : 'Disponible sur Google Play'}
-                    className="h-12 w-auto"
-                  />
-                </a>
-                <a
-                  href="https://apps.apple.com/fr/app/tunidrive/id6753982765"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                >
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
-                    alt={en ? 'Download on the App Store' : "Télécharger sur l'App Store"}
-                    className="h-12 w-auto"
-                  />
-                </a>
-              </div>
+              <AppStoreBadges className="justify-center" />
             </div>
           </div>
         </RevealSection>
 
         {/* FAQ */}
-        <RevealSection id="faq-vtc-accueil" className="py-16 bg-surface-muted">
+        <RevealSection id="faq-vtc-accueil" className="scroll-mt-20 py-16 bg-surface-muted">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="page-heading mb-2 text-center">
               {en ? 'Private driver & airport transfer' : 'VTC, chauffeur privé & transfert aéroport'}
@@ -563,7 +440,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </p>
             <div className="space-y-3">
               {faqItems.slice(0, 4).map((item) => (
-                <details key={item.question} className="uber-card p-4">
+                <details key={item.question} className="rounded-xl border border-surface-border bg-white p-4">
                   <summary className="font-medium text-gray-900 cursor-pointer text-sm">{item.question}</summary>
                   <p className="mt-2 text-sm text-gray-600 leading-relaxed">{item.answer}</p>
                 </details>
@@ -572,43 +449,79 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </RevealSection>
 
-        {/* CTA chauffeurs */}
-        <RevealSection className="py-16 bg-white">
+        {/* Chauffeurs et transporteurs : le seul bloc de la page qui s'adresse aux professionnels */}
+        <RevealSection id="chauffeurs" className="scroll-mt-20 py-16 bg-white">
           <div className="page-container">
-            <div className="max-w-6xl mx-auto bg-black rounded-2xl p-10 sm:p-14 text-center text-white border border-gray-800">
-              <h2 className="text-3xl sm:text-4xl font-semibold mb-4 tracking-tight">
-                {en ? 'Drive when you want and earn on your own terms' : 'Conduisez quand vous voulez, générez des revenus sur mesure'}
-              </h2>
-              <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-                {en
-                  ? 'Offer rides and parcel transport between Europe and Tunisia.'
-                  : "Proposez vos courses et vos services de transport de colis entre l'Europe et la Tunisie."}
-              </p>
-              <div className="flex flex-wrap justify-center gap-6 mb-10 text-sm text-gray-300">
-                {(en ? ['Attractive earnings', 'Flexible hours', 'Dedicated support'] : ['Revenus attractifs', 'Horaires flexibles', 'Support dédié']).map((benefit) => (
-                  <span key={benefit} className="flex items-center gap-2">
-                    <CheckCircle size={18} className="text-white" />
-                    {benefit}
-                  </span>
+            <div className="max-w-6xl mx-auto bg-black rounded-2xl p-6 sm:p-12 text-white">
+              <div className="max-w-2xl mb-8">
+                <p className="text-sm font-semibold text-gray-400 mb-3">
+                  {en ? 'Drivers and carriers' : 'Chauffeurs et transporteurs'}
+                </p>
+                <h2 className="text-3xl sm:text-4xl font-semibold mb-4 tracking-tight">
+                  {en ? 'Drive when you want and earn on your own terms' : 'Conduisez quand vous voulez, générez des revenus sur mesure'}
+                </h2>
+                <p className="text-lg text-gray-300">
+                  {en
+                    ? 'Offer rides in Tunisia or parcel transport between Europe and Tunisia.'
+                    : "Proposez vos courses en Tunisie ou vos services de transport de colis entre l'Europe et la Tunisie."}
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                {[
+                  {
+                    icon: Car,
+                    title: en ? 'Private-hire driver' : 'Chauffeur VTC',
+                    items: en
+                      ? ['Receive requests that match your availability', 'Manage your vehicles and schedule', 'Grow your private-hire activity']
+                      : ['Recevez des demandes selon vos disponibilités', 'Gérez vos véhicules et votre planning', 'Développez votre activité VTC'],
+                    cta: en ? 'Become a driver' : 'Devenir chauffeur',
+                    onClick: onGetStarted,
+                  },
+                  {
+                    icon: Truck,
+                    title: en ? 'Parcel carrier' : 'Transporteur de colis',
+                    items: en
+                      ? ['Receive requests that match your routes', 'Propose your price in EUR or TND', 'Exchange contact details after acceptance']
+                      : ['Recevez les demandes correspondant à vos trajets', 'Proposez votre tarif en EUR ou TND', 'Échangez vos coordonnées après acceptation'],
+                    cta: en ? 'Become a carrier' : 'Devenir transporteur',
+                    onClick: () => navigate(href('/signup?activity=transporteur')),
+                  },
+                ].map(({ icon: Icon, title, items, cta, onClick }) => (
+                  <div key={title} className="flex flex-col rounded-xl border border-white/15 bg-white/5 p-6">
+                    <h3 className="flex items-center gap-3 text-lg font-semibold mb-4">
+                      <Icon size={20} aria-hidden="true" />
+                      {title}
+                    </h3>
+                    <ul className="space-y-2 text-sm text-gray-300 mb-6 flex-1">
+                      {items.map((item) => (
+                        <li key={item} className="flex items-start gap-2">
+                          <CheckCircle size={16} className="text-white mt-0.5 flex-shrink-0" aria-hidden="true" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      size="md"
+                      onClick={onClick}
+                      className="rounded-full bg-white text-gray-900 hover:bg-gray-200 focus-visible:ring-white focus-visible:ring-offset-black sm:self-start"
+                    >
+                      {cta}
+                    </Button>
+                  </div>
                 ))}
               </div>
-              <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3">
-                <Button
-                  size="lg"
-                  onClick={onGetStarted}
-                  className="rounded-full bg-white text-gray-900 hover:bg-gray-100"
-                >
-                  {en ? 'Get started' : 'Commencer maintenant'}
-                </Button>
-                <Button
-                  size="lg"
-                  //variant="outline"
+
+              <p className="mt-6 text-sm text-gray-400">
+                {en ? 'Already registered?' : 'Déjà inscrit ?'}{' '}
+                <button
+                  type="button"
                   onClick={onDriverLogin}
-                  className="rounded-full bg-white text-gray-900 hover:bg-gray-100"
+                  className="rounded-md font-semibold text-white underline underline-offset-4 hover:text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   {en ? 'Driver login' : 'Connexion chauffeur'}
-                </Button>
-              </div>
+                </button>
+              </p>
             </div>
           </div>
         </RevealSection>
