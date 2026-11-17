@@ -13,6 +13,9 @@ Traitement horaire des abonnements chauffeurs, appelé par `pg_cron` (migration
    Pas de rappel si l'abonnement a déjà été renouvelé ou prolongé.
 3. **Nouvelles demandes d'abonnement** (à toute heure) : accusé de réception au chauffeur et alerte
    à l'administrateur.
+4. **Paiements déclarés** (à toute heure) : quand un chauffeur déclare avoir payé (référence et/ou
+   reçu), alerte à l'administrateur. Demande la migration
+   `20261117110000_subscription_payment_declaration_alert.sql` ; sans elle, l'étape est ignorée.
 
 Chaque message n'est envoyé qu'une fois par échéance (table `subscription_expiration_notifications`).
 En cas d'échec d'envoi, la réservation est libérée et l'envoi est retenté au passage suivant.

@@ -29,6 +29,20 @@ export interface SubscriptionRequest {
   created_at: string
 }
 
+export interface PaymentDeclaration {
+  subscription_id: string
+  driver_id: string
+  driver_email: string
+  first_name: string | null
+  last_name: string | null
+  phone: string | null
+  billing_period: string | null
+  total_price_tnd: number | null
+  payment_declared_at: string
+  driver_payment_reference: string | null
+  has_proof: boolean
+}
+
 export interface BuiltMessage {
   subject: string
   html: string
@@ -204,6 +218,29 @@ export function buildAdminRequestEmail(r: SubscriptionRequest, siteUrl: string):
          <li>Référence attendue sur le virement : <strong>${escapeHtml(subscriptionReference(r.driver_id))}</strong></li>
        </ul>
        <p>À valider dans l'espace administrateur une fois le virement reçu.</p>`,
+      { label: 'Ouvrir l’espace admin', url: `${siteUrl}/admin-dashboard` },
+    ),
+  }
+}
+
+export function buildAdminPaymentDeclaredEmail(p: PaymentDeclaration, siteUrl: string): BuiltMessage {
+  const name = fullName(p.first_name, p.last_name) || p.driver_email
+  const price = p.total_price_tnd != null ? `${Number(p.total_price_tnd).toFixed(2)} TND TTC` : 'montant non renseigné'
+  return {
+    subject: `Paiement d'abonnement déclaré - ${name} (${periodLabel(p.billing_period)}, ${price})`,
+    html: layout(
+      'Paiement d’abonnement à vérifier',
+      `<p>Un chauffeur déclare avoir payé son abonnement :</p>
+       <ul>
+         <li>Chauffeur : <strong>${escapeHtml(name)}</strong></li>
+         <li>Email : ${escapeHtml(p.driver_email)}</li>
+         <li>Téléphone : ${escapeHtml(p.phone || 'non renseigné')}</li>
+         <li>Formule : ${escapeHtml(periodLabel(p.billing_period))} - ${escapeHtml(price)}</li>
+         <li>Référence saisie par le chauffeur : <strong>${escapeHtml(p.driver_payment_reference || 'non renseignée')}</strong></li>
+         <li>Motif attendu sur le virement : <strong>${escapeHtml(subscriptionReference(p.driver_id))}</strong></li>
+         <li>Reçu : ${p.has_proof ? 'joint, consultable dans l’espace administrateur' : 'non joint'}</li>
+       </ul>
+       <p>Vérifiez la réception du paiement, puis validez l'abonnement dans l'espace administrateur.</p>`,
       { label: 'Ouvrir l’espace admin', url: `${siteUrl}/admin-dashboard` },
     ),
   }

@@ -2,7 +2,8 @@
 // 20261105130000_subscription_expiration_notifications.sql) :
 //   1. marque comme « expired » les abonnements dont la date de fin est passée ;
 //   2. envoie les rappels J-7, J-1 et « expiré » (email + push) entre 8 h et 20 h, heure de Tunis ;
-//   3. accuse réception des nouvelles demandes d'abonnement au chauffeur et prévient l'admin.
+//   3. accuse réception des nouvelles demandes d'abonnement au chauffeur et prévient l'admin ;
+//   4. prévient l'admin quand un chauffeur déclare avoir payé (référence et/ou reçu).
 //
 // Chaque notification est « réservée » en base AVANT l'envoi (claim) puis libérée si l'envoi échoue :
 // jamais deux emails pour la même échéance, et nouvel essai automatique au passage suivant.
@@ -14,10 +15,12 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendExpoPush } from '../_shared/expoPush.ts'
 import {
+  buildAdminPaymentDeclaredEmail,
   buildAdminRequestEmail,
   buildReminderEmail,
   buildRequestReceivedEmail,
   isReminderWindow,
+  type PaymentDeclaration,
   type ReminderCandidate,
   type SubscriptionRequest,
 } from '../_shared/subscriptionReminders.ts'
@@ -64,6 +67,7 @@ interface RunSummary {
   expired_marked: number
   reminders: { sent: number; skipped_duplicate: number; failed: number; planned: string[] }
   requests: { driver_acks: number; admin_alerts: number; skipped_duplicate: number; failed: number; planned: string[] }
+  declarations: { admin_alerts: number; skipped_duplicate: number; failed: number; planned: string[] }
   push_sent: number
   truncated: boolean
 }
@@ -103,6 +107,7 @@ serve(async (req) => {
     expired_marked: 0,
     reminders: { sent: 0, skipped_duplicate: 0, failed: 0, planned: [] },
     requests: { driver_acks: 0, admin_alerts: 0, skipped_duplicate: 0, failed: 0, planned: [] },
+    declarations: { admin_alerts: 0, skipped_duplicate: 0, failed: 0, planned: [] },
     push_sent: 0,
     truncated: false,
   }
@@ -210,6 +215,46 @@ serve(async (req) => {
           await supabase.rpc('release_subscription_notification', {
             p_subscription_id: r.subscription_id,
             p_key: job.key,
+          })
+        }
+      }
+    }
+
+    // 4. Paiements déclarés par les chauffeurs : alerte à l'admin, une seule fois par demande.
+    //    Si la migration correspondante n'est pas appliquée, l'étape est ignorée sans faire
+    //    échouer le reste du traitement.
+    const { data: declarations, error: declarationsError } = await supabase.rpc(
+      'get_subscription_payment_declarations_to_notify',
+    )
+    if (declarationsError) {
+      console.error('[subscriptions] get_subscription_payment_declarations_to_notify:', declarationsError.message)
+    } else if (adminEmails.length > 0) {
+      for (const p of (declarations ?? []) as PaymentDeclaration[]) {
+        if (budget <= 0) { summary.truncated = true; break }
+        const key = 'admin_payment_declared'
+        const label = `${key} (${p.driver_email}) → ${adminEmails.join(', ')}`
+        if (dryRun) { summary.declarations.planned.push(label); continue }
+
+        const { data: claimed, error: claimError } = await supabase.rpc('claim_subscription_notification', {
+          p_subscription_id: p.subscription_id,
+          p_driver_id: p.driver_id,
+          p_key: key,
+          p_channel: 'email',
+        })
+        if (claimError) { summary.declarations.failed++; console.error('[subscriptions] claim:', claimError.message); continue }
+        if (!claimed) { summary.declarations.skipped_duplicate++; continue }
+
+        budget--
+        try {
+          const message = buildAdminPaymentDeclaredEmail(p, siteUrl)
+          await sendEmail(adminEmails, message.subject, message.html)
+          summary.declarations.admin_alerts++
+        } catch (error) {
+          summary.declarations.failed++
+          console.error(`[subscriptions] envoi ${label}:`, error)
+          await supabase.rpc('release_subscription_notification', {
+            p_subscription_id: p.subscription_id,
+            p_key: key,
           })
         }
       }

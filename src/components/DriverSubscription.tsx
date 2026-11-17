@@ -1,8 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { CreditCard, Check, X, AlertCircle, Calendar, TrendingUp, Lock, Unlock, Info, Copy, MessageCircle, Mail } from 'lucide-react';
-import { Button } from './ui/Button';
-import { supabase } from '../lib/supabase';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  CreditCard,
+  Check,
+  X,
+  Calendar,
+  TrendingUp,
+  Lock,
+  Info,
+  Copy,
+  MessageCircle,
+  Paperclip,
+  Loader2,
+} from 'lucide-react';
+import { Button } from './ui/Button';
+import { Alert } from './ui/Alert';
+import { supabase } from '../lib/supabase';
+import { cn } from '../utils/cn';
+import {
+  daysUntilSubscriptionEnd,
   getBillingPeriodLabel,
   getSubscriptionDurationLabel,
   isSubscriptionEndPassed,
@@ -12,6 +27,17 @@ import {
 /** Coordonnées bancaires affichées ET copiées : une seule source pour que les deux ne divergent jamais. */
 const BANK_BENEFICIARY = 'TuniDrive SARL';
 const BANK_IBAN = 'TN59 04 117 1850077170413 86';
+const SUPPORT_WHATSAPP = '21628528477';
+
+const FREE_RIDES_QUOTA = 2;
+const RECEIPT_BUCKET = 'subscription-receipts';
+const RECEIPT_MAX_BYTES = 5 * 1024 * 1024;
+const RECEIPT_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'application/pdf': 'pdf',
+};
 
 interface DriverSubscriptionProps {
   driverId: string;
@@ -19,12 +45,9 @@ interface DriverSubscriptionProps {
 
 interface SubscriptionStatus {
   hasActiveSubscription: boolean;
-  subscriptionType: 'free' | 'premium';
-  monthlyAcceptedBookings: number;
   canAcceptMoreBookings: boolean;
   remainingFreeBookings: number;
   lifetimeAcceptedBookings: number;
-  hasUsedFreeTrial: boolean;
   subscriptionEndDate?: string;
 }
 
@@ -32,16 +55,25 @@ type BillingPeriod = SubscriptionBillingPeriod;
 
 interface PendingSubscriptionRequest {
   id: string;
+  createdAt: string;
   startDate: string;
-  endDate: string;
   billingPeriod: BillingPeriod;
   totalPriceTnd: number;
+  /** Date à laquelle le chauffeur a déclaré son paiement (null tant qu'il ne l'a pas fait). */
+  declaredAt: string | null;
+  driverReference: string | null;
+  hasProof: boolean;
 }
 
 interface PeriodPricing {
   price_tnd: number;
   vat_percentage: number;
   total_price_tnd: number;
+}
+
+interface Notice {
+  tone: 'success' | 'warning' | 'danger' | 'info';
+  text: string;
 }
 
 const FALLBACK_PRICING: Record<BillingPeriod, PeriodPricing> = {
@@ -65,17 +97,115 @@ function parsePricing(data: unknown): Record<BillingPeriod, PeriodPricing> | nul
   return monthly && yearly ? { monthly, yearly } : null;
 }
 
+const tnd = (amount: number) => `${amount.toFixed(2).replace('.', ',')} TND`;
+
+const LONG_DATE: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+
+/** Date d'une colonne DATE (AAAA-MM-JJ), sans décalage de fuseau. */
+function formatDateOnly(date: string): string {
+  return new Date(`${date.slice(0, 10)}T00:00:00Z`).toLocaleDateString('fr-FR', { ...LONG_DATE, timeZone: 'UTC' });
+}
+
+function formatTimestamp(value: string): string {
+  return new Date(value).toLocaleDateString('fr-FR', LONG_DATE);
+}
+
+function addDays(date: string, days: number): string {
+  const d = new Date(`${date.slice(0, 10)}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+type StepState = 'done' | 'current' | 'upcoming';
+
+function TrackingStep({
+  number,
+  state,
+  title,
+  isLast,
+  children,
+}: {
+  number: number;
+  state: StepState;
+  title: string;
+  isLast?: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <li className="relative flex gap-4" aria-current={state === 'current' ? 'step' : undefined}>
+      {!isLast && (
+        <span
+          aria-hidden="true"
+          className={cn('absolute left-4 top-8 bottom-0 w-px -translate-x-1/2', state === 'done' ? 'bg-gray-900' : 'bg-gray-200')}
+        />
+      )}
+      <span
+        className={cn(
+          'relative z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold',
+          state === 'done' && 'bg-gray-900 text-white',
+          state === 'current' && 'bg-white text-gray-900 ring-2 ring-gray-900',
+          state === 'upcoming' && 'bg-white text-gray-400 ring-1 ring-gray-300',
+        )}
+      >
+        {state === 'done' ? <Check size={16} aria-hidden="true" /> : number}
+      </span>
+      <div className={cn('min-w-0 flex-1', isLast ? 'pb-0' : 'pb-8')}>
+        <h4 className={cn('pt-1 font-semibold', state === 'upcoming' ? 'text-gray-500' : 'text-gray-900')}>
+          {title}
+          {state === 'done' && <span className="sr-only"> (terminé)</span>}
+        </h4>
+        {children && <div className="mt-2 text-sm text-gray-700">{children}</div>}
+      </div>
+    </li>
+  );
+}
+
+function CopyRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* presse-papiers indisponible : la valeur reste lisible à l'écran */
+    }
+  };
+  return (
+    <div>
+      <dt className="text-xs font-medium text-gray-500">{label}</dt>
+      <dd className="mt-1 flex items-center gap-2">
+        <span className={cn('min-w-0 flex-1 break-all text-gray-900', mono && 'font-mono text-sm')}>{value}</span>
+        <button
+          type="button"
+          onClick={copy}
+          className="focus-ring inline-flex h-9 flex-shrink-0 items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
+        >
+          {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+          {copied ? 'Copié' : 'Copier'}
+        </button>
+      </dd>
+    </div>
+  );
+}
+
 export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId }) => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [lastPaidEndDate, setLastPaidEndDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showPaymentInfo, setShowPaymentInfo] = useState(false);
-  const [submittingRequest, setSubmittingRequest] = useState(false);
-  const [bankAccountCopied, setBankAccountCopied] = useState(false);
-  const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [pendingRequest, setPendingRequest] = useState<PendingSubscriptionRequest | null>(null);
-  const [cancellingRequest, setCancellingRequest] = useState(false);
+  // Faux tant que la migration « déclaration de paiement » n'est pas appliquée : on garde alors
+  // l'ancien parcours (prévenir le support) au lieu d'un formulaire qui échouerait.
+  const [declareSupported, setDeclareSupported] = useState(true);
   const [selectedBillingPeriod, setSelectedBillingPeriod] = useState<BillingPeriod>('monthly');
-  const [showExpiredModal, setShowExpiredModal] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [submittingRequest, setSubmittingRequest] = useState(false);
+  const [cancellingRequest, setCancellingRequest] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [paymentReference, setPaymentReference] = useState('');
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [declaring, setDeclaring] = useState(false);
+  const [editingDeclaration, setEditingDeclaration] = useState(false);
 
   // Tarif : la base est la seule source (fonction subscription_price_for) et c'est elle qui facture à la
   // création de la demande. L'écran l'affiche tel quel ; ces valeurs de secours ne servent qu'à
@@ -95,35 +225,11 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
     };
   }, []);
 
-  const VAT_PERCENTAGE = pricing.monthly.vat_percentage;
-
-  // Prix affichés selon la période
-  const calculatePrices = (billingPeriod: BillingPeriod) => {
-    const { price_tnd, total_price_tnd } = pricing[billingPeriod];
-    const vatAmount = total_price_tnd - price_tnd;
-    const monthlyEquivalent = billingPeriod === 'yearly' ? total_price_tnd / 12 : total_price_tnd;
-
-    return {
-      basePrice: price_tnd.toFixed(2),
-      vatAmount: vatAmount.toFixed(2),
-      totalPrice: total_price_tnd.toFixed(2),
-      monthlyEquivalent: monthlyEquivalent.toFixed(2)
-    };
-  };
-
-  const prices = calculatePrices(selectedBillingPeriod);
-
-  useEffect(() => {
-    fetchSubscriptionStatus();
-    checkPendingRequest();
-  }, [driverId]);
-
-  const checkPendingRequest = async () => {
-    try {
-      // Vérifier s'il existe déjà une demande en attente
-      const { data, error } = await supabase
+  const checkPendingRequest = useCallback(async () => {
+    const pendingQuery = (columns: string) =>
+      supabase
         .from('driver_subscriptions')
-        .select('id, created_at, billing_period, start_date, end_date, total_price_tnd')
+        .select(columns)
         .eq('driver_id', driverId)
         .eq('payment_status', 'pending')
         .eq('status', 'active')
@@ -131,36 +237,47 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
         .limit(1)
         .maybeSingle();
 
-      if (data && !error) {
-        const billingPeriod: BillingPeriod =
-          data.billing_period === 'yearly' ? 'yearly' : 'monthly';
-        setHasPendingRequest(true);
-        setPendingRequest({
-          id: data.id,
-          startDate: data.start_date,
-          endDate: data.end_date,
-          billingPeriod,
-          totalPriceTnd: Number(data.total_price_tnd) || 0,
-        });
-        setSelectedBillingPeriod(billingPeriod);
-        setShowPaymentInfo(true);
-      } else {
-        setHasPendingRequest(false);
-        setPendingRequest(null);
+    const baseColumns = 'id, created_at, billing_period, start_date, total_price_tnd';
+    try {
+      let supported = true;
+      let { data, error } = await pendingQuery(
+        `${baseColumns}, payment_declared_at, driver_payment_reference, payment_proof_path`,
+      );
+      if (error) {
+        // Colonnes de déclaration absentes : lecture sans elles.
+        supported = false;
+        ({ data, error } = await pendingQuery(baseColumns));
       }
+      if (error) {
+        console.error('Erreur vérification demande:', error);
+        return;
+      }
+      setDeclareSupported(supported);
+
+      const row = data as Record<string, unknown> | null;
+      if (!row) {
+        setPendingRequest(null);
+        return;
+      }
+      const billingPeriod: BillingPeriod = row.billing_period === 'yearly' ? 'yearly' : 'monthly';
+      setPendingRequest({
+        id: String(row.id),
+        createdAt: String(row.created_at),
+        startDate: String(row.start_date),
+        billingPeriod,
+        totalPriceTnd: Number(row.total_price_tnd) || 0,
+        declaredAt: typeof row.payment_declared_at === 'string' ? row.payment_declared_at : null,
+        driverReference: typeof row.driver_payment_reference === 'string' ? row.driver_payment_reference : null,
+        hasProof: typeof row.payment_proof_path === 'string' && row.payment_proof_path.length > 0,
+      });
     } catch (error) {
       console.error('Erreur vérification demande:', error);
     }
-  };
+  }, [driverId]);
 
-  const fetchSubscriptionStatus = async () => {
+  const fetchSubscriptionStatus = useCallback(async () => {
     try {
-      setLoading(true);
-      
-      // Appeler la fonction SQL pour récupérer le statut
-      const { data, error } = await supabase
-        .rpc('get_driver_subscription_status', { p_driver_id: driverId });
-
+      const { data, error } = await supabase.rpc('get_driver_subscription_status', { p_driver_id: driverId });
       if (error) {
         console.error('Erreur récupération statut abonnement:', error);
         return;
@@ -170,73 +287,42 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
         const status = data[0];
         setSubscriptionStatus({
           hasActiveSubscription: status.has_active_subscription,
-          subscriptionType: status.subscription_type,
-          monthlyAcceptedBookings: status.monthly_accepted_bookings,
           canAcceptMoreBookings: status.can_accept_more_bookings,
           remainingFreeBookings: status.remaining_free_bookings,
           lifetimeAcceptedBookings: status.lifetime_accepted_bookings || 0,
-          hasUsedFreeTrial: status.has_used_free_trial || false,
-          subscriptionEndDate: status.subscription_end_date
+          subscriptionEndDate: status.subscription_end_date ?? undefined,
         });
-        const hasExpiredDate = isSubscriptionEndPassed(status.subscription_end_date);
-        const isPremiumExpired = status.subscription_type === 'premium' && !status.has_active_subscription;
-        if (hasExpiredDate || isPremiumExpired) {
-          setShowExpiredModal(true);
-        }
       }
+
+      // Dernier abonnement payé : sert à dire « expiré le … » quand il n'y en a plus d'actif.
+      const { data: lastPaid } = await supabase
+        .from('driver_subscriptions')
+        .select('end_date')
+        .eq('driver_id', driverId)
+        .eq('payment_status', 'paid')
+        .order('end_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setLastPaidEndDate(lastPaid?.end_date ?? null);
     } catch (error) {
       console.error('Erreur:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [driverId]);
 
-  const handleCancelPendingRequest = async () => {
-    if (!pendingRequest) return;
-
-    const confirmed = window.confirm(
-      "Annuler votre demande d'abonnement ?\n\nVous pourrez en créer une nouvelle plus tard si vous le souhaitez."
-    );
-    if (!confirmed) return;
-
-    setCancellingRequest(true);
-    try {
-      const { data, error } = await supabase.rpc('cancel_pending_driver_subscription', {
-        p_subscription_id: pendingRequest.id,
-      });
-
-      if (error) {
-        console.error('Erreur annulation demande abonnement:', error);
-        alert("Impossible d'annuler la demande. Veuillez réessayer ou contacter le support.");
-        return;
-      }
-
-      const result = data as { success?: boolean; reason?: string } | null;
-      if (!result?.success) {
-        const message =
-          result?.reason === 'not_cancellable'
-            ? 'Cette demande ne peut plus être annulée (déjà traitée ou payée).'
-            : "Impossible d'annuler la demande.";
-        alert(message);
-        await checkPendingRequest();
-        return;
-      }
-
-      setHasPendingRequest(false);
-      setPendingRequest(null);
-      setShowPaymentInfo(false);
-      alert('Demande d\'abonnement annulée. Vous pouvez en créer une nouvelle quand vous le souhaitez.');
-      fetchSubscriptionStatus();
-    } catch (error) {
-      console.error('Erreur:', error);
-      alert('Une erreur est survenue.');
-    } finally {
-      setCancellingRequest(false);
-    }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    Promise.all([fetchSubscriptionStatus(), checkPendingRequest()]).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchSubscriptionStatus, checkPendingRequest]);
 
   const handleSubscriptionRequest = async () => {
     setSubmittingRequest(true);
+    setNotice(null);
     try {
       // Le serveur fixe le prix et les dates, refuse une seconde demande en attente et, si un abonnement
       // payé est en cours, fait démarrer la nouvelle période à sa fin (aucun jour perdu).
@@ -246,23 +332,16 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
 
       if (error) {
         console.error('Erreur création demande abonnement:', error);
-        alert('Erreur lors de la création de la demande d\'abonnement. Veuillez réessayer.');
+        setNotice({ tone: 'danger', text: "La demande n'a pas pu être créée. Veuillez réessayer." });
         return;
       }
 
-      const result = data as {
-        success: boolean;
-        reason?: string;
-        start_date?: string;
-        is_early_renewal?: boolean;
-      } | null;
+      const result = data as { success: boolean; reason?: string } | null;
 
       if (!result?.success) {
         if (result?.reason === 'already_pending') {
-          alert('Vous avez déjà une demande d\'abonnement en cours de traitement. Veuillez effectuer le paiement avec les informations affichées ci-dessous.');
-          setShowPaymentInfo(true);
-          setHasPendingRequest(true);
           await checkPendingRequest();
+          setNotice({ tone: 'info', text: 'Vous avez déjà une demande en cours : son suivi est affiché ci-dessous.' });
           return;
         }
         const messages: Record<string, string> = {
@@ -270,37 +349,150 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
           driver_not_found: 'Profil chauffeur introuvable. Contactez le support.',
           duplicate_period: 'Une demande existe déjà pour cette période. Rechargez la page.',
         };
-        alert(messages[result?.reason ?? ''] ?? 'Erreur lors de la création de la demande d\'abonnement. Veuillez réessayer.');
+        setNotice({
+          tone: 'danger',
+          text: messages[result?.reason ?? ''] ?? "La demande n'a pas pu être créée. Veuillez réessayer.",
+        });
         return;
       }
 
-      alert(
-        `Demande d'abonnement créée avec succès !\n\n` +
-        `Durée : ${getBillingPeriodLabel(selectedBillingPeriod)} (${getSubscriptionDurationLabel(selectedBillingPeriod)})\n\n` +
-        (result.is_early_renewal && result.start_date
-          ? `Votre renouvellement prendra effet le ${new Date(result.start_date + 'T00:00:00Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}, à la fin de votre abonnement actuel : vous ne perdez aucun jour.\n\n`
-          : `La période exacte débutera à la validation de votre paiement par l'administration.\n\n`) +
-        `Veuillez effectuer le paiement et contacter l'administration avec votre référence de paiement.`
-      );
-      setShowPaymentInfo(true);
-      setHasPendingRequest(true);
       await checkPendingRequest();
-      fetchSubscriptionStatus();
+      setNotice({ tone: 'success', text: 'Demande enregistrée. Il vous reste à effectuer le paiement (étape 2).' });
     } catch (error) {
       console.error('Erreur:', error);
-      alert('Une erreur est survenue.');
+      setNotice({ tone: 'danger', text: 'Une erreur est survenue. Veuillez réessayer.' });
     } finally {
       setSubmittingRequest(false);
     }
   };
 
-  const copyBankAccount = async () => {
+  const handleCancelPendingRequest = async () => {
+    if (!pendingRequest) return;
+    setCancellingRequest(true);
+    setNotice(null);
     try {
-      await navigator.clipboard.writeText(BANK_IBAN);
-      setBankAccountCopied(true);
-      setTimeout(() => setBankAccountCopied(false), 2000);
+      const { data, error } = await supabase.rpc('cancel_pending_driver_subscription', {
+        p_subscription_id: pendingRequest.id,
+      });
+
+      if (error) {
+        console.error('Erreur annulation demande abonnement:', error);
+        setNotice({ tone: 'danger', text: "Impossible d'annuler la demande. Réessayez ou contactez le support." });
+        return;
+      }
+
+      const result = data as { success?: boolean; reason?: string } | null;
+      if (!result?.success) {
+        setNotice({
+          tone: 'danger',
+          text:
+            result?.reason === 'not_cancellable'
+              ? 'Cette demande ne peut plus être annulée (déjà traitée ou payée).'
+              : "Impossible d'annuler la demande.",
+        });
+        await Promise.all([checkPendingRequest(), fetchSubscriptionStatus()]);
+        return;
+      }
+
+      setPendingRequest(null);
+      setPaymentReference('');
+      setReceiptFile(null);
+      setEditingDeclaration(false);
+      setNotice({ tone: 'info', text: 'Demande annulée. Vous pouvez en créer une nouvelle quand vous le souhaitez.' });
     } catch (error) {
-      console.error('Erreur copie:', error);
+      console.error('Erreur:', error);
+      setNotice({ tone: 'danger', text: 'Une erreur est survenue. Veuillez réessayer.' });
+    } finally {
+      setCancellingRequest(false);
+      setConfirmingCancel(false);
+    }
+  };
+
+  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setNotice(null);
+    if (!file) {
+      setReceiptFile(null);
+      return;
+    }
+    if (!RECEIPT_TYPES[file.type]) {
+      setNotice({ tone: 'danger', text: 'Format non accepté. Envoyez une photo (JPG, PNG, WebP) ou un PDF.' });
+      e.target.value = '';
+      setReceiptFile(null);
+      return;
+    }
+    if (file.size > RECEIPT_MAX_BYTES) {
+      setNotice({ tone: 'danger', text: 'Le reçu dépasse 5 Mo. Envoyez un fichier plus léger.' });
+      e.target.value = '';
+      setReceiptFile(null);
+      return;
+    }
+    setReceiptFile(file);
+  };
+
+  const handleDeclarePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingRequest) return;
+
+    const reference = paymentReference.trim();
+    if (!reference && !receiptFile) {
+      setNotice({ tone: 'danger', text: 'Indiquez la référence du paiement ou joignez le reçu.' });
+      return;
+    }
+
+    setDeclaring(true);
+    setNotice(null);
+    try {
+      let proofPath: string | null = null;
+      if (receiptFile) {
+        // Le dossier porte l'identifiant du chauffeur : c'est ce que vérifient les règles du bucket.
+        proofPath = `${driverId}/${pendingRequest.id}-${Date.now()}.${RECEIPT_TYPES[receiptFile.type]}`;
+        const { error: uploadError } = await supabase.storage
+          .from(RECEIPT_BUCKET)
+          .upload(proofPath, receiptFile, { contentType: receiptFile.type });
+        if (uploadError) {
+          console.error('Erreur envoi reçu:', uploadError);
+          setNotice({
+            tone: 'danger',
+            text: reference
+              ? "Le reçu n'a pas pu être envoyé. Réessayez, ou retirez le fichier pour déclarer avec la référence seule."
+              : "Le reçu n'a pas pu être envoyé. Réessayez, ou indiquez la référence du paiement.",
+          });
+          return;
+        }
+      }
+
+      const { data, error } = await supabase.rpc('declare_driver_subscription_payment', {
+        p_subscription_id: pendingRequest.id,
+        p_payment_reference: reference || null,
+        p_proof_path: proofPath,
+      });
+
+      const result = data as { success?: boolean; reason?: string } | null;
+      if (error || !result?.success) {
+        console.error('Erreur déclaration paiement:', error ?? result);
+        if (result?.reason === 'not_pending') {
+          await Promise.all([checkPendingRequest(), fetchSubscriptionStatus()]);
+          setNotice({ tone: 'info', text: 'Cette demande a déjà été traitée.' });
+          return;
+        }
+        setNotice({
+          tone: 'danger',
+          text: "La déclaration n'a pas pu être enregistrée. Prévenez le support par WhatsApp avec votre référence.",
+        });
+        return;
+      }
+
+      setPaymentReference('');
+      setReceiptFile(null);
+      setEditingDeclaration(false);
+      await checkPendingRequest();
+      setNotice({ tone: 'success', text: 'Paiement déclaré. Nous le vérifions et activons votre abonnement.' });
+    } catch (error) {
+      console.error('Erreur:', error);
+      setNotice({ tone: 'danger', text: 'Une erreur est survenue. Veuillez réessayer.' });
+    } finally {
+      setDeclaring(false);
     }
   };
 
@@ -316,496 +508,435 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
   }
 
   if (!subscriptionStatus) {
-    return null;
+    return (
+      <Alert tone="danger">
+        Impossible de charger votre abonnement. Rechargez la page ou contactez le support.
+      </Alert>
+    );
   }
 
-  const isPremium = subscriptionStatus.hasActiveSubscription || subscriptionStatus.subscriptionType === 'premium';
-  const isExpiredPremium = isSubscriptionEndPassed(subscriptionStatus.subscriptionEndDate) || (subscriptionStatus.subscriptionType === 'premium' && !subscriptionStatus.hasActiveSubscription);
+  const isPremium = subscriptionStatus.hasActiveSubscription;
+  const endDate = subscriptionStatus.subscriptionEndDate;
+  const daysLeft = isPremium ? daysUntilSubscriptionEnd(endDate) : null;
+  const expiredOn = !isPremium && lastPaidEndDate && isSubscriptionEndPassed(lastPaidEndDate) ? lastPaidEndDate : null;
+  const usedFreeRides = Math.min(FREE_RIDES_QUOTA, subscriptionStatus.lifetimeAcceptedBookings);
+
+  const transferMotif = `ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}`;
+  const monthlyTotal = pricing.monthly.total_price_tnd;
+  const yearlyTotal = pricing.yearly.total_price_tnd;
+  const selected = pricing[selectedBillingPeriod];
+  const yearlySaving = monthlyTotal * 12 - yearlyTotal;
+
+  const isDeclared = pendingRequest?.declaredAt != null;
+  const showDeclareForm = pendingRequest !== null && declareSupported && (!isDeclared || editingDeclaration);
+  // Renouvellement anticipé : la période demandée commence après l'abonnement en cours.
+  const pendingStartsLater = pendingRequest !== null && isPremium && pendingRequest.startDate > new Date().toISOString().slice(0, 10);
+
+  const whatsappHref = pendingRequest
+    ? `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(
+        `Bonjour, j'ai payé mon abonnement Premium ${pendingRequest.billingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'} (${tnd(pendingRequest.totalPriceTnd)}).\n\nRéférence : ${transferMotif}`,
+      )}`
+    : '';
+
+  const periodButtonClass = (active: boolean) =>
+    cn(
+      'focus-ring relative rounded-xl border-2 p-4 text-center transition-colors',
+      active ? 'border-gray-900 bg-gray-50' : 'border-gray-200 bg-white hover:border-gray-300',
+    );
 
   return (
     <div className="space-y-6">
-      {showExpiredModal && isExpiredPremium && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-          <div className="bg-white rounded-2xl shadow-overlay max-w-lg w-full p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-6 h-6 text-danger-600" />
-              <h3 className="text-xl font-semibold text-gray-900">Abonnement expiré</h3>
-            </div>
-            <p className="text-gray-700">
-              {subscriptionStatus.subscriptionEndDate
-                ? `Votre abonnement Premium a expiré le ${new Date(subscriptionStatus.subscriptionEndDate).toLocaleDateString('fr-FR')}.`
-                : 'Votre dernier abonnement Premium est arrivé à expiration.'}
-              {' '}Souscrivez à un nouvel abonnement pour continuer à recevoir des courses.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                className="flex-1 bg-black text-white hover:bg-gray-800"
-                onClick={() => {
-                  setShowExpiredModal(false);
-                  setSelectedBillingPeriod('monthly');
-                }}
-              >
-                Souscrire maintenant
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowExpiredModal(false)}
-              >
-                Plus tard
-              </Button>
-            </div>
-          </div>
-        </div>
+      {notice && (
+        <Alert tone={notice.tone} aria-live="polite">
+          {notice.text}
+        </Alert>
       )}
-      {/* Carte de statut principal */}
-      <div className={`rounded-xl p-6 ${
-        isPremium 
-          ? 'bg-gray-900 text-white' 
-          : 'bg-white border border-surface-border'
-      }`}>
-        <div className="flex items-start justify-between mb-4">
+
+      {expiredOn && !pendingRequest && (
+        <Alert tone="danger" title={`Votre abonnement Premium a expiré le ${formatDateOnly(expiredOn)}`}>
+          Souscrivez de nouveau ci-dessous pour recommencer à accepter des courses.
+        </Alert>
+      )}
+
+      {/* Statut */}
+      <div className={cn('rounded-xl p-6', isPremium ? 'bg-gray-900 text-white' : 'bg-white border border-surface-border')}>
+        <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
-            {isPremium ? (
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <TrendingUp size={24} className="text-white" />
-              </div>
-            ) : (
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Lock size={24} className="text-gray-600" />
-              </div>
-            )}
+            <div
+              className={cn(
+                'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0',
+                isPremium ? 'bg-white/20' : 'bg-gray-100',
+              )}
+            >
+              {isPremium ? (
+                <TrendingUp size={24} className="text-white" aria-hidden="true" />
+              ) : (
+                <Lock size={24} className="text-gray-600" aria-hidden="true" />
+              )}
+            </div>
             <div>
-               <h3 className={`text-xl font-semibold ${isPremium ? 'text-white' : 'text-gray-900'}`}>
-                 {isPremium ? 'Abonnement Premium' : 'Compte Gratuit'}
-               </h3>
-               <p className={`text-sm ${isPremium ? 'text-white/90' : 'text-gray-600'}`}>
-                 {isPremium ? 'Courses illimitées' : '2 courses gratuites'}
-               </p>
+              <h3 className={cn('text-xl font-semibold', isPremium ? 'text-white' : 'text-gray-900')}>
+                {isPremium ? 'Abonnement Premium' : 'Compte gratuit'}
+              </h3>
+              <p className={cn('text-sm', isPremium ? 'text-white/90' : 'text-gray-600')}>
+                {isPremium ? 'Courses illimitées' : `${FREE_RIDES_QUOTA} courses gratuites`}
+              </p>
             </div>
           </div>
           {isPremium && (
-            <div className="px-3 py-1 bg-white/20 rounded-full">
-              <span className="text-sm font-semibold text-white">Actif</span>
-            </div>
+            <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-semibold text-white">Actif</span>
           )}
         </div>
 
-        {/* Statistiques */}
-        <div className={`rounded-lg p-4 ${
-          isPremium ? 'bg-white/10' : 'bg-gray-50'
-        }`}>
-          <div className="flex items-center justify-between mb-2">
-            <span className={`text-sm ${isPremium ? 'text-white/90' : 'text-gray-600'}`}>
-              {isPremium ? 'Courses acceptées' : 'Courses gratuites utilisées'}
-            </span>
-             <span className={`text-2xl font-semibold ${isPremium ? 'text-white' : 'text-gray-900'}`}>
-               {subscriptionStatus.lifetimeAcceptedBookings}
-               {!isPremium && <span className="text-sm font-normal"> / 2</span>}
-             </span>
-          </div>
-          
-          {!isPremium && (
+        <div className={cn('rounded-lg p-4', isPremium ? 'bg-white/10' : 'bg-gray-50')}>
+          {isPremium ? (
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+              <p className="text-sm text-white/90">
+                <Calendar size={14} className="inline mr-1.5 -mt-0.5" aria-hidden="true" />
+                {endDate ? `Valable jusqu'au ${formatDateOnly(endDate)}` : 'Sans date de fin'}
+              </p>
+              {daysLeft !== null && daysLeft >= 0 && (
+                <p className="text-sm font-semibold text-white">
+                  {daysLeft === 0 ? "Expire aujourd'hui" : daysLeft === 1 ? 'Expire demain' : `${daysLeft} jours restants`}
+                </p>
+              )}
+            </div>
+          ) : (
             <>
-               <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                 <div 
-                   className="bg-gray-900 h-2 rounded-full transition-[width] duration-300"
-                   style={{ width: `${Math.min(100, (subscriptionStatus.lifetimeAcceptedBookings / 2) * 100)}%` }}
-                 ></div>
-               </div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Courses gratuites utilisées</span>
+                <span className="text-2xl font-semibold text-gray-900">
+                  {usedFreeRides}
+                  <span className="text-sm font-normal"> / {FREE_RIDES_QUOTA}</span>
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div
+                  className="bg-gray-900 h-2 rounded-full transition-[width] duration-300"
+                  style={{ width: `${(usedFreeRides / FREE_RIDES_QUOTA) * 100}%` }}
+                />
+              </div>
               <p className="text-xs text-gray-600">
-                {subscriptionStatus.remainingFreeBookings > 0 ? (
-                  <>
-                    <Check size={12} className="inline mr-1" />
-                    {subscriptionStatus.remainingFreeBookings} course{subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''} gratuite{subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''} restante{subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''}
-                  </>
-                ) : (
-                  <>
-                    <X size={12} className="inline mr-1" />
-                    Quota gratuit épuisé - Abonnement requis
-                  </>
-                )}
+                {subscriptionStatus.remainingFreeBookings > 0
+                  ? `${subscriptionStatus.remainingFreeBookings} course${subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''} gratuite${subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''} restante${subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''}`
+                  : 'Quota gratuit épuisé : un abonnement est nécessaire pour accepter de nouvelles courses.'}
               </p>
             </>
           )}
-          
-          {isPremium && subscriptionStatus.subscriptionEndDate && (
-            <p className="text-xs text-white/80 mt-2">
-              <Calendar size={12} className="inline mr-1" />
-              Valable jusqu'au {new Date(subscriptionStatus.subscriptionEndDate).toLocaleDateString('fr-FR')}
-            </p>
-          )}
         </div>
-
-        {/* Alerte si quota atteint */}
-        {!isPremium && !subscriptionStatus.canAcceptMoreBookings && (
-          <div className="mt-4 bg-danger-50 border border-danger-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-danger-600 flex-shrink-0 mt-0.5" />
-              <div>
-                 <h4 className="font-semibold text-danger-900 mb-1">
-                   Courses gratuites épuisées
-                 </h4>
-                 <p className="text-sm text-danger-800">
-                   Vous avez utilisé vos 2 courses gratuites. 
-                   Souscrivez à l'abonnement Premium pour continuer à recevoir des courses.
-                 </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Carte Premium - Si compte gratuit */}
-      {!isPremium && (
-        <div className="bg-white border border-surface-border rounded-xl p-6">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Unlock size={24} className="text-white" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                Passez au Premium
-              </h3>
-              <p className="text-gray-700">
-                Débloquez un accès illimité aux courses et maximisez vos revenus
-              </p>
-            </div>
-          </div>
-
-          {/* Sélecteur de période d'abonnement */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-3">
-              Choisissez votre période d'abonnement
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setSelectedBillingPeriod('monthly')}
-                className={`relative p-4 border-2 rounded-lg transition-colors ${
-                  selectedBillingPeriod === 'monthly'
-                    ? 'border-gray-900 bg-gray-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
-              >
-                <div className="text-center">
-                  <p className="font-semibold text-gray-900 mb-1">Mensuel</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {calculatePrices('monthly').totalPrice} TND
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">par mois</p>
-                </div>
-                {selectedBillingPeriod === 'monthly' && (
-                  <div className="absolute top-2 right-2">
-                    <Check className="w-5 h-5 text-gray-900" />
-                  </div>
-                )}
-              </button>
-
-              <button
-                onClick={() => setSelectedBillingPeriod('yearly')}
-                className={`relative p-4 border-2 rounded-lg transition-colors ${
-                  selectedBillingPeriod === 'yearly'
-                    ? 'border-gray-900 bg-gray-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
-              >
-                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-success-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                    -10%
-                  </span>
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold text-gray-900 mb-1">Annuel</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {calculatePrices('yearly').totalPrice} TND
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {calculatePrices('yearly').monthlyEquivalent} TND/mois
-                  </p>
-                </div>
-                {selectedBillingPeriod === 'yearly' && (
-                  <div className="absolute top-2 right-2">
-                    <Check className="w-5 h-5 text-gray-900" />
-                  </div>
-                )}
-              </button>
-            </div>
-            {selectedBillingPeriod === 'yearly' && (
-              <p className="text-xs text-success-700 mt-2 text-center font-medium">
-                Économisez {(parseFloat(calculatePrices('monthly').totalPrice) * 12 - parseFloat(calculatePrices('yearly').totalPrice)).toFixed(2)} TND par an !
-              </p>
-            )}
-          </div>
-
-          {/* Avantages Premium */}
-          <div className="space-y-3 mb-6">
-            <div className="flex items-start gap-3">
-              <Check size={20} className="text-success-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-gray-900">Courses illimitées</p>
-                <p className="text-sm text-gray-600">Acceptez autant de courses que vous le souhaitez</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Check size={20} className="text-success-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-gray-900">Priorité sur les réservations</p>
-                <p className="text-sm text-gray-600">Recevez les nouvelles demandes en priorité</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Check size={20} className="text-success-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-gray-900">Support prioritaire</p>
-                <p className="text-sm text-gray-600">Assistance rapide en cas de besoin</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Prix */}
-          <div className="bg-white rounded-lg p-4 mb-6">
-            <div className="flex items-baseline justify-between mb-2">
-              <span className="text-gray-600">
-                {selectedBillingPeriod === 'yearly' ? 'Prix annuel' : 'Prix mensuel'}
-              </span>
-              <div className="text-right">
-                <span className="text-3xl font-semibold text-gray-900">{prices.basePrice} TND</span>
-                <span className="text-sm text-gray-600 ml-1">HT</span>
-              </div>
-            </div>
-            <div className="flex items-baseline justify-between text-sm mb-3">
-              <span className="text-gray-600">TVA ({VAT_PERCENTAGE}%)</span>
-              <span className="text-gray-700 font-medium">{prices.vatAmount} TND</span>
-            </div>
-            {selectedBillingPeriod === 'yearly' && (
-              <div className="flex items-baseline justify-between text-sm mb-3 text-success-700">
-                <span className="font-medium">Réduction annuelle (10%)</span>
-                <span className="font-semibold">
-                  -{(pricing.monthly.price_tnd * 12 - pricing.yearly.price_tnd).toFixed(2)} TND
-                </span>
-              </div>
-            )}
-            <div className="border-t border-gray-200 pt-3">
-              <div className="flex items-baseline justify-between mb-1">
-                <span className="text-gray-900 font-semibold">Total TTC</span>
-                <span className="text-2xl font-semibold text-gray-900">{prices.totalPrice} TND</span>
-              </div>
-              {selectedBillingPeriod === 'yearly' && (
-                <p className="text-xs text-gray-500 text-right">
-                  Soit {prices.monthlyEquivalent} TND/mois
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Bouton d'action */}
-          {!hasPendingRequest ? (
-            <Button
-              onClick={handleSubscriptionRequest}
-              disabled={submittingRequest}
-              className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 rounded-lg transition-colors duration-200"
-            >
-              {submittingRequest ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                  Création en cours...
-                </>
-              ) : (
-                <>
-                  <CreditCard size={20} className="mr-2" />
-                  Souscrire - {selectedBillingPeriod === 'yearly' ? 'Annuel' : 'Mensuel'} ({prices.totalPrice} TND)
-                </>
-              )}
-            </Button>
-          ) : (
-            <div className="space-y-3">
-              <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-warning-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-warning-900 mb-1">
-                      Demande en attente
-                    </h4>
-                    <p className="text-sm text-warning-800">
-                      Vous avez déjà une demande d'abonnement en cours. Effectuez le paiement avec les informations ci-dessous.
-                    </p>
-                    {pendingRequest && (
-                      <div className="mt-3 rounded-lg border border-warning-200 bg-white p-3">
-                        <p className="text-xs font-semibold text-warning-900 mb-1">
-                          Durée souscrite
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {getBillingPeriodLabel(pendingRequest.billingPeriod)} — {getSubscriptionDurationLabel(pendingRequest.billingPeriod)} — {pendingRequest.totalPriceTnd.toFixed(2)} TND TTC
-                        </p>
-                        <p className="text-xs text-gray-600 mt-2">
-                          La période exacte débutera à la validation de votre paiement par l&apos;administration
-                          (vous bénéficierez de {getSubscriptionDurationLabel(pendingRequest.billingPeriod)} complets à compter de cette date).
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <Button
-                onClick={() => setShowPaymentInfo(!showPaymentInfo)}
-                className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 rounded-lg"
-              >
-                <Info size={20} className="mr-2" />
-                {showPaymentInfo ? 'Masquer' : 'Voir'} les informations de paiement
-              </Button>
-              <Button
-                onClick={handleCancelPendingRequest}
-                disabled={cancellingRequest}
-                variant="outline"
-                className="w-full border-danger-300 text-danger-700 hover:bg-danger-50 font-semibold py-4 rounded-lg"
-              >
-                {cancellingRequest ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-danger-600 mr-2" />
-                    Annulation...
-                  </>
-                ) : (
-                  <>
-                    <X size={20} className="mr-2" />
-                    Annuler ma demande
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Informations de paiement */}
-      {showPaymentInfo && (
-        <div className="bg-white border border-surface-border rounded-xl p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Info className="text-gray-700" size={24} />
-            Informations de paiement
+      {/* Suivi de la demande en cours */}
+      {pendingRequest && (
+        <section className="bg-white border border-surface-border rounded-xl p-6" aria-labelledby="subscription-tracking-title">
+          <h3 id="subscription-tracking-title" className="text-xl font-semibold text-gray-900 mb-1">
+            {isPremium ? 'Suivi de votre renouvellement' : 'Suivi de votre demande'}
           </h3>
+          <p className="text-sm text-gray-600 mb-6">
+            {getBillingPeriodLabel(pendingRequest.billingPeriod)} ({getSubscriptionDurationLabel(pendingRequest.billingPeriod)}) ·{' '}
+            <strong className="text-gray-900">{tnd(pendingRequest.totalPriceTnd)} TTC</strong>
+          </p>
 
-          {pendingRequest && (
-            <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-semibold text-gray-900 mb-1">
-                Durée souscrite (en attente de validation)
-              </p>
-              <p className="text-base font-semibold text-gray-900">
-                {getBillingPeriodLabel(pendingRequest.billingPeriod)} — {getSubscriptionDurationLabel(pendingRequest.billingPeriod)}
-              </p>
-              <p className="text-sm text-gray-700 mt-1">
-                Montant : {pendingRequest.totalPriceTnd.toFixed(2)} TND TTC. Les dates exactes seront calculées à la validation de votre paiement.
-              </p>
-            </div>
-          )}
+          <ol>
+            <TrackingStep number={1} state="done" title="Demande enregistrée">
+              <p>Le {formatTimestamp(pendingRequest.createdAt)}.</p>
+            </TrackingStep>
 
-          <div className="space-y-4">
-            {/* Méthode 1: Virement bancaire */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <CreditCard size={18} />
-                Méthode 1 : Virement bancaire
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-gray-700 font-medium">Bénéficiaire :</span>
-                  <p className="text-gray-900">{BANK_BENEFICIARY}</p>
+            <TrackingStep number={2} state={isDeclared ? 'done' : 'current'} title={isDeclared ? 'Paiement déclaré' : 'Effectuez le paiement'}>
+              {isDeclared && !editingDeclaration ? (
+                <div className="space-y-2">
+                  <p>
+                    Le {formatTimestamp(pendingRequest.declaredAt as string)}
+                    {pendingRequest.driverReference ? ` · référence ${pendingRequest.driverReference}` : ''}
+                    {pendingRequest.hasProof ? ' · reçu envoyé' : ''}.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingDeclaration(true);
+                      setPaymentReference(pendingRequest.driverReference ?? '');
+                    }}
+                    className="focus-ring rounded-md text-sm font-semibold text-gray-900 underline underline-offset-4 hover:text-ink-muted"
+                  >
+                    Corriger ou ajouter un reçu
+                  </button>
                 </div>
-                <div>
-                  <span className="text-gray-700 font-medium">Numéro de compte :</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <code className="bg-white px-3 py-2 rounded border border-gray-200 text-gray-900 font-mono flex-1">
-                      {BANK_IBAN}
-                    </code>
-                    <button
-                      onClick={copyBankAccount}
-                      className="p-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-                      title="Copier le numéro"
-                    >
-                      {bankAccountCopied ? <Check size={16} /> : <Copy size={16} />}
-                    </button>
+              ) : (
+                <div className="space-y-5">
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <p className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <CreditCard size={18} aria-hidden="true" />
+                      Virement bancaire
+                    </p>
+                    <dl className="space-y-3">
+                      <div>
+                        <dt className="text-xs font-medium text-gray-500">Bénéficiaire</dt>
+                        <dd className="mt-1 text-gray-900">{BANK_BENEFICIARY}</dd>
+                      </div>
+                      <CopyRow label="Numéro de compte" value={BANK_IBAN} mono />
+                      <div>
+                        <dt className="text-xs font-medium text-gray-500">Montant</dt>
+                        <dd className="mt-1 font-semibold text-gray-900">{tnd(pendingRequest.totalPriceTnd)}</dd>
+                      </div>
+                      <CopyRow label="Motif du virement" value={transferMotif} mono />
+                    </dl>
                   </div>
-                </div>
-                <div>
-                  <span className="text-gray-700 font-medium">Montant :</span>
-                  <p className="text-gray-900 font-semibold">{prices.totalPrice} TND</p>
-                  {selectedBillingPeriod === 'yearly' && (
-                    <p className="text-xs text-gray-600 mt-1">Abonnement annuel avec 10% de réduction</p>
+
+                  {declareSupported ? (
+                    showDeclareForm && (
+                      <form onSubmit={handleDeclarePayment} className="space-y-4">
+                        <p className="font-semibold text-gray-900">Une fois le paiement fait, déclarez-le ici</p>
+                        <div>
+                          <label htmlFor="subscription-payment-reference" className="block text-sm font-medium text-gray-700 mb-1">
+                            Référence du paiement
+                          </label>
+                          <input
+                            id="subscription-payment-reference"
+                            type="text"
+                            value={paymentReference}
+                            onChange={(e) => setPaymentReference(e.target.value)}
+                            maxLength={255}
+                            placeholder="Numéro indiqué sur votre reçu"
+                            className="block w-full rounded-control border border-gray-300 px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="subscription-payment-receipt" className="block text-sm font-medium text-gray-700 mb-1">
+                            Reçu de paiement (photo ou PDF, 5 Mo max)
+                          </label>
+                          <input
+                            id="subscription-payment-receipt"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,application/pdf"
+                            onChange={handleReceiptChange}
+                            className="block w-full text-sm text-gray-700 file:mr-3 file:rounded-full file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-gray-800"
+                          />
+                          {receiptFile && (
+                            <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-600">
+                              <Paperclip size={12} aria-hidden="true" />
+                              {receiptFile.name}
+                            </p>
+                          )}
+                          <p className="mt-2 text-xs text-gray-500">La référence ou le reçu suffit ; les deux accélèrent la vérification.</p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button type="submit" disabled={declaring} className="sm:flex-1">
+                            {declaring ? (
+                              <>
+                                <Loader2 size={18} className="animate-spin mr-2" aria-hidden="true" />
+                                Envoi en cours…
+                              </>
+                            ) : (
+                              "J'ai payé"
+                            )}
+                          </Button>
+                          {editingDeclaration && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={declaring}
+                              onClick={() => {
+                                setEditingDeclaration(false);
+                                setReceiptFile(null);
+                              }}
+                            >
+                              Annuler la correction
+                            </Button>
+                          )}
+                        </div>
+                      </form>
+                    )
+                  ) : (
+                    <div className="space-y-3">
+                      <p>Une fois le paiement fait, prévenez le support avec votre référence de paiement :</p>
+                      <a
+                        href={whatsappHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="focus-ring inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-success-600 px-5 text-sm font-semibold text-white hover:bg-success-700 transition-colors"
+                      >
+                        <MessageCircle size={16} aria-hidden="true" />
+                        Prévenir par WhatsApp
+                      </a>
+                    </div>
                   )}
                 </div>
-                <div>
-                  <span className="text-gray-700 font-medium">Motif du virement :</span>
-                  <p className="text-gray-900 font-mono">ABONNEMENT-{driverId.slice(0, 8).toUpperCase()}</p>
-                </div>
-              </div>
-            </div>
+              )}
+            </TrackingStep>
 
-            {/* Instructions après paiement */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <AlertCircle size={18} />
-                Après votre paiement
-              </h4>
-              <ol className="text-sm text-gray-700 space-y-1 ml-4 list-decimal mb-4">
-                <li>Conservez le reçu de paiement</li>
-                <li>Notez votre numéro de référence de paiement</li>
-                <li>Contactez le support avec votre référence de paiement</li>
-                <li>Votre abonnement sera activé sous 24h ouvrables</li>
-              </ol>
-              
-              {/* Liens de contact */}
-              <div className="border-t border-gray-200 pt-3">
-                <p className="text-xs font-semibold text-gray-900 mb-2">Contactez-nous pour valider votre paiement :</p>
-                <div className="flex flex-col sm:flex-row gap-2">
+            <TrackingStep number={3} state={isDeclared ? 'current' : 'upcoming'} title="Activation par TuniDrive" isLast>
+              {isDeclared ? (
+                <div className="space-y-3">
+                  <p>
+                    Vérification en cours : l'activation se fait sous 24 h ouvrables et vous recevrez un email de
+                    confirmation.
+                  </p>
                   <a
-                    href={`https://wa.me/21628528477?text=${encodeURIComponent(`Bonjour, je souhaite valider mon abonnement Premium ${selectedBillingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'}.\n\nRéférence : ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}\n\nJ'ai effectué le paiement de ${prices.totalPrice} TND.`)}`}
+                    href={whatsappHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-card"
+                    className="focus-ring inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-gray-900 underline underline-offset-4 hover:text-ink-muted"
                   >
-                    <MessageCircle size={16} />
-                    WhatsApp
-                  </a>
-                  <a
-                    href={`mailto:support@tunidrive.net?subject=Validation%20Abonnement%20Premium%20${selectedBillingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'}%20-%20ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}&body=Bonjour,%0D%0A%0D%0AJe souhaite valider mon abonnement Premium ${selectedBillingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'}.%0D%0A%0D%0ARéférence : ABONNEMENT-${driverId.slice(0, 8).toUpperCase()}%0D%0A%0D%0AJ'ai effectué le paiement de ${prices.totalPrice} TND par virement bancaire.%0D%0A%0D%0ANuméro de référence du paiement : __________%0D%0A%0D%0ACi-joint la preuve de paiement.%0D%0A%0D%0ACordialement`}
-                    className="flex items-center justify-center gap-2 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-card"
-                  >
-                    <Mail size={16} />
-                    Email
+                    <MessageCircle size={14} aria-hidden="true" />
+                    Une question ? Écrire au support
                   </a>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Les messages sont pré-remplis avec votre référence d'abonnement
+              ) : (
+                <p className="text-gray-500">
+                  {pendingStartsLater
+                    ? `Après vérification du paiement. La nouvelle période commencera le ${formatDateOnly(pendingRequest.startDate)}, à la fin de votre abonnement actuel.`
+                    : `Après vérification du paiement, sous 24 h ouvrables. Vos ${getSubscriptionDurationLabel(pendingRequest.billingPeriod)} commencent le jour de l'activation.`}
                 </p>
+              )}
+            </TrackingStep>
+          </ol>
+
+          <div className="mt-6 border-t border-gray-200 pt-4">
+            {confirmingCancel ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <p className="text-sm text-gray-700 sm:flex-1">
+                  {isDeclared
+                    ? 'Vous avez déclaré un paiement pour cette demande. Annuler quand même ?'
+                    : 'Annuler cette demande ? Vous pourrez en créer une nouvelle ensuite.'}
+                </p>
+                <div className="flex gap-3">
+                  <Button size="sm" variant="danger" disabled={cancellingRequest} onClick={handleCancelPendingRequest}>
+                    {cancellingRequest ? 'Annulation…' : "Oui, annuler"}
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={cancellingRequest} onClick={() => setConfirmingCancel(false)}>
+                    Garder ma demande
+                  </Button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingCancel(true)}
+                className="focus-ring inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-danger-700 hover:underline underline-offset-4"
+              >
+                <X size={14} aria-hidden="true" />
+                Annuler ma demande
+              </button>
+            )}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Informations supplémentaires */}
+      {/* Souscription ou renouvellement (masqué tant qu'une demande est en cours) */}
+      {!pendingRequest && (
+        <section className="bg-white border border-surface-border rounded-xl p-6" aria-labelledby="subscription-offer-title">
+          <h3 id="subscription-offer-title" className="text-2xl font-semibold text-gray-900 mb-2">
+            {isPremium ? 'Renouveler mon abonnement' : 'Passez au Premium'}
+          </h3>
+          <p className="text-gray-700 mb-6">
+            {isPremium
+              ? endDate
+                ? `La nouvelle période commencera le ${formatDateOnly(addDays(endDate, 1))}, à la fin de votre abonnement actuel : vous ne perdez aucun jour.`
+                : 'Ajoutez une période à votre abonnement.'
+              : 'Débloquez un accès illimité aux courses et maximisez vos revenus.'}
+          </p>
+
+          <fieldset className="mb-6">
+            <legend className="block text-sm font-semibold text-gray-900 mb-3">Choisissez votre période</legend>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                aria-pressed={selectedBillingPeriod === 'monthly'}
+                onClick={() => setSelectedBillingPeriod('monthly')}
+                className={periodButtonClass(selectedBillingPeriod === 'monthly')}
+              >
+                <p className="font-semibold text-gray-900 mb-1">Mensuel</p>
+                <p className="text-xl sm:text-2xl font-semibold text-gray-900">{tnd(monthlyTotal)}</p>
+                <p className="text-xs text-gray-500 mt-1">par mois</p>
+              </button>
+              <button
+                type="button"
+                aria-pressed={selectedBillingPeriod === 'yearly'}
+                onClick={() => setSelectedBillingPeriod('yearly')}
+                className={periodButtonClass(selectedBillingPeriod === 'yearly')}
+              >
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-success-600 px-2 py-0.5 text-xs font-semibold text-white">
+                  -10 %
+                </span>
+                <p className="font-semibold text-gray-900 mb-1">Annuel</p>
+                <p className="text-xl sm:text-2xl font-semibold text-gray-900">{tnd(yearlyTotal)}</p>
+                <p className="text-xs text-gray-500 mt-1">soit {tnd(yearlyTotal / 12)}/mois</p>
+              </button>
+            </div>
+            {selectedBillingPeriod === 'yearly' && yearlySaving > 0 && (
+              <p className="text-xs text-success-700 mt-2 text-center font-medium">
+                Vous économisez {tnd(yearlySaving)} par an.
+              </p>
+            )}
+          </fieldset>
+
+          {!isPremium && (
+            <ul className="space-y-3 mb-6">
+              {[
+                { title: 'Courses illimitées', text: 'Acceptez autant de courses que vous le souhaitez' },
+                { title: 'Priorité sur les réservations', text: 'Recevez les nouvelles demandes en priorité' },
+                { title: 'Support prioritaire', text: 'Assistance rapide en cas de besoin' },
+              ].map(({ title, text }) => (
+                <li key={title} className="flex items-start gap-3">
+                  <Check size={20} className="text-success-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                  <div>
+                    <p className="font-semibold text-gray-900">{title}</p>
+                    <p className="text-sm text-gray-600">{text}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <dl className="rounded-lg bg-gray-50 p-4 mb-6 text-sm">
+            <div className="flex items-baseline justify-between mb-2">
+              <dt className="text-gray-600">Prix HT</dt>
+              <dd className="text-gray-900 font-medium">{tnd(selected.price_tnd)}</dd>
+            </div>
+            <div className="flex items-baseline justify-between mb-3">
+              <dt className="text-gray-600">TVA ({selected.vat_percentage} %)</dt>
+              <dd className="text-gray-900 font-medium">{tnd(selected.total_price_tnd - selected.price_tnd)}</dd>
+            </div>
+            <div className="flex items-baseline justify-between border-t border-gray-200 pt-3">
+              <dt className="text-gray-900 font-semibold">Total TTC</dt>
+              <dd className="text-2xl font-semibold text-gray-900">{tnd(selected.total_price_tnd)}</dd>
+            </div>
+          </dl>
+
+          <Button size="lg" fullWidth onClick={handleSubscriptionRequest} disabled={submittingRequest}>
+            {submittingRequest ? (
+              <>
+                <Loader2 size={20} className="animate-spin mr-2" aria-hidden="true" />
+                Création en cours…
+              </>
+            ) : (
+              `${isPremium ? 'Renouveler' : 'Souscrire'} · ${tnd(selected.total_price_tnd)}`
+            )}
+          </Button>
+          <p className="mt-3 text-center text-xs text-gray-500">
+            Paiement par virement bancaire. Les coordonnées s'affichent à l'étape suivante.
+          </p>
+        </section>
+      )}
+
+      {/* Rappel des règles */}
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-        <div className="space-y-2">
-          <p className="text-sm text-gray-600 flex items-start gap-2">
-            <Info size={16} className="flex-shrink-0 mt-0.5" />
+        <ul className="space-y-2 text-sm text-gray-600">
+          <li className="flex items-start gap-2">
+            <Info size={16} className="flex-shrink-0 mt-0.5" aria-hidden="true" />
             <span>
-              <strong>Période d'essai gratuite :</strong> 2 courses gratuites pour tous les nouveaux chauffeurs (offre valable une seule fois).
+              <strong>Essai gratuit :</strong> {FREE_RIDES_QUOTA} courses gratuites pour tout nouveau chauffeur, une seule fois.
             </span>
-          </p>
-          <p className="text-sm text-gray-600 flex items-start gap-2">
-            <Info size={16} className="flex-shrink-0 mt-0.5" />
+          </li>
+          <li className="flex items-start gap-2">
+            <Info size={16} className="flex-shrink-0 mt-0.5" aria-hidden="true" />
             <span>
-              <strong>Abonnement mensuel :</strong> Valable pour 1 mois à partir de la date d'activation. Renouvelable manuellement chaque mois.
+              <strong>Durée :</strong> 1 mois ou 1 an à partir de l'activation. Pas de renouvellement automatique : vous
+              pouvez renouveler à tout moment sans perdre de jours.
             </span>
-          </p>
-          <p className="text-sm text-gray-600 flex items-start gap-2">
-            <Info size={16} className="flex-shrink-0 mt-0.5" />
-            <span>
-              <strong>Abonnement annuel :</strong> Valable pour 1 an à partir de la date d'activation avec 10% de réduction. Plus économique sur le long terme !
-            </span>
-          </p>
-        </div>
+          </li>
+        </ul>
       </div>
     </div>
   );
 };
-
