@@ -291,6 +291,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     Record<string, { declaredAt: string; reference: string | null; proofPath: string | null }>
   >({});
   const [openingReceipt, setOpeningReceipt] = useState(false);
+  // Fin de l'accès provisoire du chauffeur dont la demande est ouverte (null s'il n'y en a pas).
+  const [selectedDriverGraceUntil, setSelectedDriverGraceUntil] = useState<string | null>(null);
+  const [revokingGrace, setRevokingGrace] = useState(false);
   const [validatingPayment, setValidatingPayment] = useState(false);
   const [paymentValidationError, setPaymentValidationError] = useState<string | null>(null);
   const [paymentForm, setPaymentForm] = useState<{ method: string; reference: string }>({
@@ -403,6 +406,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       setExtendError(null);
     }
   }, [selectedSubscription]);
+
+  // Accès provisoire du chauffeur (lecture tolérante : colonne absente sans la migration)
+  const selectedSubscriptionDriverId = selectedSubscription?.driverId ?? null;
+  useEffect(() => {
+    setSelectedDriverGraceUntil(null);
+    if (!selectedSubscriptionDriverId) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('drivers')
+        .select('payment_grace_until')
+        .eq('id', selectedSubscriptionDriverId)
+        .maybeSingle();
+      if (cancelled || error) return;
+      const until = (data as { payment_grace_until?: string | null } | null)?.payment_grace_until;
+      setSelectedDriverGraceUntil(until && new Date(until).getTime() > Date.now() ? until : null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSubscriptionDriverId]);
+
+  const revokeDriverPaymentGrace = async () => {
+    if (!selectedSubscription) return;
+    setRevokingGrace(true);
+    try {
+      const { error } = await supabase
+        .from('drivers')
+        .update({ payment_grace_until: new Date().toISOString() })
+        .eq('id', selectedSubscription.driverId);
+      if (error) {
+        setPaymentValidationError("L'accès provisoire n'a pas pu être retiré. Réessayez.");
+        return;
+      }
+      setSelectedDriverGraceUntil(null);
+    } finally {
+      setRevokingGrace(false);
+    }
+  };
 
   const availabilityWindow = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -4477,6 +4519,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             </button>
                           ) : (
                             <p className="mt-1 text-gray-600">Aucun reçu joint.</p>
+                          )}
+                          {selectedDriverGraceUntil && (
+                            <div className="mt-3 border-t border-gray-200 pt-3">
+                              <p>
+                                Accès provisoire : ce chauffeur peut accepter des courses jusqu&apos;au{' '}
+                                <strong>
+                                  {new Date(selectedDriverGraceUntil).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}
+                                </strong>
+                                , en attendant votre validation.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={revokeDriverPaymentGrace}
+                                disabled={revokingGrace}
+                                className="mt-1 text-sm font-semibold text-danger-700 underline underline-offset-2 hover:text-danger-900 disabled:opacity-60"
+                              >
+                                {revokingGrace ? 'Retrait…' : 'Paiement introuvable : retirer cet accès'}
+                              </button>
+                            </div>
                           )}
                         </div>
                       );

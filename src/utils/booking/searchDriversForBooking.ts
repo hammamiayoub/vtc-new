@@ -113,6 +113,8 @@ interface SubscriptionStatusRow {
   driver_id: string;
   has_active_subscription: boolean;
   remaining_free_bookings: number;
+  /** Décision de la base : abonnement actif, courses gratuites restantes ou accès provisoire. */
+  can_accept_more_bookings?: boolean | null;
 }
 
 export interface SearchDriversForBookingParams {
@@ -236,8 +238,12 @@ async function filterDriversBySubscription(drivers: EnrichedDriver[]): Promise<E
           driversWithValidSubscription.push(driver);
           continue;
         }
+        // On suit la décision de la base quand elle est fournie : elle seule connaît l'accès
+        // provisoire accordé après une déclaration de paiement.
         const canAccept =
-          status.has_active_subscription || status.remaining_free_bookings > 0;
+          typeof status.can_accept_more_bookings === 'boolean'
+            ? status.can_accept_more_bookings
+            : status.has_active_subscription || status.remaining_free_bookings > 0;
         if (canAccept) {
           driversWithValidSubscription.push(driver);
         }

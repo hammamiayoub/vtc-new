@@ -110,6 +110,11 @@ function formatTimestamp(value: string): string {
   return new Date(value).toLocaleDateString('fr-FR', LONG_DATE);
 }
 
+/** Fin de l'accès provisoire : jour et heure, à l'heure de l'appareil. */
+function formatGraceEnd(value: string): string {
+  return new Date(value).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+}
+
 function addDays(date: string, days: number): string {
   const d = new Date(`${date.slice(0, 10)}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
@@ -192,6 +197,8 @@ function CopyRow({ label, value, mono }: { label: string; value: string; mono?: 
 export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId }) => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [lastPaidEndDate, setLastPaidEndDate] = useState<string | null>(null);
+  // Fin de l'accès provisoire accordé après une déclaration de paiement (null s'il n'y en a pas).
+  const [graceUntil, setGraceUntil] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingRequest, setPendingRequest] = useState<PendingSubscriptionRequest | null>(null);
   // Faux tant que la migration « déclaration de paiement » n'est pas appliquée : on garde alors
@@ -304,6 +311,15 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
         .limit(1)
         .maybeSingle();
       setLastPaidEndDate(lastPaid?.end_date ?? null);
+
+      // Accès provisoire : lecture tolérante (colonne absente tant que la migration n'est pas appliquée).
+      const { data: grace, error: graceError } = await supabase
+        .from('drivers')
+        .select('payment_grace_until')
+        .eq('id', driverId)
+        .maybeSingle();
+      const until = graceError ? null : (grace as { payment_grace_until?: string | null } | null)?.payment_grace_until;
+      setGraceUntil(until && new Date(until).getTime() > Date.now() ? until : null);
     } catch (error) {
       console.error('Erreur:', error);
     }
@@ -486,8 +502,14 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
       setPaymentReference('');
       setReceiptFile(null);
       setEditingDeclaration(false);
-      await checkPendingRequest();
-      setNotice({ tone: 'success', text: 'Paiement déclaré. Nous le vérifions et activons votre abonnement.' });
+      await Promise.all([checkPendingRequest(), fetchSubscriptionStatus()]);
+      const graceGranted = (data as { grace_until?: string | null } | null)?.grace_until;
+      setNotice({
+        tone: 'success',
+        text: graceGranted
+          ? `Paiement déclaré. En attendant la vérification, vous pouvez accepter des courses jusqu'au ${formatGraceEnd(graceGranted)}.`
+          : 'Paiement déclaré. Nous le vérifions et activons votre abonnement.',
+      });
     } catch (error) {
       console.error('Erreur:', error);
       setNotice({ tone: 'danger', text: 'Une erreur est survenue. Veuillez réessayer.' });
@@ -528,6 +550,8 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
   const yearlySaving = monthlyTotal * 12 - yearlyTotal;
 
   const isDeclared = pendingRequest?.declaredAt != null;
+  const activeGraceUntil =
+    !isPremium && isDeclared && graceUntil && subscriptionStatus.canAcceptMoreBookings ? graceUntil : null;
   const showDeclareForm = pendingRequest !== null && declareSupported && (!isDeclared || editingDeclaration);
   // Renouvellement anticipé : la période demandée commence après l'abonnement en cours.
   const pendingStartsLater = pendingRequest !== null && isPremium && pendingRequest.startDate > new Date().toISOString().slice(0, 10);
@@ -619,7 +643,9 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
               <p className="text-xs text-gray-600">
                 {subscriptionStatus.remainingFreeBookings > 0
                   ? `${subscriptionStatus.remainingFreeBookings} course${subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''} gratuite${subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''} restante${subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''}`
-                  : 'Quota gratuit épuisé : un abonnement est nécessaire pour accepter de nouvelles courses.'}
+                  : activeGraceUntil
+                    ? `Quota gratuit épuisé. Accès provisoire jusqu'au ${formatGraceEnd(activeGraceUntil)}, le temps de vérifier votre paiement.`
+                    : 'Quota gratuit épuisé : un abonnement est nécessaire pour accepter de nouvelles courses.'}
               </p>
             </>
           )}
@@ -767,6 +793,11 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             <TrackingStep number={3} state={isDeclared ? 'current' : 'upcoming'} title="Activation par TuniDrive" isLast>
               {isDeclared ? (
                 <div className="space-y-3">
+                  {activeGraceUntil && (
+                    <Alert tone="success" title="Vous pouvez déjà accepter des courses">
+                      Accès provisoire jusqu'au {formatGraceEnd(activeGraceUntil)}, sans attendre la validation.
+                    </Alert>
+                  )}
                   <p>
                     Vérification en cours : l'activation se fait sous 24 h ouvrables et vous recevrez un email de
                     confirmation.
