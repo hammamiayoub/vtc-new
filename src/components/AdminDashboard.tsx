@@ -286,6 +286,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [cancelReasonId, setCancelReasonId] = useState<BookingCancellationReasonId | ''>('');
   const [cancelCustomReason, setCancelCustomReason] = useState('');
   const [selectedSubscription, setSelectedSubscription] = useState<DriverSubscription | null>(null);
+  // Paiements déclarés par les chauffeurs (référence, reçu), par identifiant de demande.
+  const [declaredPayments, setDeclaredPayments] = useState<
+    Record<string, { declaredAt: string; reference: string | null; proofPath: string | null }>
+  >({});
+  const [openingReceipt, setOpeningReceipt] = useState(false);
+  // Fin de l'accès provisoire du chauffeur dont la demande est ouverte (null s'il n'y en a pas).
+  const [selectedDriverGraceUntil, setSelectedDriverGraceUntil] = useState<string | null>(null);
+  const [revokingGrace, setRevokingGrace] = useState(false);
   const [validatingPayment, setValidatingPayment] = useState(false);
   const [paymentValidationError, setPaymentValidationError] = useState<string | null>(null);
   const [paymentForm, setPaymentForm] = useState<{ method: string; reference: string }>({
@@ -390,12 +398,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         method: selectedSubscription.paymentMethod || 'bank_transfer',
         reference:
           selectedSubscription.paymentReference ||
-          `ABONNEMENT-${selectedSubscription.id.slice(0, 8).toUpperCase()}`
+          declaredPayments[selectedSubscription.id]?.reference ||
+          // Même référence que le motif de virement affiché au chauffeur (identifiant du chauffeur).
+          `ABONNEMENT-${selectedSubscription.driverId.slice(0, 8).toUpperCase()}`
       });
       setExtendForm({ amount: 1, unit: 'months', note: '' });
       setExtendError(null);
     }
   }, [selectedSubscription]);
+
+  // Accès provisoire du chauffeur (lecture tolérante : colonne absente sans la migration)
+  const selectedSubscriptionDriverId = selectedSubscription?.driverId ?? null;
+  useEffect(() => {
+    setSelectedDriverGraceUntil(null);
+    if (!selectedSubscriptionDriverId) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('drivers')
+        .select('payment_grace_until')
+        .eq('id', selectedSubscriptionDriverId)
+        .maybeSingle();
+      if (cancelled || error) return;
+      const until = (data as { payment_grace_until?: string | null } | null)?.payment_grace_until;
+      setSelectedDriverGraceUntil(until && new Date(until).getTime() > Date.now() ? until : null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSubscriptionDriverId]);
+
+  const revokeDriverPaymentGrace = async () => {
+    if (!selectedSubscription) return;
+    setRevokingGrace(true);
+    try {
+      const { error } = await supabase
+        .from('drivers')
+        .update({ payment_grace_until: new Date().toISOString() })
+        .eq('id', selectedSubscription.driverId);
+      if (error) {
+        setPaymentValidationError("L'accès provisoire n'a pas pu être retiré. Réessayez.");
+        return;
+      }
+      setSelectedDriverGraceUntil(null);
+    } finally {
+      setRevokingGrace(false);
+    }
+  };
 
   const availabilityWindow = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -1241,6 +1290,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const openSubscriptionReceipt = async (proofPath: string) => {
+    setOpeningReceipt(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from('subscription-receipts')
+        .createSignedUrl(proofPath, 300);
+      if (error || !data?.signedUrl) {
+        setPaymentValidationError("Impossible d'ouvrir le reçu. Réessayez.");
+        return;
+      }
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    } finally {
+      setOpeningReceipt(false);
+    }
+  };
+
   const formatSubscriptionRow = (sub: AdminSubscriptionRow): DriverSubscription => {
     const endDate = new Date(sub.end_date);
     const today = new Date();
@@ -1298,6 +1363,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     try {
       const rows = await fetchAdminSubscriptionRows();
       setSubscriptions(rows.map(formatSubscriptionRow));
+
+      // Lecture séparée et tolérante : si la migration « déclaration de paiement » n'est pas
+      // appliquée, la liste des abonnements s'affiche quand même, sans cette information.
+      const { data: declared, error: declaredError } = await supabase
+        .from('driver_subscriptions')
+        .select('id, payment_declared_at, driver_payment_reference, payment_proof_path')
+        .eq('payment_status', 'pending')
+        .not('payment_declared_at', 'is', null);
+      if (!declaredError && declared) {
+        setDeclaredPayments(
+          Object.fromEntries(
+            declared.map((row) => [
+              row.id,
+              {
+                declaredAt: row.payment_declared_at,
+                reference: row.driver_payment_reference ?? null,
+                proofPath: row.payment_proof_path ?? null,
+              },
+            ]),
+          ),
+        );
+      }
     } catch (error) {
       console.error('Erreur lors de la récupération des abonnements:', error);
     }
@@ -2500,6 +2587,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                               {getSubscriptionDurationLabel(subscription.billingPeriod)} à compter de la validation
                             </p>
                           )}
+                          {subscription.paymentStatus === 'pending' && declaredPayments[subscription.id] && (
+                            <p className="mt-1 inline-block rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-semibold text-success-800">
+                              Paiement déclaré
+                            </p>
+                          )}
                         </div>
                       </td>
                       
@@ -2691,7 +2783,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </p>
                       {subscription.paymentStatus === 'pending' && (
                         <p className="text-[10px] sm:text-xs text-warning-700 font-medium mt-1">
-                          En attente de validation du paiement
+                          {declaredPayments[subscription.id]
+                            ? 'Paiement déclaré par le chauffeur : à vérifier'
+                            : 'En attente de validation du paiement'}
                         </p>
                       )}
                     </div>
@@ -4396,6 +4490,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
                   <h4 className="text-sm font-semibold text-warning-900 mb-3">Valider le paiement</h4>
                   <div className="space-y-4">
+                    {(() => {
+                      const declared = declaredPayments[selectedSubscription.id];
+                      if (!declared) {
+                        return (
+                          <p className="text-sm text-warning-800">
+                            Le chauffeur n&apos;a pas encore déclaré son paiement dans l&apos;application.
+                          </p>
+                        );
+                      }
+                      return (
+                        <div className="rounded-lg border border-success-300 bg-white p-3 text-sm text-gray-800">
+                          <p className="font-semibold text-gray-900">
+                            Paiement déclaré par le chauffeur le{' '}
+                            {new Date(declared.declaredAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}
+                          </p>
+                          <p className="mt-1">
+                            Référence saisie : <span className="font-mono">{declared.reference ?? 'non renseignée'}</span>
+                          </p>
+                          {declared.proofPath ? (
+                            <button
+                              type="button"
+                              onClick={() => openSubscriptionReceipt(declared.proofPath as string)}
+                              disabled={openingReceipt}
+                              className="mt-2 text-sm font-semibold text-blue-700 underline underline-offset-2 hover:text-blue-900 disabled:opacity-60"
+                            >
+                              {openingReceipt ? 'Ouverture…' : 'Voir le reçu'}
+                            </button>
+                          ) : (
+                            <p className="mt-1 text-gray-600">Aucun reçu joint.</p>
+                          )}
+                          {selectedDriverGraceUntil && (
+                            <div className="mt-3 border-t border-gray-200 pt-3">
+                              <p>
+                                Accès provisoire : ce chauffeur peut accepter des courses jusqu&apos;au{' '}
+                                <strong>
+                                  {new Date(selectedDriverGraceUntil).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}
+                                </strong>
+                                , en attendant votre validation.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={revokeDriverPaymentGrace}
+                                disabled={revokingGrace}
+                                className="mt-1 text-sm font-semibold text-danger-700 underline underline-offset-2 hover:text-danger-900 disabled:opacity-60"
+                              >
+                                {revokingGrace ? 'Retrait…' : 'Paiement introuvable : retirer cet accès'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <p className="text-sm text-warning-800">
                       Une fois le paiement reçu, validez l&apos;abonnement : la période sera recalculée automatiquement
                       à partir d&apos;aujourd&apos;hui pour garantir {getSubscriptionDurationLabel(selectedSubscription.billingPeriod)} complets.
