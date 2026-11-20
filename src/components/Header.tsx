@@ -125,9 +125,10 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
             <button
               type="button"
               onClick={() => go('/')}
-              className="focus-ring rounded-md text-xl font-semibold text-white tracking-tight truncate min-w-0 hover:opacity-90 transition-opacity"
+              aria-label="TuniDrive"
+              className="focus-ring rounded-md flex items-center min-w-0 hover:opacity-90 transition-opacity"
             >
-              TuniDrive
+              <img src="/tunidrive-wordmark.png?v=3" alt="TuniDrive" width="720" height="130" className="h-7 sm:h-8 w-auto" />
             </button>
 
             <nav className="hidden lg:flex items-center gap-1" aria-label={en ? 'Main' : 'Principale'}>
