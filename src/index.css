@@ -134,3 +134,53 @@
     display: none;
   }
 }
+
+/* Fil de trajet discret (page d'accueil) */
+.route-line {
+  position: relative;
+  height: 1px;
+  background: #e8e8e8;
+  overflow: visible;
+}
+
+.route-line__dot,
+.route-line__pin {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  background: #000;
+}
+
+.route-line__dot { left: 0; border-radius: 9999px; }
+.route-line__pin { right: 0; border-radius: 2px; }
+
+.route-line__glide {
+  position: absolute;
+  top: -0.5px;
+  left: 0;
+  height: 2px;
+  width: 140px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, #000 60%, transparent);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes route-glide {
+    0% { transform: translateX(0); opacity: 0; }
+    10%, 85% { opacity: 1; }
+    100% { transform: translateX(calc(var(--route-w, 1000px) - 140px)); opacity: 0; }
+  }
+
+  .route-line__glide { animation: route-glide 5.5s cubic-bezier(0.45, 0, 0.25, 1) infinite; }
+
+  .vehicle-card .vehicle-art {
+    transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .vehicle-card:hover .vehicle-art {
+    transform: translateX(6px) scale(1.03);
+  }
+}
