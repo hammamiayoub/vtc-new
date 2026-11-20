@@ -38,6 +38,24 @@ interface HomePageProps {
   onDriverLogin: () => void;
 }
 
+/** Photo détourée (fond transparent) ; retombe sur l'illustration si le fichier est absent. */
+function VehicleArt({ photo, alt, Fallback }: { photo: string; alt: string; Fallback: React.ComponentType }) {
+  const [failed, setFailed] = React.useState(false);
+  if (failed) return <Fallback />;
+  return (
+    <img
+      src={photo}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      width={800}
+      height={533}
+      className="h-full w-full object-cover object-center"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 const serviceOffers = [
   {
     icon: Car,
@@ -244,19 +262,19 @@ export const HomePage: React.FC<HomePageProps> = ({
               aria-label={en ? 'Available vehicles' : 'Véhicules disponibles'}
             >
               {[
-                { Art: TaxiIllustration, title: en ? 'Yellow taxi' : 'Taxi', desc: en ? 'Quick city rides and airport runs.' : 'Courses rapides en ville et vers l’aéroport.', cap: en ? 'Up to 4 passengers' : "Jusqu'à 4 passagers" },
-                { Art: BlackSedanIllustration, title: en ? 'Black sedan' : 'Berline', desc: en ? 'Comfortable private-hire sedan.' : 'Berline confortable avec chauffeur privé.', cap: en ? 'Up to 4 passengers' : "Jusqu'à 4 passagers" },
-                { Art: GreyVanIllustration, title: en ? 'Grey van' : 'Van', desc: en ? 'Group transport for up to 8 people.' : "Transport de groupe jusqu'à 8 personnes.", cap: en ? 'Up to 8 passengers' : "Jusqu'à 8 passagers" },
-                { Art: WhiteBusIllustration, title: en ? 'White coach' : 'Bus', desc: en ? 'Long-distance trips and large groups.' : 'Trajets longue distance et grands groupes.', cap: en ? 'Up to 50 passengers' : "Jusqu'à 50 passagers" },
-                { Art: MercedesLuxuryIllustration, title: en ? 'Mercedes luxury' : 'Premium', desc: en ? 'Premium service for special occasions.' : 'Service premium pour occasions spéciales.', cap: en ? 'Premium service' : 'Service premium' },
-              ].map(({ Art, title, desc, cap }) => (
+                { Art: TaxiIllustration, photo: '/vehicles/taxi-jaune.webp', title: en ? 'Yellow taxi' : 'Taxi', desc: en ? 'Quick city rides and airport runs.' : 'Courses rapides en ville et vers l’aéroport.', cap: en ? 'Up to 4 passengers' : "Jusqu'à 4 passagers" },
+                { Art: BlackSedanIllustration, photo: '/vehicles/berline-noire.webp', title: en ? 'Black sedan' : 'Berline', desc: en ? 'Comfortable private-hire sedan.' : 'Berline confortable avec chauffeur privé.', cap: en ? 'Up to 4 passengers' : "Jusqu'à 4 passagers" },
+                { Art: GreyVanIllustration, photo: '/vehicles/van-gris.webp', title: en ? 'Grey van' : 'Van', desc: en ? 'Group transport for up to 8 people.' : "Transport de groupe jusqu'à 8 personnes.", cap: en ? 'Up to 8 passengers' : "Jusqu'à 8 passagers" },
+                { Art: WhiteBusIllustration, photo: '/vehicles/bus-blanc.webp', title: en ? 'White coach' : 'Bus', desc: en ? 'Long-distance trips and large groups.' : 'Trajets longue distance et grands groupes.', cap: en ? 'Up to 50 passengers' : "Jusqu'à 50 passagers" },
+                { Art: MercedesLuxuryIllustration, photo: '/vehicles/mercedes-luxe.webp', title: en ? 'Mercedes luxury' : 'Premium', desc: en ? 'Premium service for special occasions.' : 'Service premium pour occasions spéciales.', cap: en ? 'Premium service' : 'Service premium' },
+              ].map(({ Art, photo, title, desc, cap }) => (
                 <div
                   key={title}
                   role="listitem"
                   className="vehicle-card uber-card overflow-hidden snap-start shrink-0 w-[78%] sm:w-[46%] md:w-auto"
                 >
-                  <div className="relative h-44 overflow-hidden bg-gradient-to-b from-gray-100 to-gray-300 px-3 pt-2">
-                    <div className="vehicle-art h-full"><Art /></div>
+                  <div className="relative aspect-[3/2] overflow-hidden bg-gradient-to-b from-gray-100 to-gray-300">
+                    <div className="vehicle-art h-full"><VehicleArt photo={photo} alt={title} Fallback={Art} /></div>
                   </div>
                   <div className="p-5">
                     <h3 className="text-base font-semibold text-gray-900 mb-2">{title}</h3>
