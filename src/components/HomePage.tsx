@@ -6,8 +6,6 @@ import {
   CheckCircle,
   Users,
   Truck,
-  Bus,
-  Crown,
   Package,
   Plane,
 } from 'lucide-react';
@@ -17,6 +15,14 @@ import { AppDownloadModal } from './AppDownloadModal';
 import { AppStoreBadges } from './AppStoreBadges';
 import { HomeBookingWidget } from './HomeBookingWidget';
 import { TrustSignals } from './TrustSignals';
+import { HomeRoadAnimation } from './HomeRoadAnimation';
+import {
+  TaxiIllustration,
+  BlackSedanIllustration,
+  GreyVanIllustration,
+  WhiteBusIllustration,
+  MercedesLuxuryIllustration,
+} from './VehicleIllustrations';
 import { focusHomeBookingForm } from '../utils/focusHomeBooking';
 import { ReviewsCarousel } from './ReviewsCarousel';
 import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
@@ -30,42 +36,6 @@ interface HomePageProps {
   onClientLogin: () => void;
   onClientSignup: () => void;
   onDriverLogin: () => void;
-}
-
-function VehiclePicture({
-  webp,
-  jpg,
-  alt,
-  fallback,
-}: {
-  webp: string;
-  jpg: string;
-  alt: string;
-  fallback: React.ReactNode;
-}) {
-  return (
-    <picture>
-      <source srcSet={webp} type="image/webp" />
-      <img
-        src={jpg}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        width={800}
-        height={533}
-        className="w-full h-full object-cover transition-opacity duration-300"
-        onError={(e) => {
-          const target = e.currentTarget as HTMLImageElement;
-          target.style.display = 'none';
-          const nextElement = target.nextElementSibling as HTMLElement;
-          if (nextElement) {
-            nextElement.style.display = 'flex';
-          }
-        }}
-      />
-      {fallback}
-    </picture>
-  );
 }
 
 const serviceOffers = [
@@ -188,6 +158,10 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </section>
 
+        
+
+        <HomeRoadAnimation />
+
         {/* Services */}
         <RevealSection className="py-16 bg-surface-muted">
           <div className="page-container">
@@ -265,32 +239,24 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {/* Véhicules : défilement horizontal au doigt sur mobile, grille à partir de md */}
             <div
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 py-1 scroll-px-4 sm:-mx-6 sm:px-6 sm:scroll-px-6 md:mx-0 md:px-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible lg:grid-cols-4"
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 py-1 scroll-px-4 sm:-mx-6 sm:px-6 sm:scroll-px-6 md:mx-0 md:px-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible lg:grid-cols-5"
               role="list"
               aria-label={en ? 'Available vehicles' : 'Véhicules disponibles'}
             >
               {[
-                { webp: '/van.webp', jpg: '/van.jpg', alt: en ? 'Group van' : 'Van de transport collectif', title: en ? 'Shared van' : 'Van collectif', desc: en ? 'Group transport for up to 8 people.' : "Transport de groupe jusqu'à 8 personnes.", cap: en ? 'Up to 8 passengers' : "Jusqu'à 8 passagers", icon: Users },
-                { webp: '/bus.webp', jpg: '/bus.jpg', alt: en ? 'Coach' : 'Bus de transport', title: en ? 'Coach' : 'Bus de transport', desc: en ? 'Long-distance trips and large groups.' : 'Trajets longue distance et grands groupes.', cap: en ? 'Up to 50 passengers' : "Jusqu'à 50 passagers", icon: Bus },
-                { webp: '/utilitaire.webp', jpg: '/utilitaire.jpg', alt: en ? 'Utility vehicle' : 'Véhicule utilitaire', title: en ? 'Utility vehicle' : 'Véhicule utilitaire', desc: en ? 'Goods transport and moving.' : 'Transport de marchandises et déménagement.', cap: en ? 'Goods transport' : 'Transport de marchandises', icon: Truck },
-                { webp: '/limousine.webp', jpg: '/limousine.jpg', alt: en ? 'Luxury vehicle' : 'Véhicule de luxe', title: en ? 'Luxury vehicle' : 'Véhicule de luxe', desc: en ? 'Premium service for special occasions.' : 'Service premium pour occasions spéciales.', cap: en ? 'Premium service' : 'Service premium', icon: Crown },
-              ].map(({ webp, jpg, alt, title, desc, cap, icon: Icon }) => (
+                { Art: TaxiIllustration, title: en ? 'Yellow taxi' : 'Taxi', desc: en ? 'Quick city rides and airport runs.' : 'Courses rapides en ville et vers l’aéroport.', cap: en ? 'Up to 4 passengers' : "Jusqu'à 4 passagers" },
+                { Art: BlackSedanIllustration, title: en ? 'Black sedan' : 'Berline', desc: en ? 'Comfortable private-hire sedan.' : 'Berline confortable avec chauffeur privé.', cap: en ? 'Up to 4 passengers' : "Jusqu'à 4 passagers" },
+                { Art: GreyVanIllustration, title: en ? 'Grey van' : 'Van', desc: en ? 'Group transport for up to 8 people.' : "Transport de groupe jusqu'à 8 personnes.", cap: en ? 'Up to 8 passengers' : "Jusqu'à 8 passagers" },
+                { Art: WhiteBusIllustration, title: en ? 'White coach' : 'Bus', desc: en ? 'Long-distance trips and large groups.' : 'Trajets longue distance et grands groupes.', cap: en ? 'Up to 50 passengers' : "Jusqu'à 50 passagers" },
+                { Art: MercedesLuxuryIllustration, title: en ? 'Mercedes luxury' : 'Premium', desc: en ? 'Premium service for special occasions.' : 'Service premium pour occasions spéciales.', cap: en ? 'Premium service' : 'Service premium' },
+              ].map(({ Art, title, desc, cap }) => (
                 <div
                   key={title}
                   role="listitem"
-                  className="uber-card overflow-hidden snap-start shrink-0 w-[78%] sm:w-[46%] md:w-auto"
+                  className="vehicle-card uber-card overflow-hidden snap-start shrink-0 w-[78%] sm:w-[46%] md:w-auto"
                 >
-                  <div className="relative h-44 overflow-hidden">
-                    <VehiclePicture
-                      webp={webp}
-                      jpg={jpg}
-                      alt={alt}
-                      fallback={
-                        <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center" style={{ display: 'none' }}>
-                          <Icon size={56} className="text-white opacity-90" />
-                        </div>
-                      }
-                    />
+                  <div className="relative h-44 overflow-hidden bg-gradient-to-b from-gray-100 to-gray-300 px-3 pt-2">
+                    <div className="vehicle-art h-full"><Art /></div>
                   </div>
                   <div className="p-5">
                     <h3 className="text-base font-semibold text-gray-900 mb-2">{title}</h3>
