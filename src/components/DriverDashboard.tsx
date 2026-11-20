@@ -914,7 +914,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           <div className="flex justify-between items-center h-16 sm:h-20">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white tracking-tight">TuniDrive</h1>
+                <h1 className="flex items-center">
+                  <img src="/tunidrive-wordmark.png?v=3" alt="TuniDrive" width="720" height="130" className="h-7 sm:h-9 w-auto ml-px" />
+                </h1>
                 <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">Espace Chauffeur</p>
               </div>
             </div>

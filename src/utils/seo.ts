@@ -4,7 +4,7 @@ import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
 import { alternateUrls, type Locale } from '../i18n/locale';
 
 export const SITE_URL = 'https://tunidrive.net';
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/tunidrive-logo.png`;
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/tunidrive-logo.png?v=2`;
 
 export interface SEOData {
   title: string;

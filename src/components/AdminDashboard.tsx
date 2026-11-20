@@ -1820,7 +1820,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight truncate">TuniDrive</h1>
+                <h1 className="flex items-center">
+                  <img src="/tunidrive-wordmark.png?v=3" alt="TuniDrive" width="720" height="130" className="h-6 sm:h-8 w-auto ml-px" />
+                </h1>
                 <p className="text-xs sm:text-sm text-gray-300 hidden sm:block">Administration</p>
               </div>
             </div>
