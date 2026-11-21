@@ -2,10 +2,10 @@
 
 /** Prise en charge selon la distance à vide chauffeur → point de départ. */
 export const DRIVER_PICKUP_FARE_TIERS = [
-  { upToKm: 10, fareTnd: 10, label: '< 10 km' },
-  { upToKm: 30, fareTnd: 20, label: '10–30 km' },
-  { upToKm: 50, fareTnd: 30, label: '30–50 km' },
-  { upToKm: Infinity, fareTnd: 50, label: '50 km+' },
+  { upToKm: 10, fareTnd: 3, label: '< 10 km' },
+  { upToKm: 30, fareTnd: 6, label: '10–30 km' },
+  { upToKm: 50, fareTnd: 10, label: '30–50 km' },
+  { upToKm: Infinity, fareTnd: 15, label: '50 km+' },
 ] as const;
 
 /** Van, minibus et bus : visibles jusqu'à 150 km, avec un supplément fixe par tranche de 50 km atteinte. */
@@ -42,12 +42,12 @@ export function computeLongRangeApproachSurchargeTnd(
 }
 
 /** Prise en charge par défaut (estimation avant sélection du chauffeur). */
-export const RIDE_DEFAULT_PICKUP_FARE_TND = 10;
+export const RIDE_DEFAULT_PICKUP_FARE_TND = 3;
 
 /** @deprecated Utiliser RIDE_DEFAULT_PICKUP_FARE_TND ou computeDriverPickupFareTnd. */
 export const RIDE_BASE_FARE_TND = RIDE_DEFAULT_PICKUP_FARE_TND;
 
-export const RIDE_MIN_PRICE_TND = 14.4;
+export const RIDE_MIN_PRICE_TND = 8;
 
 export interface RideDistanceTier {
   maxKm: number;
@@ -57,11 +57,11 @@ export interface RideDistanceTier {
 
 /** Tranches progressives (km facturés dans chaque palier) */
 export const RIDE_DISTANCE_TIERS: RideDistanceTier[] = [
-  { maxKm: 15, rate: 1.53, label: '0–15 km' },
-  { maxKm: 35, rate: 1.98, label: '15–50 km' },
-  { maxKm: 50, rate: 1.71, label: '50–100 km' },
-  { maxKm: 150, rate: 1.35, label: '100–250 km' },
-  { maxKm: Infinity, rate: 1.08, label: '250+ km' },
+  { maxKm: 15, rate: 1.0, label: '0–15 km' },
+  { maxKm: 35, rate: 0.9, label: '15–50 km' },
+  { maxKm: 50, rate: 0.85, label: '50–100 km' },
+  { maxKm: 150, rate: 0.8, label: '100–250 km' },
+  { maxKm: Infinity, rate: 0.75, label: '250+ km' },
 ];
 
 export interface ProgressivePriceBreakdownRow {
@@ -157,9 +157,9 @@ export function calculateProgressiveDistancePrice(
 
 /** Tarif indicatif au km selon la distance totale (affichage récapitulatif). */
 export function getIndicativePricePerKm(distanceKm: number): { price: number; discount: string } {
-  if (distanceKm < 15) return { price: 1.53, discount: '' };
-  if (distanceKm < 50) return { price: 1.98, discount: '' };
-  if (distanceKm < 100) return { price: 1.71, discount: '' };
-  if (distanceKm < 250) return { price: 1.35, discount: '' };
-  return { price: 1.08, discount: '' };
+  if (distanceKm < 15) return { price: 1.0, discount: '' };
+  if (distanceKm < 50) return { price: 0.9, discount: '' };
+  if (distanceKm < 100) return { price: 0.85, discount: '' };
+  if (distanceKm < 250) return { price: 0.8, discount: '' };
+  return { price: 0.75, discount: '' };
 }

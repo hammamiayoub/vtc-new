@@ -33,7 +33,7 @@ export const faqCategories: FaqCategory[] = [
         id: "c3",
         question: "Quels sont les tarifs des courses ?",
         answer:
-          "Les tarifs VTC TuniDrive comprennent :\n• Prise en charge variable selon la distance du chauffeur : 10 TND (< 10 km), 20 TND (10–30 km), 30 TND (30–50 km), 50 TND (50 km+)\n• 0–15 km : 1,53 TND/km\n• 15–50 km : 1,98 TND/km\n• 50–100 km : 1,71 TND/km\n• 100–250 km : 1,35 TND/km\n• 250+ km : 1,08 TND/km\n• Prix minimum : 14,40 TND\n• Multiplicateurs véhicule : Van ×1,875 · Minibus ×3,125 · Bus ×4,375\n• Suppléments : +15 % de nuit (21 h–6 h) et +10 % le week-end, cumulables\n• Aller-retour : la distance est doublée\n\nLe tarif au km est progressif : chaque tranche est facturée séparément. Le prix estimé vous est affiché avant confirmation.",
+          "Les tarifs VTC TuniDrive comprennent :\n• Prise en charge variable selon la distance du chauffeur : 3 TND (< 10 km), 6 TND (10–30 km), 10 TND (30–50 km), 15 TND (50 km+)\n• 0–15 km : 1,00 TND/km\n• 15–50 km : 0,90 TND/km\n• 50–100 km : 0,85 TND/km\n• 100–250 km : 0,80 TND/km\n• 250+ km : 0,75 TND/km\n• Prix minimum : 8 TND\n• Multiplicateurs véhicule : Van ×1,875 · Minibus ×3,125 · Bus ×4,375\n• Suppléments : +15 % de nuit (21 h–6 h) et +10 % le week-end, cumulables\n• Aller-retour : la distance est doublée\n\nLe tarif au km est progressif : chaque tranche est facturée séparément. Le prix estimé vous est affiché avant confirmation.",
       },
       {
         id: "c4",
