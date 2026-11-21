@@ -35,12 +35,14 @@ import {
   getPendingQuote,
   type PendingQuote,
 } from '../utils/pendingQuote';
+import { usePricingGridVersion } from '../utils/pricingConfig';
 
 interface ClientDashboardProps {
   onLogout: () => void;
 }
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) => {
+  usePricingGridVersion(); // re-render quand la grille tarifaire de la base est chargée
   const { locale } = useLocale();
   const en = locale === 'en';
   const dateLocale = en ? 'en-GB' : 'fr-FR';

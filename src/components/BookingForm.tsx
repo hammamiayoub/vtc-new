@@ -52,6 +52,7 @@ import { formatVehicleType } from '../utils/vehicles';
 import type { PendingQuote } from '../utils/pendingQuote';
 import { useLocale } from '../i18n/locale';
 import { translateSignupMessage } from '../i18n/signupErrors';
+import { usePricingGridVersion } from '../utils/pricingConfig';
 
 /** TND avec la virgule en français (comme le widget d'accueil). */
 function formatTnd(amount: number, en: boolean, decimals = 2): string {
@@ -91,6 +92,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   onBookingSuccess,
   initialQuote = null,
 }) => {
+  usePricingGridVersion(); // re-render quand la grille tarifaire de la base est chargée
   const { locale } = useLocale();
   const en = locale === 'en';
   const tx = (message?: string | null) => translateSignupMessage(message ?? undefined, locale) ?? '';
