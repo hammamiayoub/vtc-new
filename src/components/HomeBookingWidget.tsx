@@ -21,6 +21,7 @@ import {
 } from '../utils/focusHomeBooking';
 import { useLocale } from '../i18n/locale';
 import { cn } from '../utils/cn';
+import { usePricingGridVersion } from '../utils/pricingConfig';
 
 interface HomeBookingWidgetProps {
   onClientLogin: () => void;
@@ -49,6 +50,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
   onClientLogin,
   onClientSignup,
 }) => {
+  const pricingGridVersion = usePricingGridVersion(); // recalcule le prix quand la grille de la base change
   const { locale } = useLocale();
   const en = locale === 'en';
   const money = (amount: number) => formatTnd(amount, locale);
@@ -122,7 +124,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
       distanceKm === null
         ? null
         : calculatePriceWithSurcharges(distanceKm, 'sedan', scheduledDate ?? new Date()),
-    [distanceKm, scheduledDate],
+    [distanceKm, scheduledDate, pricingGridVersion],
   );
   const estimatedPrice = quote?.finalPrice ?? null;
 

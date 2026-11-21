@@ -52,6 +52,7 @@ import { formatVehicleType } from '../utils/vehicles';
 import type { PendingQuote } from '../utils/pendingQuote';
 import { useLocale } from '../i18n/locale';
 import { translateSignupMessage } from '../i18n/signupErrors';
+import { usePricingGridVersion } from '../utils/pricingConfig';
 
 /** TND avec la virgule en français (comme le widget d'accueil). */
 function formatTnd(amount: number, en: boolean, decimals = 2): string {
@@ -91,6 +92,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   onBookingSuccess,
   initialQuote = null,
 }) => {
+  const pricingGridVersion = usePricingGridVersion(); // recalcule le prix quand la grille de la base change
   const { locale } = useLocale();
   const en = locale === 'en';
   const tx = (message?: string | null) => translateSignupMessage(message ?? undefined, locale) ?? '';
@@ -309,7 +311,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       setEstimatedPrice(finalPrice);
       setPriceSurcharges(surcharges);
     }
-  }, [watchVehicleType, pricedVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime, vipMultiplier, driverToPickupKm]);
+  }, [watchVehicleType, pricedVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime, vipMultiplier, driverToPickupKm, pricingGridVersion]);
 
   // Départ immédiat : verrouiller la date/heure sur maintenant
   useEffect(() => {

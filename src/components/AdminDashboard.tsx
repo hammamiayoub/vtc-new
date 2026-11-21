@@ -23,9 +23,11 @@ import {
   Search,
   FileText,
   Star,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
 import { AdminBlogPosts } from './AdminBlogPosts';
+import { AdminPricing } from './AdminPricing';
 import { DriverRatingDisplay } from './DriverRatingDisplay';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
@@ -86,7 +88,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminTabId = 'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings' | 'parcels' | 'blog';
+type AdminTabId = 'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings' | 'parcels' | 'blog' | 'pricing';
 
 interface VehicleWithDriver extends Vehicle {
   driver?: {
@@ -1785,6 +1787,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     { id: 'subscriptions', label: 'Abonnements', shortLabel: 'Abonnements', icon: CreditCard, count: subscriptions.length, attention: pendingSubscriptions },
     { id: 'parcels', label: 'Colis international', shortLabel: 'Colis', icon: Package, count: parcelStats.total, attention: parcelStats.pending },
     { id: 'blog', label: 'Blog', shortLabel: 'Blog', icon: FileText },
+    { id: 'pricing', label: 'Tarifs', shortLabel: 'Tarifs', icon: SlidersHorizontal },
   ];
 
   // Afficher un écran de chargement pendant la vérification d'authentification
@@ -1821,7 +1824,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <div className="min-w-0">
                 <h1 className="flex items-center">
-                  <img src="/tunidrive-wordmark.png?v=3" alt="TuniDrive" width="720" height="130" className="h-6 sm:h-8 w-auto ml-px" />
+                  <img src="/tunidrive-wordmark.png?v=4" alt="TuniDrive" width="736" height="520" className="h-9 sm:h-11 w-auto ml-px" />
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-300 hidden sm:block">Administration</p>
               </div>
@@ -1908,7 +1911,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       <main className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-8">
         {/* Stats Cards */}
 
-        {activeTab !== 'blog' && (
+        {activeTab !== 'blog' && activeTab !== 'pricing' && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
           {activeTab === 'bookings' ? (
             <>
@@ -2266,6 +2269,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         {/* Content based on active tab */}
         {activeTab === 'blog' ? (
           <AdminBlogPosts />
+        ) : activeTab === 'pricing' ? (
+          <AdminPricing />
         ) : activeTab === 'bookings' ? (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 space-y-3">
