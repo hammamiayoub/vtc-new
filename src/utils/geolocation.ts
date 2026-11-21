@@ -3,6 +3,7 @@ import {
   calculateProgressiveDistancePrice,
   computeLongRangeApproachSurchargeTnd,
   getIndicativePricePerKm,
+  getRideSupplementPercents,
 } from './ridePricing';
 
 export {
@@ -158,11 +159,12 @@ export const calculateSurcharges = (scheduledTime: string | Date, basePrice: num
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
   
   // Calculer les pourcentages de supplément
-  const nightSurchargePercent = isNightTime ? 15 : 0;
-  const weekendSurchargePercent = isWeekend ? 10 : 0;
+  const supplements = getRideSupplementPercents();
+  const nightSurchargePercent = isNightTime ? supplements.night : 0;
+  const weekendSurchargePercent = isWeekend ? supplements.weekend : 0;
   
-  // Les suppléments sont cumulatifs
-  const totalSurchargePercent = nightSurchargePercent + weekendSurchargePercent;
+  // Les suppléments sont cumulatifs, dans la limite du plafond de la grille
+  const totalSurchargePercent = Math.min(nightSurchargePercent + weekendSurchargePercent, supplements.max);
   const totalSurcharge = basePrice * (totalSurchargePercent / 100);
   
   return {

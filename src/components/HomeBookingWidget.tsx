@@ -21,6 +21,7 @@ import {
 } from '../utils/focusHomeBooking';
 import { useLocale } from '../i18n/locale';
 import { cn } from '../utils/cn';
+import { usePricingGridVersion } from '../utils/pricingConfig';
 
 interface HomeBookingWidgetProps {
   onClientLogin: () => void;
@@ -49,6 +50,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
   onClientLogin,
   onClientSignup,
 }) => {
+  usePricingGridVersion(); // re-render quand la grille tarifaire de la base est chargée
   const { locale } = useLocale();
   const en = locale === 'en';
   const money = (amount: number) => formatTnd(amount, locale);

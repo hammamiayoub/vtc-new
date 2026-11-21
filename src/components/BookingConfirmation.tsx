@@ -21,6 +21,7 @@ import { getPricePerKm, calculateSurcharges, PriceSurcharges, getDriverPickupFar
 import { analytics } from '../utils/analytics';
 import { triggerGoogleAdsConversion } from '../utils/googleAdsTrigger';
 import { useLocale } from '../i18n/locale';
+import { usePricingGridVersion } from '../utils/pricingConfig';
 
 interface BookingConfirmationProps {
   bookingId: string;
@@ -31,6 +32,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   bookingId, 
   onBack 
 }) => {
+  usePricingGridVersion(); // re-render quand la grille tarifaire de la base est chargée
   const { locale } = useLocale();
   const en = locale === 'en';
   const dateLocale = en ? 'en-GB' : 'fr-FR';
