@@ -478,7 +478,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="flex items-center">
-                  <img src="/tunidrive-wordmark.png?v=3" alt="TuniDrive" width="720" height="130" className="h-7 sm:h-9 w-auto ml-px" />
+                  <img src="/tunidrive-wordmark.png?v=4" alt="TuniDrive" width="736" height="520" className="h-10 sm:h-12 w-auto ml-px" />
                 </h1>
                 <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">
                   {en ? 'Rider account' : 'Espace Client'}

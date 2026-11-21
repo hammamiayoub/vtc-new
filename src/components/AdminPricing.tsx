@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from './ui/Alert';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
+import { loadPricingConfig } from '../utils/pricingConfig';
 import {
   PREVIEW_TRIPS,
   configToDraft,
@@ -14,6 +15,18 @@ import {
 
 const inputClass =
   'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand';
+
+/** Messages d'erreur lisibles pour les cas courants (fonctions absentes, compte non administrateur). */
+const describeError = (message: string): string => {
+  const m = message.toLowerCase();
+  if (m.includes('forbidden')) {
+    return 'Droits insuffisants : votre compte doit figurer dans la table admin_users pour modifier la grille.';
+  }
+  if (m.includes('schema cache') || m.includes('could not find the function')) {
+    return "Les fonctions d’administration de la grille sont introuvables : exécutez scripts/pricing-grid-admin.sql dans le SQL Editor Supabase, puis NOTIFY pgrst, 'reload schema'; si l’erreur persiste.";
+  }
+  return message;
+};
 
 const money = (n: number): string => n.toFixed(2).replace('.', ',');
 
@@ -110,7 +123,7 @@ export const AdminPricing: React.FC = () => {
 
   const active = useMemo(() => rows.find((r) => r.is_active) ?? null, [rows]);
 
-  const load = useCallback(async (resetDraft: boolean) => {
+  const load = useCallback(async (resetDraft: boolean): Promise<PricingRow[] | null> => {
     setLoading(true);
     const { data, error: loadError } = await supabase
       .from('pricing_config')
@@ -120,10 +133,10 @@ export const AdminPricing: React.FC = () => {
       setError(
         loadError.message.includes('pricing_config')
           ? 'La table pricing_config est introuvable : exécutez scripts/pricing-grid-versioning.sql puis scripts/pricing-grid-admin.sql.'
-          : loadError.message,
+          : describeError(loadError.message),
       );
       setLoading(false);
-      return;
+      return null;
     }
     const list = (data ?? []) as PricingRow[];
     setRows(list);
@@ -132,6 +145,7 @@ export const AdminPricing: React.FC = () => {
       setDraft(current ? configToDraft(current.config) : null);
     }
     setLoading(false);
+    return list;
   }, []);
 
   useEffect(() => {
@@ -142,43 +156,73 @@ export const AdminPricing: React.FC = () => {
 
   const setField = (patch: Partial<PricingDraft>) => setDraft((d) => (d ? { ...d, ...patch } : d));
 
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const [confirming, setConfirming] = useState<{ kind: 'save' } | { kind: 'activate'; version: number } | null>(null);
+
+  // Le résultat (succès ou erreur) s'affiche en haut de page : on y amène la vue pour qu'il ne passe pas inaperçu.
+  useEffect(() => {
+    if (error || notice) feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [error, notice]);
+
   const save = async () => {
     if (!validation.config) return;
-    const message = activate
-      ? 'Enregistrer cette grille comme nouvelle version et l\'ACTIVER ?\n\nLe site et les nouvelles versions de l\'application l\'utiliseront dès leur prochain chargement.'
-      : 'Enregistrer cette grille comme nouvelle version, sans l\'activer ?';
-    if (!window.confirm(message)) return;
-
+    setConfirming(null);
     setSaving(true);
     setError(null);
     setNotice(null);
-    const { data, error: rpcError } = await supabase.rpc('admin_save_pricing_grid', {
-      p_config: validation.config,
-      p_note: draft?.note ?? null,
-      p_activate: activate,
-    });
-    setSaving(false);
-    if (rpcError) {
-      setError(rpcError.message);
-      return;
+    try {
+      const { data, error: rpcError } = await supabase.rpc('admin_save_pricing_grid', {
+        p_config: validation.config,
+        p_note: draft?.note ?? null,
+        p_activate: activate,
+      });
+      if (rpcError) {
+        setError(describeError(rpcError.message));
+        return;
+      }
+      // On relit la base pour confirmer que la version existe bien (et qu'elle est active si demandé).
+      const list = await load(false);
+      const created = list?.find((r) => r.version === Number(data));
+      if (!created) {
+        setError(`La version ${data} n’apparaît pas dans pricing_config : l’enregistrement n’est pas confirmé.`);
+        return;
+      }
+      if (activate && !created.is_active) {
+        setError(`La version ${created.version} est enregistrée mais n’est pas active : activez-la depuis l’historique.`);
+        return;
+      }
+      setNotice(`Version ${created.version} enregistrée${activate ? ' et activée' : ''}.`);
+      if (activate) await loadPricingConfig({ skipCache: true });
+    } catch (err) {
+      setError(describeError(err instanceof Error ? err.message : String(err)));
+    } finally {
+      setSaving(false);
     }
-    setNotice(`Version ${data} enregistrée${activate ? ' et activée' : ''}.`);
-    await load(false);
   };
 
   const activateVersion = async (version: number) => {
-    if (!window.confirm(`Activer la version ${version} ? Elle remplacera la grille active.`)) return;
+    setConfirming(null);
     setSaving(true);
     setError(null);
     setNotice(null);
-    const { error: rpcError } = await supabase.rpc('admin_activate_pricing_grid', { p_version: version });
-    setSaving(false);
-    if (rpcError) {
-      setError(rpcError.message);
-      return;
+    try {
+      const { error: rpcError } = await supabase.rpc('admin_activate_pricing_grid', { p_version: version });
+      if (rpcError) {
+        setError(describeError(rpcError.message));
+        return;
+      }
+      const list = await load(false);
+      if (!list?.find((r) => r.version === version)?.is_active) {
+        setError(`La version ${version} n’est pas active après l’opération : l’activation n’est pas confirmée.`);
+        return;
+      }
+      setNotice(`Version ${version} activée.`);
+      await loadPricingConfig({ skipCache: true });
+    } catch (err) {
+      setError(describeError(err instanceof Error ? err.message : String(err)));
+    } finally {
+      setSaving(false);
     }
-    setNotice(`Version ${version} activée.`);
-    await load(false);
   };
 
   if (loading && rows.length === 0) {
@@ -187,8 +231,10 @@ export const AdminPricing: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {error && <Alert tone="danger">{error}</Alert>}
-      {notice && <Alert tone="success">{notice}</Alert>}
+      <div ref={feedbackRef} className="scroll-mt-24 space-y-3 empty:hidden">
+        {error && <Alert tone="danger">{error}</Alert>}
+        {notice && <Alert tone="success">{notice}</Alert>}
+      </div>
 
       <Alert tone="info" title="Comment ça fonctionne">
         Chaque enregistrement crée une <strong>nouvelle version</strong> : une version existante n’est jamais modifiée, car les réservations
@@ -317,8 +363,31 @@ export const AdminPricing: React.FC = () => {
                 </Alert>
               )}
 
+              {confirming?.kind === 'save' && (
+                <Alert tone="warning" title={activate ? 'Confirmer l’activation ?' : 'Confirmer l’enregistrement ?'}>
+                  <p>
+                    {activate
+                      ? 'Cette grille devient la grille active : le site et les nouvelles versions de l’application l’utiliseront dès leur prochain chargement.'
+                      : 'Cette grille sera enregistrée comme nouvelle version, sans être activée.'}
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <Button size="sm" onClick={() => void save()}>
+                      Confirmer
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setConfirming(null)}>
+                      Annuler
+                    </Button>
+                  </div>
+                </Alert>
+              )}
+
               <div className="flex flex-wrap gap-3">
-                <Button onClick={save} loading={saving} disabled={!validation.config || saving} size="sm">
+                <Button
+                  onClick={() => setConfirming({ kind: 'save' })}
+                  loading={saving}
+                  disabled={!validation.config || saving}
+                  size="sm"
+                >
                   {activate ? 'Enregistrer et activer' : 'Enregistrer'}
                 </Button>
                 <Button
@@ -340,6 +409,19 @@ export const AdminPricing: React.FC = () => {
 
       <section className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
         <h2 className="mb-4 text-lg font-semibold text-gray-900">Historique des versions</h2>
+        {confirming?.kind === 'activate' && (
+          <Alert tone="warning" title={`Activer la version ${confirming.version} ?`} className="mb-4">
+            <p>Elle remplacera la grille active.</p>
+            <div className="mt-3 flex gap-2">
+              <Button size="sm" onClick={() => void activateVersion(confirming.version)}>
+                Confirmer
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setConfirming(null)}>
+                Annuler
+              </Button>
+            </div>
+          </Alert>
+        )}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-left text-xs text-gray-600">
@@ -380,7 +462,7 @@ export const AdminPricing: React.FC = () => {
                           type="button"
                           disabled={saving}
                           className="rounded-lg bg-black px-3 py-1 text-xs font-medium text-white hover:bg-gray-800 disabled:bg-gray-300"
-                          onClick={() => void activateVersion(row.version)}
+                          onClick={() => setConfirming({ kind: 'activate', version: row.version })}
                         >
                           Activer
                         </button>

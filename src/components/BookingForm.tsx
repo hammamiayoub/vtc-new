@@ -92,7 +92,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   onBookingSuccess,
   initialQuote = null,
 }) => {
-  usePricingGridVersion(); // re-render quand la grille tarifaire de la base est chargée
+  const pricingGridVersion = usePricingGridVersion(); // recalcule le prix quand la grille de la base change
   const { locale } = useLocale();
   const en = locale === 'en';
   const tx = (message?: string | null) => translateSignupMessage(message ?? undefined, locale) ?? '';
@@ -311,7 +311,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       setEstimatedPrice(finalPrice);
       setPriceSurcharges(surcharges);
     }
-  }, [watchVehicleType, pricedVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime, vipMultiplier, driverToPickupKm]);
+  }, [watchVehicleType, pricedVehicleType, baseDistance, watchIsReturnTrip, watchScheduledTime, vipMultiplier, driverToPickupKm, pricingGridVersion]);
 
   // Départ immédiat : verrouiller la date/heure sur maintenant
   useEffect(() => {

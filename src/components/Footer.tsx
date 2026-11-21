@@ -22,9 +22,8 @@ export const Footer: React.FC<FooterProps> = () => {
       <div className="page-container py-12">
         <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-8">
           <div className="sm:col-span-2 lg:col-span-2">
-            <p className="flex items-center gap-2 text-xl font-semibold text-white mb-4 tracking-tight">
-              <img src="/logo-mark.png" alt="" aria-hidden="true" width="40" height="40" className="h-8 sm:h-9 w-auto shrink-0" />
-              TuniDrive
+            <p className="mb-4">
+              <img src="/tunidrive-wordmark.png?v=4" alt="TuniDrive" width="736" height="520" className="h-16 w-auto" />
             </p>
             <p className="text-sm text-gray-300 mb-4 max-w-md leading-relaxed">
               {en

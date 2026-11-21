@@ -71,12 +71,15 @@ async function fetchRemoteConfig(): Promise<unknown> {
 
 let loading: Promise<void> | null = null;
 
-/** Ne lève jamais : en cas d'échec, la grille en cours est conservée. */
-export function loadPricingConfig(): Promise<void> {
+/**
+ * Ne lève jamais : en cas d'échec, la grille en cours est conservée.
+ * `skipCache` : ne pas réappliquer la copie locale avant la réponse de la base (actualisation).
+ */
+export function loadPricingConfig(options: { skipCache?: boolean } = {}): Promise<void> {
   if (loading) return loading;
   loading = (async () => {
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
+      const cached = options.skipCache ? null : localStorage.getItem(CACHE_KEY);
       const grid = cached ? parsePricingConfig(JSON.parse(cached)) : null;
       if (grid) applyRidePricingGrid(grid);
     } catch {
@@ -100,6 +103,21 @@ export function loadPricingConfig(): Promise<void> {
     }
   })();
   return loading;
+}
+
+const REFRESH_MIN_INTERVAL_MS = 60_000;
+
+/**
+ * Recharge la grille quand l'onglet redevient visible (au plus une fois par minute), pour qu'un changement
+ * fait dans l'administration soit pris en compte sans recharger la page.
+ */
+export function startPricingConfigRefresh(): void {
+  let lastRefresh = Date.now();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || Date.now() - lastRefresh < REFRESH_MIN_INTERVAL_MS) return;
+    lastRefresh = Date.now();
+    void loadPricingConfig({ skipCache: true });
+  });
 }
 
 /** Version de grille courante ; provoque un nouveau rendu quand la grille de la base est appliquée. */

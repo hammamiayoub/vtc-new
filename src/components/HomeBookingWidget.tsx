@@ -50,7 +50,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
   onClientLogin,
   onClientSignup,
 }) => {
-  usePricingGridVersion(); // re-render quand la grille tarifaire de la base est chargée
+  const pricingGridVersion = usePricingGridVersion(); // recalcule le prix quand la grille de la base change
   const { locale } = useLocale();
   const en = locale === 'en';
   const money = (amount: number) => formatTnd(amount, locale);
@@ -124,7 +124,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
       distanceKm === null
         ? null
         : calculatePriceWithSurcharges(distanceKm, 'sedan', scheduledDate ?? new Date()),
-    [distanceKm, scheduledDate],
+    [distanceKm, scheduledDate, pricingGridVersion],
   );
   const estimatedPrice = quote?.finalPrice ?? null;
 
