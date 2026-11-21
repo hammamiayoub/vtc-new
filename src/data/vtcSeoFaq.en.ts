@@ -29,7 +29,7 @@ export const vtcSeoFaqItemsEn: FaqStructuredItem[] = [
   {
     question: 'What are TuniDrive fares in Tunisia?',
     answer:
-      'The fare includes a pickup fee based on how far the driver is (10 to 50 TND), a progressive per-kilometre rate (from 1.53 down to 1.08 TND/km depending on distance), a minimum of 14.40 TND, and a multiplier by vehicle type. The exact amount is shown before you confirm.',
+      'The fare includes a pickup fee based on how far the driver is (3 to 15 TND), a progressive per-kilometre rate (from 1.00 down to 0.75 TND/km depending on distance), a minimum of 8 TND, and a multiplier by vehicle type. The exact amount is shown before you confirm.',
   },
 ];
 

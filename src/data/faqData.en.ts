@@ -22,7 +22,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'c3',
         question: 'How much does a ride cost?',
         answer:
-          'TuniDrive fares include:\n• Pickup fee by driver distance: 10 TND (< 10 km), 20 TND (10–30 km), 30 TND (30–50 km), 50 TND (50 km+)\n• 0–15 km: 1.53 TND/km\n• 15–50 km: 1.98 TND/km\n• 50–100 km: 1.71 TND/km\n• 100–250 km: 1.35 TND/km\n• 250+ km: 1.08 TND/km\n• Minimum price: 14.40 TND\n• Vehicle multipliers: Van ×1.875 · Minibus ×3.125 · Bus ×4.375\n• Surcharges: +15% at night (9 pm–6 am) and +10% on weekends, cumulative\n• Return trip: the distance is doubled\n\nThe per-km rate is progressive: each band is charged separately. The estimated price is shown before you confirm.',
+          'TuniDrive fares include:\n• Pickup fee by driver distance: 3 TND (< 10 km), 6 TND (10–30 km), 10 TND (30–50 km), 15 TND (50 km+)\n• 0–15 km: 1.00 TND/km\n• 15–50 km: 0.90 TND/km\n• 50–100 km: 0.85 TND/km\n• 100–250 km: 0.80 TND/km\n• 250+ km: 0.75 TND/km\n• Minimum price: 8 TND\n• Vehicle multipliers: Van ×1.875 · Minibus ×3.125 · Bus ×4.375\n• Surcharges: +15% at night (9 pm–6 am) and +10% on weekends, cumulative\n• Return trip: the distance is doubled\n\nThe per-km rate is progressive: each band is charged separately. The estimated price is shown before you confirm.',
       },
       {
         id: 'c4',

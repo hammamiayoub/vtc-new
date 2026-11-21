@@ -82,7 +82,7 @@ export const getPricePerKm = (distanceKm: number): { price: number; discount: st
 
 /**
  * Calcule le prix distance + prise en charge de manière progressive par tranches.
- * Prise en charge variable selon la distance chauffeur → départ (10 / 20 / 30 / 50 TND).
+ * Prise en charge variable selon la distance chauffeur → départ (3 / 6 / 10 / 15 TND).
  */
 export const calculateProgressivePrice = (
   distanceKm: number,
