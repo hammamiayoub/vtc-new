@@ -28,6 +28,12 @@ import { ReviewsCarousel } from './ReviewsCarousel';
 import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
 import { useLocale } from '../i18n/locale';
+import { setParcelScopeHint, clearParcelScopeHint } from '../utils/parcelScopeHint';
+import {
+  DeliveryHeroIllustration,
+  GroupTransportIllustration,
+  InternationalParcelIllustration,
+} from './ui/ParcelIllustrations';
 import { RevealSection } from './ui/RevealSection';
 import { useAppDownloadPrompt } from '../hooks/useAppDownloadPrompt';
 
@@ -86,6 +92,16 @@ const serviceOffers = [
     href: '/transport-groupes-tunisie',
     cta: 'Découvrir',
     ctaEn: 'Discover',
+  },
+  {
+    icon: Truck,
+    title: 'Livraison de colis en Tunisie',
+    titleEn: 'Parcel delivery in Tunisia',
+    description: 'Faites livrer colis et marchandises partout en Tunisie : les transporteurs locaux vous proposent leur prix.',
+    descriptionEn: 'Get parcels and goods delivered across Tunisia: local carriers send you their price.',
+    href: '/livraison-colis-tunisie',
+    cta: 'Détails',
+    ctaEn: 'Details',
   },
   {
     icon: Package,
@@ -188,8 +204,16 @@ export const HomePage: React.FC<HomePageProps> = ({
                 {en ? 'See what you can do with TuniDrive' : 'Découvrez ce que vous pouvez faire avec TuniDrive'}
               </h2>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {serviceOffers.map(({ icon: Icon, title, titleEn, description, descriptionEn, href: offerHref, cta, ctaEn }) => {
+            {/* Grille de 4 colonnes (sm) / 6 colonnes (lg), chaque carte occupe 2 colonnes : la dernière
+                rangée incomplète est centrée et toutes les cartes ont la même hauteur. */}
+            <div className="grid auto-rows-fr sm:grid-cols-4 lg:grid-cols-6 gap-4">
+              {serviceOffers.map(({ icon: Icon, title, titleEn, description, descriptionEn, href: offerHref, cta, ctaEn }, index) => {
+                const lastIsAlone = serviceOffers.length % 2 === 1 && index === serviceOffers.length - 1;
+                const lastRowHasTwo = serviceOffers.length % 3 === 2 && index === serviceOffers.length - 2;
+                const position = [
+                  lastIsAlone ? 'sm:col-start-2 lg:col-start-auto' : '',
+                  lastRowHasTwo ? 'lg:col-start-2' : '',
+                ].join(' ');
                 const content = (
                   <>
                     <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center mb-4">
@@ -202,7 +226,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     </span>
                   </>
                 );
-                const cardClass = 'focus-ring uber-card p-6 flex flex-col h-full group text-left';
+                const cardClass = `focus-ring uber-card p-6 flex flex-col h-full group text-left sm:col-span-2 ${position}`;
                 // Sans lien : la carte ramène au formulaire de réservation en haut de page.
                 return offerHref ? (
                   <Link key={title} to={href(offerHref)} className={cardClass}>
@@ -316,7 +340,15 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <ArrowRight size={16} aria-hidden="true" />
                 </Link>
               </div>
-              <ul className="rounded-xl border border-surface-border bg-white p-8 space-y-4">
+              <div className="rounded-xl border border-surface-border bg-white overflow-hidden">
+              <GroupTransportIllustration
+                label={
+                  en
+                    ? 'A group is picked up at the airport and driven by bus to its hotel'
+                    : "Un groupe est accueilli à l'aéroport puis conduit en bus jusqu'à son hôtel"
+                }
+              />
+              <ul className="p-8 space-y-4">
                 {(en
                   ? [
                       'Pickup at Tunis-Carthage, Enfidha, Monastir or Djerba',
@@ -335,17 +367,89 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </li>
                 ))}
               </ul>
+              </div>
             </div>
           </div>
         </RevealSection>
 
         <ReviewsCarousel />
 
+        {/* Livraison locale de colis (Tunisie) */}
+        <RevealSection id="livraison-colis-tunisie" className="scroll-mt-20 py-16 md:py-20 bg-surface-muted">
+            <div className="page-container">
+            <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
+              <div>
+                <p className="inline-flex items-center gap-2 text-sm font-semibold text-brand mb-3">
+                  <Truck size={16} aria-hidden="true" />
+                  {en ? 'Within Tunisia' : 'En Tunisie'}
+                </p>
+                <h2 className="page-heading mb-4">
+                  {en ? 'Parcel and goods delivery in Tunisia' : 'Livraison de colis et marchandises en Tunisie'}
+                </h2>
+                <p className="page-subheading mb-6">
+                  {en
+                    ? 'Appliances, furniture, boxes or goods for your shop: local carriers send you their price in TND, you choose the best offer.'
+                    : "Électroménager, meubles, cartons ou marchandises pour votre commerce : les transporteurs locaux vous proposent leur prix en TND, vous choisissez la meilleure offre."}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      setParcelScopeHint('local');
+                      onClientSignup();
+                    }}
+                    className="rounded-full"
+                  >
+                    {en ? 'Request a delivery quote' : 'Demander un devis livraison'}
+                    <ArrowRight size={20} className="ml-2" aria-hidden="true" />
+                  </Button>
+                  <Link
+                    to={href('/livraison-colis-tunisie')}
+                    className="focus-ring rounded-md text-center text-sm font-semibold text-gray-700 hover:text-gray-900 underline-offset-4 hover:underline"
+                  >
+                    {en ? 'Learn more' : 'En savoir plus'}
+                  </Link>
+                </div>
+              </div>
+              <div className="rounded-xl border border-surface-border bg-surface-muted overflow-hidden">
+              <DeliveryHeroIllustration
+                label={
+                  en
+                    ? 'A delivery truck carrying parcels across Tunisia'
+                    : 'Une camionnette transporte des colis en Tunisie'
+                }
+              />
+              <ol className="p-8 space-y-4">
+                {(en
+                  ? ['Enter the pickup and delivery addresses in Tunisia', 'Receive offers from local carriers in your area', 'Compare and choose the best offer online']
+                  : ["Indiquez l'adresse de départ et de livraison en Tunisie", 'Recevez les offres des transporteurs locaux de votre zone', 'Comparez et choisissez la meilleure offre en ligne']
+                ).map((item, index) => (
+                  <li key={item} className="flex gap-3 text-sm text-gray-700">
+                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <span className="pt-0.5">{item}</span>
+                  </li>
+                ))}
+              </ol>
+              </div>
+            </div>
+          </div>
+        </RevealSection>
+
         {/* Transport colis (côté expéditeur) */}
-        <RevealSection id="transport-colis" className="scroll-mt-20 py-16 md:py-20 bg-surface-muted">
+        <RevealSection id="transport-colis" className="scroll-mt-20 py-16 md:py-20 bg-white">
           <div className="page-container">
             <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
-              <ol className="order-2 lg:order-1 rounded-xl border border-surface-border bg-white p-8 space-y-4">
+              <div className="order-2 lg:order-1 rounded-xl border border-surface-border bg-white overflow-hidden">
+              <InternationalParcelIllustration
+                label={
+                  en
+                    ? 'Parcels travel by plane from Europe to Tunisia'
+                    : "Des colis voyagent en avion de l'Europe vers la Tunisie"
+                }
+              />
+              <ol className="p-8 space-y-4">
                 {(en
                   ? ['Describe your shipment (addresses, date, photos)', 'Receive several price offers from carriers', 'Compare and choose the best offer online']
                   : ['Décrivez votre envoi (adresses, date, photos)', 'Recevez plusieurs propositions de prix des transporteurs', 'Comparez et choisissez la meilleure offre en ligne']
@@ -358,6 +462,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </li>
                 ))}
               </ol>
+              </div>
               <div className="order-1 lg:order-2">
                 <p className="inline-flex items-center gap-2 text-sm font-semibold text-brand mb-3">
                   <Package size={16} aria-hidden="true" />
@@ -370,7 +475,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                     : 'Déposez une demande de devis : les transporteurs qualifiés vous proposent leurs tarifs, vous comparez et validez en ligne.'}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-                  <Button size="lg" onClick={onClientSignup} className="rounded-full">
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      clearParcelScopeHint();
+                      onClientSignup();
+                    }}
+                    className="rounded-full"
+                  >
                     {en ? 'Request a parcel quote' : 'Demander un devis colis'}
                     <ArrowRight size={20} className="ml-2" aria-hidden="true" />
                   </Button>
@@ -397,7 +509,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </RevealSection>
 
         {/* App mobile */}
-        <RevealSection className="py-16 bg-white">
+        <RevealSection className="py-16 bg-surface-muted">
           <div className="page-container">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="page-heading mb-4">{en ? 'It is easier in the app' : "C'est plus simple dans l'application"}</h2>
@@ -412,7 +524,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </RevealSection>
 
         {/* FAQ */}
-        <RevealSection id="faq-vtc-accueil" className="scroll-mt-20 py-16 bg-surface-muted">
+        <RevealSection id="faq-vtc-accueil" className="scroll-mt-20 py-16 md:py-20 bg-white">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="page-heading mb-2 text-center">
               {en ? 'Private driver & airport transfer' : 'VTC, chauffeur privé & transfert aéroport'}
@@ -434,7 +546,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </RevealSection>
 
         {/* Chauffeurs et transporteurs : le seul bloc de la page qui s'adresse aux professionnels */}
-        <RevealSection id="chauffeurs" className="scroll-mt-20 py-16 bg-white">
+        <RevealSection id="chauffeurs" className="scroll-mt-20 py-16 md:py-20 bg-surface-muted">
           <div className="page-container">
             <div className="max-w-6xl mx-auto bg-black rounded-2xl p-6 sm:p-12 text-white">
               <div className="max-w-2xl mb-8">
@@ -451,7 +563,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-3 gap-4">
                 {[
                   {
                     icon: Car,
@@ -464,12 +576,21 @@ export const HomePage: React.FC<HomePageProps> = ({
                   },
                   {
                     icon: Truck,
-                    title: en ? 'Parcel carrier' : 'Transporteur de colis',
+                    title: en ? 'Local delivery carrier' : 'Transporteur local',
+                    items: en
+                      ? ['Receive delivery requests from your governorates', 'Propose your price in TND', 'Exchange contact details after acceptance']
+                      : ['Recevez les demandes de livraison de vos gouvernorats', 'Proposez votre tarif en TND', 'Échangez vos coordonnées après acceptation'],
+                    cta: en ? 'Become a local carrier' : 'Devenir transporteur local',
+                    onClick: () => navigate(href('/signup?activity=transporteur_local')),
+                  },
+                  {
+                    icon: Truck,
+                    title: en ? 'International parcel carrier' : 'Transporteur international',
                     items: en
                       ? ['Receive requests that match your routes', 'Propose your price in EUR or TND', 'Exchange contact details after acceptance']
                       : ['Recevez les demandes correspondant à vos trajets', 'Proposez votre tarif en EUR ou TND', 'Échangez vos coordonnées après acceptation'],
                     cta: en ? 'Become a carrier' : 'Devenir transporteur',
-                    onClick: () => navigate(href('/signup?activity=transporteur')),
+                    onClick: () => navigate(href('/signup?activity=transporteur_international')),
                   },
                 ].map(({ icon: Icon, title, items, cta, onClick }) => (
                   <div key={title} className="flex flex-col rounded-xl border border-white/15 bg-white/5 p-6">

@@ -1,6 +1,8 @@
 # Fichiers statiques SEO — doivent être servis tels quels (pas le fallback SPA)
+# /sitemap.xml est généré par la fonction netlify/functions/sitemap.ts (pages fixes + articles de blog).
+# Le « ! » force la règle même si un fichier public/sitemap.xml existait.
 /robots.txt       /robots.txt       200
-/sitemap.xml      /sitemap.xml      200
+/sitemap.xml      /.netlify/functions/sitemap 200!
 /BingSiteAuth.xml /BingSiteAuth.xml 200
 /llms.txt         /llms.txt         200
 /.well-known/ard.json        /.well-known/ard.json        200

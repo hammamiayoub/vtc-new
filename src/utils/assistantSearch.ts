@@ -33,6 +33,14 @@ const SYNONYMS: Record<string, string[]> = {
   taxi: ['vtc', 'chauffeur'],
   colis: ['parcel', 'envoi', 'marchandise', 'transporteur', 'europe'],
   parcel: ['colis', 'envoi'],
+  gouvernorat: ['zone', 'couvert', 'local', 'livraison', 'region', 'governorate'],
+  governorate: ['gouvernorat', 'zone', 'local', 'delivery'],
+  livraison: ['livrer', 'colis', 'local', 'tunisie', 'delivery'],
+  livrer: ['livraison', 'colis', 'local'],
+  delivery: ['livraison', 'colis', 'parcel', 'local'],
+  deliver: ['delivery', 'livraison', 'colis'],
+  meuble: ['livraison', 'colis', 'furniture'],
+  electromenager: ['livraison', 'colis', 'appliance'],
   aeroport: ['transfert', 'tun', 'enfidha', 'monastir', 'djerba', 'carthage'],
   transfert: ['aeroport', 'arrivee', 'depart'],
   tarif: ['prix', 'cout', 'coute', 'combien', 'grille', 'estimation'],
@@ -281,8 +289,21 @@ function scoreEntry(query: string, queryTokens: string[], entry: AssistantEntry)
   if (/aeroport|airport|transfert|transfer|tun|enfidha/.test(normalizedQuery) && /aeroport|airport/.test(entry.keywords.join(' '))) {
     score += 15;
   }
-  if (/colis|europe|envoi|parcel|shipping/.test(normalizedQuery) && entry.categoryId === 'parcel') {
+  if (/colis|europe|envoi|parcel|shipping/.test(normalizedQuery) && (entry.categoryId === 'parcel' || entry.categoryId === 'parcel-local')) {
     score += 12;
+  }
+  // Livraison locale (Tunisie) ou transport international : la requête départage les deux familles
+  const mentionsLocal = /livraison|livrer|deliver|local|gouvernorat|governorate|meuble|electromenager|furniture|appliance/.test(normalizedQuery);
+  const mentionsInternational =
+    /europe|internation|france|italie|allemagne|espagne|belgique|suisse|luxembourg|pays bas|italy|germany|spain|belgium|switzerland|netherlands/.test(
+      normalizedQuery,
+    );
+  if (mentionsLocal && entry.categoryId === 'parcel-local') {
+    score += 12;
+  }
+  if (mentionsInternational && !mentionsLocal) {
+    if (entry.categoryId === 'parcel') score += 20;
+    if (entry.categoryId === 'parcel-local') score -= 40;
   }
   if (/chauffeur|driver|conducteur|inscri|partenaire|vtc|signup/.test(normalizedQuery) && entry.categoryId === 'driver') {
     score += 10;
@@ -291,12 +312,14 @@ function scoreEntry(query: string, queryTokens: string[], entry: AssistantEntry)
   return score;
 }
 
-export type AssistantAudience = 'client' | 'driver' | 'parcel';
+export type AssistantAudience = 'client' | 'driver' | 'parcel' | 'parcel-local';
 
 /** Profil probable du visiteur d'après la page : sert à départager « annuler une course » client/chauffeur. */
 export function audienceForPath(path: string): AssistantAudience | undefined {
   if (path.startsWith('/client-dashboard')) return 'client';
   if (path.startsWith('/dashboard') || path.startsWith('/signup') || path.startsWith('/driver')) return 'driver';
+  // « /livraison-colis-tunisie » contient aussi « colis » : tester la livraison locale en premier
+  if (path.includes('livraison') || path.includes('parcel-delivery')) return 'parcel-local';
   if (path.includes('colis') || path.includes('parcel')) return 'parcel';
   return undefined;
 }
@@ -336,6 +359,7 @@ function suggestionIdsForPath(path: string): string[] {
   if (path.startsWith('/signup') || path.startsWith('/driver') || path.includes('chauffeur')) {
     return ['d1', 'd4', 'd6', 'd5', 'd8', 'g4'];
   }
+  if (path.includes('livraison') || path.includes('parcel-delivery')) return ['pl1', 'pl2', 'pl3', 'pl5', 'pl7', 'g4'];
   if (path.includes('colis') || path.includes('parcel')) return ['p1', 'p3', 'p5', 'p2', 'c9', 'g4'];
   if (path.includes('groupes') || path.includes('group')) return ['c3', 'c12', 'c10', 'c1', 'g4', 'extra-1'];
   if (path === '/' || path.startsWith('/vtc')) return ['c3', 'c10', 'c1', 'extra-3', 'g3', 'extra-1'];

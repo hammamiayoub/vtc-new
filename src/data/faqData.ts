@@ -100,13 +100,13 @@ export const faqCategories: FaqCategory[] = [
         id: "p1",
         question: "Comment demander un devis pour un colis ?",
         answer:
-          "Créez un compte client ou connectez-vous, puis ouvrez l'onglet « Expédier mes colis » dans votre tableau de bord.\n\nRenseignez la direction (Europe → Tunisie ou Tunisie → Europe), les adresses, la date souhaitée, la description de vos objets et ajoutez des photos ou factures si besoin. Votre demande est envoyée aux transporteurs correspondants ; leurs propositions apparaissent dans « Mes devis colis ».",
+          "Créez un compte client ou connectez-vous, puis ouvrez l'onglet « Expédier mes colis » dans votre tableau de bord.\n\nChoisissez le type de transport (International ou Local), puis, pour l'international, la direction (Europe → Tunisie ou Tunisie → Europe). Renseignez les adresses, la date souhaitée, la description de vos objets et ajoutez des photos ou factures si besoin. Votre demande est envoyée aux transporteurs correspondants ; leurs propositions apparaissent dans « Mes devis colis ».",
       },
       {
         id: "p2",
         question: "Quels trajets sont couverts ?",
         answer:
-          "Le service concerne le transport international de colis et marchandises entre l'Europe et la Tunisie, dans les deux sens :\n• Europe → Tunisie\n• Tunisie → Europe\n\nLes adresses sont saisies via l'autocomplétion dédiée à ces zones.",
+          "Le service concerne le transport international de colis et marchandises entre l'Europe et la Tunisie, dans les deux sens :\n• Europe → Tunisie\n• Tunisie → Europe\n\nLes adresses sont saisies via l'autocomplétion dédiée à ces zones.\n\nPour une livraison à l'intérieur de la Tunisie, consultez la catégorie « Livraison de colis en Tunisie ».",
       },
       {
         id: "p3",
@@ -130,25 +130,86 @@ export const faqCategories: FaqCategory[] = [
         id: "p6",
         question: "Comment devenir transporteur de colis ?",
         answer:
-          "Cliquez sur « Devenir chauffeur / transporteur » depuis l'accueil. À l'inscription, choisissez « Transport de colis » (ou « Les deux activités » plus tard depuis votre profil).\n\nComplétez votre profil, vos véhicules et vos disponibilités : vous recevrez les demandes correspondant à vos dates.",
+          "Cliquez sur « Devenir chauffeur / transporteur » depuis l'accueil. À l'inscription, choisissez « Transport de colis international » ou « Transport de colis local » (et « Les deux activités » plus tard depuis votre profil si vous faites aussi du VTC). Un transporteur est soit international, soit local.\n\nComplétez votre profil et vos véhicules : vous recevrez les demandes correspondant à votre type de transport.",
       },
       {
         id: "p7",
         question: "Comment recevoir et répondre aux demandes (transporteur) ?",
         answer:
-          "Connectez-vous à votre espace chauffeur/transporteur. Si votre type d'activité inclut le transport de colis, l'onglet « Mes devis de colis » affiche les demandes compatibles avec vos disponibilités.\n\nVous proposez votre prix, un délai estimé et un message. Le client est notifié par email de votre proposition.",
+          "Connectez-vous à votre espace chauffeur/transporteur. Si votre type d'activité inclut le transport de colis, l'onglet « Mes devis de colis » affiche les demandes correspondant à votre type de transport (local ou international).\n\nVous proposez votre prix, un délai estimé et un message. Le client est notifié par email de votre proposition.",
       },
       {
         id: "p8",
         question: "Puis-je être chauffeur VTC et transporteur de colis ?",
         answer:
-          "Oui. Depuis votre profil, vous pouvez sélectionner « Les deux activités ». Vous recevrez alors les demandes de courses de personnes et les demandes de devis colis internationaux, selon vos disponibilités et votre type de véhicule.",
+          "Oui. Depuis votre profil, vous pouvez sélectionner « Les deux activités ». Vous recevrez alors les demandes de courses de personnes et les demandes de devis colis (selon que vous êtes transporteur local ou international), en fonction de votre type de véhicule.",
       },
       {
         id: "p9",
         question: "Une demande de devis peut-elle expirer ?",
         answer:
           "Oui. Si aucune proposition n'est acceptée dans le délai prévu, la demande peut passer au statut « expiré ». Vous pouvez en déposer une nouvelle à tout moment depuis votre espace client.",
+      },
+    ],
+  },
+  {
+    id: "parcel-local",
+    label: "Livraison de colis en Tunisie",
+    emoji: "🚚",
+    items: [
+      {
+        id: "pl1",
+        question: "Comment faire livrer un colis en Tunisie ?",
+        answer:
+          "Créez un compte client ou connectez-vous, puis ouvrez l'onglet « Expédier mes colis » et choisissez « Local ».\n\nIndiquez l'adresse de départ et l'adresse de livraison en Tunisie, la date souhaitée et la description de vos objets (photos et factures possibles). Les transporteurs locaux concernés reçoivent votre demande et vous envoient leur prix en TND dans « Mes devis colis ».",
+      },
+      {
+        id: "pl2",
+        question: "Quelles zones sont couvertes pour la livraison locale ?",
+        answer:
+          "Toute la Tunisie, dans les 24 gouvernorats. Les deux adresses doivent se situer en Tunisie : l'autocomplétion est limitée à ce pays.\n\nVotre demande est envoyée aux transporteurs locaux qui couvrent le gouvernorat de l'adresse de départ.",
+      },
+      {
+        id: "pl3",
+        question: "Comment est fixé le prix d'une livraison locale ?",
+        answer:
+          "Chaque transporteur propose librement son tarif en TND. Vous comparez les offres dans votre espace client et acceptez celle qui vous convient ; les autres sont alors automatiquement refusées.\n\nTuniDrive n'impose aucun prix. Plus votre description est précise (poids, volume, étage, photos), plus les offres sont justes.",
+      },
+      {
+        id: "pl4",
+        question: "Que puis-je faire livrer en Tunisie ?",
+        answer:
+          "Des cartons, du mobilier, de l'électroménager, des effets personnels ou des marchandises de commerçants. Indiquez le nombre de colis, le poids et le volume estimés : le transporteur pourra proposer le véhicule adapté.",
+      },
+      {
+        id: "pl5",
+        question: "Que se passe-t-il après avoir accepté une offre de livraison ?",
+        answer:
+          "Le transporteur retenu est notifié par email et vos coordonnées sont échangées pour organiser l'enlèvement et la livraison.\n\nTuniDrive facilite la mise en relation : la livraison est réalisée sous la responsabilité du transporteur, et le contrat et le paiement se font directement entre vous et lui.",
+      },
+      {
+        id: "pl6",
+        question: "Quelle différence entre livraison locale et transport international ?",
+        answer:
+          "• Livraison locale : départ et arrivée en Tunisie, offres en TND, transporteurs locaux de la zone de départ.\n• Transport international : entre l'Europe et la Tunisie, dans les deux sens, offres en EUR (Europe → Tunisie) ou en TND (Tunisie → Europe).\n\nLe fonctionnement est identique : vous décrivez votre envoi, vous recevez des offres, vous choisissez.",
+      },
+      {
+        id: "pl7",
+        question: "Comment devenir transporteur local ?",
+        answer:
+          "Cliquez sur « Devenir chauffeur / transporteur » et choisissez « Transport de colis local ». Complétez votre profil avec votre numéro de permis, ajoutez un véhicule et sélectionnez les gouvernorats que vous couvrez.\n\nVous devez disposer d'un permis valide et de toutes les autorisations nécessaires au transport de marchandises (carte d'exploitation, assurance du véhicule et des marchandises).",
+      },
+      {
+        id: "pl8",
+        question: "Puis-je être transporteur local et international ?",
+        answer:
+          "Non : un transporteur de colis est soit local, soit international. Vous choisissez à l'inscription et pouvez le modifier depuis votre profil.\n\nEn revanche, vous pouvez cumuler le transport de colis avec l'activité VTC (« Les deux activités »).",
+      },
+      {
+        id: "pl9",
+        question: "Faut-il un abonnement pour être transporteur local ?",
+        answer:
+          "Les mêmes règles que pour les chauffeurs s'appliquent : 2 courses gratuites à vie, puis l'abonnement Premium. Les courses VTC et les livraisons de colis partagent ce quota.\n\nUne course est décomptée lorsqu'un client accepte votre offre. L'envoi de propositions est bloqué une fois le quota épuisé sans abonnement actif.",
       },
     ],
   },
@@ -161,7 +222,7 @@ export const faqCategories: FaqCategory[] = [
         id: "d1",
         question: "Comment m'inscrire comme chauffeur ou transporteur ?",
         answer:
-          "Cliquez sur « Devenir chauffeur / transporteur » depuis la page d'accueil. Choisissez votre type d'activité :\n• Transport de personnes (VTC)\n• Transport de colis (Europe ↔ Tunisie)\n\nComplétez le formulaire, votre profil, vos véhicules et vos disponibilités. Vous pourrez activer « Les deux activités » depuis votre profil par la suite.",
+          "Cliquez sur « Devenir chauffeur / transporteur » depuis la page d'accueil. Choisissez votre type d'activité :\n• Transport de personnes (VTC)\n• Transport de colis local (livraison en Tunisie)\n• Transport de colis international (Europe ↔ Tunisie)\n\nComplétez le formulaire, votre profil, vos véhicules et vos disponibilités. Vous pourrez activer « Les deux activités » depuis votre profil par la suite.",
       },
       {
         id: "d2",
@@ -191,7 +252,7 @@ export const faqCategories: FaqCategory[] = [
         id: "d6",
         question: "Combien de courses gratuites ai-je sans abonnement ?",
         answer:
-          "Chaque nouveau chauffeur bénéficie de 2 courses gratuites à vie (offre valable une seule fois, sans reset mensuel).\n\nUne fois ces 2 courses utilisées, l'abonnement Premium est nécessaire pour continuer à accepter de nouvelles courses.",
+          "Chaque nouveau chauffeur bénéficie de 2 courses gratuites à vie (offre valable une seule fois, sans reset mensuel).\n\nUne fois ces 2 courses utilisées, l'abonnement Premium est nécessaire pour continuer à accepter de nouvelles courses.\n\nLes livraisons de colis comptent aussi : une course est décomptée quand un client accepte votre offre.",
       },
       {
         id: "d7",

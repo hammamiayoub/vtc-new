@@ -28,3 +28,26 @@
 
 /reset-password.js
   Cache-Control: no-cache
+
+# Espaces privés de l'application (page unique servie par le fallback SPA) : jamais indexés.
+# L'en-tête agit sans JavaScript ; la balise meta robots posée par src/utils/seo.ts le complète.
+# Volontairement PAS de « Disallow » dans robots.txt : un robot qui ne peut pas explorer la page
+# ne verrait pas ce « noindex » et pourrait quand même garder l'adresse dans ses résultats.
+/dashboard
+  X-Robots-Tag: noindex, nofollow
+/client-dashboard
+  X-Robots-Tag: noindex, nofollow
+/admin
+  X-Robots-Tag: noindex, nofollow
+/admin-dashboard
+  X-Robots-Tag: noindex, nofollow
+/reset-password
+  X-Robots-Tag: noindex, nofollow
+/en/dashboard
+  X-Robots-Tag: noindex, nofollow
+/en/client-dashboard
+  X-Robots-Tag: noindex, nofollow
+/en/admin
+  X-Robots-Tag: noindex, nofollow
+/en/reset-password
+  X-Robots-Tag: noindex, nofollow

@@ -1,6 +1,7 @@
 // Utilitaire pour gérer les balises meta SEO
 import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
+import { localParcelFaqItems, localParcelFaqItemsEn } from '../data/localParcelFaq';
 import { alternateUrls, type Locale } from '../i18n/locale';
 
 export const SITE_URL = 'https://tunidrive.net';
@@ -58,6 +59,18 @@ export const seoData: Record<string, SEOData> = {
       'Demandez un devis gratuit pour le transport international de colis et marchandises entre l\'Europe et la Tunisie. Plusieurs transporteurs, prix transparents.',
     ogImage: DEFAULT_OG_IMAGE,
     canonical: '/transport-colis-europe-tunisie',
+  },
+  'parcel-local': {
+    title: 'Livraison de colis en Tunisie | Devis gratuit de transporteurs locaux — TuniDrive',
+    description:
+      "Faites livrer vos colis et marchandises en Tunisie. Déposez une demande gratuite, recevez les prix de transporteurs locaux en TND, comparez et choisissez la meilleure offre.",
+    keywords:
+      'livraison colis Tunisie, transport colis Tunisie, livraison marchandises Tunisie, transporteur local Tunisie, livraison meubles Tunisie, livraison électroménager Tunisie, devis livraison Tunisie',
+    ogTitle: 'Livraison de colis en Tunisie | TuniDrive',
+    ogDescription:
+      'Demandez un devis gratuit pour la livraison de colis et marchandises partout en Tunisie. Plusieurs transporteurs locaux, prix libres en TND.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/livraison-colis-tunisie',
   },
   'group-travel': {
     title: 'Transport de groupes en Tunisie | Séjours depuis l\'étranger — TuniDrive',
@@ -217,6 +230,18 @@ const seoDataEn: Partial<Record<string, SEOData>> = {
       'Request a free quote for international parcel and goods transport between Europe and Tunisia.',
     ogImage: DEFAULT_OG_IMAGE,
     canonical: '/en/parcel-europe-tunisia',
+  },
+  'parcel-local': {
+    title: 'Parcel delivery in Tunisia | Free quotes from local carriers — TuniDrive',
+    description:
+      'Get parcels and goods delivered across Tunisia. Submit a free request, receive prices from local carriers in TND, compare and choose the best offer.',
+    keywords:
+      'parcel delivery tunisia, goods delivery tunisia, local carrier tunisia, furniture delivery tunisia, delivery quote tunisia',
+    ogTitle: 'Parcel delivery in Tunisia | TuniDrive',
+    ogDescription:
+      'Request a free quote for parcel and goods delivery anywhere in Tunisia. Several local carriers, free prices in TND.',
+    ogImage: DEFAULT_OG_IMAGE,
+    canonical: '/en/parcel-delivery-tunisia',
   },
   'group-travel': {
     title: 'Group transport in Tunisia | Stays from abroad — TuniDrive',
@@ -459,7 +484,31 @@ export function applyBlogArticleSeo(
   });
 }
 
+/** Espaces privés : jamais indexés (l'en-tête X-Robots-Tag correspondant est dans public/_headers). */
+const NOINDEX_PATHS = new Set([
+  '/dashboard',
+  '/client-dashboard',
+  '/admin',
+  '/admin-dashboard',
+  '/reset-password',
+]);
+const ROBOTS_INDEXABLE = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+const GOOGLEBOT_INDEXABLE = 'index, follow';
+const ROBOTS_NOINDEX = 'noindex, nofollow';
+
+export const isNoIndexPath = (logicalPath?: string): boolean =>
+  Boolean(logicalPath) && NOINDEX_PATHS.has(logicalPath!.replace(/\/+$/, '') || '/');
+
+/** Rétablit « index » en quittant un espace privé : la navigation est une SPA, la page n'est pas rechargée. */
+const applyRobotsPolicy = (logicalPath?: string) => {
+  const noindex = isNoIndexPath(logicalPath);
+  setMetaContent('meta', 'name', 'robots', noindex ? ROBOTS_NOINDEX : ROBOTS_INDEXABLE);
+  setMetaContent('meta', 'name', 'googlebot', noindex ? ROBOTS_NOINDEX : GOOGLEBOT_INDEXABLE);
+};
+
 export const updateSEO = (pageKey: string, locale: Locale = 'fr', logicalPath?: string) => {
+  applyRobotsPolicy(logicalPath);
+
   const seo = (locale === 'en' ? seoDataEn[pageKey] : undefined) ?? seoData[pageKey];
   if (!seo) return;
 
@@ -518,6 +567,13 @@ export const updateSEO = (pageKey: string, locale: Locale = 'fr', logicalPath?: 
 
   if (pageKey === 'parcel-transport') {
     setFaqJsonLd(getParcelFaqItems(locale));
+  } else if (pageKey === 'parcel-local') {
+    setFaqJsonLd(
+      (locale === 'en' ? localParcelFaqItemsEn : localParcelFaqItems).map(({ question, answer }) => ({
+        question,
+        answer,
+      })),
+    );
   } else if (pageKey === 'home' || pageKey === 'vtc-tunisie') {
     setFaqJsonLd(locale === 'en' ? vtcSeoFaqItemsEn : vtcSeoFaqItems);
   } else {
