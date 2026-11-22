@@ -136,7 +136,7 @@
               "@type": "ImageObject",
               "url": "https://tunidrive.net/tunidrive-logo.png?v=3"
             },
-            "description": "Plateforme de mobilité et transport : courses VTC en Tunisie et devis transport de colis Europe ↔ Tunisie.",
+            "description": "Plateforme de mobilité et transport : courses VTC en Tunisie, livraison de colis en Tunisie et devis transport de colis Europe ↔ Tunisie.",
             "sameAs": [
               "https://www.facebook.com/people/TuniDrive/61581866699494/",
               "https://www.instagram.com/tunidrivenet/",
@@ -234,6 +234,29 @@
               "target": {
                 "@type": "EntryPoint",
                 "urlTemplate": "https://tunidrive.net/transport-colis-europe-tunisie"
+              },
+              "actionStatus": "https://schema.org/PotentialActionStatus"
+            }
+          },
+          {
+            "@type": "Service",
+            "@id": "https://tunidrive.net/#local-parcel-service",
+            "name": "Livraison de colis et marchandises en Tunisie",
+            "serviceType": "Livraison locale de colis et marchandises",
+            "provider": { "@id": "https://tunidrive.net/#org" },
+            "description": "Faites livrer colis, meubles, électroménager ou marchandises partout en Tunisie. Déposez une demande gratuite, recevez les prix de transporteurs locaux en dinars tunisiens (TND), comparez et choisissez la meilleure offre.",
+            "areaServed": { "@type": "Country", "name": "Tunisie" },
+            "availableChannel": {
+              "@type": "ServiceChannel",
+              "serviceUrl": "https://tunidrive.net/livraison-colis-tunisie",
+              "availableLanguage": ["fr", "en", "ar"]
+            },
+            "potentialAction": {
+              "@type": "QuoteAction",
+              "name": "Demander un devis de livraison de colis en Tunisie",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://tunidrive.net/livraison-colis-tunisie"
               },
               "actionStatus": "https://schema.org/PotentialActionStatus"
             }

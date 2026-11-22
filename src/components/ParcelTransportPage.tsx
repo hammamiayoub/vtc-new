@@ -15,6 +15,15 @@ import { faqCategoriesEn } from '../data/faqData.en';
 import { getParcelFaqItems, setFaqJsonLd } from '../utils/seo';
 import { useLocale } from '../i18n/locale';
 import { RevealSection } from './ui/RevealSection';
+import { clearParcelScopeHint } from '../utils/parcelScopeHint';
+import {
+  InternationalParcelIllustration,
+  StepAddressIllustration,
+  StepConfirmIllustration,
+  StepOffersIllustration,
+} from './ui/ParcelIllustrations';
+
+const STEP_ILLUSTRATIONS = [StepAddressIllustration, StepOffersIllustration, StepConfirmIllustration];
 
 const EUROPE_CORRIDORS = [
   'France',
@@ -81,6 +90,10 @@ export const ParcelTransportPage: React.FC = () => {
   const [openFaqId, setOpenFaqId] = useState<string | null>(parcelFaq[0]?.id ?? null);
 
   useEffect(() => {
+    clearParcelScopeHint();
+  }, []);
+
+  useEffect(() => {
     setFaqJsonLd(getParcelFaqItems(locale));
     return () => {
       document.querySelector('script[data-seo-jsonld="faq-page"]')?.remove();
@@ -136,6 +149,15 @@ export const ParcelTransportPage: React.FC = () => {
               </Button>
             </div>
           </div>
+          <div className="max-w-3xl mx-auto mt-12 overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
+            <InternationalParcelIllustration
+              label={
+                en
+                  ? 'Parcels travel by plane from Europe to Tunisia'
+                  : "Des colis voyagent en avion de l'Europe vers la Tunisie"
+              }
+            />
+          </div>
         </div>
       </section>
 
@@ -179,18 +201,24 @@ export const ParcelTransportPage: React.FC = () => {
             </p>
           </div>
           <ol className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto list-none">
-            {steps.map((step, index) => (
+            {steps.map((step, index) => {
+              const Illustration = STEP_ILLUSTRATIONS[index];
+              return (
               <li
                 key={step.title}
                 className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
               >
+                <div className="h-28 mb-6 overflow-hidden rounded-xl border border-gray-100">
+                  <Illustration />
+                </div>
                 <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black text-white font-semibold mb-4">
                   {index + 1}
                 </span>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">{step.title}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">{step.description}</p>
               </li>
-            ))}
+              );
+            })}
           </ol>
         </div>
       </RevealSection>

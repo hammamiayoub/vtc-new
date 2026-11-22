@@ -12,6 +12,7 @@ import { Button } from './ui/Button';
 import { Footer } from './Footer';
 import { useLocale } from '../i18n/locale';
 import { RevealSection } from './ui/RevealSection';
+import { GroupTransportIllustration } from './ui/ParcelIllustrations';
 
 const WHATSAPP_URL = 'https://wa.me/21628528477';
 
@@ -43,6 +44,30 @@ const SERVICES = [
     titleEn: 'One point of contact',
     text: 'Dates, nombre de personnes, étapes : vous décrivez le séjour, TuniDrive organise les trajets avec des chauffeurs partenaires.',
     textEn: 'Dates, headcount, stops: you describe the stay, TuniDrive arranges the rides with partner drivers.',
+  },
+];
+
+const GROUP_VEHICLES = [
+  {
+    photo: '/vehicles/berline-noire.webp',
+    title: 'Berline',
+    titleEn: 'Sedan',
+    text: "Pour une famille ou un petit groupe, jusqu'à 4 passagers.",
+    textEn: 'For a family or a small group, up to 4 passengers.',
+  },
+  {
+    photo: '/vehicles/van-gris.webp',
+    title: 'Van et minibus',
+    titleEn: 'Van and minibus',
+    text: "Pour un groupe moyen, jusqu'à 8 passagers en van.",
+    textEn: 'For a mid-size group, up to 8 passengers in a van.',
+  },
+  {
+    photo: '/vehicles/bus-blanc.webp',
+    title: 'Bus',
+    titleEn: 'Coach',
+    text: 'Pour un effectif plus large et les trajets longue distance.',
+    textEn: 'For a larger party and long-distance trips.',
   },
 ];
 
@@ -122,6 +147,15 @@ export const GroupTravelPage: React.FC = () => {
               </Button>
             </div>
           </div>
+          <div className="max-w-3xl mx-auto mt-12 overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
+            <GroupTransportIllustration
+              label={
+                en
+                  ? 'A group is picked up at the airport and driven by bus to its hotel'
+                  : "Un groupe est accueilli à l'aéroport puis conduit en bus jusqu'à son hôtel"
+              }
+            />
+          </div>
         </div>
       </section>
 
@@ -151,7 +185,43 @@ export const GroupTravelPage: React.FC = () => {
         </div>
       </RevealSection>
 
-      <RevealSection className="py-16 md:py-20 bg-gray-50" aria-labelledby="group-steps-heading">
+      <RevealSection className="py-16 md:py-20 bg-gray-50" aria-labelledby="group-vehicles-heading">
+        <div className="page-container">
+          <div className="text-center mb-12 max-w-3xl mx-auto">
+            <h2 id="group-vehicles-heading" className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
+              {en ? 'A vehicle that fits the size of the group' : 'Un véhicule adapté à la taille du groupe'}
+            </h2>
+            <p className="text-lg text-gray-600">
+              {en
+                ? 'From a family to a full coach, the vehicle is chosen with the number of travellers.'
+                : "D'une famille à un autocar complet, le véhicule est choisi selon le nombre de voyageurs."}
+            </p>
+          </div>
+          <ul className="grid sm:grid-cols-3 gap-6 max-w-5xl mx-auto list-none">
+            {GROUP_VEHICLES.map(({ photo, title, titleEn, text, textEn }) => (
+              <li key={photo} className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                <div className="aspect-[3/2] bg-gray-100">
+                  <img
+                    src={photo}
+                    alt={en ? titleEn : title}
+                    loading="lazy"
+                    decoding="async"
+                    width={800}
+                    height={533}
+                    className="h-full w-full object-cover object-center"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">{en ? titleEn : title}</h3>
+                  <p className="text-sm text-gray-600">{en ? textEn : text}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </RevealSection>
+
+      <RevealSection className="py-16 md:py-20" aria-labelledby="group-steps-heading">
         <div className="page-container">
           <div className="text-center mb-12">
             <h2 id="group-steps-heading" className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
@@ -170,7 +240,7 @@ export const GroupTravelPage: React.FC = () => {
         </div>
       </RevealSection>
 
-      <RevealSection className="py-16 md:py-20">
+      <RevealSection className="py-16 md:py-20 bg-gray-50">
         <div className="page-container">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">

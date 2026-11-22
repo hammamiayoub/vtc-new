@@ -14,6 +14,7 @@ import {
 } from '../utils/parcelGeo';
 import { createParcelRequest, notifyTransporteursForRequest } from '../utils/parcelService';
 import { uploadParcelAttachment } from '../utils/imageUpload';
+import { peekParcelScopeHint, clearParcelScopeHint } from '../utils/parcelScopeHint';
 import type {
   ParcelDirection,
   ParcelDocumentType,
@@ -58,7 +59,9 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [scope, setScope] = useState<ParcelServiceScope>('international');
+  // Présélection posée par la page publique « Livraison de colis en Tunisie »
+  const [initialScope] = useState<ParcelServiceScope>(() => peekParcelScopeHint() ?? 'international');
+  const [scope, setScope] = useState<ParcelServiceScope>(initialScope);
   const [placeErrors, setPlaceErrors] = useState<{ departure?: string; arrival?: string }>({});
   const isLocal = scope === 'local';
 
@@ -71,7 +74,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
   } = useForm<ParcelQuoteFormData>({
     resolver: zodResolver(parcelQuoteSchema),
     defaultValues: {
-      direction: 'europe_to_tunisia',
+      direction: initialScope === 'local' ? 'tunisia_domestic' : 'europe_to_tunisia',
       departureAddress: '',
       arrivalAddress: '',
       desiredDate: '',
@@ -88,6 +91,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
 
   const handleScopeChange = (next: ParcelServiceScope) => {
     if (next === scope) return;
+    clearParcelScopeHint();
     setScope(next);
     setValue('direction', next === 'local' ? 'tunisia_domestic' : 'europe_to_tunisia', {
       shouldValidate: true,
@@ -220,6 +224,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
       }
 
       await notifyTransporteursForRequest(request.id, clientId);
+      clearParcelScopeHint();
       onSuccess(request.id);
     } catch (err) {
       console.error(err);

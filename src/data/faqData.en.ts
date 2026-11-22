@@ -89,13 +89,13 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'p1',
         question: 'How do I request a parcel quote?',
         answer:
-          'Create a rider account or sign in, then open the Ship parcels tab in your dashboard.\n\nSet the direction (Europe → Tunisia or Tunisia → Europe), the addresses, the date, a description of your items, and add photos or invoices if you have them. The request is sent to matching carriers; their offers appear in Parcel quotes.',
+          'Create a rider account or sign in, then open the Ship parcels tab in your dashboard.\n\nChoose the type of transport (International or Local) and, for international, the direction (Europe → Tunisia or Tunisia → Europe). Enter the addresses, the date, a description of your items, and add photos or invoices if you have them. The request is sent to matching carriers; their offers appear in Parcel quotes.',
       },
       {
         id: 'p2',
         question: 'Which routes are covered?',
         answer:
-          'The service covers international parcels and goods between Europe and Tunisia, both ways:\n• Europe → Tunisia\n• Tunisia → Europe\n\nAddresses are entered with autocomplete for those areas.',
+          'The service covers international parcels and goods between Europe and Tunisia, both ways:\n• Europe → Tunisia\n• Tunisia → Europe\n\nAddresses are entered with autocomplete for those areas.\n\nFor a delivery within Tunisia, see the Parcel delivery in Tunisia category.',
       },
       {
         id: 'p3',
@@ -119,25 +119,86 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'p6',
         question: 'How do I become a parcel carrier?',
         answer:
-          'Click Become a driver / carrier on the homepage. During signup, choose Parcel transport (or Both activities later from your profile).\n\nComplete your profile, vehicles and availability to receive matching requests.',
+          'Click Become a driver / carrier on the homepage. During signup, choose International parcel transport or Local parcel delivery (and Both activities later from your profile if you also drive passengers). A carrier is either international or local.\n\nComplete your profile and vehicles to receive the requests that match your type of transport.',
       },
       {
         id: 'p7',
         question: 'How do carriers reply to requests?',
         answer:
-          'Sign in to the driver/carrier space. If your activity includes parcels, the Parcel quotes tab lists requests that match your availability.\n\nYou propose a price, an estimated time and a message. The client is notified by email.',
+          'Sign in to the driver/carrier space. If your activity includes parcels, the Parcel quotes tab lists requests that match your type of transport (local or international).\n\nYou propose a price, an estimated time and a message. The client is notified by email.',
       },
       {
         id: 'p8',
         question: 'Can I be both a private driver and a parcel carrier?',
         answer:
-          'Yes. From your profile you can select Both activities. You then receive ride requests and international parcel requests, according to your availability and vehicle.',
+          'Yes. From your profile you can select Both activities. You then receive ride requests and parcel requests (depending on whether you are a local or international carrier), according to your vehicle.',
       },
       {
         id: 'p9',
         question: 'Can a quote request expire?',
         answer:
           'Yes. If no offer is accepted in time, the request can expire. You can submit a new one at any time from your rider space.',
+      },
+    ],
+  },
+  {
+    id: 'parcel-local',
+    label: 'Parcel delivery in Tunisia',
+    emoji: '🚚',
+    items: [
+      {
+        id: 'pl1',
+        question: 'How do I get a parcel delivered in Tunisia?',
+        answer:
+          'Create a rider account or sign in, open the Ship parcels tab and choose Local.\n\nEnter the pickup and delivery addresses in Tunisia, the date and a description of your items (photos and invoices welcome). Matching local carriers receive your request and send their price in TND under Parcel quotes.',
+      },
+      {
+        id: 'pl2',
+        question: 'Which areas are covered for local delivery?',
+        answer:
+          'All of Tunisia, across the 24 governorates. Both addresses must be in Tunisia: autocomplete is limited to that country.\n\nYour request is sent to local carriers who cover the governorate of the pickup address.',
+      },
+      {
+        id: 'pl3',
+        question: 'How is the price of a local delivery set?',
+        answer:
+          'Each carrier freely proposes a price in TND. You compare the offers in your account and accept the one you want; the others are then declined automatically.\n\nTuniDrive does not impose any price. The more precise your description (weight, volume, floor, photos), the fairer the offers.',
+      },
+      {
+        id: 'pl4',
+        question: 'What can I have delivered in Tunisia?',
+        answer:
+          'Boxes, furniture, appliances, personal belongings or shop goods. State the number of parcels and the estimated weight and volume: the carrier can then offer the right vehicle.',
+      },
+      {
+        id: 'pl5',
+        question: 'What happens after I accept a delivery offer?',
+        answer:
+          'The chosen carrier is notified by email and contact details are exchanged to arrange pickup and delivery.\n\nTuniDrive makes the introduction: the delivery is carried out under the carrier\'s responsibility, and the contract and payment are directly between you and the carrier.',
+      },
+      {
+        id: 'pl6',
+        question: 'What is the difference between local delivery and international transport?',
+        answer:
+          '• Local delivery: pickup and delivery in Tunisia, offers in TND, local carriers from the pickup area.\n• International transport: between Europe and Tunisia, both ways, offers in EUR (Europe → Tunisia) or TND (Tunisia → Europe).\n\nIt works the same way: you describe your shipment, receive offers and choose.',
+      },
+      {
+        id: 'pl7',
+        question: 'How do I become a local carrier?',
+        answer:
+          'Click Become a driver / carrier and choose Local parcel delivery. Complete your profile with your licence number, add a vehicle and select the governorates you cover.\n\nYou must hold a valid licence and every authorisation required to carry goods (operating permit, vehicle and goods insurance).',
+      },
+      {
+        id: 'pl8',
+        question: 'Can I be both a local and an international carrier?',
+        answer:
+          'No: a parcel carrier is either local or international. You choose at signup and can change it from your profile.\n\nYou can, however, combine parcel transport with private-hire driving (Both activities).',
+      },
+      {
+        id: 'pl9',
+        question: 'Do I need a subscription to be a local carrier?',
+        answer:
+          'The same rules as for drivers apply: 2 free rides in total, then the Premium plan. Private-hire rides and parcel deliveries share that allowance.\n\nA ride is counted when a client accepts your offer. Sending offers is blocked once the allowance is used up without an active subscription.',
       },
     ],
   },
@@ -150,7 +211,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'd1',
         question: 'How do I sign up as a driver or carrier?',
         answer:
-          'Click Become a driver / carrier on the homepage. Choose your activity:\n• Passenger transport (private hire)\n• Parcel transport (Europe ↔ Tunisia)\n\nComplete the form, your profile, vehicles and availability. You can switch to Both activities later from your profile.',
+          'Click Become a driver / carrier on the homepage. Choose your activity:\n• Passenger transport (private hire)\n• Local parcel delivery (within Tunisia)\n• International parcel transport (Europe ↔ Tunisia)\n\nComplete the form, your profile, vehicles and availability. You can switch to Both activities later from your profile.',
       },
       {
         id: 'd2',
@@ -180,7 +241,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'd6',
         question: 'How many free rides do I get without a subscription?',
         answer:
-          'Each new driver gets 2 free rides in total (one-time offer, not reset every month).\n\nAfter those 2 rides, the Premium plan is required to accept new rides.',
+          'Each new driver gets 2 free rides in total (one-time offer, not reset every month).\n\nAfter those 2 rides, the Premium plan is required to accept new rides.\n\nParcel deliveries count too: a ride is counted when a client accepts your offer.',
       },
       {
         id: 'd7',

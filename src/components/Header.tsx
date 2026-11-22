@@ -27,6 +27,7 @@ interface HeaderProps {
     | 'client-signup'
     | 'client-login'
     | 'parcel-transport'
+    | 'parcel-local'
     | 'group-travel'
     | 'vtc-tunisie'
     | 'blog'
@@ -110,6 +111,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
     'focus-ring w-full flex items-center gap-4 px-4 min-h-[56px] text-left text-lg font-medium text-white hover:bg-white/10 rounded-xl transition-colors';
 
   const mobileLinks = [
+    { path: '/livraison-colis-tunisie', icon: Package, label: en ? 'Delivery in Tunisia' : 'Livraison en Tunisie' },
     { path: '/transport-colis-europe-tunisie', icon: Package, label: en ? 'Parcels Europe ↔ Tunisia' : 'Colis Europe ↔ Tunisie' },
     { path: '/transport-groupes-tunisie', icon: Users, label: en ? 'Groups in Tunisia' : 'Groupes en Tunisie' },
     { path: '/signup', icon: Car, label: en ? 'Become a driver' : 'Devenir chauffeur' },
@@ -142,6 +144,14 @@ export const Header: React.FC<HeaderProps> = ({ currentView }) => {
                 className={navLinkClass(currentView === 'parcel-transport')}
               >
                 {en ? 'Parcels' : 'Colis'}
+              </button>
+
+              <button
+                onClick={() => go('/livraison-colis-tunisie')}
+                {...prefetchProps('/livraison-colis-tunisie')}
+                className={navLinkClass(currentView === 'parcel-local')}
+              >
+                {en ? 'Delivery' : 'Livraison'}
               </button>
 
               <button

@@ -14,6 +14,7 @@ Contact : support@tunidrive.net
 - [VTC Tunisie — Chauffeur privé & transfert aéroport](https://tunidrive.net/vtc-tunisie): Page dédiée VTC, transfert aéroport Tunis-Carthage / Enfidha / Monastir / Djerba, réserver taxi ou chauffeur, transport collectif
 - [Transport de groupes en séjour](https://tunidrive.net/transport-groupes-tunisie): Organisation des déplacements pour les groupes venant de l'étranger (accueil aéroport, transferts hôtel, trajets du séjour)
 - [Transport colis Europe ↔ Tunisie](https://tunidrive.net/transport-colis-europe-tunisie): Demande de devis gratuit pour envoi ou réception de colis internationaux
+- [Livraison de colis en Tunisie](https://tunidrive.net/livraison-colis-tunisie): Demande de devis gratuit pour faire livrer colis et marchandises en Tunisie par des transporteurs locaux (prix libres en TND)
 - [Blog](https://tunidrive.net/blog): Articles et guides mobilité, VTC et transport colis
 - [Réserver une course (connexion client)](https://tunidrive.net/client-login): Espace client pour réserver un VTC ou gérer ses demandes colis
 - [Inscription client](https://tunidrive.net/client-signup): Créer un compte client gratuit
