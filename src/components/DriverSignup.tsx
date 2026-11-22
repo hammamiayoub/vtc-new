@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Car, Package } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Car, Package, Truck } from 'lucide-react';
 import { Button } from './ui/Button';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { SignupCountryPhoneFields } from './ui/SignupCountryPhoneFields';
 import { CityInput } from './ui/CityInput';
 import { driverSignupSchema, normalizePhone } from '../utils/validation';
-import { DriverSignupFormData } from '../types';
-import { DRIVER_ACTIVITY_SIGNUP_OPTIONS } from '../utils/driverActivity';
+import { DriverSignupFormData, DriverSignupActivity } from '../types';
+import { DRIVER_ACTIVITY_SIGNUP_OPTIONS, signupActivityToDriverColumns } from '../utils/driverActivity';
 import type { SignupCountryCode } from '../utils/signupCountries';
 import { supabase } from '../lib/supabase';
 import { TrustSignals } from './TrustSignals';
@@ -20,18 +20,26 @@ interface DriverSignupProps {
   onBack: () => void;
 }
 
+const isParcelActivity = (activity: DriverSignupActivity) => activity !== 'vtc';
+
 export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
   const { locale, href } = useLocale();
   const en = locale === 'en';
   const te = (message?: string) => translateSignupMessage(message, locale);
   const [searchParams] = useSearchParams();
-  const initialActivityType: 'vtc' | 'transporteur' =
-    searchParams.get('activity') === 'transporteur' ? 'transporteur' : 'vtc';
+  const activityParam = searchParams.get('activity');
+  // `?activity=transporteur` (anciens liens) = transport international
+  const initialActivityType: DriverSignupActivity =
+    activityParam === 'transporteur_local' || activityParam === 'local'
+      ? 'transporteur_local'
+      : activityParam === 'transporteur' || activityParam === 'transporteur_international'
+      ? 'transporteur_international'
+      : 'vtc';
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [registeredActivityType, setRegisteredActivityType] = useState<'vtc' | 'transporteur'>(initialActivityType);
+  const [registeredActivityType, setRegisteredActivityType] = useState<DriverSignupActivity>(initialActivityType);
   const [error, setError] = useState<string | null>(null);
   const {
     register,
@@ -175,7 +183,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             phone: data.phone,
             country: data.country,
             city: data.city,
-            driver_type: data.activityType,
+            ...signupActivityToDriverColumns(data.activityType),
           });
 
         if (profileError) {
@@ -294,8 +302,8 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             <h4 className="font-semibold text-gray-900 mb-2">{en ? 'Welcome to the TuniDrive team' : "Bienvenue dans l'équipe TuniDrive"}</h4>
             <p className="text-gray-700 text-sm">
               {en
-                ? `Once your account is active, complete your profile to receive ${registeredActivityType === 'transporteur' ? 'parcel requests' : 'passenger rides'}.`
-                : `Une fois votre compte activé, complétez votre profil pour recevoir des ${registeredActivityType === 'transporteur' ? 'demandes de transport de colis' : 'courses de personnes'}.`}
+                ? `Once your account is active, complete your profile to receive ${isParcelActivity(registeredActivityType) ? 'parcel requests' : 'passenger rides'}.`
+                : `Une fois votre compte activé, complétez votre profil pour recevoir des ${isParcelActivity(registeredActivityType) ? 'demandes de transport de colis' : 'courses de personnes'}.`}
             </p>
           </div>
 
@@ -316,8 +324,10 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
             <h2 className="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8">{en ? 'Partner benefits' : 'Avantages partenaire'}</h2>
             <div className="space-y-4 sm:space-y-6">
               {[
-                watchActivityType === 'transporteur'
+                watchActivityType === 'transporteur_international'
                   ? (en ? 'Europe ↔ Tunisia parcel requests' : 'Demandes de colis Europe ↔ Tunisie')
+                  : watchActivityType === 'transporteur_local'
+                  ? (en ? 'Local parcel delivery requests in Tunisia' : 'Demandes de livraison de colis en Tunisie')
                   : (en ? 'Passenger rides on demand' : 'Courses de personnes sur demande'),
                 en ? 'Attractive, transparent earnings' : 'Revenus attractifs et transparents',
                 en ? 'Fully flexible hours' : 'Flexibilité totale des horaires',
@@ -355,7 +365,7 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 {en ? 'Become a TuniDrive partner' : 'Devenez partenaire TuniDrive'}
               </h1>
               <p className="text-gray-600 text-base sm:text-lg">
-                {en ? 'Passenger or parcel transport — choose your activity' : 'Transport de personnes ou de colis — choisissez votre activité'}
+                {en ? 'Passenger transport, local or international parcels — choose your activity' : 'Transport de personnes, colis locaux ou internationaux — choisissez votre activité'}
               </p>
             </div>
 
@@ -372,10 +382,10 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                 <p className="text-sm font-medium text-gray-900 mb-3">
                   {en ? 'Type of activity *' : "Type d'activité *"}
                 </p>
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid sm:grid-cols-3 gap-3">
                   {DRIVER_ACTIVITY_SIGNUP_OPTIONS.map((option) => {
                     const selected = watchActivityType === option.value;
-                    const Icon = option.value === 'vtc' ? Car : Package;
+                    const Icon = option.value === 'vtc' ? Car : option.value === 'transporteur_local' ? Truck : Package;
                     return (
                       <label
                         key={option.value}
@@ -396,14 +406,10 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
                           className={selected ? 'text-gray-900' : 'text-gray-500'}
                         />
                         <span className="font-semibold text-gray-900 mt-2 text-sm">
-                          {en
-                            ? (option.value === 'vtc' ? 'Passenger transport' : 'Parcel transport')
-                            : option.label}
+                          {en ? option.labelEn : option.label}
                         </span>
                         <span className="text-xs text-gray-600 mt-1 leading-snug">
-                          {en
-                            ? (option.value === 'vtc' ? 'Rides with passengers.' : 'Parcels and goods, Europe ↔ Tunisia.')
-                            : option.description}
+                          {en ? option.descriptionEn : option.description}
                         </span>
                       </label>
                     );
@@ -564,9 +570,13 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
               </p>
               <ul className="list-disc pl-5 text-warning-900 text-sm space-y-1">
                 <li>
-                  {en
-                    ? 'must hold every legal authorisation required to transport passengers for a fee (licence, operating permit, insurance, and so on) under Tunisian regulations;'
-                    : 'sont tenus de disposer de toutes les autorisations légales nécessaires à l’exercice du transport de personnes à titre onéreux (permis, carte d’exploitation, assurance, etc.) conformément à la réglementation tunisienne ;'}
+                  {isParcelActivity(watchActivityType)
+                    ? (en
+                        ? 'must hold a valid driving licence (to be provided when completing your profile) and every legal authorisation required to carry parcels and goods for a fee (operating permit, vehicle and goods insurance, and so on) under the regulations of the countries concerned;'
+                        : 'sont tenus de disposer d’un permis de conduire valide (à renseigner lors de la complétion du profil) et de toutes les autorisations légales nécessaires au transport de colis et de marchandises à titre onéreux (carte d’exploitation, assurance du véhicule et des marchandises, etc.) conformément à la réglementation des pays concernés ;')
+                    : (en
+                        ? 'must hold every legal authorisation required to transport passengers for a fee (licence, operating permit, insurance, and so on) under Tunisian regulations;'
+                        : 'sont tenus de disposer de toutes les autorisations légales nécessaires à l’exercice du transport de personnes à titre onéreux (permis, carte d’exploitation, assurance, etc.) conformément à la réglementation tunisienne ;')}
                 </li>
                 <li>
                   {en

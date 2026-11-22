@@ -103,6 +103,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             vehicleInfo: driverData.vehicle_info,
             status: driverData.status,
             driverType: driverData.driver_type || 'vtc',
+            parcelScope: driverData.parcel_scope ?? null,
+            parcelGovernorates: driverData.parcel_governorates ?? [],
             profilePhotoUrl: driverData.profile_photo_url,
             createdAt: driverData.created_at,
             updatedAt: driverData.updated_at
@@ -915,7 +917,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="flex items-center">
-                  <img src="/tunidrive-wordmark.png?v=4" alt="TuniDrive" width="736" height="520" className="h-10 sm:h-12 w-auto ml-px" />
+                  <img src="/tunidrive-wordmark-header.png?v=3" alt="TuniDrive" width="720" height="130" className="h-7 sm:h-8 w-auto" />
                 </h1>
                 <p className="text-sm sm:text-base lg:text-lg text-white hidden sm:block">Espace Chauffeur</p>
               </div>
@@ -1060,6 +1062,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             <DriverProfileForm
               driverId={driver.id}
               initialDriverType={driver.driverType}
+              initialParcelScope={driver.parcelScope}
+              initialParcelGovernorates={driver.parcelGovernorates}
               onProfileComplete={handleProfileComplete}
             />
           </div>
@@ -1399,6 +1403,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 Consultez les demandes éligibles et envoyez vos propositions de prix
               </p>
             </div>
+            {subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings && (
+              <div className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-sm text-warning-900">
+                  Vous avez utilisé vos courses gratuites. Un abonnement Premium est nécessaire pour
+                  envoyer de nouvelles propositions (courses et colis).
+                </p>
+                <Button size="sm" onClick={() => setActiveTab('subscription')}>
+                  Voir l'abonnement
+                </Button>
+              </div>
+            )}
             <TransporteurRequests driverId={driver.id} />
           </div>
         )}

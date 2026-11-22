@@ -10,6 +10,10 @@ export interface Driver {
   vehicleInfo?: VehicleInfo;
   status: string;
   driverType?: 'vtc' | 'transporteur' | 'both';
+  /** Portée du transport de colis : exclusivement local (Tunisie) ou international. */
+  parcelScope?: ParcelServiceScope | null;
+  /** Gouvernorats couverts (transporteur local). Vide = toute la Tunisie. */
+  parcelGovernorates?: string[];
   profilePhotoUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -82,8 +86,11 @@ export interface SignupFormData {
   confirmPassword: string;
 }
 
+export type DriverSignupActivity = 'vtc' | 'transporteur_local' | 'transporteur_international';
+
 export interface DriverSignupFormData extends SignupFormData {
-  activityType: 'vtc' | 'transporteur';
+  /** Choix à l'inscription : VTC, transporteur local ou transporteur international. */
+  activityType: DriverSignupActivity;
   country: SignupCountryCode;
   phone: string;
   city: string;
@@ -228,7 +235,8 @@ export interface RatingFormData {
 // ============================================================
 // Transport international de colis (devis)
 // ============================================================
-export type ParcelDirection = 'europe_to_tunisia' | 'tunisia_to_europe';
+export type ParcelDirection = 'europe_to_tunisia' | 'tunisia_to_europe' | 'tunisia_domestic';
+export type ParcelServiceScope = 'international' | 'local';
 export type ParcelRequestStatus =
   | 'pending'
   | 'quoted'
@@ -263,14 +271,18 @@ export interface ParcelQuoteRequest {
   id: string;
   clientId: string;
   direction: ParcelDirection;
+  serviceScope: ParcelServiceScope;
   departureAddress: string;
   departureCountry?: string;
   departureLatitude?: number;
   departureLongitude?: number;
+  /** Code de gouvernorat (livraison locale) */
+  departureGovernorate?: string;
   arrivalAddress: string;
   arrivalCountry?: string;
   arrivalLatitude?: number;
   arrivalLongitude?: number;
+  arrivalGovernorate?: string;
   desiredDate: string;
   currency: ParcelCurrency;
   notes?: string;

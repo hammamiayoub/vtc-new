@@ -6,10 +6,21 @@ import { Button } from './ui/Button';
 import AddressAutocomplete from './AddressAutocomplete';
 import { ParcelItemsInput } from './ui/ParcelItemsInput';
 import { parcelQuoteSchema } from '../utils/validation';
-import { countriesForPoint, extractPlaceDetails, geolocateCurrentPosition } from '../utils/parcelGeo';
+import {
+  countriesForPoint,
+  extractPlaceDetails,
+  geolocateCurrentPosition,
+  isTunisiaCountry,
+} from '../utils/parcelGeo';
 import { createParcelRequest, notifyTransporteursForRequest } from '../utils/parcelService';
 import { uploadParcelAttachment } from '../utils/imageUpload';
-import type { ParcelDirection, ParcelDocumentType, ParcelItem, ParcelQuoteFormData } from '../types';
+import type {
+  ParcelDirection,
+  ParcelDocumentType,
+  ParcelItem,
+  ParcelQuoteFormData,
+  ParcelServiceScope,
+} from '../types';
 import { useLocale } from '../i18n/locale';
 import { translateSignupMessage } from '../i18n/signupErrors';
 
@@ -29,6 +40,7 @@ interface ParcelQuoteFormProps {
 interface PlaceState {
   address: string;
   country?: string;
+  governorate?: string;
   latitude?: number;
   longitude?: number;
 }
@@ -46,6 +58,9 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [scope, setScope] = useState<ParcelServiceScope>('international');
+  const [placeErrors, setPlaceErrors] = useState<{ departure?: string; arrival?: string }>({});
+  const isLocal = scope === 'local';
 
   const {
     register,
@@ -67,10 +82,37 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
 
   const direction = watch('direction') as ParcelDirection;
 
+  const tunisiaOnlyMessage = en
+    ? 'Local delivery is limited to Tunisia. Pick an address in Tunisia from the suggestions.'
+    : 'La livraison locale est limitée à la Tunisie. Choisissez une adresse en Tunisie dans les suggestions.';
+
+  const handleScopeChange = (next: ParcelServiceScope) => {
+    if (next === scope) return;
+    setScope(next);
+    setValue('direction', next === 'local' ? 'tunisia_domestic' : 'europe_to_tunisia', {
+      shouldValidate: true,
+    });
+    // Les adresses déjà choisies ne sont plus valides pour la nouvelle portée
+    setDeparture({ address: '' });
+    setArrival({ address: '' });
+    setValue('departureAddress', '');
+    setValue('arrivalAddress', '');
+    setPlaceErrors({});
+  };
+
+  /** Pour une livraison locale, une adresse n'est valide que si elle est géolocalisée en Tunisie. */
+  const isValidLocalPlace = (place: PlaceState) =>
+    isTunisiaCountry(place.country) && place.latitude != null && place.longitude != null;
+
   const handleGeolocateDeparture = async () => {
     setIsGeolocating(true);
     try {
       const place = await geolocateCurrentPosition();
+      if (isLocal && !isTunisiaCountry(place.country)) {
+        setPlaceErrors((prev) => ({ ...prev, departure: tunisiaOnlyMessage }));
+        return;
+      }
+      setPlaceErrors((prev) => ({ ...prev, departure: undefined }));
       setDeparture(place);
       setValue('departureAddress', place.address, { shouldValidate: true });
     } catch (err) {
@@ -137,20 +179,35 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
 
   const onSubmit = async (data: ParcelQuoteFormData) => {
     setSubmitError(null);
+
+    if (isLocal) {
+      const departureOk = isValidLocalPlace(departure);
+      const arrivalOk = isValidLocalPlace(arrival);
+      if (!departureOk || !arrivalOk) {
+        setPlaceErrors({
+          departure: departureOk ? undefined : tunisiaOnlyMessage,
+          arrival: arrivalOk ? undefined : tunisiaOnlyMessage,
+        });
+        return;
+      }
+    }
+    setPlaceErrors({});
     setIsSubmitting(true);
 
     try {
       const payload = {
         clientId,
-        direction: data.direction,
+        direction: isLocal ? ('tunisia_domestic' as const) : data.direction,
         departureAddress: departure.address || data.departureAddress,
         departureCountry: departure.country,
         departureLatitude: departure.latitude,
         departureLongitude: departure.longitude,
+        departureGovernorate: isLocal ? departure.governorate : undefined,
         arrivalAddress: arrival.address || data.arrivalAddress,
         arrivalCountry: arrival.country,
         arrivalLatitude: arrival.latitude,
         arrivalLongitude: arrival.longitude,
+        arrivalGovernorate: isLocal ? arrival.governorate : undefined,
         desiredDate: data.desiredDate,
         notes: data.notes,
         items,
@@ -182,25 +239,64 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
         </div>
         <div>
           <h2 className="text-xl font-semibold text-gray-900">
-            {en ? 'International parcel transport' : 'Transport international de colis'}
+            {isLocal
+              ? (en ? 'Local parcel delivery' : 'Livraison locale de colis')
+              : (en ? 'International parcel transport' : 'Transport international de colis')}
           </h2>
           <p className="text-sm text-gray-600">
-            {en ? 'Request a quote for Europe ↔ Tunisia' : 'Demandez un devis pour un transport Europe ↔ Tunisie'}
+            {isLocal
+              ? (en ? 'Request a quote for a delivery within Tunisia' : 'Demandez un devis pour une livraison en Tunisie')
+              : (en ? 'Request a quote for Europe ↔ Tunisia' : 'Demandez un devis pour un transport Europe ↔ Tunisie')}
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">{en ? 'Direction *' : 'Direction du transport *'}</label>
-          <select
-            {...register('direction')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-          >
-            <option value="europe_to_tunisia">{en ? 'Europe → Tunisia (currency: EUR)' : 'Europe → Tunisie (devise : EUR)'}</option>
-            <option value="tunisia_to_europe">{en ? 'Tunisia → Europe (currency: TND)' : 'Tunisie → Europe (devise : TND)'}</option>
-          </select>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{en ? 'Type of transport *' : 'Type de transport *'}</label>
+          <div role="radiogroup" className="grid grid-cols-2 gap-2">
+            {([
+              { value: 'international', fr: 'International', en: 'International', subFr: 'Europe ↔ Tunisie', subEn: 'Europe ↔ Tunisia' },
+              { value: 'local', fr: 'Local', en: 'Local', subFr: 'En Tunisie', subEn: 'Within Tunisia' },
+            ] as const).map((opt) => {
+              const selected = scope === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => handleScopeChange(opt.value)}
+                  className={`text-left px-4 py-3 rounded-lg border-2 transition-colors ${
+                    selected ? 'border-black bg-gray-50 ring-1 ring-black' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="block text-sm font-semibold text-gray-900">{en ? opt.en : opt.fr}</span>
+                  <span className="block text-xs text-gray-600">{en ? opt.subEn : opt.subFr}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {isLocal ? (
+          <p className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+            {en
+              ? 'Pickup and delivery addresses must both be in Tunisia. Offers are in TND.'
+              : 'Les adresses de départ et de livraison doivent toutes deux se situer en Tunisie. Les offres sont en TND.'}
+          </p>
+        ) : (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{en ? 'Direction *' : 'Direction du transport *'}</label>
+            <select
+              {...register('direction')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+            >
+              <option value="europe_to_tunisia">{en ? 'Europe → Tunisia (currency: EUR)' : 'Europe → Tunisie (devise : EUR)'}</option>
+              <option value="tunisia_to_europe">{en ? 'Tunisia → Europe (currency: TND)' : 'Tunisie → Europe (devise : TND)'}</option>
+            </select>
+          </div>
+        )}
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -220,7 +316,9 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
             label=""
             value={departure.address}
             onChange={(v) => {
-              setDeparture((prev) => ({ ...prev, address: v }));
+              // Toute saisie manuelle invalide la position précédemment choisie
+              setDeparture({ address: v });
+              setPlaceErrors((prev) => ({ ...prev, departure: undefined }));
               setValue('departureAddress', v, { shouldValidate: true });
             }}
             onPlaceSelect={(place) => {
@@ -229,7 +327,11 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
               setValue('departureAddress', details.address, { shouldValidate: true });
             }}
             countries={countriesForPoint(direction, 'departure')}
-            placeholder={en ? 'Pickup address…' : 'Adresse de départ…'}
+            placeholder={
+              isLocal
+                ? (en ? 'Pickup address in Tunisia…' : 'Adresse de départ en Tunisie…')
+                : (en ? 'Pickup address…' : 'Adresse de départ…')
+            }
           />
           {departure.country && (
             <p className="text-xs text-gray-500 flex items-center gap-1">
@@ -239,15 +341,21 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
           {errors.departureAddress && (
             <p className="text-sm text-danger-600">{tx(errors.departureAddress.message)}</p>
           )}
+          {placeErrors.departure && <p className="text-sm text-danger-600">{placeErrors.departure}</p>}
         </div>
 
         <div>
           <AddressAutocomplete
             inputId="parcel-arrival-address"
-            label={en ? 'Destination address *' : "Adresse d'arrivée *"}
+            label={
+              isLocal
+                ? (en ? 'Delivery address *' : 'Adresse de livraison *')
+                : (en ? 'Destination address *' : "Adresse d'arrivée *")
+            }
             value={arrival.address}
             onChange={(v) => {
-              setArrival((prev) => ({ ...prev, address: v }));
+              setArrival({ address: v });
+              setPlaceErrors((prev) => ({ ...prev, arrival: undefined }));
               setValue('arrivalAddress', v, { shouldValidate: true });
             }}
             onPlaceSelect={(place) => {
@@ -256,7 +364,11 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
               setValue('arrivalAddress', details.address, { shouldValidate: true });
             }}
             countries={countriesForPoint(direction, 'arrival')}
-            placeholder={en ? 'Destination address…' : "Adresse d'arrivée…"}
+            placeholder={
+              isLocal
+                ? (en ? 'Delivery address in Tunisia…' : 'Adresse de livraison en Tunisie…')
+                : (en ? 'Destination address…' : "Adresse d'arrivée…")
+            }
           />
           {arrival.country && (
             <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
@@ -266,6 +378,7 @@ export const ParcelQuoteForm: React.FC<ParcelQuoteFormProps> = ({ clientId, onSu
           {errors.arrivalAddress && (
             <p className="text-sm text-danger-600">{tx(errors.arrivalAddress.message)}</p>
           )}
+          {placeErrors.arrival && <p className="text-sm text-danger-600">{placeErrors.arrival}</p>}
         </div>
 
         <div>

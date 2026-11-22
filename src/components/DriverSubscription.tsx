@@ -645,7 +645,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
                   ? `${subscriptionStatus.remainingFreeBookings} course${subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''} gratuite${subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''} restante${subscriptionStatus.remainingFreeBookings > 1 ? 's' : ''}`
                   : activeGraceUntil
                     ? `Quota gratuit épuisé. Accès provisoire jusqu'au ${formatGraceEnd(activeGraceUntil)}, le temps de vérifier votre paiement.`
-                    : 'Quota gratuit épuisé : un abonnement est nécessaire pour accepter de nouvelles courses.'}
+                    : 'Quota gratuit épuisé : un abonnement est nécessaire pour accepter de nouvelles courses ou de nouveaux colis.'}
               </p>
             </>
           )}
@@ -956,7 +956,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
           <li className="flex items-start gap-2">
             <Info size={16} className="flex-shrink-0 mt-0.5" aria-hidden="true" />
             <span>
-              <strong>Essai gratuit :</strong> {FREE_RIDES_QUOTA} courses gratuites pour tout nouveau chauffeur, une seule fois.
+              <strong>Essai gratuit :</strong> {FREE_RIDES_QUOTA} courses gratuites pour tout nouveau chauffeur, une seule fois (courses de personnes et colis confondus).
             </span>
           </li>
           <li className="flex items-start gap-2">

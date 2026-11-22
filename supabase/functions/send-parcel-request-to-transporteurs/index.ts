@@ -30,6 +30,7 @@ async function sendEmail(to: string, subject: string, html: string) {
 }
 
 function directionLabel(direction: string) {
+  if (direction === 'tunisia_domestic') return 'Livraison locale (Tunisie)';
   return direction === 'europe_to_tunisia' ? 'Europe → Tunisie' : 'Tunisie → Europe';
 }
 
@@ -66,6 +67,8 @@ serve(async (req) => {
     );
     if (matchErr) throw matchErr;
 
+    const isLocal = request.service_scope === 'local';
+
     const formattedDate = new Date(request.desired_date).toLocaleDateString('fr-FR', {
       weekday: 'long',
       year: 'numeric',
@@ -87,7 +90,7 @@ serve(async (req) => {
         </div>
         <div style="padding:30px 20px;">
           <h2>Bonjour ${client?.first_name || ''} ${client?.last_name || ''},</h2>
-          <p>Votre demande de transport international de colis a bien été enregistrée.</p>
+          <p>Votre demande de ${isLocal ? 'livraison locale' : 'transport international'} de colis a bien été enregistrée.</p>
           <div style="background:#e8f5e8;padding:20px;border-radius:8px;margin:20px 0;">
             <p><strong>Direction :</strong> ${directionLabel(request.direction)}</p>
             <p><strong>Départ :</strong> ${request.departure_address}</p>
@@ -131,7 +134,7 @@ serve(async (req) => {
           </div>
           <div style="padding:30px 20px;">
             <h2>Bonjour ${t.first_name} ${t.last_name},</h2>
-            <p>Une nouvelle demande de transport international correspond à votre profil.</p>
+            <p>Une nouvelle demande de ${isLocal ? 'livraison locale' : 'transport international'} correspond à votre profil.</p>
             <div style="background:#e3f2fd;padding:20px;border-radius:8px;margin:20px 0;">
               <p><strong>Direction :</strong> ${directionLabel(request.direction)}</p>
               <p><strong>Départ :</strong> ${request.departure_address}</p>
@@ -155,7 +158,7 @@ serve(async (req) => {
 
     await sendEmail(
       SUPPORT_EMAIL,
-      `[Support] Nouvelle demande colis — ${request.direction}`,
+      `[Support] Nouvelle demande colis ${isLocal ? 'locale' : 'internationale'} — ${request.direction}`,
       `<p>Nouvelle demande #${requestId}</p><p>${request.departure_address} → ${request.arrival_address}</p><p>${(transporteurs || []).length} transporteur(s) notifié(s).</p>`
     );
 
