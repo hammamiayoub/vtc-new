@@ -48,6 +48,8 @@ export interface AdminDriverRow {
   vehicle_info?: unknown;
   status: string;
   driver_type?: string | null;
+  parcel_scope?: string | null;
+  parcel_governorates?: string[] | null;
   profile_photo_url?: string | null;
   created_at: string;
   updated_at: string;
@@ -155,7 +157,7 @@ export interface AdminBookingRow {
 }
 
 const DRIVER_COLUMNS =
-  'id, first_name, last_name, email, phone, city, license_number, vehicle_info, status, driver_type, profile_photo_url, created_at, updated_at';
+  'id, first_name, last_name, email, phone, city, license_number, vehicle_info, status, driver_type, parcel_scope, parcel_governorates, profile_photo_url, created_at, updated_at';
 
 const CLIENT_COLUMNS =
   'id, first_name, last_name, email, phone, city, status, profile_photo_url, created_at, updated_at';
@@ -483,6 +485,8 @@ export function assembleAdminDrivers(
       vehicles: driverVehicles,
       status: driver.status,
       driverType: (driver.driver_type as Driver['driverType']) || 'vtc',
+      parcelScope: (driver.parcel_scope as Driver['parcelScope']) ?? null,
+      parcelGovernorates: driver.parcel_governorates ?? [],
       profilePhotoUrl: driver.profile_photo_url ?? undefined,
       createdAt: driver.created_at,
       updatedAt: driver.updated_at,
@@ -606,6 +610,7 @@ export function assembleAdminVehicles<
               city: driverRow.city ?? undefined,
               status: driverRow.status,
               driverType: (driverRow.driver_type as Driver['driverType']) || 'vtc',
+              parcelScope: (driverRow.parcel_scope as Driver['parcelScope']) ?? null,
             }
           : undefined,
         upcomingAvailabilities: upcoming.map(mapAvailabilityRow),

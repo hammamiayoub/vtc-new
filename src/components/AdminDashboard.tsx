@@ -58,11 +58,14 @@ import {
 } from '../utils/adminDashboardData';
 import {
   DRIVER_ACTIVITY_PROFILE_OPTIONS,
+  PARCEL_SCOPE_OPTIONS,
   type DriverActivityValue,
   driverActivityBadgeClasses,
   driverActivityLabel,
   driverActivityShortLabel,
 } from '../utils/driverActivity';
+import { GovernoratePicker } from './ui/GovernoratePicker';
+import type { ParcelServiceScope } from '../types';
 import {
   DRIVER_BOOKING_CANCELLATION_REASONS,
   resolveBookingCancellationReasonText,
@@ -99,6 +102,7 @@ interface VehicleWithDriver extends Vehicle {
     city?: string;
     status: string;
     driverType?: Driver['driverType'];
+    parcelScope?: Driver['parcelScope'];
   };
   upcomingAvailabilities?: DriverAvailability[];
   availabilityCount?: number;
@@ -260,7 +264,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     city: string;
     licenseNumber: string;
     driverType: DriverActivityValue;
-  }>({ firstName: '', lastName: '', email: '', phone: '', city: '', licenseNumber: '', driverType: 'vtc' });
+    parcelScope: ParcelServiceScope;
+    parcelGovernorates: string[];
+  }>({
+    firstName: '', lastName: '', email: '', phone: '', city: '', licenseNumber: '',
+    driverType: 'vtc', parcelScope: 'international', parcelGovernorates: [],
+  });
   const [savingDriver, setSavingDriver] = useState(false);
   const [driverEditError, setDriverEditError] = useState<string | null>(null);
   const [editingClient, setEditingClient] = useState<ClientWithBookings | null>(null);
@@ -622,7 +631,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       phone: driver.phone ?? '',
       city: driver.city ?? '',
       licenseNumber: driver.licenseNumber ?? '',
-      driverType: driver.driverType || 'vtc'
+      driverType: driver.driverType || 'vtc',
+      parcelScope: driver.parcelScope ?? 'international',
+      parcelGovernorates: driver.parcelGovernorates ?? [],
     });
     setEditingDriver(driver);
   };
@@ -635,6 +646,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
     if (!driverEditForm.email.trim()) {
       setDriverEditError("L'email est requis.");
+      return;
+    }
+
+    const handlesParcels = driverEditForm.driverType !== 'vtc';
+    const handlesLocalParcels = handlesParcels && driverEditForm.parcelScope === 'local';
+    if (handlesLocalParcels && driverEditForm.parcelGovernorates.length === 0) {
+      setDriverEditError('Sélectionnez au moins un gouvernorat, ou « Toute la Tunisie ».');
       return;
     }
 
@@ -651,7 +669,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           phone: driverEditForm.phone.trim() || null,
           city: driverEditForm.city.trim() || null,
           license_number: driverEditForm.licenseNumber.trim() || null,
-          driver_type: driverEditForm.driverType
+          driver_type: driverEditForm.driverType,
+          parcel_scope: handlesParcels ? driverEditForm.parcelScope : null,
+          parcel_governorates: handlesLocalParcels ? driverEditForm.parcelGovernorates : null,
         })
         .eq('id', editingDriver.id);
 
@@ -664,7 +684,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         phone: driverEditForm.phone.trim() || undefined,
         city: driverEditForm.city.trim() || undefined,
         licenseNumber: driverEditForm.licenseNumber.trim() || undefined,
-        driverType: driverEditForm.driverType
+        driverType: driverEditForm.driverType,
+        parcelScope: handlesParcels ? driverEditForm.parcelScope : null,
+        parcelGovernorates: handlesLocalParcels ? driverEditForm.parcelGovernorates : [],
       };
 
       setDrivers(prev => prev.map(d => (d.id === editingDriver.id ? { ...d, ...patch } : d)));
@@ -1652,9 +1674,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     onLogout();
   };
 
-  const getDriverActivityBadge = (driverType?: Driver['driverType']) => (
-    <span className={driverActivityBadgeClasses(driverType || 'vtc')} title={driverActivityLabel(driverType || 'vtc')}>
-      {driverActivityShortLabel(driverType || 'vtc')}
+  const getDriverActivityBadge = (driverType?: Driver['driverType'], parcelScope?: Driver['parcelScope']) => (
+    <span
+      className={driverActivityBadgeClasses(driverType || 'vtc', parcelScope)}
+      title={`${driverActivityLabel(driverType || 'vtc')}${
+        driverType && driverType !== 'vtc' ? ` · ${parcelScope === 'local' ? 'Local' : 'International'}` : ''
+      }`}
+    >
+      {driverActivityShortLabel(driverType || 'vtc', parcelScope)}
     </span>
   );
 
@@ -1785,7 +1812,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     { id: 'vehicles', label: 'Véhicules', shortLabel: 'Véhicules', icon: Car, count: vehicles.length },
     { id: 'bookings', label: 'Réservations', shortLabel: 'Réservations', icon: Calendar, count: bookings.length, attention: bookingPendingCount },
     { id: 'subscriptions', label: 'Abonnements', shortLabel: 'Abonnements', icon: CreditCard, count: subscriptions.length, attention: pendingSubscriptions },
-    { id: 'parcels', label: 'Colis international', shortLabel: 'Colis', icon: Package, count: parcelStats.total, attention: parcelStats.pending },
+    { id: 'parcels', label: 'Colis', shortLabel: 'Colis', icon: Package, count: parcelStats.total, attention: parcelStats.pending },
     { id: 'blog', label: 'Blog', shortLabel: 'Blog', icon: FileText },
     { id: 'pricing', label: 'Tarifs', shortLabel: 'Tarifs', icon: SlidersHorizontal },
   ];
@@ -1824,7 +1851,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <div className="min-w-0">
                 <h1 className="flex items-center">
-                  <img src="/tunidrive-wordmark.png?v=4" alt="TuniDrive" width="736" height="520" className="h-9 sm:h-11 w-auto ml-px" />
+                  <img src="/tunidrive-wordmark-header.png?v=3" alt="TuniDrive" width="720" height="130" className="h-7 sm:h-8 w-auto" />
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-300 hidden sm:block">Administration</p>
               </div>
@@ -2938,7 +2965,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                               {vehicle.driver.firstName} {vehicle.driver.lastName}
                             </p>
                             <p className="text-gray-500 truncate text-[10px]">{vehicle.driver.email}</p>
-                            <div className="mt-1">{getDriverActivityBadge(vehicle.driver.driverType)}</div>
+                            <div className="mt-1">{getDriverActivityBadge(vehicle.driver.driverType, vehicle.driver.parcelScope)}</div>
                           </div>
                         ) : (
                           <p className="text-gray-500 italic text-xs">Aucun chauffeur</p>
@@ -3112,7 +3139,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                               {vehicle.driver.firstName} {vehicle.driver.lastName}
                             </p>
                             <div className="mt-1 flex flex-wrap items-center gap-1">
-                            {getDriverActivityBadge(vehicle.driver.driverType)}
+                            {getDriverActivityBadge(vehicle.driver.driverType, vehicle.driver.parcelScope)}
                             {<DriverStatusBadge status={vehicle.driver.status} />}
                             </div>
                           </>
@@ -3362,7 +3389,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
                     {/* Activité VTC / transporteur */}
                     <td className="px-3 py-3">
-                      {getDriverActivityBadge(driver.driverType)}
+                      {getDriverActivityBadge(driver.driverType, driver.parcelScope)}
                     </td>
                     
                     {/* Contact */}
@@ -3519,7 +3546,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {getDriverActivityBadge(driver.driverType)}
+                      {getDriverActivityBadge(driver.driverType, driver.parcelScope)}
                       {<DriverStatusBadge status={driver.status} />}
                       <button
                         onClick={() => setSelectedDriver(driver)}
@@ -3934,7 +3961,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <div className="bg-gray-50 rounded-lg p-4 md:col-span-2">
                     <p className="text-sm text-gray-600 mb-1">Type d&apos;activité</p>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {getDriverActivityBadge(selectedDriver.driverType)}
+                      {getDriverActivityBadge(selectedDriver.driverType, selectedDriver.parcelScope)}
                       <span className="text-sm text-gray-600">
                         {driverActivityLabel(selectedDriver.driverType || 'vtc')}
                       </span>
@@ -5121,6 +5148,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     ))}
                   </select>
                 </div>
+                {driverEditForm.driverType !== 'vtc' && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type de transport de colis</label>
+                    <select
+                      value={driverEditForm.parcelScope}
+                      onChange={(e) => setDriverEditForm(f => ({ ...f, parcelScope: e.target.value as ParcelServiceScope }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {PARCEL_SCOPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {driverEditForm.driverType !== 'vtc' && driverEditForm.parcelScope === 'local' && (
+                  <div className="sm:col-span-2">
+                    <GovernoratePicker
+                      value={driverEditForm.parcelGovernorates}
+                      onChange={(next) => setDriverEditForm(f => ({ ...f, parcelGovernorates: next }))}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -5504,7 +5555,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <p className="text-sm text-gray-600 mb-1">Type d&apos;activité</p>
-                      {getDriverActivityBadge(selectedVehicle.driver.driverType)}
+                      {getDriverActivityBadge(selectedVehicle.driver.driverType, selectedVehicle.driver.parcelScope)}
                     </div>
                   </div>
                 </div>

@@ -6,20 +6,25 @@ import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Button } from './ui/Button';
 import { CityInput } from './ui/CityInput';
+import { GovernoratePicker } from './ui/GovernoratePicker';
 import { driverProfileSchema, normalizePhone } from '../utils/validation';
-import { DriverProfileData, Driver } from '../types';
-import { DRIVER_ACTIVITY_PROFILE_OPTIONS } from '../utils/driverActivity';
+import { DriverProfileData, Driver, ParcelServiceScope } from '../types';
+import { DRIVER_ACTIVITY_PROFILE_OPTIONS, PARCEL_SCOPE_OPTIONS } from '../utils/driverActivity';
 import { supabase } from '../lib/supabase';
 
 interface DriverProfileFormProps {
   driverId: string;
   initialDriverType?: Driver['driverType'];
+  initialParcelScope?: ParcelServiceScope | null;
+  initialParcelGovernorates?: string[];
   onProfileComplete: () => void;
 }
 
 export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({ 
   driverId,
   initialDriverType = 'vtc',
+  initialParcelScope = null,
+  initialParcelGovernorates = [],
   onProfileComplete 
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,6 +33,14 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
   const [driverType, setDriverType] = useState<'vtc' | 'transporteur' | 'both'>(
     initialDriverType ?? 'vtc'
   );
+
+  const [parcelScope, setParcelScope] = useState<ParcelServiceScope>(
+    initialParcelScope ?? 'international'
+  );
+  const [governorates, setGovernorates] = useState<string[]>(initialParcelGovernorates);
+  const [governorateError, setGovernorateError] = useState<string | undefined>();
+  const handlesParcels = driverType === 'transporteur' || driverType === 'both';
+  const needsZones = handlesParcels && parcelScope === 'local';
 
   const {
     register,
@@ -48,6 +61,11 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
   // anciennes options liées au véhicule supprimées
 
   const onSubmit = async (data: DriverProfileData) => {
+    if (needsZones && governorates.length === 0) {
+      setGovernorateError('Sélectionnez au moins un gouvernorat, ou « Toute la Tunisie ».');
+      return;
+    }
+    setGovernorateError(undefined);
     setIsSubmitting(true);
     data.phone = normalizePhone(data.phone);
     
@@ -59,6 +77,8 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
           city: data.city,
           license_number: data.licenseNumber,
           driver_type: driverType,
+          parcel_scope: handlesParcels ? parcelScope : null,
+          parcel_governorates: needsZones ? governorates : null,
           status: 'pending'
         })
         .eq('id', driverId);
@@ -160,6 +180,13 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
               {errors.licenseNumber && (
                 <p className="mt-2 text-sm text-danger-600">{errors.licenseNumber.message}</p>
               )}
+              {handlesParcels && (
+                <p className="mt-2 text-xs text-warning-800 bg-warning-50 border border-warning-200 rounded-lg p-3">
+                  Le transport de colis et de marchandises à titre onéreux est soumis à la réglementation en vigueur.
+                  Vous devez disposer d'un permis valide et de toutes les autorisations nécessaires (carte d'exploitation, assurance du véhicule et des marchandises).
+                  TuniDrive n'assure ni le transport ni l'exploitation des véhicules.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -179,11 +206,44 @@ export const DriverProfileForm: React.FC<DriverProfileFormProps> = ({
           </select>
           <p className="text-xs text-gray-500 mt-2">
             {driverType === 'transporteur'
-              ? 'Vous recevrez les demandes de colis Europe ↔ Tunisie selon vos disponibilités.'
+              ? 'Vous recevrez les demandes de colis correspondant à votre type de transport.'
               : driverType === 'both'
-              ? 'Courses de personnes et demandes de colis internationales.'
+              ? 'Courses de personnes et demandes de colis.'
               : 'Vous recevrez des demandes de courses de personnes.'}
           </p>
+
+          {handlesParcels && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Type de transport de colis</label>
+              <select
+                value={parcelScope}
+                onChange={(e) => setParcelScope(e.target.value as ParcelServiceScope)}
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              >
+                {PARCEL_SCOPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-2">
+                {PARCEL_SCOPE_OPTIONS.find((o) => o.value === parcelScope)?.description} Un transporteur est soit local, soit international.
+              </p>
+            </div>
+          )}
+
+          {needsZones && (
+            <div className="mt-4">
+              <GovernoratePicker
+                value={governorates}
+                onChange={(next) => {
+                  setGovernorates(next);
+                  setGovernorateError(undefined);
+                }}
+                error={governorateError}
+              />
+            </div>
+          )}
         </div>
 
         {/* Section informations véhicule supprimée (gérée dans Mes véhicules) */}

@@ -35,6 +35,7 @@ export const AdminParcelQuotes: React.FC<AdminParcelQuotesProps> = ({ refreshKey
             id: row.id,
             clientId: row.client_id,
             direction: row.direction,
+            serviceScope: row.service_scope ?? 'international',
             departureAddress: row.departure_address,
             arrivalAddress: row.arrival_address,
             desiredDate: row.desired_date,

@@ -136,7 +136,7 @@ export const signupSchema = signupObjectSchema.refine(
 
 export const driverSignupSchema = signupObjectSchema
   .extend({
-    activityType: z.enum(['vtc', 'transporteur'], {
+    activityType: z.enum(['vtc', 'transporteur_local', 'transporteur_international'], {
       message: 'Veuillez choisir votre type d\'activité',
     }),
     ...signupContactFieldsSchema,
@@ -270,7 +270,7 @@ export const parcelItemSchema = z.object({
 });
 
 export const parcelQuoteSchema = z.object({
-  direction: z.enum(['europe_to_tunisia', 'tunisia_to_europe'], {
+  direction: z.enum(['europe_to_tunisia', 'tunisia_to_europe', 'tunisia_domestic'], {
     message: 'Veuillez sélectionner une direction',
   }),
   departureAddress: z

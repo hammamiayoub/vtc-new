@@ -1,6 +1,7 @@
 import { googleMapsLoader } from './googleMapsLoader';
 import { findNearbyFrequentPlace, loadFrequentPlaces } from './frequentPlaces';
 import type { ParcelDirection } from '../types';
+import { governorateFromAdministrativeArea, governorateFromText } from './tunisiaGovernorates';
 
 // Codes ISO des pays européens couverts par le service
 export const EUROPE_COUNTRY_CODES = [
@@ -15,7 +16,14 @@ export const TUNISIA_COUNTRY_CODE = 'tn';
  * Restriction de pays pour l'autocomplétion selon la direction et le point.
  * - europe_to_tunisia : départ = Europe, arrivée = Tunisie
  * - tunisia_to_europe : départ = Tunisie, arrivée = Europe
+ * - tunisia_domestic : Tunisie des deux côtés (livraison locale)
  */
+export function isTunisiaCountry(country?: string | null): boolean {
+  if (!country) return false;
+  const c = country.trim().toLowerCase();
+  return ['tunisia', 'tunisie', 'tn', 'تونس'].includes(c);
+}
+
 export function countriesForPoint(
   direction: ParcelDirection,
   point: 'departure' | 'arrival'
@@ -29,6 +37,8 @@ export function countriesForPoint(
 export interface PlaceDetails {
   address: string;
   country: string;
+  /** Code de gouvernorat (Tunisie uniquement), voir tunisiaGovernorates.ts */
+  governorate?: string;
   latitude?: number;
   longitude?: number;
 }
@@ -59,10 +69,19 @@ export function extractPlaceDetails(
     address = place.formatted_address || place.name;
   }
 
+  let governorate = governorateFromAdministrativeArea(
+    components.find((c) => c.types.includes('administrative_area_level_1'))?.long_name,
+  );
+  // Nos lieux fréquents (aéroports, gares…) n'ont pas de composant administratif
+  if (!governorate && place.place_id?.startsWith('frequent:') && isTunisiaCountry(country)) {
+    governorate = governorateFromText(place.name || place.formatted_address);
+  }
+
   const location = place.geometry?.location;
   return {
     address,
     country,
+    governorate,
     latitude: location?.lat?.(),
     longitude: location?.lng?.(),
   };
@@ -93,6 +112,7 @@ export async function geolocateCurrentPosition(): Promise<PlaceDetails> {
     return {
       address: nearby.label,
       country: nearby.country_code === 'tn' ? 'Tunisia' : nearby.country_code.toUpperCase(),
+      governorate: nearby.country_code === 'tn' ? governorateFromText(nearby.label) : undefined,
       latitude: nearby.latitude,
       longitude: nearby.longitude,
     };
@@ -127,6 +147,9 @@ export async function geolocateCurrentPosition(): Promise<PlaceDetails> {
   return {
     address: result.formatted_address,
     country,
+    governorate: governorateFromAdministrativeArea(
+      result.address_components.find((c) => c.types.includes('administrative_area_level_1'))?.long_name,
+    ),
     latitude,
     longitude,
   };

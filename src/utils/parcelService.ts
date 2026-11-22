@@ -56,14 +56,17 @@ export function mapRequest(row: Record<string, unknown>): ParcelQuoteRequest {
     id: row.id as string,
     clientId: row.client_id as string,
     direction: row.direction as ParcelDirection,
+    serviceScope: (row.service_scope as ParcelQuoteRequest['serviceScope']) ?? 'international',
     departureAddress: row.departure_address as string,
     departureCountry: row.departure_country as string | undefined,
     departureLatitude: row.departure_latitude as number | undefined,
     departureLongitude: row.departure_longitude as number | undefined,
+    departureGovernorate: (row.departure_governorate as string | null) ?? undefined,
     arrivalAddress: row.arrival_address as string,
     arrivalCountry: row.arrival_country as string | undefined,
     arrivalLatitude: row.arrival_latitude as number | undefined,
     arrivalLongitude: row.arrival_longitude as number | undefined,
+    arrivalGovernorate: (row.arrival_governorate as string | null) ?? undefined,
     desiredDate: row.desired_date as string,
     currency: row.currency as ParcelQuoteRequest['currency'],
     notes: row.notes as string | undefined,
@@ -102,6 +105,11 @@ const REQUEST_SELECT = `
   ),
   clients(first_name, last_name, email, phone)
 `;
+
+/** Le transporteur a épuisé ses courses gratuites et n'a pas d'abonnement actif. */
+export const SUBSCRIPTION_REQUIRED_ERROR = 'subscription_required';
+/** Côté client : le transporteur de l'offre choisie n'est plus autorisé à accepter. */
+export const DRIVER_SUBSCRIPTION_REQUIRED_ERROR = 'subscription_required_driver';
 
 export async function expireOldParcelRequests(): Promise<void> {
   await supabase.rpc('expire_old_parcel_requests');
@@ -255,10 +263,12 @@ export interface CreateParcelRequestInput {
   departureCountry?: string;
   departureLatitude?: number;
   departureLongitude?: number;
+  departureGovernorate?: string;
   arrivalAddress: string;
   arrivalCountry?: string;
   arrivalLatitude?: number;
   arrivalLongitude?: number;
+  arrivalGovernorate?: string;
   desiredDate: string;
   notes?: string;
   items: Omit<ParcelItem, 'id' | 'requestId' | 'createdAt'>[];
@@ -270,14 +280,17 @@ export async function createParcelRequest(input: CreateParcelRequestInput): Prom
     .insert({
       client_id: input.clientId,
       direction: input.direction,
+      service_scope: input.direction === 'tunisia_domestic' ? 'local' : 'international',
       departure_address: input.departureAddress,
       departure_country: input.departureCountry || null,
       departure_latitude: input.departureLatitude ?? null,
       departure_longitude: input.departureLongitude ?? null,
+      departure_governorate: input.departureGovernorate ?? null,
       arrival_address: input.arrivalAddress,
       arrival_country: input.arrivalCountry || null,
       arrival_latitude: input.arrivalLatitude ?? null,
       arrival_longitude: input.arrivalLongitude ?? null,
+      arrival_governorate: input.arrivalGovernorate ?? null,
       desired_date: input.desiredDate,
       notes: input.notes || null,
       status: 'pending',
@@ -342,6 +355,9 @@ export async function submitParcelProposal(
     .single();
 
   if (error) {
+    if (error.message?.includes('subscription_required')) {
+      throw new Error(SUBSCRIPTION_REQUIRED_ERROR);
+    }
     const closed =
       error.message?.includes("n'accepte plus") ||
       error.message?.includes('accepte plus de nouvelles');
@@ -373,7 +389,12 @@ export async function acceptParcelProposal(proposalId: string): Promise<ParcelPr
     p_proposal_id: proposalId,
   });
 
-  if (error) throw error;
+  if (error) {
+    if (error.message?.includes('subscription_required_driver')) {
+      throw new Error(DRIVER_SUBSCRIPTION_REQUIRED_ERROR);
+    }
+    throw error;
+  }
 
   const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-parcel-acceptance-confirmation`;
   try {
@@ -393,6 +414,9 @@ export async function acceptParcelProposal(proposalId: string): Promise<ParcelPr
 }
 
 export function directionLabel(direction: ParcelDirection, locale: 'fr' | 'en' = 'fr'): string {
+  if (direction === 'tunisia_domestic') {
+    return locale === 'en' ? 'Local delivery (Tunisia)' : 'Livraison locale (Tunisie)';
+  }
   if (locale === 'en') {
     return direction === 'europe_to_tunisia' ? 'Europe → Tunisia' : 'Tunisia → Europe';
   }

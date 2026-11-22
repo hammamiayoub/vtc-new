@@ -8,6 +8,7 @@ import {
   acceptParcelProposal,
   directionLabel,
   statusLabel,
+  DRIVER_SUBSCRIPTION_REQUIRED_ERROR,
 } from '../utils/parcelService';
 import type { ParcelQuoteRequest } from '../types';
 import { useLocale } from '../i18n/locale';
@@ -57,7 +58,15 @@ export const ParcelQuoteDetail: React.FC<ParcelQuoteDetailProps> = ({
       onAccepted?.();
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de l'acceptation de l'offre.");
+      if (err instanceof Error && err.message === DRIVER_SUBSCRIPTION_REQUIRED_ERROR) {
+        alert(
+          en
+            ? 'This carrier can no longer accept new requests at the moment. Please choose another offer.'
+            : "Ce transporteur ne peut plus accepter de nouvelle demande pour le moment. Veuillez choisir une autre offre."
+        );
+      } else {
+        alert(en ? 'Error while accepting the offer.' : "Erreur lors de l'acceptation de l'offre.");
+      }
     } finally {
       setAcceptingId(null);
     }

@@ -15,7 +15,9 @@ import { ImageUpload } from './ui/ImageUpload';
 import { CityInput } from './ui/CityInput';
 import { supabase } from '../lib/supabase';
 import { Driver, Client } from '../types';
-import { DRIVER_ACTIVITY_PROFILE_OPTIONS, driverActivityLabel } from '../utils/driverActivity';
+import { GovernoratePicker } from './ui/GovernoratePicker';
+import { governorateLabel } from '../utils/tunisiaGovernorates';
+import { DRIVER_ACTIVITY_PROFILE_OPTIONS, PARCEL_SCOPE_OPTIONS, driverActivityLabel, parcelScopeLabel } from '../utils/driverActivity';
 import { uploadProfileImage } from '../utils/imageUpload';
 import { useLocale } from '../i18n/locale';
 
@@ -54,6 +56,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     city: 'city' in user ? user.city || '' : '',
     email: user.email,
     driverType: (userType === 'driver' && 'driverType' in user ? user.driverType : 'vtc') as 'vtc' | 'transporteur' | 'both',
+    parcelGovernorates: ((userType === 'driver' && 'parcelGovernorates' in user ? user.parcelGovernorates : []) ?? []) as string[],
+    parcelScope: ((userType === 'driver' && 'parcelScope' in user ? user.parcelScope : null) ?? 'international') as 'international' | 'local',
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -99,6 +103,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         phone: string;
         city: string;
         driver_type?: string;
+        parcel_scope?: string | null;
+        parcel_governorates?: string[] | null;
       } = {
         first_name: editData.firstName,
         last_name: editData.lastName,
@@ -108,6 +114,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
       if (userType === 'driver') {
         updateData.driver_type = editData.driverType;
+        const handlesLocalParcels =
+          editData.driverType !== 'vtc' && editData.parcelScope === 'local';
+        if (handlesLocalParcels && editData.parcelGovernorates.length === 0) {
+          alert('Sélectionnez au moins un gouvernorat, ou « Toute la Tunisie ».');
+          return;
+        }
+        updateData.parcel_scope =
+          editData.driverType === 'vtc' ? null : editData.parcelScope;
+        updateData.parcel_governorates = handlesLocalParcels ? editData.parcelGovernorates : null;
       }
 
       console.log('📝 Données à mettre à jour:', updateData);
@@ -365,6 +380,42 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     ) : (
                       <p className="font-semibold text-gray-900">
                         {driverActivityLabel(driver.driverType)}
+                        {driver.driverType && driver.driverType !== 'vtc' &&
+                          ` · ${parcelScopeLabel(driver.parcelScope)}`}
+                      </p>
+                    )}
+                    {isEditing && editData.driverType !== 'vtc' && (
+                      <select
+                        value={editData.parcelScope}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            parcelScope: e.target.value as 'international' | 'local',
+                          })
+                        }
+                        className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      >
+                        {PARCEL_SCOPE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {isEditing && editData.driverType !== 'vtc' && editData.parcelScope === 'local' && (
+                      <div className="mt-3">
+                        <GovernoratePicker
+                          value={editData.parcelGovernorates}
+                          onChange={(next) => setEditData({ ...editData, parcelGovernorates: next })}
+                        />
+                      </div>
+                    )}
+                    {!isEditing && driver.driverType !== 'vtc' && driver.parcelScope === 'local' && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        Zones :{' '}
+                        {driver.parcelGovernorates && driver.parcelGovernorates.length > 0
+                          ? driver.parcelGovernorates.map((c) => governorateLabel(c)).join(', ')
+                          : 'Toute la Tunisie'}
                       </p>
                     )}
                   </div>
@@ -426,7 +477,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     lastName: user.lastName,
                     phone: 'phone' in user ? user.phone : '',
                     city: 'city' in user ? user.city || '' : '',
-                    email: user.email
+                    email: user.email,
+                    driverType: (driver?.driverType ?? 'vtc') as 'vtc' | 'transporteur' | 'both',
+                    parcelScope: (driver?.parcelScope ?? 'international') as 'international' | 'local',
+                    parcelGovernorates: driver?.parcelGovernorates ?? [],
                   });
                 }}
                 variant="outline"

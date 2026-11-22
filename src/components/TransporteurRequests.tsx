@@ -11,7 +11,9 @@ import {
   submitParcelProposal,
   directionLabel,
   statusLabel,
+  SUBSCRIPTION_REQUIRED_ERROR,
 } from '../utils/parcelService';
+import { governorateLabel } from '../utils/tunisiaGovernorates';
 import type { ParcelQuoteRequest, ParcelProposalFormData } from '../types';
 
 interface TransporteurRequestsProps {
@@ -73,7 +75,13 @@ export const TransporteurRequests: React.FC<TransporteurRequestsProps> = ({
         alert('Votre proposition a été envoyée au client.');
       } catch (err) {
         console.error(err);
-        alert('Erreur lors de l\'envoi de la proposition.');
+        if (err instanceof Error && err.message === SUBSCRIPTION_REQUIRED_ERROR) {
+          alert(
+            'Vous avez utilisé vos courses gratuites. Souscrivez à l\'abonnement Premium (onglet « Abonnement ») pour continuer à envoyer des propositions.'
+          );
+        } else {
+          alert('Erreur lors de l\'envoi de la proposition.');
+        }
       } finally {
         setSubmittingId(null);
       }
@@ -180,6 +188,11 @@ export const TransporteurRequests: React.FC<TransporteurRequestsProps> = ({
                     {statusLabel(req.status)}
                   </span>
                   <span className="text-xs text-gray-500">{directionLabel(req.direction)}</span>
+                  {req.serviceScope === 'local' && req.departureGovernorate && (
+                    <span className="text-xs text-gray-500">
+                      · Départ : {governorateLabel(req.departureGovernorate)}
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm font-medium text-gray-900 truncate">
                   {req.departureAddress} → {req.arrivalAddress}
