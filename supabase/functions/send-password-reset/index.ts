@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { throttle, adminClient, jsonResponse } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -123,7 +124,18 @@ serve(async (req) => {
       throw new Error('Données manquantes: email, firstName, lastName ou userType')
     }
 
-    await sendPasswordResetEmail(email, firstName, lastName, userType)
+    // Appel possible sans connexion : on limite la fréquence, on n'écrit qu'à un compte existant
+    // et les noms viennent de la base (jamais de l'appelant). Réponse identique si le compte n'existe pas.
+    const __email = String(email).trim().toLowerCase()
+    if (!(await throttle(`pwreset:${__email}`, 60))) {
+      return jsonResponse(corsHeaders, 429, { success: false, error: 'too_many_requests' })
+    }
+    const __table = userType === 'driver' ? 'drivers' : 'clients'
+    const { data: __acct } = await adminClient()
+      .from(__table).select('email, first_name, last_name').ilike('email', __email).maybeSingle()
+    if (__acct) {
+      await sendPasswordResetEmail(__acct.email, __acct.first_name, __acct.last_name, userType)
+    }
 
     return new Response(
       JSON.stringify({ 

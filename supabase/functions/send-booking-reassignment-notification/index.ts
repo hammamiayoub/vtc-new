@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { requireAdmin } from '../_shared/auth.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendExpoPush } from '../_shared/expoPush.ts';
 
@@ -50,6 +51,10 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders, status: 200 });
   }
+
+  // Réservé aux administrateurs (la clé anon, publique, ne suffit pas)
+  const __admin = await requireAdmin(req, corsHeaders)
+  if (__admin instanceof Response) return __admin
 
   try {
     const { bookingData, clientData, driverData } = await req.json();

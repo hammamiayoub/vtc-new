@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { authBearer } from './edgeAuth';
 import type {
   ParcelQuoteRequest,
   ParcelItem,
@@ -324,7 +325,7 @@ export async function notifyTransporteursForRequest(requestId: string, clientId:
     await fetch(functionUrl, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        Authorization: await authBearer(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ requestId, clientId }),
@@ -372,7 +373,7 @@ export async function submitParcelProposal(
     await fetch(functionUrl, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        Authorization: await authBearer(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ proposalId: data.id, requestId }),
@@ -401,7 +402,7 @@ export async function acceptParcelProposal(proposalId: string): Promise<ParcelPr
     await fetch(functionUrl, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        Authorization: await authBearer(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ proposalId }),

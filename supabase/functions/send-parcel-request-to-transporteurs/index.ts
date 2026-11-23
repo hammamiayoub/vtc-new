@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { requireUser, jsonResponse } from '../_shared/auth.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendExpoPushBatch } from '../_shared/expoPush.ts';
 
@@ -39,6 +40,9 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders, status: 200 });
   }
 
+  const __caller = await requireUser(req, corsHeaders)
+  if (__caller instanceof Response) return __caller
+
   try {
     const { requestId, clientId } = await req.json();
     if (!requestId || !clientId) throw new Error('requestId et clientId requis');
@@ -54,6 +58,9 @@ serve(async (req) => {
       .eq('id', requestId)
       .single();
     if (reqErr || !request) throw new Error('Demande introuvable');
+    if (request.client_id !== __caller.user.id && !__caller.isAdmin) {
+      return jsonResponse(corsHeaders, 403, { success: false, error: 'forbidden' });
+    }
 
     const { data: client } = await supabase
       .from('clients')

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { authBearer } from '../utils/edgeAuth';
 import { TabBar } from './ui/TabBar';
 import { BottomNav } from './ui/BottomNav';
 import { daysUntilSubscriptionEnd, isSubscriptionEndPassed } from '../utils/subscriptionPeriod';
@@ -480,7 +481,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Authorization': await authBearer(),
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(emailPayload)
@@ -668,7 +669,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           const emailResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Authorization': await authBearer(),
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(emailPayload)

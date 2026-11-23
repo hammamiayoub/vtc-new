@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { throttle, adminClient, jsonResponse, escapeHtml } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -137,7 +138,20 @@ serve(async (req) => {
       throw new Error('Données manquantes: userData ou userType')
     }
 
-    await sendSignupNotificationEmail(userData, userType)
+    // Appel possible sans connexion : le compte doit exister et être récent, une seule notification par adresse
+    const __email = String(userData?.email ?? '').trim().toLowerCase()
+    const __table = userType === 'driver' ? 'drivers' : 'clients'
+    const { data: __acct } = await adminClient()
+      .from(__table).select('created_at').ilike('email', __email).maybeSingle()
+    const __recent = __acct && Date.now() - new Date(__acct.created_at).getTime() < 60 * 60 * 1000
+    if (!__recent || !(await throttle(`signup:${__email}`, 3600))) {
+      return jsonResponse(corsHeaders, 200, { success: true, message: 'ignored' })
+    }
+    // Contenu saisi par l'appelant : échappé avant d'être inséré dans l'e-mail destiné au support
+    const __safe = Object.fromEntries(
+      Object.entries(userData ?? {}).map(([k, v]) => [k, typeof v === 'string' ? escapeHtml(v) : v]),
+    )
+    await sendSignupNotificationEmail(__safe, userType)
 
     return new Response(
       JSON.stringify({ 

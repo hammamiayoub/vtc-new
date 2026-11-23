@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { authBearer } from '../utils/edgeAuth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
@@ -617,7 +618,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Authorization': await authBearer(),
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({

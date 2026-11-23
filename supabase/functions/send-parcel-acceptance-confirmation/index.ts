@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { requireUser, jsonResponse } from '../_shared/auth.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendExpoPush } from '../_shared/expoPush.ts';
 
@@ -32,6 +33,9 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders, status: 200 });
   }
 
+  const __caller = await requireUser(req, corsHeaders)
+  if (__caller instanceof Response) return __caller
+
   try {
     const { proposalId } = await req.json();
     if (!proposalId) throw new Error('proposalId requis');
@@ -54,6 +58,9 @@ serve(async (req) => {
       .eq('id', proposal.request_id)
       .single();
     if (!request) throw new Error('Demande introuvable');
+    if (request.client_id !== __caller.user.id && !__caller.isAdmin) {
+      return jsonResponse(corsHeaders, 403, { success: false, error: 'forbidden' });
+    }
 
     const client = request.clients;
     const driver = proposal.drivers;
