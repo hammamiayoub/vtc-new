@@ -440,7 +440,7 @@ function AppContent({ cookieConsent }: { cookieConsent: CookieConsentChoice | nu
       </Suspense>
       {showChat && !signupCallback && currentView !== 'admin' && currentView !== 'admin-dashboard' && (
         <Suspense fallback={null}>
-          <ChatWidget />
+          <ChatWidget loggedIn={currentView === 'dashboard' || currentView === 'client-dashboard'} />
         </Suspense>
       )}
     </div>

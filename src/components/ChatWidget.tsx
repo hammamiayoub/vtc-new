@@ -9,6 +9,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Mail,
+  Minimize2,
+  Maximize2,
 } from 'lucide-react';
 import { faqCategories, FaqCategory, FaqItem } from '../data/faqData';
 import { faqCategoriesEn } from '../data/faqData.en';
@@ -39,9 +41,37 @@ const OPENED_KEY = 'td_chat_opened';
 
 /** Au-dessus des bannières cookies + téléchargement app (variables CSS sur :root) */
 const CHAT_FLOAT_BOTTOM =
-  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + var(--td-selection-bar-offset, 0px) + var(--td-bottom-nav-offset, 0px) + 1.5rem)';
+  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + var(--td-selection-bar-offset, 0px) + var(--td-bottom-nav-offset, 0px) + var(--td-chat-gap, 1.5rem))';
 const CHAT_PANEL_BOTTOM =
-  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + var(--td-selection-bar-offset, 0px) + var(--td-bottom-nav-offset, 0px) + 4.5rem)';
+  'calc(max(1rem, var(--td-bottom-banner-offset, 0px)) + var(--td-app-download-offset, 0px) + var(--td-selection-bar-offset, 0px) + var(--td-bottom-nav-offset, 0px) + var(--td-chat-panel-gap, 4.5rem))';
+
+/**
+ * Préférence du bouton flottant : « min » = simple languette sur le bord de l'écran, « full » = bouton complet.
+ * Sans choix de l'utilisateur : languette sur mobile pour un utilisateur connecté (écrans de gestion
+ * denses, le bouton y masque du contenu), bouton complet partout ailleurs.
+ */
+const LAUNCHER_PREF_KEY = 'td_chat_launcher';
+type LauncherPref = 'min' | 'full';
+
+function readLauncherPref(): LauncherPref | null {
+  try {
+    const value = window.localStorage.getItem(LAUNCHER_PREF_KEY);
+    return value === 'min' || value === 'full' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLauncherPref(value: LauncherPref) {
+  try {
+    window.localStorage.setItem(LAUNCHER_PREF_KEY, value);
+  } catch {
+    /* stockage indisponible : le choix vaut pour la visite en cours */
+  }
+}
+
+const FORM_FIELD_SELECTOR =
+  'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]), textarea, select, [contenteditable="true"]';
 
 function readSession(key: string): boolean {
   try {
@@ -131,7 +161,12 @@ function renderRichText(text: string, linkClass: string): React.ReactNode {
 const chipClass =
   'focus-ring w-full text-left px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors text-sm text-gray-800 flex items-center justify-between gap-2 group';
 
-export const ChatWidget: React.FC = () => {
+interface ChatWidgetProps {
+  /** Utilisateur connecté (tableau de bord client ou chauffeur) : le bouton se réduit par défaut sur mobile. */
+  loggedIn?: boolean;
+}
+
+export const ChatWidget: React.FC<ChatWidgetProps> = ({ loggedIn = false }) => {
   const { locale, logicalPath } = useLocale();
   const en = locale === 'en';
   const showWhatsApp = logicalPath === '/';
@@ -153,6 +188,13 @@ export const ChatWidget: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([{ type: 'bot', text: greeting }]);
   const [hasUnread, setHasUnread] = useState(() => !readSession(OPENED_KEY));
   const [showTeaser, setShowTeaser] = useState(false);
+  const [launcherPref, setLauncherPref] = useState<LauncherPref | null>(readLauncherPref);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 639px)').matches);
+  const [fieldFocused, setFieldFocused] = useState(false);
+
+  const minimized = launcherPref ? launcherPref === 'min' : loggedIn && isMobile;
+  const minimizedRef = useRef(minimized);
+  minimizedRef.current = minimized;
 
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const lastBotRef = useRef<HTMLDivElement>(null);
@@ -184,10 +226,40 @@ export const ChatWidget: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [en]);
 
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 639px)');
+    const onChange = () => setIsMobile(query.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
+  // Sur mobile, le bouton disparaît pendant la saisie dans un champ de la page : il masquerait
+  // le champ ou le bouton de validation, et le clavier occupe déjà la moitié de l'écran.
+  useEffect(() => {
+    if (!isMobile) {
+      setFieldFocused(false);
+      return;
+    }
+    const onFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target || target.closest('[data-chat-root]')) return;
+      if (target.matches(FORM_FIELD_SELECTOR)) setFieldFocused(true);
+    };
+    const onFocusOut = () => setFieldFocused(false);
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+    return () => {
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('focusout', onFocusOut);
+    };
+  }, [isMobile]);
+
   // Bulle d'invitation : une seule fois par session, discrète, qui disparaît seule
   useEffect(() => {
     if (readSession(TEASER_KEY) || readSession(OPENED_KEY)) return;
     const show = window.setTimeout(() => {
+      // Bouton réduit : aucune bulle, l'utilisateur a choisi la discrétion.
+      if (minimizedRef.current) return;
       // Pas de bulle par-dessus la bannière de l'application : un seul message à la fois.
       if (document.documentElement.style.getPropertyValue('--td-app-download-offset')) return;
       setShowTeaser(true);
@@ -237,6 +309,18 @@ export const ChatWidget: React.FC = () => {
     if (window.matchMedia('(pointer: fine)').matches) {
       window.setTimeout(() => inputRef.current?.focus(), 50);
     }
+  };
+
+  const chooseLauncher = (value: LauncherPref) => {
+    setLauncherPref(value);
+    writeLauncherPref(value);
+  };
+
+  /** Réduit le bouton en languette ; le panneau se referme s'il était ouvert. */
+  const minimizeLauncher = () => {
+    chooseLauncher('min');
+    setShowTeaser(false);
+    setIsOpen(false);
   };
 
   const pushUser = useCallback((text: string) => {
@@ -416,10 +500,31 @@ export const ChatWidget: React.FC = () => {
     </div>
   );
 
+  const hideLauncher = isMobile && fieldFocused && !isOpen;
+  const showTab = minimized && !isOpen;
+
   return (
     <>
+      {showTab && !hideLauncher && (
+        <button
+          type="button"
+          data-chat-root
+          onClick={handleOpen}
+          className="focus-ring fixed right-0 z-50 flex h-12 w-7 items-center justify-center rounded-l-2xl bg-black/85 text-white shadow-card transition-colors hover:bg-black [--td-chat-gap:0.75rem] sm:[--td-chat-gap:1.5rem]"
+          style={{ bottom: CHAT_FLOAT_BOTTOM }}
+          aria-label={en ? 'Open help chat' : "Ouvrir le chat d'aide"}
+        >
+          <MessageCircle size={16} />
+          {hasUnread && (
+            <span className="absolute -left-0.5 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-danger-500" />
+          )}
+        </button>
+      )}
+
+      {!showTab && !hideLauncher && (
       <div
-        className="fixed right-4 sm:right-6 z-50 flex flex-col items-end gap-3"
+        data-chat-root
+        className="fixed right-4 sm:right-6 z-50 flex flex-col items-end gap-3 [--td-chat-gap:0.75rem] sm:[--td-chat-gap:1.5rem]"
         style={{ bottom: CHAT_FLOAT_BOTTOM }}
       >
         {!isOpen && showTeaser && (
@@ -437,29 +542,44 @@ export const ChatWidget: React.FC = () => {
             </button>
           </div>
         )}
-        <button
-          ref={launcherRef}
-          onClick={isOpen ? handleClose : handleOpen}
-          className="focus-ring relative flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-card transition-colors duration-200 hover:bg-gray-800"
-          aria-label={isOpen ? (en ? 'Close chat' : 'Fermer le chat') : en ? 'Open help chat' : "Ouvrir le chat d'aide"}
-          aria-expanded={isOpen}
-        >
-          {isOpen ? <X size={22} /> : <MessageCircle size={22} />}
-          {!isOpen && hasUnread && (
-            <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-danger-500" />
+        <div className="relative">
+          <button
+            ref={launcherRef}
+            onClick={isOpen ? handleClose : handleOpen}
+            className="focus-ring relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-black text-white shadow-card transition-colors duration-200 hover:bg-gray-800"
+            aria-label={isOpen ? (en ? 'Close chat' : 'Fermer le chat') : en ? 'Open help chat' : "Ouvrir le chat d'aide"}
+            aria-expanded={isOpen}
+          >
+            {isOpen ? <X size={22} /> : <MessageCircle size={22} />}
+            {!isOpen && hasUnread && (
+              <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-danger-500" />
+            )}
+          </button>
+          {!isOpen && (
+            <button
+              type="button"
+              onClick={minimizeLauncher}
+              className="focus-ring absolute -left-2.5 -top-2.5 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-card transition-colors hover:bg-gray-50 hover:text-gray-900"
+              aria-label={en ? 'Minimize the assistant button' : "Réduire le bouton de l'assistant"}
+              title={en ? 'Minimize' : 'Réduire'}
+            >
+              <ChevronRight size={14} />
+            </button>
           )}
-        </button>
+        </div>
       </div>
+      )}
 
       {isOpen && (
         <div
           role="dialog"
+          data-chat-root
           aria-label={en ? 'TuniDrive assistant' : 'Assistant TuniDrive'}
-          className="fixed left-3 right-3 sm:left-auto sm:right-6 z-50 flex animate-slide-up flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-overlay sm:w-[400px] h-[min(620px,calc(100dvh-7rem))]"
+          className="[--td-chat-panel-gap:3.75rem] sm:[--td-chat-panel-gap:4.5rem] fixed left-3 right-3 sm:left-auto sm:right-6 z-50 flex animate-slide-up flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-overlay sm:w-[400px] h-[min(620px,calc(100dvh-7rem))]"
           style={{ bottom: CHAT_PANEL_BOTTOM }}
         >
-          <div className="flex flex-shrink-0 items-center gap-3 bg-black px-4 py-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white">
+          <div className="flex flex-shrink-0 items-center gap-1 bg-black px-3 py-3 sm:gap-3 sm:px-4">
+            <div className="hidden h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white sm:flex">
               <MessageCircle size={20} className="text-black" />
             </div>
             <div className="min-w-0 flex-1">
@@ -491,6 +611,23 @@ export const ChatWidget: React.FC = () => {
               title={en ? 'New conversation' : 'Nouvelle conversation'}
             >
               <RotateCcw size={17} />
+            </button>
+            <button
+              type="button"
+              onClick={minimized ? () => chooseLauncher('full') : minimizeLauncher}
+              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label={
+                minimized
+                  ? en ? 'Show the floating chat button' : 'Afficher le bouton flottant'
+                  : en ? 'Minimize the chat button' : 'Réduire le bouton du chat'
+              }
+              title={
+                minimized
+                  ? en ? 'Show the floating button' : 'Afficher le bouton flottant'
+                  : en ? 'Minimize the button' : 'Réduire le bouton'
+              }
+            >
+              {minimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
             </button>
             <button
               type="button"
