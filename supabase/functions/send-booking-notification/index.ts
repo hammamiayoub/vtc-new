@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { requireUser, recipientsAllowed, callerInBooking, jsonResponse } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -80,6 +81,20 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     console.log('✅ Réponse CORS OPTIONS')
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  // Utilisateur connecté, partie prenante de la réservation, destinataires = vrais comptes
+  const __caller = await requireUser(req, corsHeaders)
+  if (__caller instanceof Response) return __caller
+  {
+    const __p: any = await req.clone().json().catch(() => ({}))
+    const __bookingId = __p?.bookingData?.id
+    if (__bookingId && !(await callerInBooking(__caller, __bookingId))) {
+      return jsonResponse(corsHeaders, 403, { success: false, error: 'forbidden_booking' })
+    }
+    if (!(await recipientsAllowed(__caller, [__p?.clientData?.email, __p?.driverData?.email]))) {
+      return jsonResponse(corsHeaders, 403, { success: false, error: 'forbidden_recipients' })
+    }
   }
 
   try {

@@ -1,3 +1,5 @@
+import { checkEmailAvailable } from '../utils/emailAvailability';
+import { authBearer } from '../utils/edgeAuth';
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -69,42 +71,14 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
       // Vérifier si l'email existe déjà AVANT de créer l'utilisateur
       console.log('🔍 Vérification de l\'email avant création...');
       
-      // Vérifier si l'email existe déjà dans la table drivers
-      const { data: existingDriver, error: driverCheckError } = await supabase
-        .from('drivers')
-        .select('id, email')
-        .eq('email', data.email)
-        .maybeSingle();
-
-      if (driverCheckError) {
-        console.error('Erreur lors de la vérification des chauffeurs:', driverCheckError);
-        setError('Erreur lors de la vérification de l\'email. Veuillez réessayer.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (existingDriver) {
-        setError('Cette adresse email est déjà utilisée par un compte chauffeur. Veuillez utiliser une autre adresse email ou vous connecter avec votre compte chauffeur.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Vérifier si l'email existe déjà dans la table clients
-      const { data: existingClient, error: clientCheckError } = await supabase
-        .from('clients')
-        .select('id, email')
-        .eq('email', data.email)
-        .maybeSingle();
-
-      if (clientCheckError) {
-        console.error('Erreur lors de la vérification des clients:', clientCheckError);
-        setError('Erreur lors de la vérification de l\'email. Veuillez réessayer.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (existingClient) {
-        setError('Cette adresse email est déjà utilisée par un compte client. Veuillez utiliser une autre adresse email ou vous connecter avec votre compte existant.');
+      // Vérification côté serveur : les tables clients / drivers ne sont plus lisibles sans connexion
+      const emailCheck = await checkEmailAvailable(data.email);
+      if (!emailCheck.available) {
+        setError(
+          emailCheck.usedBy === 'driver'
+            ? 'Cette adresse email est déjà utilisée par un compte chauffeur. Veuillez utiliser une autre adresse email ou vous connecter avec votre compte chauffeur.'
+            : 'Cette adresse email est déjà utilisée par un compte client. Veuillez utiliser une autre adresse email ou vous connecter avec votre compte existant.'
+        );
         setIsSubmitting(false);
         return;
       }
@@ -177,7 +151,7 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
           const response = await fetch(notificationUrl, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Authorization': await authBearer(),
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({

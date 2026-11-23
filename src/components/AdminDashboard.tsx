@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { authBearer } from '../utils/edgeAuth';
 import { BookingStatusBadge, DriverStatusBadge } from './ui/StatusBadge';
 import { 
   Users, 
@@ -864,7 +865,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           const emailResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Authorization': await authBearer(),
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(emailPayload)
@@ -1002,7 +1003,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              Authorization: await authBearer(),
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -1570,7 +1571,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-driver-validation-email`, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Authorization': await authBearer(),
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({

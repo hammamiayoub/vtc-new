@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { authBearer } from '../utils/edgeAuth';
 import { Badge } from './ui/Badge';
 import { TabBar } from './ui/TabBar';
 import { BottomNav } from './ui/BottomNav';
@@ -377,7 +378,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
         const emailResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-booking-status-notification`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Authorization': await authBearer(),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(emailPayload)
