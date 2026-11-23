@@ -57,7 +57,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
             </p>
             <ul className="text-lg text-gray-700 mb-4 list-disc pl-6 space-y-1">
               <li>la réservation de trajets en véhicule de transport avec chauffeur (VTC) ;</li>
-              <li>la demande et la proposition de devis pour le transport international de colis et marchandises entre l&apos;Europe et la Tunisie.</li>
+              <li>la demande et la proposition de devis pour le transport de colis et marchandises, en Tunisie (livraison locale) ou entre l&apos;Europe et la Tunisie (transport international).</li>
             </ul>
             <p className="text-lg text-gray-700 mb-4 leading-relaxed">
               TuniDrive n&apos;est pas un transporteur. Elle n&apos;exerce aucune activité de transport public de personnes
@@ -95,7 +95,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                   <h4 className="font-semibold text-gray-900 mb-2">Les chauffeurs et transporteurs partenaires :</h4>
                   <p className="text-gray-700">
                     professionnels indépendants inscrits sur la plateforme selon leur type d&apos;activité :
-                    transport de personnes (VTC), transport de colis international, ou les deux. Ils proposent leurs
+                    transport de personnes (VTC), transport de colis local en Tunisie, transport de colis international, ou personnes et colis. Ils proposent leurs
                     prestations et tarifs en toute autonomie.
                   </p>
                 </div>
@@ -119,8 +119,9 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">
-                    Lors de l&apos;inscription, le professionnel choisit son type d&apos;activité (transport de personnes ou transport de colis).
-                    Il peut ultérieurement modifier ce choix depuis son profil.
+                    Lors de l&apos;inscription, le professionnel choisit son type d&apos;activité (transport de personnes, colis local en Tunisie ou colis international).
+                    Il peut ultérieurement modifier ce choix depuis son profil. Un transporteur de colis exerce soit en local, soit en international
+                    et, pour le local, indique les gouvernorats de départ qu&apos;il couvre (à défaut, toute la Tunisie).
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -173,13 +174,13 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Package size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900">4. Transport international de colis et marchandises</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">4. Transport de colis et marchandises (local et international)</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
                 Ce service permet aux clients de déposer une demande de devis (adresses, date souhaitée, description des objets,
-                photos et documents le cas échéant). Les transporteurs partenaires dont le profil et les disponibilités
-                correspondent reçoivent la demande et peuvent soumettre une proposition de prix libre.
+                photos et documents le cas échéant). Les transporteurs partenaires dont le service (local ou international) et, pour la livraison locale, les zones couvertes
+                correspondent reçoivent la demande et peuvent soumettre une proposition de prix libre. Un transporteur n&apos;a aucune disponibilité à renseigner.
               </p>
 
               <ul className="space-y-3 mb-4">
@@ -192,7 +193,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-600 rounded-full mt-2"></div>
                   <span className="text-gray-700">
-                    Les tarifs sont exprimés en EUR pour un trajet Europe → Tunisie et en TND pour un trajet Tunisie → Europe,
+                    Les tarifs sont exprimés en TND pour la livraison locale (Tunisie → Tunisie), et pour le transport international en EUR pour un trajet Europe → Tunisie ou en TND pour un trajet Tunisie → Europe,
                     selon la direction indiquée par le client.
                   </span>
                 </li>
@@ -254,7 +255,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Les chauffeurs et transporteurs peuvent être soumis à un abonnement mensuel pour l&apos;utilisation de la plateforme.</span>
+                  <span className="text-gray-700">Chaque nouveau chauffeur ou transporteur bénéficie de 2 courses gratuites au total, une seule fois, courses de personnes et colis acceptés confondus. Ensuite, un abonnement « Pro » (mensuel ou annuel) est nécessaire pour accepter de nouvelles courses ou envoyer de nouvelles propositions de devis.</span>
                 </li>
               </ul>
             </div>
@@ -275,6 +276,10 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
+                  <span className="text-gray-700">Course immédiate : une fois qu&apos;un chauffeur a accepté, le client peut annuler gratuitement dans les 3 minutes suivant l&apos;acceptation ; au-delà, l&apos;annulation reste possible avec un motif et est enregistrée comme annulation tardive. Elle n&apos;est plus possible depuis l&apos;application après l&apos;arrivée du chauffeur au point de prise en charge, ni une fois la course démarrée.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">
                     Pour les demandes de devis colis, l&apos;annulation ou l&apos;abandon avant acceptation d&apos;une proposition peut être effectué
                     depuis l&apos;espace client ; après acceptation, les parties conviennent entre elles des conditions d&apos;annulation.
@@ -282,7 +287,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Toute annulation tardive ou répétée peut entraîner des pénalités ou la suspension du compte.</span>
+                  <span className="text-gray-700">Toute annulation tardive ou répétée peut entraîner des pénalités, une restriction d&apos;accès au service ou la suspension du compte.</span>
                 </li>
               </ul>
             </div>
@@ -342,7 +347,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 </div>
 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-3">Pour les transporteurs (colis internationaux) :</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3">Pour les transporteurs (colis locaux et internationaux) :</h4>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-gray-600 rounded-full mt-2"></div>
@@ -358,7 +363,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-gray-600 rounded-full mt-2"></div>
-                      <span className="text-gray-700 text-sm">Maintenir à jour ses disponibilités sur la plateforme pour un matching pertinent des demandes.</span>
+                      <span className="text-gray-700 text-sm">Disposer d&apos;un permis de conduire valide et, pour le local, indiquer ses zones de départ afin de ne recevoir que les demandes concernées.</span>
                     </li>
                   </ul>
                 </div>

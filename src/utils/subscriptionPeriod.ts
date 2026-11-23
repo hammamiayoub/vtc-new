@@ -49,7 +49,7 @@ const DATE_SHORT_OPTS: Intl.DateTimeFormatOptions = {
 export function getBillingPeriodLabel(billingPeriod?: SubscriptionBillingPeriod | null): string {
   if (billingPeriod === 'yearly') return 'Annuel';
   if (billingPeriod === 'monthly') return 'Mensuel';
-  return 'Premium';
+  return 'Pro';
 }
 
 export function formatSubscriptionPeriodRange(

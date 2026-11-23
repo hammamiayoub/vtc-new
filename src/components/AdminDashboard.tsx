@@ -2950,7 +2950,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             )}
                             {vehicle.isVip && (
                               <span className="inline-block mt-0.5 ml-1 text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded-full">
-                                VIP
+                                Premium
                               </span>
                             )}
                           </div>
@@ -3098,7 +3098,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           )}
                           {vehicle.isVip && (
                             <span className="inline-block mt-1 ml-1 text-xs bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full">
-                              VIP
+                              Premium
                             </span>
                           )}
                         </div>
@@ -5400,9 +5400,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       className="mt-1 h-4 w-4 rounded border-gray-300"
                     />
                     <span>
-                      <span className="block text-sm font-medium text-gray-900">Véhicule VIP</span>
+                      <span className="block text-sm font-medium text-gray-900">Véhicule Premium</span>
                       <span className="block text-xs text-gray-500">
-                        Cochez pour appliquer le tarif VIP (prix × 2,5). Décochez pour retirer ce critère.
+                        Cochez pour appliquer le tarif Premium (prix × 2,5). Décochez pour retirer ce critère.
                       </span>
                     </span>
                   </label>
@@ -5504,7 +5504,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <p className="text-sm text-gray-600 mb-1">Tarif</p>
                     {selectedVehicle.isVip ? (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
-                        VIP · prix × 2,5
+                        Premium · prix × 2,5
                       </span>
                     ) : (
                       <p className="font-semibold text-gray-900">Standard</p>

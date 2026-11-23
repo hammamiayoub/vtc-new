@@ -372,10 +372,10 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
               onChange={(e) => setForm({ ...form, isVip: e.target.checked })}
               className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
             />
-            Véhicule VIP
+            Véhicule Premium
           </label>
           <p className="text-[11px] text-gray-700">
-            Le mode VIP augmente le prix des courses ×2.5.
+            Le mode Premium augmente le prix des courses ×2.5.
           </p>
         </div>
         <div className="flex items-end">
@@ -512,7 +512,7 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                         onChange={(e)=>setEditForm({ ...editForm, [v.id]: { ...editForm[v.id], isVip: e.target.checked } })}
                       />
                       <label htmlFor={`vip-${v.id}`} className="text-xs text-gray-700">
-                        VIP (prix ×2.5)
+                        Premium (prix ×2.5)
                       </label>
                     </div>
                     <div className="col-span-2 flex items-center gap-2 mt-1">
@@ -533,7 +533,7 @@ export const DriverVehicles: React.FC<DriverVehiclesProps> = ({ driverId }) => {
                         <span className="text-xs px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200">{getVehicleTypeLabel(v.type)}</span>
                       )}
                       {v.isVip && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-900 text-white">VIP</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-900 text-white">Premium</span>
                       )}
                       {v.seats && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-success-50 text-success-700 border border-success-200">{v.seats} places</span>

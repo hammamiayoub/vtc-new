@@ -198,7 +198,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'pl9',
         question: 'Do I need a subscription to be a local carrier?',
         answer:
-          'The same rules as for drivers apply: 2 free rides in total, then the Premium plan. Private-hire rides and parcel deliveries share that allowance.\n\nA ride is counted when a client accepts your offer. Sending offers is blocked once the allowance is used up without an active subscription.',
+          'The same rules as for drivers apply: 2 free rides in total, then the Pro plan. Private-hire rides and parcel deliveries share that allowance.\n\nA ride is counted when a client accepts your offer. Sending offers is blocked once the allowance is used up without an active subscription.',
       },
     ],
   },
@@ -229,7 +229,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'd4',
         question: 'How much is the driver subscription?',
         answer:
-          'The premium plan is:\n• Monthly: 30 TND excl. tax / month (about 35.70 TND incl. 19% VAT)\n• Yearly: 10% off the monthly price\n\nWithout a subscription you get a limited number of free rides to try the platform.',
+          'The Pro plan is:\n• Monthly: 30 TND excl. tax / month (about 35.70 TND incl. 19% VAT)\n• Yearly: 10% off the monthly price\n\nWithout a subscription you get a limited number of free rides to try the platform.',
       },
       {
         id: 'd5',
@@ -241,7 +241,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'd6',
         question: 'How many free rides do I get without a subscription?',
         answer:
-          'Each new driver gets 2 free rides in total (one-time offer, not reset every month).\n\nAfter those 2 rides, the Premium plan is required to accept new rides.\n\nParcel deliveries count too: a ride is counted when a client accepts your offer.',
+          'Each new driver gets 2 free rides in total (one-time offer, not reset every month).\n\nAfter those 2 rides, the Pro plan is required to accept new rides.\n\nParcel deliveries count too: a ride is counted when a client accepts your offer.',
       },
       {
         id: 'd7',

@@ -77,7 +77,7 @@ export const TransporteurRequests: React.FC<TransporteurRequestsProps> = ({
         console.error(err);
         if (err instanceof Error && err.message === SUBSCRIPTION_REQUIRED_ERROR) {
           alert(
-            'Vous avez utilisé vos courses gratuites. Souscrivez à l\'abonnement Premium (onglet « Abonnement ») pour continuer à envoyer des propositions.'
+            'Vous avez utilisé vos courses gratuites. Souscrivez à l\'abonnement Pro (onglet « Abonnement ») pour continuer à envoyer des propositions.'
           );
         } else {
           alert('Erreur lors de l\'envoi de la proposition.');

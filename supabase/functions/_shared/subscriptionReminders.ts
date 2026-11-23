@@ -100,7 +100,7 @@ export function formatDateFr(dateStr: string): string {
 function periodLabel(period: string | null): string {
   if (period === 'yearly') return 'annuel'
   if (period === 'monthly') return 'mensuel'
-  return 'Premium'
+  return 'Pro'
 }
 
 function fullName(first: string | null, last: string | null): string {
@@ -294,13 +294,13 @@ export function buildActivatedEmail(i: ActivationInfo, siteUrl: string): BuiltMe
   const name = escapeHtml(fullName(i.first_name, i.last_name) || 'chauffeur')
   const price = i.total_price_tnd != null ? `${escapeHtml(Number(i.total_price_tnd).toFixed(2))} TND` : null
   return {
-    subject: 'TuniDrive - Votre abonnement Premium est activé',
+    subject: 'TuniDrive - Votre abonnement Pro est activé',
     html: layout(
-      'Votre abonnement Premium est activé',
+      'Votre abonnement Pro est activé',
       `<p>Bonjour ${name},</p>
-       <p>Votre paiement a été validé : votre abonnement Premium TuniDrive est <strong>activé</strong>. Vous pouvez à nouveau accepter des courses sans limite.</p>
+       <p>Votre paiement a été validé : votre abonnement Pro TuniDrive est <strong>activé</strong>. Vous pouvez à nouveau accepter des courses sans limite.</p>
        ${detailRows([
-         ['Formule', `Premium ${escapeHtml(periodLabel(i.billing_period))}`],
+         ['Formule', `Pro ${escapeHtml(periodLabel(i.billing_period))}`],
          ['Début', i.start_date ? escapeHtml(formatDateFr(i.start_date)) : null],
          ['Fin', `<strong>${escapeHtml(formatDateFr(i.end_date))}</strong>`],
          ['Montant TTC', price],
@@ -319,11 +319,11 @@ export function buildExtendedEmail(
   const name = escapeHtml(fullName(i.first_name, i.last_name) || 'chauffeur')
   const label = extension ? escapeHtml(extensionLabel(extension.amount, extension.unit)) : null
   return {
-    subject: 'TuniDrive - Votre abonnement Premium a été prolongé',
+    subject: 'TuniDrive - Votre abonnement Pro a été prolongé',
     html: layout(
       'Votre abonnement a été prolongé',
       `<p>Bonjour ${name},</p>
-       <p>Votre abonnement Premium a été prolongé${label ? ` de <strong>${label}</strong>` : ''} par notre équipe.</p>
+       <p>Votre abonnement Pro a été prolongé${label ? ` de <strong>${label}</strong>` : ''} par notre équipe.</p>
        ${detailRows([
          ['Ancienne fin', extension?.previous_end_date ? escapeHtml(formatDateFr(extension.previous_end_date)) : null],
          ['Nouvelle fin', `<strong>${escapeHtml(formatDateFr(i.end_date))}</strong>`],

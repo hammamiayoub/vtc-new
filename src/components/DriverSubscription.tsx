@@ -558,7 +558,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
 
   const whatsappHref = pendingRequest
     ? `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(
-        `Bonjour, j'ai payé mon abonnement Premium ${pendingRequest.billingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'} (${tnd(pendingRequest.totalPriceTnd)}).\n\nRéférence : ${transferMotif}`,
+        `Bonjour, j'ai payé mon abonnement Pro ${pendingRequest.billingPeriod === 'yearly' ? 'ANNUEL' : 'MENSUEL'} (${tnd(pendingRequest.totalPriceTnd)}).\n\nRéférence : ${transferMotif}`,
       )}`
     : '';
 
@@ -577,7 +577,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
       )}
 
       {expiredOn && !pendingRequest && (
-        <Alert tone="danger" title={`Votre abonnement Premium a expiré le ${formatDateOnly(expiredOn)}`}>
+        <Alert tone="danger" title={`Votre abonnement Pro a expiré le ${formatDateOnly(expiredOn)}`}>
           Souscrivez de nouveau ci-dessous pour recommencer à accepter des courses.
         </Alert>
       )}
@@ -600,7 +600,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
             </div>
             <div>
               <h3 className={cn('text-xl font-semibold', isPremium ? 'text-white' : 'text-gray-900')}>
-                {isPremium ? 'Abonnement Premium' : 'Compte gratuit'}
+                {isPremium ? 'Abonnement Pro' : 'Compte gratuit'}
               </h3>
               <p className={cn('text-sm', isPremium ? 'text-white/90' : 'text-gray-600')}>
                 {isPremium ? 'Courses illimitées' : `${FREE_RIDES_QUOTA} courses gratuites`}
@@ -857,7 +857,7 @@ export const DriverSubscription: React.FC<DriverSubscriptionProps> = ({ driverId
       {!pendingRequest && (
         <section className="bg-white border border-surface-border rounded-xl p-6" aria-labelledby="subscription-offer-title">
           <h3 id="subscription-offer-title" className="text-2xl font-semibold text-gray-900 mb-2">
-            {isPremium ? 'Renouveler mon abonnement' : 'Passez au Premium'}
+            {isPremium ? 'Renouveler mon abonnement' : 'Passez à Pro'}
           </h3>
           <p className="text-gray-700 mb-6">
             {isPremium

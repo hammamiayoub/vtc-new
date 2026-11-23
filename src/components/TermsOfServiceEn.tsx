@@ -51,7 +51,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
             </p>
             <ul className="text-lg text-gray-700 mb-4 list-disc pl-6 space-y-1">
               <li>booking trips in a vehicle with a driver (private hire);</li>
-              <li>requesting and proposing quotes for the international transport of parcels and goods between Europe and Tunisia.</li>
+              <li>requesting and proposing quotes for the transport of parcels and goods, within Tunisia (local delivery) or between Europe and Tunisia (international transport).</li>
             </ul>
             <p className="text-lg text-gray-700 mb-4 leading-relaxed">
               TuniDrive is not a carrier. It does not operate a public passenger-transport service within the meaning of
@@ -86,7 +86,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                   <h4 className="font-semibold text-gray-900 mb-2">Partner drivers and carriers:</h4>
                   <p className="text-gray-700">
                     independent professionals registered on the platform according to their activity:
-                    passenger transport (private hire), international parcel transport, or both. They offer their
+                    passenger transport (private hire), local parcel delivery within Tunisia, international parcel transport, or passengers and parcels. They offer their
                     services and prices independently.
                   </p>
                 </div>
@@ -109,8 +109,9 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">
-                    When signing up, the professional chooses an activity type (passenger transport or parcel transport).
-                    That choice can later be changed from the profile.
+                    When signing up, the professional chooses an activity type (passenger transport, local parcels within Tunisia, or international parcels).
+                    That choice can later be changed from the profile. A parcel carrier operates either locally or internationally and,
+                    for local, states the pickup governorates they cover (otherwise all of Tunisia).
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -161,13 +162,13 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Package size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900">4. International transport of parcels and goods</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">4. Parcel and goods transport (local and international)</h2>
               </div>
 
               <p className="text-gray-700 mb-4">
                 This service lets customers submit a quote request (addresses, preferred date, description of the items,
-                and photos or documents where relevant). Partner carriers whose profile and availability match
-                receive the request and may submit their own price offer.
+                and photos or documents where relevant). Partner carriers whose service (local or international) and, for local delivery, covered areas match
+                receive the request and may submit their own price offer. A carrier has no availability to enter.
               </p>
 
               <ul className="space-y-3 mb-4">
@@ -180,7 +181,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-600 rounded-full mt-2"></div>
                   <span className="text-gray-700">
-                    Prices are shown in EUR for a Europe → Tunisia trip and in TND for a Tunisia → Europe trip,
+                    Prices are shown in TND for local delivery (Tunisia → Tunisia), and for international transport in EUR for a Europe → Tunisia trip or TND for a Tunisia → Europe trip,
                     according to the direction chosen by the customer.
                   </span>
                 </li>
@@ -241,7 +242,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Drivers and carriers may be charged a monthly subscription to use the platform.</span>
+                  <span className="text-gray-700">Each new driver or carrier gets 2 free rides in total, once only, passenger rides and accepted parcel requests combined. After that, a “Pro” subscription (monthly or yearly) is required to accept new rides or send new quotes.</span>
                 </li>
               </ul>
             </div>
@@ -261,6 +262,10 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
+                  <span className="text-gray-700">Immediate ride: once a driver has accepted, the customer may cancel free of charge within 3 minutes of acceptance; after that, cancelling is still possible with a reason and is recorded as a late cancellation. It is no longer possible in the app once the driver has arrived at the pickup point, or once the ride has started.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">
                     For parcel quote requests, cancellation or withdrawal before an offer is accepted can be done
                     from the customer account; after acceptance, the parties agree the cancellation terms between themselves.
@@ -268,7 +273,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">A late or repeated cancellation may lead to penalties or to suspension of the account.</span>
+                  <span className="text-gray-700">A late or repeated cancellation may lead to penalties, restricted access to the service or suspension of the account.</span>
                 </li>
               </ul>
             </div>
@@ -327,7 +332,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 </div>
 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-3">For carriers (international parcels):</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3">For carriers (local and international parcels):</h4>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-gray-600 rounded-full mt-2"></div>
@@ -343,7 +348,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-gray-600 rounded-full mt-2"></div>
-                      <span className="text-gray-700 text-sm">Keep availability up to date on the platform so requests can be matched properly.</span>
+                      <span className="text-gray-700 text-sm">Hold a valid driving licence and, for local, state your pickup areas so you only receive the relevant requests.</span>
                     </li>
                   </ul>
                 </div>
