@@ -315,6 +315,10 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">Ne publier aucune photo ni aucun contenu illicite, pornographique, violent, haineux ou portant atteinte à autrui (photo de profil, photo de véhicule, etc.). Les photos sont vérifiées automatiquement et peuvent l&apos;être par nos équipes.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
                       <span className="text-gray-700 text-sm">Pour les envois de colis : fournir une description exacte du contenu et respecter la réglementation douanière applicable.</span>
                     </li>
                   </ul>
@@ -460,6 +464,10 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">Fausses informations fournies lors de l'inscription.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
+                  <span className="text-gray-700">Publication de contenus inappropriés (photo de profil ou de véhicule à caractère pornographique, violent, haineux ou illicite) : le contenu est supprimé et le compte peut être suspendu immédiatement et sans préavis, puis supprimé en cas de récidive.</span>
                 </li>
               </ul>
             </div>

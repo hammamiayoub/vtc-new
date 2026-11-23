@@ -49,12 +49,14 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({ status, 
   );
 };
 
-type DriverAccountStatus = 'active' | 'pending' | 'rejected';
+type DriverAccountStatus = 'active' | 'pending' | 'rejected' | 'suspended';
 
 const DRIVER_STATUS: Record<DriverAccountStatus, { tone: BadgeTone; icon: LucideIcon; label: string }> = {
   active: { tone: 'success', icon: CheckCircle, label: 'Actif' },
   pending: { tone: 'warning', icon: Clock, label: 'En attente' },
   rejected: { tone: 'danger', icon: XCircle, label: 'Rejeté' },
+  // Suspendu après un signalement (onglet Signalements) : connexion bloquée
+  suspended: { tone: 'danger', icon: AlertTriangle, label: 'Suspendu' },
 };
 
 /** Statut d'un compte chauffeur (espace admin). */
