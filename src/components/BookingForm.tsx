@@ -947,9 +947,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               {vipMultiplier > 1 && (
                   <div className="mb-4 rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
                     {en ? (
-                      <>This vehicle is marked <strong>VIP</strong>: the fare is higher than a standard vehicle.</>
+                      <>This vehicle is marked <strong>Premium</strong>: the fare is higher than a standard vehicle.</>
                     ) : (
-                      <>Ce véhicule est marqué <strong>VIP</strong> : le prix est plus élevé qu’un véhicule classique.</>
+                      <>Ce véhicule est marqué <strong>Premium</strong> : le prix est plus élevé qu’un véhicule classique.</>
                     )}
                 </div>
               )}
@@ -1042,7 +1042,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                           value={`×${String(vehicleMultiplier).replace('.', en ? '.' : ',')}`}
                         />
                       )}
-                      {vipMultiplier > 1 && <DetailRow label="VIP" value={`×${String(vipMultiplier).replace('.', en ? '.' : ',')}`} />}
+                      {vipMultiplier > 1 && <DetailRow label="Premium" value={`×${String(vipMultiplier).replace('.', en ? '.' : ',')}`} />}
                       {approachSurcharge > 0 && (
                         <DetailRow
                           label={en ? 'Long-distance approach' : 'Approche longue distance'}

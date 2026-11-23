@@ -147,7 +147,7 @@ export function DriverSearchResultCard({
                   </p>
                   {vehicle.isVip && (
                     <span className="ml-auto inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold bg-gray-100 text-gray-800">
-                      VIP
+                      Premium
                     </span>
                   )}
                 </div>

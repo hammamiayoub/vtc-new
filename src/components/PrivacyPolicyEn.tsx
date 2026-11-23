@@ -46,7 +46,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
             <p className="text-lg text-gray-700 mb-8 leading-relaxed">
               This privacy policy describes how TuniDrive.net collects, uses, stores and protects your personal data
               when you use our platform to book private-hire trips, submit quote requests for the international transport
-              of parcels and goods (Europe ↔ Tunisia), or offer your services as a partner driver or carrier.
+              of parcels and goods (within Tunisia or Europe ↔ Tunisia), or offer your services as a partner driver or carrier.
             </p>
 
             <div className="mb-10">
@@ -75,7 +75,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Parcel quote requests:</h4>
                   <p className="text-gray-700">
-                    trip direction (Europe → Tunisia or the reverse), addresses, preferred date, description of the items
+                    type of service (local within Tunisia or international), trip direction (Europe → Tunisia or the reverse), addresses (and pickup and delivery governorates for a local delivery), preferred date, description of the items
                     (name, quantity, weight, volume), notes, photos and attached documents (invoices, supporting documents),
                     carriers&apos; price offers and the status of the request.
                   </p>
@@ -84,7 +84,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Driver / carrier profile:</h4>
                   <p className="text-gray-700">
-                    activity type (passenger transport, parcel transport, or both), availability,
+                    activity type (passenger transport, local parcels, international parcels, or several), pickup governorates covered (local carriers), availability (passenger drivers),
                     vehicles, city, licence and professional information provided at signup or in the profile.
                   </p>
                 </div>
@@ -96,12 +96,12 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Location data:</h4>
-                  <p className="text-gray-700">only when you allow your position to be shared, so we can help connect you with a driver.</p>
+                  <p className="text-gray-700">only when you allow your position to be shared, so we can help connect you with a driver. For local parcel carriers, the pickup governorates they declare covering are stored so that they only receive the relevant requests.</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Technical data:</h4>
-                  <p className="text-gray-700">IP address, browser type, device used, session cookies and user preferences.</p>
+                  <p className="text-gray-700">IP address, browser type, device used, session cookies and user preferences; in the mobile app, a push notification token (to alert you of a new request, an offer or a cancellation) and the device advertising identifier, used only for audience measurement (usage analytics) and not for advertising.</p>
                 </div>
               </div>
             </div>
@@ -129,7 +129,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Manage parcel quote requests, match them to availability and compare offers.</span>
+                  <span className="text-gray-700">Manage parcel quote requests, send them to carriers of the relevant service (local or international) and area, and compare offers. Track cancellations (reason and whether late) to limit abuse.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
@@ -333,14 +333,14 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Package size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900">8. Data related to parcel transport</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">8. Data related to parcel transport (local and international)</h2>
               </div>
 
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-600 rounded-full mt-2"></div>
                   <span className="text-gray-700">
-                    When you submit a request, you are informed that carriers matching your date and your route
+                    When you submit a request, you are informed that carriers matching the chosen service (local or international) and, for a local delivery, your pickup area
                     may see the information and attachments needed to prepare a quote.
                   </span>
                 </li>

@@ -209,7 +209,7 @@ export const faqCategories: FaqCategory[] = [
         id: "pl9",
         question: "Faut-il un abonnement pour être transporteur local ?",
         answer:
-          "Les mêmes règles que pour les chauffeurs s'appliquent : 2 courses gratuites à vie, puis l'abonnement Premium. Les courses VTC et les livraisons de colis partagent ce quota.\n\nUne course est décomptée lorsqu'un client accepte votre offre. L'envoi de propositions est bloqué une fois le quota épuisé sans abonnement actif.",
+          "Les mêmes règles que pour les chauffeurs s'appliquent : 2 courses gratuites à vie, puis l'abonnement Pro. Les courses VTC et les livraisons de colis partagent ce quota.\n\nUne course est décomptée lorsqu'un client accepte votre offre. L'envoi de propositions est bloqué une fois le quota épuisé sans abonnement actif.",
       },
     ],
   },
@@ -240,7 +240,7 @@ export const faqCategories: FaqCategory[] = [
         id: "d4",
         question: "Combien coûte l'abonnement chauffeur ?",
         answer:
-          "L'abonnement premium est proposé à :\n• Mensuel : 30 TND HT / mois (soit ~35,70 TND TTC avec 19% de TVA)\n• Annuel : 10% de réduction sur le tarif mensuel\n\nSans abonnement, vous bénéficiez d'un nombre limité de courses gratuites pour tester la plateforme.",
+          "L'abonnement Pro est proposé à :\n• Mensuel : 30 TND HT / mois (soit ~35,70 TND TTC avec 19% de TVA)\n• Annuel : 10% de réduction sur le tarif mensuel\n\nSans abonnement, vous bénéficiez d'un nombre limité de courses gratuites pour tester la plateforme.",
       },
       {
         id: "d5",
@@ -252,7 +252,7 @@ export const faqCategories: FaqCategory[] = [
         id: "d6",
         question: "Combien de courses gratuites ai-je sans abonnement ?",
         answer:
-          "Chaque nouveau chauffeur bénéficie de 2 courses gratuites à vie (offre valable une seule fois, sans reset mensuel).\n\nUne fois ces 2 courses utilisées, l'abonnement Premium est nécessaire pour continuer à accepter de nouvelles courses.\n\nLes livraisons de colis comptent aussi : une course est décomptée quand un client accepte votre offre.",
+          "Chaque nouveau chauffeur bénéficie de 2 courses gratuites à vie (offre valable une seule fois, sans reset mensuel).\n\nUne fois ces 2 courses utilisées, l'abonnement Pro est nécessaire pour continuer à accepter de nouvelles courses.\n\nLes livraisons de colis comptent aussi : une course est décomptée quand un client accepte votre offre.",
       },
       {
         id: "d7",

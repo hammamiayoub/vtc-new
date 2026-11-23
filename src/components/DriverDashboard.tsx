@@ -304,6 +304,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       .catch((err) => console.error('Erreur refresh colis (onglet courses):', err));
   }, [activeTab, driver?.id, driver?.driverType]);
 
+  // Un transporteur de colis pur n'a pas de disponibilités à saisir : on le ramène au tableau de bord
+  // si l'onglet est ouvert (ancien lien, onglet mémorisé…).
+  useEffect(() => {
+    if (activeTab === 'availability' && driver?.driverType === 'transporteur') {
+      setActiveTab('dashboard');
+    }
+  }, [activeTab, driver?.driverType]);
+
   // Fonction pour rafraîchir les réservations après une action
   const refreshBookings = async () => {
     if (driver) {
@@ -374,7 +382,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           alert(
             '❌ Limite de courses gratuites atteinte\n\n' +
             'Vous avez déjà accepté 2 courses avec votre compte gratuit.\n\n' +
-            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Premium (35.70 TND/mois).\n\n' +
+            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Pro (35.70 TND/mois).\n\n' +
             'Rendez-vous dans l\'onglet "Abonnement" pour plus d\'informations.'
           );
           return;
@@ -403,7 +411,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           alert(
             '❌ Limite de courses gratuites atteinte\n\n' +
             'Vous avez déjà accepté 2 courses avec votre compte gratuit.\n\n' +
-            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Premium (35.70 TND/mois).\n\n' +
+            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Pro (35.70 TND/mois).\n\n' +
             'Rendez-vous dans l\'onglet "Abonnement" pour plus d\'informations.'
           );
           await checkSubscriptionStatus();
@@ -871,6 +879,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   );
   const showParcelInBookings =
     driver?.driverType === 'transporteur' || driver?.driverType === 'both';
+  // Les transporteurs de colis proposent librement un devis : aucune disponibilité à renseigner
+  const hidesAvailability = driver?.driverType === 'transporteur';
   const totalTripsCount = bookings.length + (showParcelInBookings ? parcelTrips.length : 0);
 
   console.log('📊 Statistiques chauffeur:', {
@@ -902,10 +912,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   const subscriptionModalMessage = premiumExpired
     ? `${
         expirationDateString
-          ? `Votre abonnement Premium a expiré le ${expirationDateString}.`
-          : 'Votre dernier abonnement Premium est arrivé à expiration.'
+          ? `Votre abonnement Pro a expiré le ${expirationDateString}.`
+          : 'Votre dernier abonnement Pro est arrivé à expiration.'
       } Souscrivez à un nouvel abonnement pour continuer à recevoir des courses.`
-    : 'Vous avez utilisé vos 2 courses gratuites. Souscrivez à l\'abonnement Premium pour continuer à recevoir des courses.';
+    : 'Vous avez utilisé vos 2 courses gratuites. Souscrivez à l\'abonnement Pro pour continuer à recevoir des courses.';
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 pb-[var(--td-bottom-nav-offset,0px)]">
@@ -957,7 +967,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         onChange={handleTabChange}
         tabs={[
           { id: 'dashboard', label: 'Tableau de bord' },
-          { id: 'availability', label: 'Mes disponibilités' },
+          { id: 'availability', label: 'Mes disponibilités', hidden: hidesAvailability },
           { id: 'vehicles', label: 'Mes véhicules' },
           { id: 'bookings', label: `Mes courses (${totalTripsCount})`, alertCount: pendingBookings.length },
           {
@@ -989,14 +999,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   Vous avez accepté vos 2 courses gratuites. Vous ne pouvez plus accepter de nouvelles courses.
                 </p>
                 <p className="text-warning-900 font-semibold mb-4">
-                  Passez à l'abonnement Premium pour continuer à recevoir des courses !
+                  Passez à l'abonnement Pro pour continuer à recevoir des courses !
                 </p>
                 <div className="flex gap-3">
                   <Button
                     onClick={() => setActiveTab('subscription')}
                     className="bg-black hover:bg-gray-800 text-white font-semibold"
                   >
-                    Voir l'abonnement Premium
+                    Voir l'abonnement Pro
                   </Button>
                 </div>
               </div>
@@ -1262,7 +1272,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     ['Vérification des documents', 'Nos équipes vérifient votre permis de conduire et les documents du véhicule'],
                     ['Validation administrative', 'Un administrateur valide votre compte (24-48h)'],
                     ['Configuration des disponibilités', 'Définissez vos créneaux de disponibilité pour recevoir des courses'],
-                  ].map(([title, text], index) => (
+                  ].filter(([title]) => !(hidesAvailability && title === 'Configuration des disponibilités')).map(([title, text], index) => (
                     <li key={title} className="flex items-start gap-3">
                       <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-700">
                         {index + 1}
@@ -1276,6 +1286,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 </ol>
               </details>
 
+              {!hidesAvailability && (
               <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
                 <h4 className="mb-2 flex items-center gap-2 font-semibold text-gray-900">
                   <Lightbulb className="h-4 w-4 text-gray-700" aria-hidden="true" />
@@ -1294,6 +1305,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   Plus vous êtes disponible, plus vous aurez de chances de recevoir des demandes de course.
                 </p>
               </div>
+              )}
             </div>
 
             {/* Next Steps */}
@@ -1334,6 +1346,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                   </div>
                 </li>
 
+                {!hidesAvailability && (
                 <li className={`flex items-center gap-4 rounded-lg border border-gray-200 p-4 ${driver?.status === 'active' ? 'bg-gray-50' : ''}`}>
                   <StepMarker n={3} state={driver?.status === 'active' ? 'current' : 'todo'} />
                   <div className="flex-1 min-w-0">
@@ -1355,6 +1368,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                     </Button>
                   )}
                 </li>
+                )}
               </ol>
             </div>
 
@@ -1364,7 +1378,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         )}
 
         {/* Onglet Disponibilités */}
-        {!showProfileForm && activeTab === 'availability' && driver && (
+        {!showProfileForm && activeTab === 'availability' && !hidesAvailability && driver && (
           <div className="w-full">
             <AvailabilityCalendar driverId={driver.id} />
           </div>
@@ -1406,7 +1420,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings && (
               <div className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <p className="text-sm text-warning-900">
-                  Vous avez utilisé vos courses gratuites. Un abonnement Premium est nécessaire pour
+                  Vous avez utilisé vos courses gratuites. Un abonnement Pro est nécessaire pour
                   envoyer de nouvelles propositions (courses et colis).
                 </p>
                 <Button size="sm" onClick={() => setActiveTab('subscription')}>
@@ -1961,7 +1975,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             icon: Package,
             hidden: !(driver?.driverType === 'transporteur' || driver?.driverType === 'both'),
           },
-          { id: 'availability', label: 'Dispos', icon: CalendarDays },
+          { id: 'availability', label: 'Dispos', icon: CalendarDays, hidden: hidesAvailability },
           { id: 'vehicles', label: 'Véhicules', icon: Car },
           { id: 'subscription', label: 'Abonnement', icon: CreditCard },
         ]}

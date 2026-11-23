@@ -55,7 +55,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               La présente Politique de confidentialité décrit la manière dont TuniDrive.net collecte,
               utilise, conserve et protège vos données personnelles lorsque vous utilisez notre plateforme
               pour réserver des trajets VTC, déposer des demandes de devis pour le transport international
-              de colis et marchandises (Europe ↔ Tunisie), ou proposer vos services en tant que chauffeur
+              de colis et marchandises (en Tunisie ou Europe ↔ Tunisie), ou proposer vos services en tant que chauffeur
               ou transporteur partenaire.
             </p>
 
@@ -86,7 +86,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Demandes de devis colis :</h4>
                   <p className="text-gray-700">
-                    direction du trajet (Europe → Tunisie ou inverse), adresses, date souhaitée, description des objets
+                    type de service (local en Tunisie ou international), direction du trajet (Europe → Tunisie ou inverse), adresses (et gouvernorats de départ et d&apos;arrivée pour une livraison locale), date souhaitée, description des objets
                     (nom, quantité, poids, volume), notes, photos et documents joints (factures, justificatifs), propositions
                     de prix des transporteurs et statut de la demande.
                   </p>
@@ -95,7 +95,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Profil chauffeur / transporteur :</h4>
                   <p className="text-gray-700">
-                    type d&apos;activité (transport de personnes, transport de colis, ou les deux), disponibilités,
+                    type d&apos;activité (transport de personnes, colis local, colis international, ou plusieurs), gouvernorats de départ couverts (transporteurs locaux), disponibilités (chauffeurs de personnes),
                     véhicules, ville, permis et informations professionnelles fournies à l&apos;inscription ou dans le profil.
                   </p>
                 </div>
@@ -107,12 +107,12 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Données de localisation :</h4>
-                  <p className="text-gray-700">uniquement lorsque vous autorisez le partage de votre position pour faciliter la mise en relation avec un chauffeur.</p>
+                  <p className="text-gray-700">uniquement lorsque vous autorisez le partage de votre position pour faciliter la mise en relation avec un chauffeur. Pour les transporteurs de colis locaux, les gouvernorats de départ qu&apos;ils déclarent couvrir sont enregistrés afin de ne leur adresser que les demandes concernées.</p>
                 </div>
                 
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Données techniques :</h4>
-                  <p className="text-gray-700">adresse IP, type de navigateur, appareil utilisé, cookies de session et préférences utilisateur.</p>
+                  <p className="text-gray-700">adresse IP, type de navigateur, appareil utilisé, cookies de session et préférences utilisateur ; sur l&apos;application mobile, jeton de notification push (pour vous alerter d&apos;une nouvelle demande, d&apos;une offre ou d&apos;une annulation) et identifiant publicitaire de l&apos;appareil, utilisé uniquement à des fins de mesure d&apos;audience (analyse d&apos;usage) et non pour de la publicité.</p>
                 </div>
               </div>
             </div>
@@ -141,7 +141,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Gérer les demandes de devis colis, le matching selon les disponibilités et la comparaison des propositions.</span>
+                  <span className="text-gray-700">Gérer les demandes de devis colis, leur transmission aux transporteurs du service (local ou international) et de la zone concernés, et la comparaison des propositions. Suivre les annulations (motif et caractère tardif) afin de limiter les abus.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
@@ -351,14 +351,14 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <Package size={24} className="text-gray-700" />
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900">8. Données relatives au transport de colis</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">8. Données relatives au transport de colis (local et international)</h2>
               </div>
 
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-600 rounded-full mt-2"></div>
                   <span className="text-gray-700">
-                    En déposant une demande, vous êtes informé que les transporteurs correspondant à votre date et à votre trajet
+                    En déposant une demande, vous êtes informé que les transporteurs correspondant au service choisi (local ou international) et, pour une livraison locale, à votre zone de départ
                     pourront consulter les informations et pièces jointes utiles à l&apos;établissement d&apos;un devis.
                   </span>
                 </li>
