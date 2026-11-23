@@ -1,5 +1,32 @@
 import { supabase } from '../lib/supabase';
 
+/**
+ * Fait analyser la photo qui vient d'être envoyée (fonction Edge « moderate-image »).
+ * Photo inappropriée : elle est supprimée côté serveur et on lève une erreur AVANT tout enregistrement en base.
+ * Analyse indisponible (réseau, service) : on continue pour ne pas bloquer l'utilisateur.
+ */
+const moderateImage = async (bucket: 'profile-photos' | 'vehicle-photos', path: string): Promise<void> => {
+  let data: { approved?: boolean; reason?: string } | null = null;
+  try {
+    const res = await supabase.functions.invoke('moderate-image', { body: { bucket, path } });
+    if (res.error) {
+      console.warn('Modération indisponible, envoi conservé:', res.error.message);
+      return;
+    }
+    data = res.data;
+  } catch (e) {
+    console.warn('Modération indisponible, envoi conservé:', e);
+    return;
+  }
+  if (data?.approved === false) {
+    throw new Error(
+      data.reason === 'too_large'
+        ? 'Cette photo est trop volumineuse. Choisissez une photo plus légère.'
+        : 'Cette photo a été refusée car elle ne respecte pas nos règles (contenu inapproprié). Choisissez une autre photo.'
+    );
+  }
+};
+
 export const uploadVehicleImage = async (
   file: File, 
   driverId: string
@@ -32,6 +59,8 @@ export const uploadVehicleImage = async (
     }
 
     console.log('✅ Upload véhicule réussi:', uploadData);
+
+    await moderateImage('vehicle-photos', filePath);
 
     // Obtenir l'URL publique
     const { data: urlData } = supabase.storage
@@ -143,6 +172,8 @@ export const uploadVehiclePhotoForVehicle = async (
     .from('vehicle-photos')
     .upload(filePath, file, { cacheControl: '3600', upsert: false });
   if (uploadError) throw uploadError;
+
+  await moderateImage('vehicle-photos', filePath);
 
   const { data: urlData } = supabase.storage
     .from('vehicle-photos')
@@ -295,6 +326,8 @@ export const uploadProfileImage = async (
     }
 
     console.log('✅ Upload réussi:', uploadData);
+
+    await moderateImage('profile-photos', filePath);
 
     // Obtenir l'URL publique
     const { data: urlData } = supabase.storage

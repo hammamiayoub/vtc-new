@@ -75,7 +75,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Informations de compte :</h4>
-                  <p className="text-gray-700">nom, prénom, adresse email, numéro de téléphone, mot de passe.</p>
+                  <p className="text-gray-700">nom, prénom, adresse email, numéro de téléphone, mot de passe, photo de profil (facultative) et, pour les chauffeurs, photos de leur véhicule.</p>
                 </div>
                 
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -161,7 +161,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Respecter nos obligations légales et prévenir toute fraude ou usage abusif.</span>
+                  <span className="text-gray-700">Respecter nos obligations légales et prévenir toute fraude ou usage abusif, notamment en faisant vérifier automatiquement les photos de profil et de véhicule afin de refuser les contenus inappropriés (nudité, violence explicite). Seul le résultat de la vérification (accepté ou refusé) est conservé ; une photo refusée est supprimée immédiatement.</span>
                 </li>
               </ul>
             </div>
@@ -190,7 +190,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Les prestataires techniques :</h4>
-                  <p className="text-gray-700">hébergement, envoi d'email/SMS, paiement sécurisé.</p>
+                  <p className="text-gray-700">hébergement, envoi d'email/SMS, paiement sécurisé et vérification automatisée des photos (OpenAI, société établie aux États-Unis : les photos de profil et de véhicule lui sont transmises, sans votre nom ni votre identifiant, uniquement pour détecter les contenus inappropriés).</p>
                 </div>
                 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

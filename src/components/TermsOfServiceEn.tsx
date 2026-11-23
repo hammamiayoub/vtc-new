@@ -300,6 +300,10 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
+                      <span className="text-gray-700 text-sm">Do not post any unlawful, pornographic, violent or hateful content, or content that harms others (profile photo, vehicle photo, etc.). Photos are checked automatically and may also be reviewed by our team.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2"></div>
                       <span className="text-gray-700 text-sm">For parcel shipments: provide an accurate description of the contents and comply with the applicable customs rules.</span>
                     </li>
                   </ul>
@@ -440,6 +444,10 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
                   <span className="text-gray-700">False information provided at signup.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
+                  <span className="text-gray-700">Posting inappropriate content (a pornographic, violent, hateful or unlawful profile or vehicle photo): the content is removed and the account may be suspended immediately and without notice, then deleted in case of repeat offences.</span>
                 </li>
               </ul>
             </div>

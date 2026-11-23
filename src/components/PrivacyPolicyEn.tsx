@@ -64,7 +64,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Account information:</h4>
-                  <p className="text-gray-700">first name, last name, email address, phone number, password.</p>
+                  <p className="text-gray-700">first name, last name, email address, phone number, password, profile photo (optional) and, for drivers, photos of their vehicle.</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -149,7 +149,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Meet our legal obligations and prevent fraud or misuse.</span>
+                  <span className="text-gray-700">Meet our legal obligations and prevent fraud or misuse, including by automatically checking profile and vehicle photos so that inappropriate content (nudity, graphic violence) is rejected. Only the result of the check (accepted or rejected) is kept; a rejected photo is deleted immediately.</span>
                 </li>
               </ul>
             </div>
@@ -177,7 +177,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Technical providers:</h4>
-                  <p className="text-gray-700">hosting, email/SMS delivery, secure payment.</p>
+                  <p className="text-gray-700">hosting, email/SMS delivery, secure payment and automated photo checks (OpenAI, a company based in the United States: profile and vehicle photos are sent to it, without your name or identifier, solely to detect inappropriate content).</p>
                 </div>
 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

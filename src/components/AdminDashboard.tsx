@@ -25,8 +25,12 @@ import {
   FileText,
   Star,
   SlidersHorizontal,
+  Flag,
+  ShieldCheck,
+  ShieldOff,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
+import { AdminReports } from './AdminReports';
 import { AdminBlogPosts } from './AdminBlogPosts';
 import { AdminPricing } from './AdminPricing';
 import { DriverRatingDisplay } from './DriverRatingDisplay';
@@ -92,7 +96,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminTabId = 'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings' | 'parcels' | 'blog' | 'pricing';
+type AdminTabId = 'drivers' | 'clients' | 'vehicles' | 'subscriptions' | 'bookings' | 'parcels' | 'reports' | 'blog' | 'pricing';
 
 interface VehicleWithDriver extends Vehicle {
   driver?: {
@@ -325,11 +329,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTabId>('drivers');
+  const [openReportsCount, setOpenReportsCount] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [driverRatings, setDriverRatings] = useState<Map<string, AdminDriverRatingStats>>(new Map());
   const [driverSearch, setDriverSearch] = useState('');
-  const [driverStatusFilter, setDriverStatusFilter] = useState<'all' | 'pending' | 'active' | 'rejected'>('all');
+  const [clientStatusFilter, setClientStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
+  const [driverStatusFilter, setDriverStatusFilter] = useState<'all' | 'pending' | 'active' | 'rejected' | 'suspended'>('all');
   const [bookingSearch, setBookingSearch] = useState('');
   const [bookingStatusFilter, setBookingStatusFilter] = useState<'all' | 'ongoing' | AdminBooking['status']>('all');
   const [statusConfirm, setStatusConfirm] = useState<{ driver: AdminDriver; newStatus: string } | null>(null);
@@ -400,6 +406,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
+  }, [isAuthenticated]);
+
+  // Nombre de signalements à traiter (pastille de l'onglet « Signalements »)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const loadOpenReports = async () => {
+      const { count } = await supabase
+        .from('user_reports')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'open');
+      if (count !== null) setOpenReportsCount(count);
+    };
+    loadOpenReports();
+    const interval = window.setInterval(loadOpenReports, 60000);
+    return () => window.clearInterval(interval);
   }, [isAuthenticated]);
 
   // Préparer le formulaire de validation de paiement à l'ouverture d'un abonnement
@@ -1534,6 +1555,46 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     );
   };
 
+  /**
+   * Suspend ou réactive un compte (client ou chauffeur) via la fonction Edge admin-moderate-user :
+   * la suspension bloque la connexion, la réactivation la rétablit et restaure le statut d'avant.
+   */
+  const setAccountSuspension = async (
+    id: string,
+    role: 'client' | 'driver',
+    action: 'suspend' | 'unsuspend',
+    displayName: string,
+  ) => {
+    const message =
+      action === 'suspend'
+        ? `Bloquer le compte de ${displayName} ? Cette personne ne pourra plus se connecter ni apparaître dans les recherches, jusqu'à la réactivation du compte.`
+        : `Réactiver le compte de ${displayName} ? Cette personne pourra de nouveau se connecter.`;
+    if (!window.confirm(message)) return;
+
+    setActionLoading(id);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-moderate-user`, {
+        method: 'POST',
+        headers: { Authorization: await authBearer(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: id, role, action }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      const newStatus: string = result.accountStatus ?? (action === 'suspend' ? 'suspended' : 'active');
+      if (role === 'driver') {
+        setDrivers((prev) => prev.map((d) => (d.id === id ? { ...d, status: newStatus } : d)));
+        setSelectedDriver((prev) => (prev && prev.id === id ? { ...prev, status: newStatus } : prev));
+      } else {
+        setClients((prev) => prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c)));
+      }
+    } catch (e) {
+      console.error('Erreur suspension / réactivation du compte:', e);
+      window.alert("L'opération a échoué. Réessayez, ou consultez les journaux de la fonction « admin-moderate-user ».");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const requestDriverStatusChange = (driver: AdminDriver, newStatus: string) => {
     const needsConfirm =
       newStatus === 'rejected' || (newStatus === 'pending' && driver.status === 'active');
@@ -1689,6 +1750,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const pendingDrivers = drivers.filter(d => d.status === 'pending');
   const activeDrivers = drivers.filter(d => d.status === 'active');
   const rejectedDrivers = drivers.filter(d => d.status === 'rejected');
+  const suspendedDrivers = drivers.filter(d => d.status === 'suspended');
+  const suspendedClientsCount = clients.filter(c => c.status === 'suspended').length;
+  const visibleClients = clients.filter(c => {
+    if (clientStatusFilter === 'all') return true;
+    if (clientStatusFilter === 'suspended') return c.status === 'suspended';
+    return c.status !== 'suspended';
+  });
 
   // Statistiques des clients
   const totalClients = clients.length;
@@ -1814,6 +1882,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     { id: 'bookings', label: 'Réservations', shortLabel: 'Réservations', icon: Calendar, count: bookings.length, attention: bookingPendingCount },
     { id: 'subscriptions', label: 'Abonnements', shortLabel: 'Abonnements', icon: CreditCard, count: subscriptions.length, attention: pendingSubscriptions },
     { id: 'parcels', label: 'Colis', shortLabel: 'Colis', icon: Package, count: parcelStats.total, attention: parcelStats.pending },
+    { id: 'reports', label: 'Signalements', shortLabel: 'Signalements', icon: Flag, attention: openReportsCount },
     { id: 'blog', label: 'Blog', shortLabel: 'Blog', icon: FileText },
     { id: 'pricing', label: 'Tarifs', shortLabel: 'Tarifs', icon: SlidersHorizontal },
   ];
@@ -1939,7 +2008,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       <main className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-8">
         {/* Stats Cards */}
 
-        {activeTab !== 'blog' && activeTab !== 'pricing' && (
+        {activeTab !== 'blog' && activeTab !== 'pricing' && activeTab !== 'reports' && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
           {activeTab === 'bookings' ? (
             <>
@@ -2187,6 +2256,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </div>
                 </div>
               </button>
+              {(suspendedDrivers.length > 0 || driverStatusFilter === 'suspended') && (
+                <button
+                  type="button"
+                  onClick={() => setDriverStatusFilter('suspended')}
+                  className={`bg-white rounded-xl shadow-sm p-3 sm:p-6 text-left transition-shadow hover:shadow-md ${driverStatusFilter === 'suspended' ? 'ring-2 ring-brand/30' : ''}`}
+                >
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle size={20} className="sm:w-6 sm:h-6 text-danger-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Suspendus</h3>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">{suspendedDrivers.length}</p>
+                    </div>
+                  </div>
+                </button>
+              )}
             </>
           ) : activeTab === 'parcels' ? (
             <>
@@ -2297,6 +2383,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         {/* Content based on active tab */}
         {activeTab === 'blog' ? (
           <AdminBlogPosts />
+        ) : activeTab === 'reports' ? (
+          <AdminReports onOpenCountChange={setOpenReportsCount} />
         ) : activeTab === 'pricing' ? (
           <AdminPricing />
         ) : activeTab === 'bookings' ? (
@@ -3322,6 +3410,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <option value="pending">En attente</option>
                   <option value="active">Actifs</option>
                   <option value="rejected">Rejetés</option>
+                  <option value="suspended">Suspendus</option>
                 </select>
               </div>
             </div>
@@ -3508,9 +3597,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             onClick={() => requestDriverStatusChange(driver, 'pending')}
                             disabled={actionLoading === driver.id}
                             className="p-1.5 text-warning-600 hover:bg-warning-100 rounded-lg transition-colors disabled:opacity-50"
-                            title="Suspendre"
+                            title="Remettre en attente"
                           >
                             <Clock size={14} />
+                          </button>
+                        )}
+
+                        {driver.status === 'active' && (
+                          <button
+                            onClick={() => setAccountSuspension(driver.id, 'driver', 'suspend', `${driver.firstName} ${driver.lastName}`)}
+                            disabled={actionLoading === driver.id}
+                            className="p-1.5 text-danger-600 hover:bg-danger-100 rounded-lg transition-colors disabled:opacity-50"
+                            title="Bloquer le compte"
+                          >
+                            <ShieldOff size={14} />
+                          </button>
+                        )}
+
+                        {driver.status === 'suspended' && (
+                          <button
+                            onClick={() => setAccountSuspension(driver.id, 'driver', 'unsuspend', `${driver.firstName} ${driver.lastName}`)}
+                            disabled={actionLoading === driver.id}
+                            className="p-1.5 text-success-600 hover:bg-success-100 rounded-lg transition-colors disabled:opacity-50"
+                            title="Réactiver le compte"
+                          >
+                            <ShieldCheck size={14} />
                           </button>
                         )}
                       </div>
@@ -3638,7 +3749,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           disabled={actionLoading === driver.id}
                           className="px-3 py-1 text-xs bg-warning-600 text-white rounded-lg hover:bg-warning-700 disabled:opacity-50"
                         >
-                          Suspendre
+                          Remettre en attente
+                        </button>
+                      )}
+
+                      {driver.status === 'active' && (
+                        <button
+                          onClick={() => setAccountSuspension(driver.id, 'driver', 'suspend', `${driver.firstName} ${driver.lastName}`)}
+                          disabled={actionLoading === driver.id}
+                          className="px-3 py-1 text-xs bg-danger-600 text-white rounded-lg hover:bg-danger-700 disabled:opacity-50"
+                        >
+                          Bloquer le compte
+                        </button>
+                      )}
+
+                      {driver.status === 'suspended' && (
+                        <button
+                          onClick={() => setAccountSuspension(driver.id, 'driver', 'unsuspend', `${driver.firstName} ${driver.lastName}`)}
+                          disabled={actionLoading === driver.id}
+                          className="px-3 py-1 text-xs bg-success-600 text-white rounded-lg hover:bg-success-700 disabled:opacity-50"
+                        >
+                          Réactiver
                         </button>
                       )}
                     </div>
@@ -3673,6 +3804,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Gestion des clients</h2>
                   <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Consultez les informations des clients et leurs courses</p>
                 </div>
+                <select
+                  value={clientStatusFilter}
+                  onChange={(e) => setClientStatusFilter(e.target.value as typeof clientStatusFilter)}
+                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand ml-2 flex-shrink-0"
+                  aria-label="Filtrer les clients par statut"
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="active">Actifs</option>
+                  <option value="suspended">Suspendus{suspendedClientsCount > 0 ? ` (${suspendedClientsCount})` : ''}</option>
+                </select>
                 {refreshing && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-shrink-0 ml-2">
                     <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-brand"></div>
@@ -3708,7 +3849,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {clients.map((client) => (
+                  {visibleClients.map((client) => (
                     <tr key={client.id} className="hover:bg-gray-50 transition-colors">
                       {/* Client */}
                       <td className="px-3 py-3">
@@ -3729,6 +3870,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                               {client.firstName} {client.lastName}
                             </p>
                             <p className="text-[10px] text-gray-500 truncate">{client.email}</p>
+                            {client.status === 'suspended' && (
+                              <div className="mt-1">
+                                <DriverStatusBadge status="suspended" size="sm" />
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -3808,6 +3954,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           >
                             <Eye size={14} />
                           </button>
+                          {client.status === 'suspended' ? (
+                            <button
+                              onClick={() => setAccountSuspension(client.id, 'client', 'unsuspend', `${client.firstName} ${client.lastName}`)}
+                              disabled={actionLoading === client.id}
+                              className="p-1.5 text-success-600 hover:bg-success-100 rounded-lg transition-colors disabled:opacity-50"
+                              title="Réactiver le compte"
+                            >
+                              <ShieldCheck size={14} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setAccountSuspension(client.id, 'client', 'suspend', `${client.firstName} ${client.lastName}`)}
+                              disabled={actionLoading === client.id}
+                              className="p-1.5 text-danger-600 hover:bg-danger-100 rounded-lg transition-colors disabled:opacity-50"
+                              title="Suspendre le compte"
+                            >
+                              <ShieldOff size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -3819,7 +3984,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             {/* Version mobile/tablet - Cards des clients */}
             <div className="lg:hidden">
               <div className="divide-y divide-gray-200">
-                {clients.map((client) => (
+                {visibleClients.map((client) => (
                   <div key={client.id} className="p-6 hover:bg-gray-50 transition-colors">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
@@ -3839,15 +4004,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             {client.firstName} {client.lastName}
                           </h3>
                           <p className="text-sm text-gray-500">{client.email}</p>
+                          {client.status === 'suspended' && (
+                            <div className="mt-1">
+                              <DriverStatusBadge status="suspended" size="sm" />
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <button
-                        onClick={() => openClientDetails(client)}
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                        title="Voir les détails"
-                      >
-                        <Eye size={16} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openClientDetails(client)}
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Voir les détails"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        {client.status === 'suspended' ? (
+                          <button
+                            onClick={() => setAccountSuspension(client.id, 'client', 'unsuspend', `${client.firstName} ${client.lastName}`)}
+                            disabled={actionLoading === client.id}
+                            className="p-2 text-success-600 hover:bg-success-100 rounded-lg transition-colors disabled:opacity-50"
+                            title="Réactiver le compte"
+                          >
+                            <ShieldCheck size={16} />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setAccountSuspension(client.id, 'client', 'suspend', `${client.firstName} ${client.lastName}`)}
+                            disabled={actionLoading === client.id}
+                            className="p-2 text-danger-600 hover:bg-danger-100 rounded-lg transition-colors disabled:opacity-50"
+                            title="Suspendre le compte"
+                          >
+                            <ShieldOff size={16} />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
@@ -4198,10 +4389,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         size="sm"
                       >
                         <Clock size={16} />
-                        Suspendre
+                        Remettre en attente
+                      </Button>
+                    )}
+
+                    {selectedDriver.status === 'active' && (
+                      <Button
+                        onClick={() =>
+                          setAccountSuspension(
+                            selectedDriver.id,
+                            'driver',
+                            'suspend',
+                            `${selectedDriver.firstName} ${selectedDriver.lastName}`,
+                          )
+                        }
+                        loading={actionLoading === selectedDriver.id}
+                        className="bg-danger-600 hover:bg-danger-700 text-white flex items-center gap-2"
+                        size="sm"
+                      >
+                        <ShieldOff size={16} />
+                        Bloquer le compte
                       </Button>
                     )}
                     
+                    {selectedDriver.status === 'suspended' && (
+                      <Button
+                        onClick={() =>
+                          setAccountSuspension(
+                            selectedDriver.id,
+                            'driver',
+                            'unsuspend',
+                            `${selectedDriver.firstName} ${selectedDriver.lastName}`,
+                          )
+                        }
+                        loading={actionLoading === selectedDriver.id}
+                        className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
+                        size="sm"
+                      >
+                        <ShieldCheck size={16} />
+                        Réactiver le compte
+                      </Button>
+                    )}
+
                     {selectedDriver.status === 'rejected' && (
                       <Button
                         onClick={() => updateDriverStatus(selectedDriver.id, 'pending')}
@@ -4776,7 +5005,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">
-                  {statusConfirm.newStatus === 'rejected' ? 'Rejeter le chauffeur' : 'Suspendre le chauffeur'}
+                  {statusConfirm.newStatus === 'rejected' ? 'Rejeter le chauffeur' : 'Remettre le chauffeur en attente'}
                 </h3>
               </div>
             </div>
@@ -4811,7 +5040,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       : 'bg-warning-600 hover:bg-warning-700'
                   }`}
                 >
-                  {statusConfirm.newStatus === 'rejected' ? 'Confirmer le rejet' : 'Confirmer la suspension'}
+                  {statusConfirm.newStatus === 'rejected' ? 'Confirmer le rejet' : 'Confirmer la mise en attente'}
                 </Button>
               </div>
             </div>
