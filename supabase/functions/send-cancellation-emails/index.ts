@@ -211,7 +211,7 @@ serve(async (req) => {
     if (__bookingId && !(await callerInBooking(__caller, __bookingId))) {
       return jsonResponse(corsHeaders, 403, { success: false, error: 'forbidden_booking' })
     }
-    if (!(await recipientsAllowed(__caller, [__p?.clientEmail, __p?.driverEmail]))) {
+    if (!(await recipientsAllowed(__caller, [__p?.clientEmail, __p?.driverEmail], __p?.bookingId))) {
       return jsonResponse(corsHeaders, 403, { success: false, error: 'forbidden_recipients' })
     }
   }

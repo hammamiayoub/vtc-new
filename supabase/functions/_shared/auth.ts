@@ -92,10 +92,39 @@ export async function throttle(key: string, windowSeconds: number): Promise<bool
  * et l'appelant doit être administrateur ou l'un des destinataires (client ou chauffeur de la réservation).
  * Empêche d'utiliser nos fonctions pour envoyer du contenu à des adresses externes arbitraires.
  */
-export async function recipientsAllowed(caller: Caller, emails: (string | null | undefined)[]): Promise<boolean> {
+export async function recipientsAllowed(
+  caller: Caller,
+  emails: (string | null | undefined)[],
+  bookingId?: unknown,
+): Promise<boolean> {
   const wanted = [...new Set(emails.filter(Boolean).map((e) => String(e).trim().toLowerCase()))];
   if (wanted.length === 0) return false;
   if (caller.isAdmin) return true;
+
+  // Réservation fournie et appelant partie prenante : les destinataires doivent être le client ou le chauffeur
+  // de CETTE réservation (lus en base). On n'exige alors plus que l'e-mail de l'appelant figure dans la requête
+  // (le site n'envoie pas l'e-mail du chauffeur à l'acceptation).
+  if (typeof bookingId === 'string' && /^[0-9a-f-]{36}$/i.test(bookingId)) {
+    const { data: booking } = await adminClient()
+      .from('bookings')
+      .select('client_id, driver_id')
+      .eq('id', bookingId)
+      .maybeSingle();
+    if (booking && (booking.client_id === caller.user.id || booking.driver_id === caller.user.id)) {
+      const ids = [booking.client_id, booking.driver_id].filter(Boolean) as string[];
+      const db = adminClient();
+      const [{ data: cl }, { data: dr }] = await Promise.all([
+        db.from('clients').select('email').in('id', ids),
+        db.from('drivers').select('email').in('id', ids),
+      ]);
+      const allowed = new Set(
+        [...(cl ?? []), ...(dr ?? [])]
+          .map((r: { email: string | null }) => (r.email ?? '').toLowerCase())
+          .filter(Boolean),
+      );
+      return wanted.every((e) => allowed.has(e));
+    }
+  }
 
   const callerEmail = (caller.user.email ?? '').toLowerCase();
   if (!wanted.includes(callerEmail)) return false;
