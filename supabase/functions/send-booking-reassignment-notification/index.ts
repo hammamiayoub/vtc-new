@@ -70,6 +70,7 @@ serve(async (req) => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'Africa/Tunis',
     });
 
     const driverName = `${escapeHtml(driverData.first_name)} ${escapeHtml(driverData.last_name)}`.trim();

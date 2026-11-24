@@ -272,7 +272,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Le client et le chauffeur peuvent annuler une réservation VTC jusqu&apos;à 24 heures avant l&apos;heure prévue du trajet.</span>
+                  <span className="text-gray-700">Réservation programmée : le client et le chauffeur peuvent annuler jusqu&apos;au jour du départ, tant que la course n&apos;a pas démarré. Toute annulation tardive ou répétée peut entraîner des pénalités, une restriction d&apos;accès au service ou la suspension du compte.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>

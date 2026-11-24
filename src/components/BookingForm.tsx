@@ -544,7 +544,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
         destination_longitude: destinationCoords.longitude,
         distance_km: estimatedDistance,
         price_tnd: estimatedPrice,
-        scheduled_time: data.scheduledTime,
+        // Le champ datetime-local est sans fuseau (« 2026-11-25T14:23 ») : la base l'interpréterait en UTC
+        // (une heure de décalage en Tunisie). On envoie l'instant exact, avec fuseau.
+        scheduled_time: new Date(data.scheduledTime).toISOString(),
         is_return_trip: data.isReturnTrip || false,
         notes: data.notes || null,
         status: 'pending'

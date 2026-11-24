@@ -16,7 +16,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'c2',
         question: 'How do I cancel or change a booking?',
         answer:
-          'From My bookings, open the ride and click Cancel. Online cancellation is possible up to 24 hours before the scheduled time, while the ride is pending or accepted.\n\nAfter that, contact the driver directly (their number is shown on the ride) or support. To change the time or address, cancel and book again, or write to us.',
+          'From My bookings, open the ride and click Cancel. Online cancellation is possible at any time while the ride is pending or accepted, that is, before it starts. Late or repeated cancellations may lead to penalties.\n\nOnce the ride has started, contact the driver directly (their number is shown on the ride) or support. To change the time or address, cancel and book again, or write to us.',
       },
       {
         id: 'c3',
@@ -259,7 +259,7 @@ export const faqCategoriesEn: FaqCategory[] = [
         id: 'd9',
         question: 'Can I cancel a ride I accepted?',
         answer:
-          'Yes, up to 24 hours before the scheduled time, with the Cancel button (or Decline for a new request). After that, call the client: their number is shown on the ride.',
+          'Yes, as long as the ride has not started, with the Cancel button (or Decline for a new request). Late or repeated cancellations may lead to penalties. Once the ride has started, call the client: their number is shown on the ride.',
       },
     ],
   },

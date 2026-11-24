@@ -123,7 +123,8 @@ serve(async (req) => {
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Africa/Tunis'
     })
 
     const cancellationReason = bookingData.cancellation_reason?.trim() || null

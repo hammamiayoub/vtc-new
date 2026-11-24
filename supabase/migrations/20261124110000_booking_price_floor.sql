@@ -1,4 +1,7 @@
 /*
+  # ⚠️ REMPLACÉE par 20261126130000_booking_price_floor_v2.sql — NE PLUS APPLIQUER CETTE VERSION.
+  #    (Elle refusait des réservations légitimes : voir l'en-tête de la v2.)
+
   # Contrôle serveur du prix et de la distance d'une réservation
 
   PROBLÈME
