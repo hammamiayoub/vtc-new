@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { requireUser, recipientsAllowed, callerInBooking, jsonResponse } from '../_shared/auth.ts'
+import { FROM_EMAIL, SUPPORT_EMAIL } from '../_shared/emailLayout.ts'
+import { buildBookingEmails } from '../_shared/vtcBookingEmails.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,8 +11,6 @@ const corsHeaders = {
 
 // Configuration Resend
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>'
-const SUPPORT_EMAIL = 'support@tunidrive.net'
 
 async function sendEmail(to: string, subject: string, html: string) {
   console.log('🔧 Configuration email:')
@@ -131,177 +131,12 @@ serve(async (req) => {
       timeZone: 'Africa/Tunis'
     })
 
-    // Email content for client
-    const clientEmailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
-          <h1 style="color: #333; margin: 0;">TuniDrive - Confirmation de réservation</h1>
-        </div>
-        
-        <div style="padding: 30px 20px;">
-          <h2 style="color: #333;">Bonjour ${clientData.first_name} ${clientData.last_name},</h2>
-          
-          <p style="font-size: 16px; line-height: 1.6; color: #555;">
-            Votre réservation a été confirmée avec succès !
-          </p>
-          
-          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #2d5a2d; margin-top: 0;">Détails de votre course</h3>
-            <p><strong>Départ :</strong> ${bookingData.pickup_address}</p>
-            <p><strong>Arrivée :</strong> ${bookingData.destination_address}</p>
-            <p><strong>Date et heure :</strong> ${formattedDate}</p>
-            <p><strong>Distance :</strong> ${bookingData.distance_km} km</p>
-            <p><strong>Prix :</strong> ${bookingData.price_tnd} TND</p>
-            ${bookingData.notes ? `<p><strong>Notes :</strong> ${bookingData.notes}</p>` : ''}
-          </div>
-          
-          <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #1565c0; margin-top: 0;">Votre chauffeur</h3>
-            <p><strong>Nom :</strong> ${driverData.first_name} ${driverData.last_name}</p>
-            ${driverData.phone ? `<p><strong>Téléphone :</strong> ${driverData.phone}</p>` : ''}
-            ${driverData.vehicle_info ? `
-              <p><strong>Véhicule :</strong> ${driverData.vehicle_info.make} ${driverData.vehicle_info.model} (${driverData.vehicle_info.color})</p>
-              <p><strong>Plaque :</strong> ${driverData.vehicle_info.licensePlate}</p>
-            ` : ''}
-          </div>
-          
-          <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #856404;">
-              <strong>Important :</strong> Soyez prêt 5 minutes avant l'heure prévue. 
-              Votre chauffeur vous contactera si nécessaire.
-            </p>
-          </div>
-          
-          <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Merci de faire confiance à TuniDrive pour vos déplacements !
-          </p>
-        </div>
-        
-        <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-          <p style="margin: 0;">TuniDrive - Votre transport sur mesure</p>
-        </div>
-      </div>
-    `
-
-    // Email content for driver
-    const driverEmailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
-          <h1 style="color: #333; margin: 0;">TuniDrive - Nouvelle réservation</h1>
-        </div>
-        
-        <div style="padding: 30px 20px;">
-          <h2 style="color: #333;">Bonjour ${driverData.first_name} ${driverData.last_name},</h2>
-          
-          <p style="font-size: 16px; line-height: 1.6; color: #555;">
-            Vous avez reçu une nouvelle réservation !
-          </p>
-          
-          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #2d5a2d; margin-top: 0;">Détails de la course</h3>
-            <p><strong>Départ :</strong> ${bookingData.pickup_address}</p>
-            <p><strong>Arrivée :</strong> ${bookingData.destination_address}</p>
-            <p><strong>Date et heure :</strong> ${formattedDate}</p>
-            <p><strong>Distance :</strong> ${bookingData.distance_km} km</p>
-            <p><strong>Prix :</strong> ${bookingData.price_tnd} TND</p>
-            ${bookingData.notes ? `<p><strong>Notes du client :</strong> ${bookingData.notes}</p>` : ''}
-          </div>
-          
-          <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #1565c0; margin-top: 0;">Informations client</h3>
-            <p><strong>Nom :</strong> ${clientData.first_name} ${clientData.last_name}</p>
-            ${clientData.phone ? `<p><strong>Téléphone :</strong> ${clientData.phone}</p>` : ''}
-          </div>
-          
-          <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #856404;">
-              <strong>Action requise :</strong> Connectez-vous à votre tableau de bord pour 
-              accepter ou refuser cette réservation.
-            </p>
-          </div>
-          
-          <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Merci de faire partie de l'équipe TuniDrive !
-          </p>
-        </div>
-        
-        <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-          <p style="margin: 0;">TuniDrive - Plateforme chauffeurs</p>
-        </div>
-      </div>
-    `
-
-    // Email content for support team
-    const supportEmailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
-          <h1 style="color: #333; margin: 0;">TuniDrive - Nouvelle réservation</h1>
-          <p style="color: #666; margin: 5px 0 0 0;">Notification pour l'équipe support</p>
-        </div>
-        
-        <div style="padding: 30px 20px;">
-          <h2 style="color: #333;">Nouvelle réservation créée</h2>
-          
-          <p style="font-size: 16px; line-height: 1.6; color: #555;">
-            Une nouvelle réservation a été créée et les emails de confirmation ont été envoyés aux parties concernées.
-          </p>
-          
-          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #2d5a2d; margin-top: 0;">Détails de la réservation</h3>
-            <p><strong>ID Réservation :</strong> ${bookingData.id || 'N/A'}</p>
-            <p><strong>Départ :</strong> ${bookingData.pickup_address}</p>
-            <p><strong>Arrivée :</strong> ${bookingData.destination_address}</p>
-            <p><strong>Date et heure :</strong> ${formattedDate}</p>
-            <p><strong>Distance :</strong> ${bookingData.distance_km} km</p>
-            <p><strong>Prix :</strong> ${bookingData.price_tnd} TND</p>
-            <p><strong>Statut :</strong> ${bookingData.status || 'En attente'}</p>
-            ${bookingData.notes ? `<p><strong>Notes du client :</strong> ${bookingData.notes}</p>` : ''}
-          </div>
-          
-          <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #1565c0; margin-top: 0;">Informations client</h3>
-            <p><strong>Nom :</strong> ${clientData.first_name} ${clientData.last_name}</p>
-            <p><strong>Email :</strong> ${clientData.email}</p>
-            ${clientData.phone ? `<p><strong>Téléphone :</strong> ${clientData.phone}</p>` : ''}
-            <p><strong>Ville :</strong> ${clientData.city || 'Non renseignée'}</p>
-          </div>
-          
-          <div style="background-color: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #e65100; margin-top: 0;">Informations chauffeur</h3>
-            <p><strong>Nom :</strong> ${driverData.first_name} ${driverData.last_name}</p>
-            <p><strong>Email :</strong> ${driverData.email}</p>
-            ${driverData.phone ? `<p><strong>Téléphone :</strong> ${driverData.phone}</p>` : ''}
-            <p><strong>Ville :</strong> ${driverData.city || 'Non renseignée'}</p>
-            ${driverData.vehicle_info ? `
-              <p><strong>Véhicule :</strong> ${driverData.vehicle_info.make} ${driverData.vehicle_info.model}</p>
-              <p><strong>Plaque :</strong> ${driverData.vehicle_info.licensePlate}</p>
-              <p><strong>Année :</strong> ${driverData.vehicle_info.year}</p>
-              <p><strong>Couleur :</strong> ${driverData.vehicle_info.color}</p>
-            ` : ''}
-          </div>
-          
-          <div style="background-color: #f3e5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #7b1fa2; margin-top: 0;">Actions effectuées</h3>
-            <ul style="color: #7b1fa2; margin: 0; padding-left: 20px; line-height: 1.6;">
-              <li>✅ Email de confirmation envoyé au client</li>
-              <li>✅ Email de notification envoyé au chauffeur</li>
-              <li>✅ Réservation enregistrée dans la base de données</li>
-            </ul>
-          </div>
-          
-          <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Équipe TuniDrive - Support technique
-          </p>
-        </div>
-        
-        <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-          <p style="margin: 0;">TuniDrive - Plateforme de transport</p>
-          <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">
-            Email automatique - Ne pas répondre
-          </p>
-        </div>
-      </div>
-    `
+    // Contenu des e-mails (gabarit commun, valeurs échappées)
+    const {
+      client: clientEmailContent,
+      driver: driverEmailContent,
+      support: supportEmailContent,
+    } = buildBookingEmails({ bookingData, clientData, driverData, formattedDate })
 
     // Envoi des emails via Resend
     const emailResults: Array<{type: string, success: boolean, id?: string, error?: string}> = []
@@ -311,7 +146,7 @@ serve(async (req) => {
       console.log('📧 Envoi email client à:', clientData.email)
       const clientResult = await sendEmail(
         clientData.email,
-        'TuniDrive - Confirmation de votre réservation',
+        'TuniDrive — Confirmation de votre réservation',
         clientEmailContent
       )
       emailResults.push({ type: 'client', success: true, id: clientResult.id })
@@ -325,7 +160,7 @@ serve(async (req) => {
       console.log('📧 Envoi email chauffeur à:', driverData.email)
       const driverResult = await sendEmail(
         driverData.email,
-        'TuniDrive - Nouvelle réservation reçue',
+        'TuniDrive — Nouvelle réservation reçue',
         driverEmailContent
       )
       emailResults.push({ type: 'driver', success: true, id: driverResult.id })
@@ -346,7 +181,7 @@ serve(async (req) => {
       
       const supportResult = await sendEmail(
         SUPPORT_EMAIL,
-        'TuniDrive - Nouvelle réservation créée',
+        'TuniDrive — Nouvelle réservation créée',
         supportEmailContent
       )
       

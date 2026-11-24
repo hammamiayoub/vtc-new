@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { requireUser, jsonResponse } from '../_shared/auth.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendExpoPush } from '../_shared/expoPush.ts';
+import { renderEmail, greeting, paragraph, infoCard, button, FROM_EMAIL, SITE_URL } from '../_shared/emailLayout.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,7 +11,6 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>';
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY manquante');
@@ -66,47 +66,44 @@ serve(async (req) => {
     const driver = proposal.drivers;
     const formattedDate = new Date(request.desired_date).toLocaleDateString('fr-FR');
 
-    const tripBlock = `
-      <p><strong>Départ :</strong> ${request.departure_address}</p>
-      <p><strong>Arrivée :</strong> ${request.arrival_address}</p>
-      <p><strong>Date souhaitée :</strong> ${formattedDate}</p>
-      <p><strong>Prix convenu :</strong> ${proposal.price} ${proposal.currency}</p>`;
+    const tripRows = [
+      { label: 'Départ', value: request.departure_address },
+      { label: 'Arrivée', value: request.arrival_address },
+      { label: 'Date souhaitée', value: formattedDate },
+      { label: 'Prix convenu', value: `${proposal.price} ${proposal.currency}` },
+    ];
 
-    const clientHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background:#f8f9fa;padding:20px;text-align:center;">
-          <h1 style="color:#333;margin:0;">TuniDrive — Offre acceptée</h1>
-        </div>
-        <div style="padding:30px 20px;">
-          <h2>Bonjour ${client?.first_name || ''} ${client?.last_name || ''},</h2>
-          <p>Vous avez validé l'offre d'un transporteur. Voici ses coordonnées pour organiser le rendez-vous :</p>
-          <div style="background:#e8f5e8;padding:20px;border-radius:8px;margin:20px 0;">
-            ${tripBlock}
-            <hr style="border:none;border-top:1px solid #ccc;margin:15px 0;">
-            <p><strong>Transporteur :</strong> ${driver?.first_name || ''} ${driver?.last_name || ''}</p>
-            ${driver?.phone ? `<p><strong>Téléphone :</strong> ${driver.phone}</p>` : ''}
-            ${driver?.email ? `<p><strong>Email :</strong> ${driver.email}</p>` : ''}
-          </div>
-        </div>
-      </div>`;
+    const clientHtml = renderEmail({
+      title: 'Votre offre est confirmée',
+      preheader: 'Voici les coordonnées du transporteur pour organiser le rendez-vous.',
+      body: [
+        greeting(`${client?.first_name || ''} ${client?.last_name || ''}`),
+        paragraph('Vous avez validé l\'offre d\'un transporteur. Voici ses coordonnées pour organiser le rendez-vous.'),
+        infoCard('Votre envoi', tripRows, 'success'),
+        infoCard('Le transporteur', [
+          { label: 'Nom', value: `${driver?.first_name || ''} ${driver?.last_name || ''}`.trim() },
+          { label: 'Téléphone', value: driver?.phone, href: driver?.phone ? `tel:${driver.phone}` : undefined },
+          { label: 'E-mail', value: driver?.email, href: driver?.email ? `mailto:${driver.email}` : undefined },
+        ], 'info'),
+        button('Ouvrir mon espace client', `${SITE_URL}/client-dashboard`),
+      ].join(''),
+    });
 
-    const driverHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background:#f8f9fa;padding:20px;text-align:center;">
-          <h1 style="color:#333;margin:0;">TuniDrive — Votre offre a été acceptée</h1>
-        </div>
-        <div style="padding:30px 20px;">
-          <h2>Bonjour ${driver?.first_name || ''} ${driver?.last_name || ''},</h2>
-          <p>Le client a accepté votre proposition. Voici ses coordonnées pour organiser le rendez-vous :</p>
-          <div style="background:#e3f2fd;padding:20px;border-radius:8px;margin:20px 0;">
-            ${tripBlock}
-            <hr style="border:none;border-top:1px solid #ccc;margin:15px 0;">
-            <p><strong>Client :</strong> ${client?.first_name || ''} ${client?.last_name || ''}</p>
-            ${client?.phone ? `<p><strong>Téléphone :</strong> ${client.phone}</p>` : ''}
-            ${client?.email ? `<p><strong>Email :</strong> ${client.email}</p>` : ''}
-          </div>
-        </div>
-      </div>`;
+    const driverHtml = renderEmail({
+      title: 'Votre offre a été acceptée',
+      preheader: 'Voici les coordonnées du client pour organiser le rendez-vous.',
+      body: [
+        greeting(`${driver?.first_name || ''} ${driver?.last_name || ''}`),
+        paragraph('Le client a accepté votre proposition. Voici ses coordonnées pour organiser le rendez-vous.'),
+        infoCard('L\'envoi', tripRows, 'success'),
+        infoCard('Le client', [
+          { label: 'Nom', value: `${client?.first_name || ''} ${client?.last_name || ''}`.trim() },
+          { label: 'Téléphone', value: client?.phone, href: client?.phone ? `tel:${client.phone}` : undefined },
+          { label: 'E-mail', value: client?.email, href: client?.email ? `mailto:${client.email}` : undefined },
+        ], 'info'),
+        button('Ouvrir mon tableau de bord', `${SITE_URL}/dashboard`),
+      ].join(''),
+    });
 
     if (client?.email) {
       await sendEmail(
@@ -148,8 +145,16 @@ serve(async (req) => {
         await sendEmail(
           d.email,
           'TuniDrive — Demande de colis : offre non retenue',
-          `<p>Bonjour ${d.first_name} ${d.last_name},</p>
-           <p>Le client a choisi une autre offre pour la demande concernée. Merci pour votre proposition.</p>`
+          renderEmail({
+            title: 'Votre offre n\'a pas été retenue',
+            preheader: 'Le client a choisi une autre proposition.',
+            body: [
+              greeting(`${d.first_name ?? ''} ${d.last_name ?? ''}`),
+              paragraph('Le client a choisi une autre offre pour la demande concernée. Merci pour votre proposition.'),
+              paragraph('De nouvelles demandes de colis vous attendent sur votre tableau de bord.'),
+              button('Voir les demandes', `${SITE_URL}/dashboard`),
+            ].join(''),
+          })
         );
       }
     }

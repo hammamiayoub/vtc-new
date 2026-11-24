@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { throttle, adminClient, jsonResponse, escapeHtml } from '../_shared/auth.ts'
+import { throttle, adminClient, jsonResponse } from '../_shared/auth.ts'
+import { renderEmail, paragraph, infoCard, notice, bulletList, button, esc, FROM_EMAIL, SUPPORT_EMAIL, SITE_URL } from '../_shared/emailLayout.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,84 +8,46 @@ const corsHeaders = {
 }
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>'
-const SUPPORT_EMAIL = 'support@tunidrive.net'
 
 async function sendSignupNotificationEmail(userData: any, userType: string) {
   const userTypeLabel = userType === 'client' ? 'Client' : 'Chauffeur'
   const userTypeLabelLower = userType === 'client' ? 'client' : 'chauffeur'
   
-  const emailContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background-color: #7c3aed; padding: 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">TuniDrive</h1>
-        <p style="color: #e9d5ff; margin: 10px 0 0 0;">Nouvelle inscription ${userTypeLabelLower}</p>
-      </div>
-      
-      <div style="padding: 30px 20px;">
-        <h2 style="color: #333; margin-bottom: 20px;">Nouvelle inscription ${userTypeLabel}</h2>
-        <p style="color: #666; font-size: 16px; line-height: 1.6;">
-          Un nouveau ${userTypeLabelLower} s'est inscrit sur la plateforme TuniDrive.
-        </p>
-        
-        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #1e293b; margin-top: 0; margin-bottom: 15px;">Informations du compte :</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569; width: 120px;">Nom complet :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${userData.first_name} ${userData.last_name}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569;">Email :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${userData.email}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569;">Téléphone :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${userData.phone || 'Non renseigné'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569;">Ville :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${userData.city || 'Non renseignée'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569;">Date d'inscription :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${new Date(userData.created_at).toLocaleString('fr-FR')}</td>
-            </tr>
-            ${userType === 'driver' ? `
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569;">Statut :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${userData.status || 'pending'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569;">Véhicule :</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b;">${userData.vehicle_make || 'Non renseigné'} ${userData.vehicle_model || ''}</td>
-            </tr>
-            ` : ''}
-          </table>
-        </div>
-        
-        <div style="background-color: #e0f2fe; border: 1px solid #0288d1; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #01579b; margin-top: 0; margin-bottom: 10px;">Actions recommandées :</h3>
-          <ul style="color: #01579b; margin: 0; padding-left: 20px;">
-            <li>Vérifier les informations du compte</li>
-            <li>${userType === 'driver' ? 'Valider les documents du chauffeur' : 'Activer le compte client'}</li>
-            <li>Envoyer un email de bienvenue si nécessaire</li>
-          </ul>
-        </div>
-        
-        <p style="color: #666; font-size: 14px; margin-top: 30px;">
-          Cette notification a été envoyée automatiquement lors de l'inscription.
-        </p>
-      </div>
-      
-      <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-        <p style="margin: 0;">TuniDrive - Votre transport sur mesure</p>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">
-          Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-        </p>
-      </div>
-    </div>
-  `
+  const fullName = `${userData.first_name ?? ''} ${userData.last_name ?? ''}`.trim()
+  const vehicle = `${userData.vehicle_make || 'Non renseigné'} ${userData.vehicle_model || ''}`.trim()
+  const emailContent = renderEmail({
+    title: `Nouvelle inscription ${userTypeLabelLower}`,
+    preheader: `${fullName} vient de s'inscrire sur TuniDrive.`,
+    body: [
+      paragraph(`Un nouveau ${esc(userTypeLabelLower)} s'est inscrit sur la plateforme TuniDrive.`),
+      infoCard('Informations du compte', [
+        { label: 'Nom', value: fullName },
+        { label: 'E-mail', value: userData.email },
+        { label: 'Téléphone', value: userData.phone || 'Non renseigné' },
+        { label: 'Ville', value: userData.city || 'Non renseignée' },
+        {
+          label: 'Inscription',
+          value: new Date(userData.created_at).toLocaleString('fr-FR', { timeZone: 'Africa/Tunis' }),
+        },
+        ...(userType === 'driver'
+          ? [
+              { label: 'Statut', value: userData.status || 'pending' },
+              { label: 'Véhicule', value: vehicle },
+            ]
+          : []),
+      ]),
+      notice(
+        `<strong>À faire</strong>${bulletList([
+          'Vérifier les informations du compte.',
+          userType === 'driver' ? 'Valider les documents du chauffeur.' : 'Activer le compte client.',
+          'Envoyer un e-mail de bienvenue si nécessaire.',
+        ])}`,
+        'info',
+      ),
+      button('Ouvrir l\'administration', `${SITE_URL}/admin`),
+    ].join(''),
+    footnote: 'Notification interne envoyée à chaque nouvelle inscription.',
+  })
 
   try {
     console.log('📤 Envoi notification inscription via Resend...')
@@ -98,7 +61,7 @@ async function sendSignupNotificationEmail(userData: any, userType: string) {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [SUPPORT_EMAIL],
-        subject: `TuniDrive - Nouvelle inscription ${userTypeLabel}: ${userData.first_name} ${userData.last_name}`,
+        subject: `TuniDrive — Nouvelle inscription ${userTypeLabel} : ${userData.first_name} ${userData.last_name}`,
         html: emailContent,
       }),
     })
@@ -147,11 +110,8 @@ serve(async (req) => {
     if (!__recent || !(await throttle(`signup:${__email}`, 3600))) {
       return jsonResponse(corsHeaders, 200, { success: true, message: 'ignored' })
     }
-    // Contenu saisi par l'appelant : échappé avant d'être inséré dans l'e-mail destiné au support
-    const __safe = Object.fromEntries(
-      Object.entries(userData ?? {}).map(([k, v]) => [k, typeof v === 'string' ? escapeHtml(v) : v]),
-    )
-    await sendSignupNotificationEmail(__safe, userType)
+    // Contenu saisi par l'appelant : échappé par le gabarit (renderEmail / infoCard) avant insertion dans l'e-mail
+    await sendSignupNotificationEmail(userData, userType)
 
     return new Response(
       JSON.stringify({ 

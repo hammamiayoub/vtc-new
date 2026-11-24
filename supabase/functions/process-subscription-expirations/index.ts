@@ -24,8 +24,8 @@ import {
   type ReminderCandidate,
   type SubscriptionRequest,
 } from '../_shared/subscriptionReminders.ts'
+import { FROM_EMAIL } from '../_shared/emailLayout.ts'
 
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>'
 const DEFAULT_ADMIN_EMAIL = 'support@tunidrive.net'
 /** Garde-fou : un passage n'envoie jamais plus de messages que ça (évite les emballements). */
 const MAX_MESSAGES_PER_RUN = 200

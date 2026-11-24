@@ -23,6 +23,7 @@ import {
   type ExtensionInfo,
   type ExtensionUnit,
 } from '../_shared/subscriptionReminders.ts'
+import { FROM_EMAIL } from '../_shared/emailLayout.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,7 +31,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const EXTENSION_UNITS: ExtensionUnit[] = ['days', 'months', 'years']

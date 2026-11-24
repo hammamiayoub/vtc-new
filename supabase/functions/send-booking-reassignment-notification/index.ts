@@ -2,6 +2,8 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { requireAdmin } from '../_shared/auth.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendExpoPush } from '../_shared/expoPush.ts';
+import { FROM_EMAIL } from '../_shared/emailLayout.ts';
+import { buildBookingEmails } from '../_shared/vtcBookingEmails.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,15 +12,6 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>';
-
-function escapeHtml(value: unknown): string {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!RESEND_API_KEY) {
@@ -73,55 +66,17 @@ serve(async (req) => {
       timeZone: 'Africa/Tunis',
     });
 
-    const driverName = `${escapeHtml(driverData.first_name)} ${escapeHtml(driverData.last_name)}`.trim();
-    const clientName = `${escapeHtml(clientData.first_name)} ${escapeHtml(clientData.last_name)}`.trim();
-    const notes = bookingData.notes
-      ? `<p><strong>Notes du client :</strong> ${escapeHtml(bookingData.notes)}</p>`
-      : '';
-    const clientPhone = clientData.phone
-      ? `<p><strong>Téléphone :</strong> ${escapeHtml(clientData.phone)}</p>`
-      : '';
-
-    const driverEmailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
-          <h1 style="color: #333; margin: 0;">TuniDrive - Nouvelle réservation</h1>
-        </div>
-        <div style="padding: 30px 20px;">
-          <h2 style="color: #333;">Bonjour ${driverName},</h2>
-          <p style="font-size: 16px; line-height: 1.6; color: #555;">
-            Vous avez reçu une nouvelle réservation !
-          </p>
-          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #2d5a2d; margin-top: 0;">Détails de la course</h3>
-            <p><strong>Départ :</strong> ${escapeHtml(bookingData.pickup_address)}</p>
-            <p><strong>Arrivée :</strong> ${escapeHtml(bookingData.destination_address)}</p>
-            <p><strong>Date et heure :</strong> ${escapeHtml(formattedDate)}</p>
-            <p><strong>Distance :</strong> ${escapeHtml(bookingData.distance_km)} km</p>
-            <p><strong>Prix :</strong> ${escapeHtml(bookingData.price_tnd)} TND</p>
-            ${notes}
-          </div>
-          <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #1565c0; margin-top: 0;">Informations client</h3>
-            <p><strong>Nom :</strong> ${clientName || 'Client'}</p>
-            ${clientPhone}
-          </div>
-          <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #856404;">
-              <strong>Action requise :</strong> Connectez-vous à votre tableau de bord pour
-              accepter ou refuser cette réservation.
-            </p>
-          </div>
-        </div>
-        <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-          <p style="margin: 0;">TuniDrive - Plateforme chauffeurs</p>
-        </div>
-      </div>
-    `;
+    // Même e-mail « nouvelle réservation » que pour une création : gabarit commun, valeurs échappées
+    const { driver: driverEmailContent } = buildBookingEmails({
+      bookingData,
+      clientData,
+      driverData,
+      formattedDate,
+    });
 
     await sendEmail(
       driverData.email,
-      'TuniDrive - Nouvelle réservation reçue',
+      'TuniDrive — Nouvelle réservation reçue',
       driverEmailContent,
     );
 

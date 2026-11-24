@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { throttle, adminClient, jsonResponse } from '../_shared/auth.ts'
+import { renderEmail, greeting, paragraph, infoCard, notice, bulletList, esc, FROM_EMAIL, SUPPORT_EMAIL } from '../_shared/emailLayout.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +9,6 @@ const corsHeaders = {
 
 // Configuration Resend
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'TuniDrive <team@tunidrive.net>' // Utilisez votre domaine vérifié
 
 async function sendPasswordResetEmail(to: string, firstName: string, lastName: string, userType: string) {
   console.log('🔧 Configuration email reset:')
@@ -23,54 +23,30 @@ async function sendPasswordResetEmail(to: string, firstName: string, lastName: s
   }
 
   const userTypeLabel = userType === 'client' ? 'client' : 'chauffeur';
-  const dashboardUrl = userType === 'client' ? 'client-dashboard' : 'dashboard';
 
-  const emailContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background-color: #7c3aed; padding: 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">TuniDrive</h1>
-        <p style="color: #e9d5ff; margin: 10px 0 0 0;">Réinitialisation de mot de passe</p>
-      </div>
-      
-      <div style="padding: 30px 20px;">
-        <h2 style="color: #333; margin-bottom: 20px;">Bonjour ${firstName} ${lastName},</h2>
-        
-        <p style="font-size: 16px; line-height: 1.6; color: #555; margin-bottom: 20px;">
-          Vous avez demandé la réinitialisation de votre mot de passe pour votre compte ${userTypeLabel} TuniDrive.
-        </p>
-        
-        <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #92400e; margin-top: 0; margin-bottom: 10px;">Instructions importantes :</h3>
-          <ul style="color: #92400e; margin: 0; padding-left: 20px;">
-            <li>Vous avez reçu un email de Supabase avec un lien de réinitialisation</li>
-            <li>Cliquez sur ce lien pour accéder au formulaire de nouveau mot de passe</li>
-            <li>Le lien est valide pendant 1 heure seulement</li>
-            <li>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email</li>
-          </ul>
-        </div>
-        
-        <div style="background-color: #e0f2fe; border: 1px solid #0288d1; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #01579b; margin-top: 0; margin-bottom: 10px;">Conseils de sécurité :</h3>
-          <ul style="color: #01579b; margin: 0; padding-left: 20px;">
-            <li>Choisissez un mot de passe fort (8+ caractères)</li>
-            <li>Incluez majuscules, minuscules, chiffres et caractères spéciaux</li>
-            <li>N'utilisez pas le même mot de passe que sur d'autres sites</li>
-          </ul>
-        </div>
-        
-        <p style="color: #666; font-size: 14px; margin-top: 30px;">
-          Si vous rencontrez des difficultés, contactez notre support à contact@tunidrive.net
-        </p>
-      </div>
-      
-      <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-        <p style="margin: 0;">TuniDrive - Votre transport sur mesure</p>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">
-          Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-        </p>
-      </div>
-    </div>
-  `
+  const emailContent = renderEmail({
+    title: 'Réinitialisation de votre mot de passe',
+    preheader: `Vous avez demandé à réinitialiser le mot de passe de votre compte ${userTypeLabel} TuniDrive.`,
+    body: [
+      greeting(`${firstName ?? ''} ${lastName ?? ''}`),
+      paragraph(`Nous avons bien reçu votre demande de réinitialisation du mot de passe de votre compte ${esc(userTypeLabel)} TuniDrive.`),
+      notice(
+        `<strong>Comment procéder ?</strong>${bulletList([
+          'Un autre e-mail, envoyé séparément, contient votre lien sécurisé de réinitialisation.',
+          'Cliquez sur ce lien pour choisir votre nouveau mot de passe.',
+          'Le lien est valable <strong>1 heure</strong>.',
+          'Vous n\'êtes pas à l\'origine de cette demande ? Ignorez simplement ce message : votre mot de passe actuel reste inchangé.',
+        ])}`,
+        'warning',
+      ),
+      infoCard('Pour un mot de passe solide', [
+        { label: 'Longueur', value: '8 caractères minimum' },
+        { label: 'Contenu', value: 'Majuscules, minuscules, chiffres et symboles' },
+        { label: 'Unicité', value: 'Un mot de passe différent de vos autres comptes' },
+      ], 'info'),
+      paragraph(`Besoin d'aide ? Écrivez-nous à <a href="mailto:${SUPPORT_EMAIL}" style="color:#111827;">${SUPPORT_EMAIL}</a>.`),
+    ].join(''),
+  })
 
   try {
     console.log('📤 Envoi email reset via Resend...')
@@ -84,7 +60,7 @@ async function sendPasswordResetEmail(to: string, firstName: string, lastName: s
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [to],
-        subject: `TuniDrive - Réinitialisation de votre mot de passe ${userTypeLabel}`,
+        subject: `TuniDrive — Réinitialisation de votre mot de passe`,
         html: emailContent,
       }),
     })
