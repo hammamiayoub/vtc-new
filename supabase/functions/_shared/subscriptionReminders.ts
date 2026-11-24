@@ -1,4 +1,5 @@
-// Logique pure des notifications d'abonnement (aucune dépendance : testable hors Deno).
+// Logique pure des notifications d'abonnement (seule dépendance : le gabarit emailLayout, lui-même sans dépendance).
+import { renderEmail, button } from './emailLayout.ts'
 
 export type ReminderType = 'expiring_soon_7d' | 'expiring_soon_1d' | 'expired'
 
@@ -107,28 +108,18 @@ function fullName(first: string | null, last: string | null): string {
   return [first, last].filter(Boolean).join(' ').trim()
 }
 
+/**
+ * Enveloppe commune des e-mails d'abonnement : délègue au gabarit TuniDrive (logo, pied de page unique).
+ * `body` est du HTML déjà échappé par les appelants ; les balises <p> et <ul> nues reçoivent le style commun.
+ */
 export function layout(title: string, body: string, cta?: { label: string; url: string }): string {
-  const button = cta
-    ? `<p style="text-align:center;margin:28px 0 8px;">
-         <a href="${escapeHtml(cta.url)}" style="display:inline-block;background:#000;color:#fff;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:999px;">${escapeHtml(cta.label)}</a>
-       </p>`
-    : ''
-  return `<!doctype html>
-<html lang="fr"><body style="margin:0;padding:0;background:#f6f6f6;">
-  <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
-    <div style="background:#000;padding:20px;text-align:center;">
-      <h1 style="color:#fff;margin:0;font-size:24px;">TuniDrive</h1>
-      <p style="color:#d1d5db;margin:6px 0 0;font-size:14px;">${escapeHtml(title)}</p>
-    </div>
-    <div style="padding:28px 24px;color:#333;font-size:16px;line-height:1.6;">
-      ${body}
-      ${button}
-    </div>
-    <div style="background:#f3f4f6;padding:16px;text-align:center;font-size:12px;color:#6b7280;">
-      TuniDrive · support@tunidrive.net<br />Cet email a été envoyé automatiquement.
-    </div>
-  </div>
-</body></html>`
+  const styledBody = body
+    .replace(/<p>/g, '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#374151;">')
+    .replace(/<ul>/g, '<ul style="margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.6;color:#374151;">')
+  return renderEmail({
+    title,
+    body: styledBody + (cta ? button(cta.label, cta.url) : ''),
+  })
 }
 
 function daysPhrase(days: number): string {
@@ -152,7 +143,7 @@ export function buildReminderEmail(c: ReminderCandidate, siteUrl: string): Built
 
   if (c.notification_type === 'expired') {
     return {
-      subject: 'TuniDrive - Votre abonnement a expiré',
+      subject: 'TuniDrive — Votre abonnement a expiré',
       html: layout(
         'Abonnement expiré',
         `<p>Bonjour ${name},</p>
@@ -168,7 +159,7 @@ export function buildReminderEmail(c: ReminderCandidate, siteUrl: string): Built
 
   const when = daysPhrase(c.days_remaining)
   return {
-    subject: `TuniDrive - Votre abonnement expire ${when}`,
+    subject: `TuniDrive — Votre abonnement expire ${when}`,
     html: layout(
       'Votre abonnement arrive à échéance',
       `<p>Bonjour ${name},</p>
@@ -187,7 +178,7 @@ export function buildRequestReceivedEmail(r: SubscriptionRequest, siteUrl: strin
   const price =
     r.total_price_tnd != null ? `<li>Montant à régler : <strong>${escapeHtml(Number(r.total_price_tnd).toFixed(2))} TND TTC</strong></li>` : ''
   return {
-    subject: "TuniDrive - Demande d'abonnement reçue",
+    subject: "TuniDrive — Demande d'abonnement reçue",
     html: layout(
       'Demande d’abonnement reçue',
       `<p>Bonjour ${name},</p>
@@ -206,7 +197,7 @@ export function buildAdminRequestEmail(r: SubscriptionRequest, siteUrl: string):
   const name = fullName(r.first_name, r.last_name) || r.driver_email
   const price = r.total_price_tnd != null ? `${Number(r.total_price_tnd).toFixed(2)} TND TTC` : 'montant non renseigné'
   return {
-    subject: `Nouvelle demande d'abonnement - ${name} (${periodLabel(r.billing_period)}, ${price})`,
+    subject: `TuniDrive — Nouvelle demande d'abonnement : ${name} (${periodLabel(r.billing_period)}, ${price})`,
     html: layout(
       'Nouvelle demande d’abonnement',
       `<p>Un chauffeur a demandé un abonnement :</p>
@@ -227,7 +218,7 @@ export function buildAdminPaymentDeclaredEmail(p: PaymentDeclaration, siteUrl: s
   const name = fullName(p.first_name, p.last_name) || p.driver_email
   const price = p.total_price_tnd != null ? `${Number(p.total_price_tnd).toFixed(2)} TND TTC` : 'montant non renseigné'
   return {
-    subject: `Paiement d'abonnement déclaré - ${name} (${periodLabel(p.billing_period)}, ${price})`,
+    subject: `TuniDrive — Paiement d'abonnement déclaré : ${name} (${periodLabel(p.billing_period)}, ${price})`,
     html: layout(
       'Paiement d’abonnement à vérifier',
       `<p>Un chauffeur déclare avoir payé son abonnement :</p>
@@ -277,13 +268,13 @@ export function extensionLabel(amount: number, unit: ExtensionUnit): string {
 }
 
 function detailRows(rows: [string, string | null][]): string {
-  return `<table style="width:100%;border-collapse:collapse;margin:16px 0;">
+  return `<table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 20px;">
     ${rows
       .filter(([, value]) => value)
       .map(
         ([label, value]) => `<tr>
-          <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;color:#6b7280;width:140px;">${escapeHtml(label)}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;color:#111827;">${value}</td>
+          <td style="padding:10px 12px 10px 0;border-bottom:1px solid #e5e7eb;font-size:13px;color:#6b7280;width:140px;vertical-align:top;">${escapeHtml(label)}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;font-size:15px;color:#111827;">${value}</td>
         </tr>`,
       )
       .join('')}
@@ -294,7 +285,7 @@ export function buildActivatedEmail(i: ActivationInfo, siteUrl: string): BuiltMe
   const name = escapeHtml(fullName(i.first_name, i.last_name) || 'chauffeur')
   const price = i.total_price_tnd != null ? `${escapeHtml(Number(i.total_price_tnd).toFixed(2))} TND` : null
   return {
-    subject: 'TuniDrive - Votre abonnement Pro est activé',
+    subject: 'TuniDrive — Votre abonnement Pro est activé',
     html: layout(
       'Votre abonnement Pro est activé',
       `<p>Bonjour ${name},</p>
@@ -319,7 +310,7 @@ export function buildExtendedEmail(
   const name = escapeHtml(fullName(i.first_name, i.last_name) || 'chauffeur')
   const label = extension ? escapeHtml(extensionLabel(extension.amount, extension.unit)) : null
   return {
-    subject: 'TuniDrive - Votre abonnement Pro a été prolongé',
+    subject: 'TuniDrive — Votre abonnement Pro a été prolongé',
     html: layout(
       'Votre abonnement a été prolongé',
       `<p>Bonjour ${name},</p>

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { requireUser, recipientsAllowed, callerInBooking, jsonResponse } from '../_shared/auth.ts'
+import { renderEmail, greeting, paragraph, infoCard, notice, bulletList, button, esc, FROM_EMAIL, SUPPORT_EMAIL, SITE_URL } from '../_shared/emailLayout.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,7 +10,6 @@ const corsHeaders = {
 
 // Configuration Resend
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>'
 
 async function sendEmail(to: string, subject: string, html: string) {
   console.log('🔧 Configuration email:')
@@ -128,160 +128,96 @@ serve(async (req) => {
     })
 
     const cancellationReason = bookingData.cancellation_reason?.trim() || null
-    const cancellationReasonBlock = cancellationReason
-      ? `<p style="margin: 8px 0;"><strong>Motif :</strong> ${cancellationReason}</p>`
-      : ''
 
     let emailContent = ''
     let emailSubject = ''
 
+    const tripRows = [
+      { label: 'Départ', value: bookingData.pickup_address },
+      { label: 'Arrivée', value: bookingData.destination_address },
+      { label: 'Date et heure', value: formattedDate },
+      { label: 'Distance', value: bookingData.distance_km !== undefined ? `${bookingData.distance_km} km` : '' },
+      { label: 'Prix', value: bookingData.price_tnd !== undefined ? `${bookingData.price_tnd} TND` : '' },
+    ]
+    const clientFullName = `${clientData.first_name ?? ''} ${clientData.last_name ?? ''}`.trim()
+
     if (status === 'accepted') {
       // Email pour réservation acceptée
-      emailSubject = '✅ TuniDrive - Réservation acceptée par le chauffeur'
-      emailContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #10b981; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">✅ Réservation acceptée !</h1>
-          </div>
-          
-          <div style="padding: 30px 20px;">
-            <h2 style="color: #333;">Bonjour ${clientData.first_name} ${clientData.last_name},</h2>
-            
-            <p style="font-size: 16px; line-height: 1.6; color: #555;">
-              Bonne nouvelle ! Votre chauffeur a <strong style="color: #10b981;">accepté votre réservation</strong> !
-            </p>
-            
-            <div style="background-color: #d1fae5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
-              <h3 style="color: #065f46; margin-top: 0;">📍 Détails de votre course</h3>
-              <p style="margin: 8px 0;"><strong>Départ :</strong> ${bookingData.pickup_address}</p>
-              <p style="margin: 8px 0;"><strong>Arrivée :</strong> ${bookingData.destination_address}</p>
-              <p style="margin: 8px 0;"><strong>Date et heure :</strong> ${formattedDate}</p>
-              <p style="margin: 8px 0;"><strong>Distance :</strong> ${bookingData.distance_km} km</p>
-              <p style="margin: 8px 0;"><strong>Prix :</strong> ${bookingData.price_tnd} TND</p>
-              ${bookingData.notes ? `<p style="margin: 8px 0;"><strong>Notes :</strong> ${bookingData.notes}</p>` : ''}
-            </div>
-            
-            <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #1565c0; margin-top: 0;">👨‍✈️ Votre chauffeur</h3>
-              <p style="margin: 8px 0;"><strong>Nom :</strong> ${driverData.first_name} ${driverData.last_name}</p>
-              ${driverData.phone ? `<p style="margin: 8px 0;"><strong>Téléphone :</strong> ${driverData.phone}</p>` : ''}
-              ${driverData.vehicle_info ? `
-                <p style="margin: 8px 0;"><strong>Véhicule :</strong> ${driverData.vehicle_info.make} ${driverData.vehicle_info.model} (${driverData.vehicle_info.color})</p>
-                <p style="margin: 8px 0;"><strong>Plaque :</strong> ${driverData.vehicle_info.licensePlate}</p>
-              ` : ''}
-            </div>
-            
-            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0; color: #856404;">
-                <strong>⏰ Important :</strong> Soyez prêt 5 minutes avant l'heure prévue. 
-                Votre chauffeur vous contactera directement si nécessaire.
-              </p>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; margin-top: 30px;">
-              Merci de faire confiance à TuniDrive pour vos déplacements !
-            </p>
-          </div>
-          
-          <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-            <p style="margin: 0;">TuniDrive - Votre transport sur mesure</p>
-            <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">
-              Pour toute question : support@tunidrive.net
-            </p>
-          </div>
-        </div>
-      `
+      emailSubject = 'TuniDrive — Votre réservation est acceptée'
+      const vehicle = driverData.vehicle_info
+      const vehicleText = vehicle
+        ? `${vehicle.make ?? ''} ${vehicle.model ?? ''}${vehicle.color ? ` (${vehicle.color})` : ''}`.trim()
+        : ''
+      emailContent = renderEmail({
+        title: 'Votre réservation est acceptée',
+        preheader: `${formattedDate} — ${bookingData.pickup_address ?? ''} → ${bookingData.destination_address ?? ''}`,
+        body: [
+          greeting(clientFullName),
+          paragraph('Bonne nouvelle : votre chauffeur a <strong>accepté votre réservation</strong>.'),
+          infoCard('Votre course', [...tripRows, { label: 'Notes', value: bookingData.notes }], 'success'),
+          infoCard('Votre chauffeur', [
+            { label: 'Nom', value: `${driverData.first_name ?? ''} ${driverData.last_name ?? ''}`.trim() },
+            { label: 'Téléphone', value: driverData.phone, href: driverData.phone ? `tel:${driverData.phone}` : undefined },
+            { label: 'Véhicule', value: vehicleText },
+            { label: 'Plaque', value: vehicle?.licensePlate },
+          ], 'info'),
+          notice('<strong>À savoir :</strong> soyez prêt 5 minutes avant l\'heure prévue. Votre chauffeur vous contactera directement si nécessaire.', 'warning'),
+          button('Voir ma réservation', `${SITE_URL}/client-dashboard`),
+          paragraph('Merci de faire confiance à TuniDrive pour vos déplacements.'),
+        ].join(''),
+      })
     } else if (status === 'cancelled') {
       // Email pour réservation annulée - adapter le message selon qui a annulé
       console.log('📧 === EMAIL ANNULATION CLIENT ===');
       console.log('cancelledBy reçu:', cancelledBy);
       console.log('Type de cancelledBy:', typeof cancelledBy);
-      
+
       const cancelledByDriver = cancelledBy === 'driver';
       const cancelledByAdmin = cancelledBy === 'admin';
       console.log('cancelledByDriver calculé:', cancelledByDriver);
       console.log('cancelledByAdmin calculé:', cancelledByAdmin);
-      
-      emailSubject = cancelledByDriver 
-        ? '❌ TuniDrive - Réservation annulée par le chauffeur'
+
+      emailSubject = cancelledByDriver
+        ? 'TuniDrive — Réservation annulée par le chauffeur'
         : cancelledByAdmin
-          ? '❌ TuniDrive - Réservation annulée par TuniDrive'
-          : '❌ TuniDrive - Réservation annulée';
-      
+          ? 'TuniDrive — Réservation annulée par TuniDrive'
+          : 'TuniDrive — Réservation annulée';
+
       console.log('Email subject choisi:', emailSubject);
-      
-      emailContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #ef4444; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">❌ Réservation annulée</h1>
-          </div>
-          
-          <div style="padding: 30px 20px;">
-            <h2 style="color: #333;">Bonjour ${clientData.first_name} ${clientData.last_name},</h2>
-            
-            <p style="font-size: 16px; line-height: 1.6; color: #555;">
-              ${cancelledByDriver 
-                ? 'Nous sommes désolés de vous informer que votre chauffeur a dû <strong style="color: #ef4444;">annuler votre réservation</strong>.'
-                : cancelledByAdmin
-                  ? 'Nous sommes désolés de vous informer que votre réservation a été <strong style="color: #ef4444;">annulée par notre équipe TuniDrive</strong>.'
-                  : 'Votre réservation a été <strong style="color: #ef4444;">annulée avec succès</strong>.'
-              }
-            </p>
-            
-            <div style="background-color: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
-              <h3 style="color: #991b1b; margin-top: 0;">📍 Détails de la réservation annulée</h3>
-              <p style="margin: 8px 0;"><strong>Départ :</strong> ${bookingData.pickup_address}</p>
-              <p style="margin: 8px 0;"><strong>Arrivée :</strong> ${bookingData.destination_address}</p>
-              <p style="margin: 8px 0;"><strong>Date et heure :</strong> ${formattedDate}</p>
-              <p style="margin: 8px 0;"><strong>Distance :</strong> ${bookingData.distance_km} km</p>
-              <p style="margin: 8px 0;"><strong>Prix :</strong> ${bookingData.price_tnd} TND</p>
-              ${cancellationReasonBlock}
-            </div>
-            
-            <div style="background-color: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #1e40af; margin-top: 0;">🔄 Que faire maintenant ?</h3>
-              <p style="margin: 8px 0;">Vous pouvez :</p>
-              <ul style="color: #1e40af; margin: 10px 0; padding-left: 20px;">
-                <li style="margin: 8px 0;">Rechercher un autre chauffeur disponible pour le même trajet</li>
-                <li style="margin: 8px 0;">Modifier votre date et heure de départ</li>
-                <li style="margin: 8px 0;">Nous contacter si vous avez besoin d'aide</li>
-              </ul>
-            </div>
-            
-            <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0; color: #92400e; font-size: 14px;">
-                <strong>ℹ️ À noter :</strong> Les annulations ne sont autorisées que jusqu'à 24h avant le départ. Au-delà, veuillez contacter directement votre chauffeur ou le support.
-              </p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${bookingData.booking_url || 'https://tunidrive.net'}" style="display: inline-block; padding: 15px 30px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
-                Rechercher un autre chauffeur
-              </a>
-            </div>
-            
-            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0; color: #6b7280; font-size: 14px;">
-                <strong>💬 Besoin d'aide ?</strong><br>
-                Notre équipe support est à votre disposition :<br>
-                📧 Email : support@tunidrive.net<br>
-                📱 WhatsApp : +216 28 528 477
-              </p>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; margin-top: 30px;">
-              Nous nous excusons pour ce désagrément et restons à votre disposition.
-            </p>
-          </div>
-          
-          <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-            <p style="margin: 0;">TuniDrive - Votre transport sur mesure</p>
-            <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">
-              Pour toute question : support@tunidrive.net
-            </p>
-          </div>
-        </div>
-      `
+
+      // Lien du bouton : uniquement une adresse web (jamais un autre schéma)
+      const bookingUrl = typeof bookingData.booking_url === 'string' && /^https?:\/\//i.test(bookingData.booking_url)
+        ? bookingData.booking_url
+        : SITE_URL
+
+      emailContent = renderEmail({
+        title: 'Votre réservation est annulée',
+        preheader: `${formattedDate} — ${bookingData.pickup_address ?? ''} → ${bookingData.destination_address ?? ''}`,
+        body: [
+          greeting(clientFullName),
+          paragraph(
+            cancelledByDriver
+              ? 'Nous sommes désolés : votre chauffeur a dû <strong>annuler votre réservation</strong>.'
+              : cancelledByAdmin
+                ? 'Nous sommes désolés : votre réservation a été <strong>annulée par l\'équipe TuniDrive</strong>.'
+                : 'Votre réservation a bien été <strong>annulée</strong>.',
+          ),
+          infoCard('Réservation annulée', [...tripRows, { label: 'Motif', value: cancellationReason }], 'danger'),
+          notice(
+            `<strong>Et maintenant ?</strong>${bulletList([
+              'Rechercher un autre chauffeur disponible pour le même trajet.',
+              'Modifier la date et l\'heure de votre départ.',
+              'Nous contacter si vous avez besoin d\'aide.',
+            ])}`,
+            'info',
+          ),
+          button('Rechercher un autre chauffeur', bookingUrl),
+          paragraph(
+            `Besoin d'aide ? Écrivez-nous à <a href="mailto:${SUPPORT_EMAIL}" style="color:#111827;">${SUPPORT_EMAIL}</a> ou contactez-nous sur WhatsApp au +216 28 528 477.`,
+          ),
+          paragraph('Nous vous présentons nos excuses pour ce désagrément.'),
+        ].join(''),
+      })
     } else {
       throw new Error(`Status non supporté: ${status}`)
     }
@@ -323,76 +259,38 @@ serve(async (req) => {
         const cancelledByDriver = cancelledBy === 'driver';
         const cancelledByAdmin = cancelledBy === 'admin';
         const driverEmailSubject = cancelledByDriver
-          ? '❌ TuniDrive - Vous avez annulé une course'
+          ? 'TuniDrive — Vous avez annulé une course'
           : cancelledByAdmin
-            ? '❌ TuniDrive - Course annulée par TuniDrive'
-            : '❌ TuniDrive - Course annulée par le client';
+            ? 'TuniDrive — Course annulée par TuniDrive'
+            : 'TuniDrive — Course annulée par le client';
         
-        const driverEmailContent = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background-color: #ef4444; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">❌ Course annulée</h1>
-            </div>
-            
-            <div style="padding: 30px 20px;">
-              <h2 style="color: #333;">Bonjour ${driverData.first_name} ${driverData.last_name},</h2>
-              
-              <p style="font-size: 16px; line-height: 1.6; color: #555;">
-                ${cancelledByDriver 
-                  ? 'Vous avez annulé la course suivante :'
-                  : cancelledByAdmin
-                    ? 'La course suivante a été <strong style="color: #ef4444;">annulée par l\'équipe TuniDrive</strong> :'
-                    : `Le client <strong>${clientData.first_name} ${clientData.last_name}</strong> a annulé sa réservation.`
-                }
-              </p>
-              
-              <div style="background-color: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
-                <h3 style="color: #991b1b; margin-top: 0;">📍 Détails de la course annulée</h3>
-                <p style="margin: 8px 0;"><strong>Client :</strong> ${clientData.first_name} ${clientData.last_name}</p>
-                <p style="margin: 8px 0;"><strong>Départ :</strong> ${bookingData.pickup_address}</p>
-                <p style="margin: 8px 0;"><strong>Arrivée :</strong> ${bookingData.destination_address}</p>
-                <p style="margin: 8px 0;"><strong>Date et heure :</strong> ${formattedDate}</p>
-                <p style="margin: 8px 0;"><strong>Distance :</strong> ${bookingData.distance_km} km</p>
-                <p style="margin: 8px 0;"><strong>Prix :</strong> ${bookingData.price_tnd} TND</p>
-                ${cancellationReasonBlock}
-              </div>
-              
-              ${cancelledByDriver ? `
-                <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <p style="margin: 0; color: #92400e;">
-                    <strong>⚠️ Important :</strong> L'annulation fréquente de courses peut affecter votre réputation et votre classement. Veuillez éviter les annulations sauf en cas de force majeure.
-                  </p>
-                </div>
-                <div style="background-color: #e0f2fe; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <p style="margin: 0; color: #075985; font-size: 14px;">
-                    <strong>ℹ️ Rappel :</strong> Les annulations ne sont autorisées que jusqu'à 24h avant le départ. Au-delà de ce délai, veuillez contacter directement le client par téléphone pour convenir d'une solution.
-                  </p>
-                </div>
-              ` : `
-                <div style="background-color: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <h3 style="color: #1e40af; margin-top: 0;">✅ Prochaines étapes</h3>
-                  <p style="margin: 8px 0; color: #1e40af;">Cette course n'est plus dans votre planning. Vous pouvez accepter de nouvelles courses dès maintenant.</p>
-                </div>
-                <div style="background-color: #e0f2fe; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <p style="margin: 0; color: #075985; font-size: 14px;">
-                    <strong>ℹ️ Rappel :</strong> Les annulations ne sont autorisées que jusqu'à 24h avant le départ. Au-delà de ce délai, veuillez contacter directement le chauffeur par téléphone pour convenir d'une solution.
-                  </p>
-                </div>
-              `}
-              
-              <p style="color: #666; font-size: 14px; margin-top: 30px;">
-                Merci de faire partie de l'équipe TuniDrive !
-              </p>
-            </div>
-            
-            <div style="background-color: #333; color: white; padding: 20px; text-align: center;">
-              <p style="margin: 0;">TuniDrive - Plateforme chauffeurs</p>
-              <p style="margin: 5px 0 0 0; font-size: 12px; color: #ccc;">
-                Pour toute question : support@tunidrive.net
-              </p>
-            </div>
-          </div>
-        `;
+        const driverEmailContent = renderEmail({
+          title: cancelledByDriver ? 'Vous avez annulé une course' : 'Une course a été annulée',
+          preheader: `${formattedDate} — ${bookingData.pickup_address ?? ''} → ${bookingData.destination_address ?? ''}`,
+          body: [
+            greeting(`${driverData.first_name ?? ''} ${driverData.last_name ?? ''}`),
+            paragraph(
+              cancelledByDriver
+                ? 'Votre annulation de la course suivante a bien été prise en compte.'
+                : cancelledByAdmin
+                  ? 'La course suivante a été <strong>annulée par l\'équipe TuniDrive</strong>.'
+                  : `Le client <strong>${esc(`${clientData.first_name ?? ''} ${clientData.last_name ?? ''}`.trim())}</strong> a annulé sa réservation.`,
+            ),
+            infoCard('Course annulée', [
+              { label: 'Client', value: `${clientData.first_name ?? ''} ${clientData.last_name ?? ''}`.trim() },
+              { label: 'Départ', value: bookingData.pickup_address },
+              { label: 'Arrivée', value: bookingData.destination_address },
+              { label: 'Date et heure', value: formattedDate },
+              { label: 'Distance', value: bookingData.distance_km !== undefined ? `${bookingData.distance_km} km` : '' },
+              { label: 'Prix', value: bookingData.price_tnd !== undefined ? `${bookingData.price_tnd} TND` : '' },
+              { label: 'Motif', value: cancellationReason },
+            ], 'danger'),
+            cancelledByDriver
+              ? notice('<strong>Important :</strong> les annulations fréquentes peuvent affecter votre réputation et votre classement. Merci de les éviter, sauf cas de force majeure.', 'warning')
+              : notice('<strong>Et maintenant ?</strong> Cette course n\'est plus dans votre planning : vous pouvez accepter de nouvelles courses dès maintenant.', 'info'),
+            button('Ouvrir mon tableau de bord', `${SITE_URL}/dashboard`),
+          ].join(''),
+        });
         
         const driverResult = await sendEmail(
           driverData.email,

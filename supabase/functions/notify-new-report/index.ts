@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { adminClient, escapeHtml, jsonResponse, requireServiceRole } from '../_shared/auth.ts'
+import { adminClient, jsonResponse, requireServiceRole } from '../_shared/auth.ts'
+import { renderEmail, paragraph, infoCard, button, FROM_EMAIL, SITE_URL } from '../_shared/emailLayout.ts'
 
 /**
  * E-mail à l'administrateur à chaque nouveau signalement (user_reports).
@@ -13,7 +14,6 @@ const corsHeaders = {
 }
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>'
 const ADMIN_EMAIL = 'support@tunidrive.net'
 
 const REASONS: Record<string, string> = {
@@ -62,26 +62,31 @@ serve(async (req) => {
     ])
 
     const reasonLabel = REASONS[report.reason] ?? report.reason
-    const html = `
-      <h2>Nouveau signalement : ${escapeHtml(reasonLabel)}</h2>
-      <ul>
-        <li><strong>Signalé par :</strong> ${escapeHtml(reporter)} — ${escapeHtml(ROLES[report.reporter_role] ?? report.reporter_role)}</li>
-        <li><strong>Personne signalée :</strong> ${escapeHtml(reported)} — ${escapeHtml(ROLES[report.reported_role] ?? report.reported_role)}</li>
-        <li><strong>Motif :</strong> ${escapeHtml(reasonLabel)}</li>
-        <li><strong>Commentaire :</strong> ${report.comment ? escapeHtml(report.comment) : '<em>aucun</em>'}</li>
-        <li><strong>Contexte :</strong> ${
-          report.booking_id
-            ? `réservation ${escapeHtml(report.booking_id)}`
-            : report.parcel_request_id
-              ? `demande de devis colis ${escapeHtml(report.parcel_request_id)}`
-              : 'non précisé'
-        }</li>
-        <li><strong>Historique de la personne signalée :</strong> ${totalAgainst ?? 1} signalement(s) au total, ${
-          rejectedPhotos ?? 0
-        } photo(s) refusée(s) par la modération automatique</li>
-      </ul>
-      <p>À traiter dans l'administration, onglet « Signalements » :
-        <a href="https://tunidrive.net/admin">tunidrive.net/admin</a>.</p>`
+    const context = report.booking_id
+      ? `Réservation ${report.booking_id}`
+      : report.parcel_request_id
+        ? `Demande de devis colis ${report.parcel_request_id}`
+        : 'Non précisé'
+    const html = renderEmail({
+      title: `Nouveau signalement : ${reasonLabel}`,
+      preheader: `${reporter} a signalé ${reported}.`,
+      body: [
+        infoCard('Signalement', [
+          { label: 'Signalé par', value: `${reporter} — ${ROLES[report.reporter_role] ?? report.reporter_role}` },
+          { label: 'Personne signalée', value: `${reported} — ${ROLES[report.reported_role] ?? report.reported_role}` },
+          { label: 'Motif', value: reasonLabel },
+          { label: 'Commentaire', value: report.comment || 'Aucun' },
+          { label: 'Contexte', value: context },
+        ], 'warning'),
+        infoCard('Historique de la personne signalée', [
+          { label: 'Signalements', value: `${totalAgainst ?? 1} au total` },
+          { label: 'Photos refusées', value: `${rejectedPhotos ?? 0} (modération automatique)` },
+        ]),
+        paragraph('À traiter dans l\'administration, onglet « Signalements ».'),
+        button('Ouvrir l\'administration', `${SITE_URL}/admin`),
+      ].join(''),
+      footnote: 'Notification interne envoyée à chaque nouveau signalement.',
+    })
 
     if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY manquante')
     const res = await fetch('https://api.resend.com/emails', {
@@ -90,7 +95,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [ADMIN_EMAIL],
-        subject: `[TuniDrive] Signalement : ${reasonLabel}`,
+        subject: `TuniDrive — Signalement : ${reasonLabel}`,
         html,
       }),
     })

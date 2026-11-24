@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { requireUser, jsonResponse } from '../_shared/auth.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendExpoPush } from '../_shared/expoPush.ts';
+import { renderEmail, greeting, paragraph, infoCard, button, esc, FROM_EMAIL, SITE_URL } from '../_shared/emailLayout.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,7 +11,6 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>';
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY manquante');
@@ -79,23 +79,21 @@ serve(async (req) => {
       .eq('id', proposal.driver_id)
       .single();
 
-    const clientHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background:#f8f9fa;padding:20px;text-align:center;">
-          <h1 style="color:#333;margin:0;">TuniDrive — Nouvelle proposition</h1>
-        </div>
-        <div style="padding:30px 20px;">
-          <h2>Bonjour ${client.first_name || ''} ${client.last_name || ''},</h2>
-          <p>Un transporteur vous a envoyé une proposition pour votre demande de colis.</p>
-          <div style="background:#e8f5e8;padding:20px;border-radius:8px;margin:20px 0;">
-            <p><strong>Transporteur :</strong> ${driver?.first_name || ''} ${driver?.last_name || ''}</p>
-            <p><strong>Prix proposé :</strong> ${proposal.price} ${proposal.currency}</p>
-            ${proposal.message ? `<p><strong>Message :</strong> ${proposal.message}</p>` : ''}
-          </div>
-          <p>Connectez-vous à votre espace client pour comparer les offres et valider celle de votre choix.</p>
-          <p style="margin-top:20px;"><a href="https://tunidrive.net/client-dashboard" style="background:#333;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;">Voir les propositions</a></p>
-        </div>
-      </div>`;
+    const clientHtml = renderEmail({
+      title: 'Vous avez reçu une proposition',
+      preheader: `${proposal.price} ${proposal.currency} — un transporteur a répondu à votre demande de colis.`,
+      body: [
+        greeting(`${client.first_name || ''} ${client.last_name || ''}`),
+        paragraph('Un transporteur vous a envoyé une proposition pour votre demande de colis.'),
+        infoCard('Proposition', [
+          { label: 'Transporteur', value: `${driver?.first_name || ''} ${driver?.last_name || ''}`.trim() },
+          { label: 'Prix proposé', value: `${proposal.price} ${proposal.currency}` },
+          { label: 'Message', value: proposal.message },
+        ], 'success'),
+        paragraph('Connectez-vous à votre espace client pour comparer les offres et valider celle de votre choix.'),
+        button('Voir les propositions', `${SITE_URL}/client-dashboard`),
+      ].join(''),
+    });
 
     if (client.email) {
       await sendEmail(
@@ -125,14 +123,20 @@ serve(async (req) => {
     }
 
     if (driver?.email) {
+      const driverConfirmHtml = renderEmail({
+        title: 'Votre proposition a été envoyée',
+        preheader: `Votre offre de ${proposal.price} ${proposal.currency} a été transmise au client.`,
+        body: [
+          greeting(`${driver.first_name ?? ''} ${driver.last_name ?? ''}`),
+          paragraph(`Votre proposition de <strong>${esc(proposal.price)} ${esc(proposal.currency)}</strong> a bien été transmise au client.`),
+          paragraph('Vous serez notifié si le client accepte votre offre.'),
+          button('Ouvrir mon tableau de bord', `${SITE_URL}/dashboard`),
+        ].join(''),
+      });
       await sendEmail(
         driver.email,
         'TuniDrive — Votre proposition a été envoyée',
-        `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-          <p>Bonjour ${driver.first_name} ${driver.last_name},</p>
-          <p>Votre proposition de <strong>${proposal.price} ${proposal.currency}</strong> a bien été transmise au client.</p>
-          <p>Vous serez notifié si le client accepte votre offre.</p>
-        </div>`
+        driverConfirmHtml
       );
     }
 
