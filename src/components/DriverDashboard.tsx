@@ -517,15 +517,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   };
 
   const canCancelBooking = (booking: { scheduled_time?: string; status: string }) => {
-    try {
-      if (!booking?.scheduled_time) return false;
-      const scheduledMs = new Date(booking.scheduled_time).getTime();
-      const nowMs = Date.now();
-      const hoursUntil = (scheduledMs - nowMs) / 36e5;
-      return hoursUntil >= 24 && (booking.status === 'pending' || booking.status === 'accepted');
-    } catch {
-      return false;
-    }
+    // Plus de délai minimal : annulation possible tant que la course n'a pas démarré.
+    return booking.status === 'pending' || booking.status === 'accepted';
   };
 
   const cancelBookingByDriver = async (bookingId: string) => {
@@ -540,23 +533,11 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       return;
     }
     
-    // Vérifier le délai de 24h
     if (!canCancelBooking(booking)) {
-      const scheduledTime = new Date(booking.scheduled_time);
-      const now = new Date();
-      const hoursUntil = (scheduledTime.getTime() - now.getTime()) / 36e5;
-      
-      alert(
-        `⚠️ Annulation impossible\n\n` +
-        `Les réservations ne peuvent être annulées que si elles sont programmées dans plus de 24 heures.\n\n` +
-        `Cette course est prévue dans ${Math.round(hoursUntil)} heure(s).\n\n` +
-        `Pour annuler cette réservation, veuillez contacter directement le client par téléphone :\n` +
-        `${booking.clients?.phone || 'Numéro non disponible'}\n\n` +
-        `Client : ${booking.clients?.first_name} ${booking.clients?.last_name}`
-      );
+      alert('Cette réservation ne peut plus être annulée.');
       return;
     }
-    
+
     const confirmed = window.confirm(
       "Confirmer l'annulation de cette course ?\n\n" +
       "Cette action sera notifiée au client par email et notification push.\n\n" +

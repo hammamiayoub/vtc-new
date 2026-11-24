@@ -258,7 +258,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">The customer and the driver may cancel a private-hire booking up to 24 hours before the scheduled pickup time.</span>
+                  <span className="text-gray-700">Scheduled booking: the customer and the driver may cancel up to the day of departure, as long as the trip has not yet started. A late or repeated cancellation may lead to penalties, restricted access to the service or suspension of the account.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>

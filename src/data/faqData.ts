@@ -27,7 +27,7 @@ export const faqCategories: FaqCategory[] = [
         id: "c2",
         question: "Comment annuler ou modifier une réservation ?",
         answer:
-          "Depuis « Mes réservations », ouvrez la course concernée et cliquez sur « Annuler ». L'annulation en ligne est possible jusqu'à 24 h avant l'heure prévue, tant que la course est en attente ou acceptée.\n\nPassé ce délai, contactez directement le chauffeur (son numéro est affiché sur la course) ou le support. Pour changer l'horaire ou l'adresse, annulez puis réservez de nouveau, ou écrivez-nous.",
+          "Depuis « Mes réservations », ouvrez la course concernée et cliquez sur « Annuler ». L'annulation en ligne est possible à tout moment tant que la course est en attente ou acceptée, c'est-à-dire avant son démarrage. Les annulations tardives ou répétées peuvent entraîner des pénalités.\n\nUne fois la course démarrée, contactez directement le chauffeur (son numéro est affiché sur la course) ou le support. Pour changer l'horaire ou l'adresse, annulez puis réservez de nouveau, ou écrivez-nous.",
       },
       {
         id: "c3",
@@ -270,7 +270,7 @@ export const faqCategories: FaqCategory[] = [
         id: "d9",
         question: "Puis-je annuler une course acceptée ?",
         answer:
-          "Oui, jusqu'à 24 h avant l'heure prévue, avec le bouton « Annuler » (ou « Refuser » pour une nouvelle demande). Passé ce délai, contactez le client par téléphone : son numéro est affiché dans la course.",
+          "Oui, tant que la course n'a pas démarré, avec le bouton « Annuler » (ou « Refuser » pour une nouvelle demande). Les annulations tardives ou répétées peuvent entraîner des pénalités. Une fois la course démarrée, contactez le client par téléphone : son numéro est affiché dans la course.",
       },
     ],
   },

@@ -238,15 +238,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ onLogout }) =>
   const canCancelBooking = (
     booking: { scheduled_time?: string; status: Booking['status'] }
   ) => {
-    try {
-      if (!booking?.scheduled_time) return false;
-      const scheduledMs = new Date(booking.scheduled_time).getTime();
-      const nowMs = Date.now();
-      const hoursUntil = (scheduledMs - nowMs) / 36e5;
-      return hoursUntil >= 24 && (booking.status === 'pending' || booking.status === 'accepted');
-    } catch {
-      return false;
-    }
+    // Plus de délai minimal : annulation possible tant que la course n'a pas démarré.
+    return booking.status === 'pending' || booking.status === 'accepted';
   };
 
   const cancelBooking = async (bookingId: string) => {
