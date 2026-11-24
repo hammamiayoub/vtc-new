@@ -6,7 +6,7 @@
  * le titre reste lisible quand les images sont bloquées (alt + texte).
  */
 
-export const LOGO_URL = 'https://tunidrive.net/new-logo-Tunidrive.jpg';
+export const LOGO_URL = 'https://tunidrive.net/email/logo-email.png';
 export const SITE_URL = 'https://tunidrive.net';
 export const SUPPORT_EMAIL = 'support@tunidrive.net';
 export const FROM_EMAIL = 'TuniDrive <noreply@tunidrive.net>';
@@ -128,7 +128,7 @@ export function renderEmail({ title, body, preheader, footnote }: EmailLayoutOpt
         <tr>
           <td align="center" style="padding:28px 24px 20px;border-bottom:3px solid #111827;">
             <a href="${SITE_URL}" target="_blank" style="text-decoration:none;">
-              <img src="${LOGO_URL}" alt="TuniDrive" width="160" style="display:block;width:160px;max-width:100%;height:auto;border:0;margin:0 auto;font-size:22px;font-weight:800;color:#111827;">
+              <img src="${LOGO_URL}" alt="TuniDrive" width="180" style="display:block;width:180px;max-width:100%;height:auto;border:0;margin:0 auto;font-size:22px;font-weight:800;color:#111827;">
             </a>
           </td>
         </tr>
