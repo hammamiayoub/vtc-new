@@ -1,0 +1,3 @@
+[process-commission-statements]
+verify_jwt = false
+allow_net = ["<all>"]

@@ -30,6 +30,7 @@ import {
   ShieldOff,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
+import { AdminCommissionStatements } from './AdminCommissionStatements';
 import { AdminReports } from './AdminReports';
 import { AdminBlogPosts } from './AdminBlogPosts';
 import { AdminPricing } from './AdminPricing';
@@ -2663,6 +2664,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           </div>
         ) : activeTab === 'subscriptions' ? (
           /* Subscriptions List */
+          <>
+          <AdminCommissionStatements />
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -2974,6 +2977,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               </div>
             )}
           </div>
+          </>
         ) : activeTab === 'parcels' ? (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
