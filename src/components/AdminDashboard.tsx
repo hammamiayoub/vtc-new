@@ -1677,6 +1677,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  /** Boutons de décision sur le chauffeur propriétaire d'un véhicule (accepter / révoquer / remettre en attente). */
+  const renderVehicleDriverActions = (vehicle: VehicleWithDriver, size: 'sm' | 'md' = 'sm') => {
+    const driver = drivers.find((d) => d.id === vehicle.driverId);
+    if (!driver) return null;
+    const busy = actionLoading === driver.id;
+    const base =
+      size === 'sm'
+        ? 'inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md border transition-colors disabled:opacity-50'
+        : 'inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50';
+    const icon = size === 'sm' ? 12 : 16;
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
+        {driver.status !== 'active' && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => requestDriverStatusChange(driver, 'active')}
+            className={`${base} text-success-700 bg-success-50 border-success-200 hover:bg-success-100`}
+            title="Accepter le chauffeur"
+          >
+            <CheckCircle size={icon} /> Accepter
+          </button>
+        )}
+        {driver.status !== 'pending' && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => requestDriverStatusChange(driver, 'pending')}
+            className={`${base} text-warning-700 bg-warning-50 border-warning-200 hover:bg-warning-100`}
+            title="Remettre le chauffeur en attente"
+          >
+            <Clock size={icon} /> En attente
+          </button>
+        )}
+        {driver.status !== 'rejected' && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => requestDriverStatusChange(driver, 'rejected')}
+            className={`${base} text-danger-700 bg-danger-50 border-danger-200 hover:bg-danger-100`}
+            title="Révoquer le chauffeur"
+          >
+            <XCircle size={icon} /> Révoquer
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const fetchAllAvailabilities = async (vehicle: VehicleWithDriver) => {
     if (!vehicle.driverId) return;
     
@@ -3055,6 +3104,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             </p>
                             <p className="text-gray-500 truncate text-[10px]">{vehicle.driver.email}</p>
                             <div className="mt-1">{getDriverActivityBadge(vehicle.driver.driverType, vehicle.driver.parcelScope)}</div>
+                            <div className="mt-2">{renderVehicleDriverActions(vehicle)}</div>
                           </div>
                         ) : (
                           <p className="text-gray-500 italic text-xs">Aucun chauffeur</p>
@@ -3231,6 +3281,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                             {getDriverActivityBadge(vehicle.driver.driverType, vehicle.driver.parcelScope)}
                             {<DriverStatusBadge status={vehicle.driver.status} />}
                             </div>
+                            <div className="mt-2">{renderVehicleDriverActions(vehicle)}</div>
                           </>
                         ) : (
                           <p className="text-sm text-gray-500 italic">Aucun chauffeur</p>
@@ -5687,6 +5738,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
 
             <div className="p-6 space-y-6">
+              {/* Décision sur le chauffeur */}
+              {selectedVehicle.driver && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {selectedVehicle.driver.firstName} {selectedVehicle.driver.lastName}
+                    </p>
+                    <div className="mt-1"><DriverStatusBadge status={drivers.find((d) => d.id === selectedVehicle.driverId)?.status ?? selectedVehicle.driver.status} /></div>
+                  </div>
+                  {renderVehicleDriverActions(selectedVehicle, 'md')}
+                </div>
+              )}
+
               {/* Vehicle Photo */}
               {selectedVehicle.photoUrl && (
                 <div>
