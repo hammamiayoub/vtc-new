@@ -1116,7 +1116,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
                     <p className="text-sm sm:text-base text-gray-600">
                       {en
                         ? `Checking availability and distance within ${searchRadiusKm} km…`
-                        : `Vérification des disponibilités, abonnements et distances dans un rayon de ${searchRadiusKm} km…`}
+                        : `Vérification des disponibilités et des distances dans un rayon de ${searchRadiusKm} km…`}
                     </p>
                   </div>
                 </div>

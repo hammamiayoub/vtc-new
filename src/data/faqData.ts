@@ -207,9 +207,9 @@ export const faqCategories: FaqCategory[] = [
       },
       {
         id: "pl9",
-        question: "Faut-il un abonnement pour être transporteur local ?",
+        question: "Y a-t-il un abonnement pour être transporteur local ?",
         answer:
-          "Les mêmes règles que pour les chauffeurs s'appliquent : 2 courses gratuites à vie, puis l'abonnement Pro. Les courses VTC et les livraisons de colis partagent ce quota.\n\nUne course est décomptée lorsqu'un client accepte votre offre. L'envoi de propositions est bloqué une fois le quota épuisé sans abonnement actif.",
+          "Non, il n'y a pas d'abonnement. Les mêmes règles que pour les chauffeurs s'appliquent : vos 2 premières courses sont gratuites, puis TuniDrive perçoit une commission de 10 % HT (+ 19 % de TVA) sur les courses terminées chaque mois. Les courses VTC et les livraisons de colis sont comptées ensemble.\n\nUne course est facturée lorsqu'elle est terminée (non annulée). Si vous ne faites aucune course dans le mois, vous ne payez rien.",
       },
     ],
   },
@@ -238,21 +238,21 @@ export const faqCategories: FaqCategory[] = [
       },
       {
         id: "d4",
-        question: "Combien coûte l'abonnement chauffeur ?",
+        question: "Combien coûte la plateforme pour un chauffeur ?",
         answer:
-          "L'abonnement Pro est proposé à :\n• Mensuel : 30 TND HT / mois (soit ~35,70 TND TTC avec 19% de TVA)\n• Annuel : 10% de réduction sur le tarif mensuel\n\nSans abonnement, vous bénéficiez d'un nombre limité de courses gratuites pour tester la plateforme.",
+          "Il n'y a pas d'abonnement. TuniDrive perçoit une commission de 10 % HT sur le montant des courses que vous terminez dans le mois, majorée de 19 % de TVA (soit 11,9 % TTC).\n\nExemple : 1 000 TND de courses terminées = 100 TND HT de commission, soit 119 TND TTC à virer.\n\nVos 2 premières courses sont gratuites, et un mois sans course ne coûte rien.",
       },
       {
         id: "d5",
-        question: "Comment payer mon abonnement ?",
+        question: "Comment payer ma commission ?",
         answer:
-          "Le paiement se fait par virement bancaire. Depuis votre tableau de bord, accédez à la section « Abonnement », choisissez votre formule (mensuelle ou annuelle) et suivez les instructions de paiement. Votre abonnement est activé une fois le virement validé par notre équipe.",
+          "Le 1er de chaque mois, vous recevez par e-mail (et par notification) votre relevé de commission du mois précédent. Réglez le montant TTC par virement bancaire en indiquant la référence du relevé, au plus tard le 7 du mois à 23 h 59 (heure de Tunisie), puis déclarez votre paiement dans la section « Ma commission » de votre tableau de bord (référence ou reçu).\n\nVous restez actif tant que votre paiement déclaré n'est pas refusé. Sans paiement à l'échéance, l'accès aux nouvelles courses est suspendu jusqu'au règlement.",
       },
       {
         id: "d6",
-        question: "Combien de courses gratuites ai-je sans abonnement ?",
+        question: "Combien de courses gratuites ai-je ?",
         answer:
-          "Chaque nouveau chauffeur bénéficie de 2 courses gratuites à vie (offre valable une seule fois, sans reset mensuel).\n\nUne fois ces 2 courses utilisées, l'abonnement Pro est nécessaire pour continuer à accepter de nouvelles courses.\n\nLes livraisons de colis comptent aussi : une course est décomptée quand un client accepte votre offre.",
+          "Chaque nouveau chauffeur bénéficie de ses 2 premières courses terminées gratuites, une seule fois (courses de personnes et colis confondus). Ensuite, la commission de 10 % HT s'applique aux courses terminées.\n\nCes 2 courses ne limitent pas votre accès : vous pouvez accepter des courses normalement dès votre inscription.",
       },
       {
         id: "d7",

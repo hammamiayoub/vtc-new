@@ -126,7 +126,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Pour les chauffeurs et transporteurs, l&apos;inscription peut être soumise à des frais d&apos;abonnement ou à des conditions particulières (précisées lors de l&apos;enregistrement).</span>
+                  <span className="text-gray-700">Pour les chauffeurs et transporteurs, l&apos;inscription est gratuite ; une commission sur les courses terminées est due dans les conditions de l&apos;article 5 (« Tarifs et paiement »).</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
@@ -255,7 +255,11 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Chaque nouveau chauffeur ou transporteur bénéficie de 2 courses gratuites au total, une seule fois, courses de personnes et colis acceptés confondus. Ensuite, un abonnement « Pro » (mensuel ou annuel) est nécessaire pour accepter de nouvelles courses ou envoyer de nouvelles propositions de devis.</span>
+                  <span className="text-gray-700">Chaque nouveau chauffeur ou transporteur bénéficie de ses 2 premières courses terminées gratuites, une seule fois (courses de personnes et colis confondus). Ensuite, TuniDrive perçoit une commission de 10 % hors taxes sur le montant des courses terminées (non annulées) du mois, majorée de la TVA applicable (19 %). Il n&apos;y a pas d&apos;abonnement : un mois sans course ne donne lieu à aucune commission.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
+                  <span className="text-gray-700">Un relevé de commission est émis le 1er de chaque mois pour le mois précédent et notifié au chauffeur, qui le règle par virement bancaire avant le 7 du mois à 23 h 59 (heure de Tunisie), puis déclare son paiement depuis son espace. Le chauffeur reste actif tant que son paiement déclaré n&apos;est pas refusé ; à défaut de règlement à l&apos;échéance, l&apos;accès aux nouvelles courses est suspendu jusqu&apos;au paiement.</span>
                 </li>
               </ul>
             </div>

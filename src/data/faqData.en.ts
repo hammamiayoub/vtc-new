@@ -196,9 +196,9 @@ export const faqCategoriesEn: FaqCategory[] = [
       },
       {
         id: 'pl9',
-        question: 'Do I need a subscription to be a local carrier?',
+        question: 'Is there a subscription to be a local carrier?',
         answer:
-          'The same rules as for drivers apply: 2 free rides in total, then the Pro plan. Private-hire rides and parcel deliveries share that allowance.\n\nA ride is counted when a client accepts your offer. Sending offers is blocked once the allowance is used up without an active subscription.',
+          'No, there is no subscription. The same rules as for drivers apply: your first 2 rides are free, then TuniDrive charges a 10% commission (excl. tax, plus 19% VAT) on the rides completed each month. Private-hire rides and parcel deliveries are counted together.\n\nA ride is charged once it is completed (not cancelled). If you do not complete any ride in a month, you pay nothing.',
       },
     ],
   },
@@ -227,21 +227,21 @@ export const faqCategoriesEn: FaqCategory[] = [
       },
       {
         id: 'd4',
-        question: 'How much is the driver subscription?',
+        question: 'How much does the platform cost for a driver?',
         answer:
-          'The Pro plan is:\n• Monthly: 30 TND excl. tax / month (about 35.70 TND incl. 19% VAT)\n• Yearly: 10% off the monthly price\n\nWithout a subscription you get a limited number of free rides to try the platform.',
+          'There is no subscription. TuniDrive charges a 10% commission, excl. tax, on the amount of the rides you complete during the month, plus 19% VAT (11.9% incl. tax).\n\nExample: 1,000 TND of completed rides = 100 TND commission excl. tax, i.e. 119 TND incl. tax to transfer.\n\nYour first 2 rides are free, and a month without a ride costs nothing.',
       },
       {
         id: 'd5',
-        question: 'How do I pay the subscription?',
+        question: 'How do I pay my commission?',
         answer:
-          'Payment is by bank transfer. From the dashboard, open Subscription, choose monthly or yearly, and follow the payment instructions. The plan is activated once our team confirms the transfer.',
+          'On the 1st of each month you receive your commission statement for the previous month by e-mail (and notification). Pay the total incl. tax by bank transfer, quoting the statement reference, no later than 11:59 pm (Tunisia time) on the 7th, then declare your payment in the My commission section of your dashboard (reference or receipt).\n\nYou stay active as long as your declared payment has not been rejected. If the statement is not paid by the due date, access to new rides is suspended until payment.',
       },
       {
         id: 'd6',
-        question: 'How many free rides do I get without a subscription?',
+        question: 'How many free rides do I get?',
         answer:
-          'Each new driver gets 2 free rides in total (one-time offer, not reset every month).\n\nAfter those 2 rides, the Pro plan is required to accept new rides.\n\nParcel deliveries count too: a ride is counted when a client accepts your offer.',
+          'Each new driver gets their first 2 completed rides free, once only (passenger rides and parcels combined). After that, the 10% commission (excl. tax) applies to completed rides.\n\nThese 2 rides do not limit your access: you can accept rides normally from signup.',
       },
       {
         id: 'd7',

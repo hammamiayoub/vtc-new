@@ -45,7 +45,8 @@ const SYNONYMS: Record<string, string[]> = {
   transfert: ['aeroport', 'arrivee', 'depart'],
   tarif: ['prix', 'cout', 'coute', 'combien', 'grille', 'estimation'],
   prix: ['tarif', 'cout', 'combien'],
-  abonnement: ['premium', 'subscription', 'mensuel', 'annuel', '30'],
+  abonnement: ['commission', 'subscription', 'mensuel', 'virement', 'releve'],
+  commission: ['abonnement', 'releve', 'virement', 'tva', 'gratuites'],
   annuler: ['annulation', 'modifier', 'cancel'],
   inscription: ['compte', 'inscrire', 'signup', 'creer'],
   application: ['app', 'mobile', 'android', 'iphone', 'play', 'store'],
@@ -387,12 +388,12 @@ export function formatAssistantFallback(locale: Locale = 'fr'): string {
   if (locale === 'en') {
     return (
       'I could not find a precise answer to that question.\n\n' +
-      'Try keywords such as “price”, “airport”, “parcel” or “driver subscription”, or contact our team directly:'
+      'Try keywords such as “price”, “airport”, “parcel” or “driver commission”, or contact our team directly:'
     );
   }
   return (
     'Je n\'ai pas trouvé de réponse précise à cette question.\n\n' +
-    'Essayez des mots-clés comme « tarif », « aéroport », « colis » ou « abonnement chauffeur », ou contactez directement notre équipe :'
+    'Essayez des mots-clés comme « tarif », « aéroport », « colis » ou « commission chauffeur », ou contactez directement notre équipe :'
   );
 }
 
