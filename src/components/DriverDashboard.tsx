@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { authBearer } from '../utils/edgeAuth';
 import { TabBar } from './ui/TabBar';
 import { BottomNav } from './ui/BottomNav';
-import { daysUntilSubscriptionEnd, isSubscriptionEndPassed } from '../utils/subscriptionPeriod';
 import { Alert } from './ui/Alert';
 import { Badge } from './ui/Badge';
 import { BookingStatusBadge } from './ui/StatusBadge';
@@ -21,7 +20,6 @@ import { useDriverNotifications } from '../hooks/useNotifications';
 import { pushNotificationService } from '../utils/pushNotifications';
 import { VehicleImageUpload } from './ui/VehicleImageUpload';
 import { DriverVehicles } from './DriverVehicles';
-import { DriverSubscription } from './DriverSubscription';
 import { DriverCommission } from './DriverCommission';
 import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
@@ -64,17 +62,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
   );
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [uploadingVehiclePhoto, setUploadingVehiclePhoto] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<{
-    canAcceptMoreBookings: boolean;
-    hasActiveSubscription?: boolean;
-    subscriptionType?: 'free' | 'premium';
-    subscriptionEndDate?: string | null;
-    remainingFreeBookings?: number;
-    lastPaidSubscriptionEnd?: string | null;
-    hadPaidSubscription?: boolean;
-  } | null>(null);
+  // Accès aux nouvelles courses (false = relevé de commission en retard)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<{ canAcceptMoreBookings: boolean } | null>(null);
   const appDownloadPrompt = useAppDownloadPrompt();
-  const [showExpiredSubscriptionModal, setShowExpiredSubscriptionModal] = useState(false);
 
   // Hook pour les notifications
   const { unreadCount, hasNewBookings, markAsRead } = useDriverNotifications(driver?.id || '');
@@ -143,33 +133,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         return null;
       }
 
-      let lastPaidSubscriptionEnd: string | null = null;
-      let hadPaidSubscription = false;
-
-      const { data: lastPaidSub } = await supabase
-        .from('driver_subscriptions')
-        .select('end_date')
-        .eq('driver_id', driver.id)
-        .eq('payment_status', 'paid')
-        .order('end_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (lastPaidSub?.end_date) {
-        lastPaidSubscriptionEnd = lastPaidSub.end_date;
-        hadPaidSubscription = true;
-      }
-
       if (data && data.length > 0) {
-        return {
-          canAcceptMoreBookings: data[0].can_accept_more_bookings,
-          hasActiveSubscription: data[0].has_active_subscription,
-          subscriptionType: data[0].subscription_type,
-          subscriptionEndDate: data[0].subscription_end_date,
-          remainingFreeBookings: data[0].remaining_free_bookings,
-          lastPaidSubscriptionEnd,
-          hadPaidSubscription
-        };
+        return { canAcceptMoreBookings: Boolean(data[0].can_accept_more_bookings) };
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -184,29 +149,6 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
       setSubscriptionStatus(status);
     }
   };
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !subscriptionStatus || !driver?.id) return;
-
-    const hasActiveSubscription = subscriptionStatus.hasActiveSubscription;
-    const remainingFree = subscriptionStatus.remainingFreeBookings ?? 0;
-
-    const premiumExpired = subscriptionStatus.hadPaidSubscription && !hasActiveSubscription;
-    const endDatePassed =
-      isSubscriptionEndPassed(subscriptionStatus.subscriptionEndDate) ||
-      isSubscriptionEndPassed(subscriptionStatus.lastPaidSubscriptionEnd);
-    const noFreeRidesLeft = remainingFree <= 0;
-    const shouldShow = premiumExpired || endDatePassed || noFreeRidesLeft;
-
-    const sessionKey = `td_driver_subscription_modal_${driver.id}`;
-    const dismissed = window.sessionStorage.getItem(sessionKey) === 'dismissed';
-
-    if (shouldShow && !dismissed) {
-      setShowExpiredSubscriptionModal(true);
-    } else if (!shouldShow) {
-      setShowExpiredSubscriptionModal(false);
-    }
-  }, [subscriptionStatus, driver?.id]);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -382,10 +324,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         if (currentSubscriptionStatus && !currentSubscriptionStatus.canAcceptMoreBookings) {
           setSubscriptionStatus(currentSubscriptionStatus);
           alert(
-            '❌ Limite de courses gratuites atteinte\n\n' +
-            'Vous avez déjà accepté 2 courses avec votre compte gratuit.\n\n' +
-            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Pro (35.70 TND/mois).\n\n' +
-            'Rendez-vous dans l\'onglet "Abonnement" pour plus d\'informations.'
+            '❌ Accès aux nouvelles courses suspendu\n\n' +
+            'Votre relevé de commission est en retard.\n\n' +
+            'Réglez-le puis déclarez votre paiement dans l\'onglet "Ma commission" pour reprendre les courses.'
           );
           return;
         }
@@ -411,10 +352,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         console.error('Erreur lors de la mise à jour:', error);
         if (error.message?.includes('subscription_required')) {
           alert(
-            '❌ Limite de courses gratuites atteinte\n\n' +
-            'Vous avez déjà accepté 2 courses avec votre compte gratuit.\n\n' +
-            'Pour continuer à accepter des courses, veuillez souscrire à l\'abonnement Pro (35.70 TND/mois).\n\n' +
-            'Rendez-vous dans l\'onglet "Abonnement" pour plus d\'informations.'
+            '❌ Accès aux nouvelles courses suspendu\n\n' +
+            'Votre relevé de commission est en retard.\n\n' +
+            'Réglez-le puis déclarez votre paiement dans l\'onglet "Ma commission" pour reprendre les courses.'
           );
           await checkSubscriptionStatus();
         } else {
@@ -884,22 +824,6 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
     );
   }
 
-  const premiumExpired =
-    Boolean(subscriptionStatus?.hadPaidSubscription && !subscriptionStatus?.hasActiveSubscription);
-  const quotaDepleted = (subscriptionStatus?.remainingFreeBookings ?? 1) <= 0;
-  const expirationDateString = subscriptionStatus?.subscriptionEndDate
-    ? new Date(subscriptionStatus.subscriptionEndDate).toLocaleDateString('fr-FR')
-    : subscriptionStatus?.lastPaidSubscriptionEnd
-      ? new Date(subscriptionStatus.lastPaidSubscriptionEnd).toLocaleDateString('fr-FR')
-      : null;
-  const subscriptionModalMessage = premiumExpired
-    ? `${
-        expirationDateString
-          ? `Votre abonnement Pro a expiré le ${expirationDateString}.`
-          : 'Votre dernier abonnement Pro est arrivé à expiration.'
-      } Souscrivez à un nouvel abonnement pour continuer à recevoir des courses.`
-    : 'Vous avez utilisé vos 2 courses gratuites. Souscrivez à l\'abonnement Pro pour continuer à recevoir des courses.';
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 pb-[var(--td-bottom-nav-offset,0px)]">
       <AppDownloadModal isOpen={appDownloadPrompt.isOpen} onClose={appDownloadPrompt.close} />
@@ -958,7 +882,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             label: 'Mes devis de colis',
             hidden: !(driver?.driverType === 'transporteur' || driver?.driverType === 'both'),
           },
-          { id: 'subscription', label: 'Mon abonnement' },
+          { id: 'subscription', label: 'Ma commission' },
         ]}
       />
 
@@ -967,63 +891,24 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {/* Notification Permission */}
         <NotificationPermission />
 
-        {/* Alerte abonnement si limite proche ou atteinte */}
+        {/* Accès suspendu : relevé de commission en retard */}
         {driver && subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings && (
-          <div className="bg-warning-50 border border-warning-200 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <AlertCircle className="text-warning-700" size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-warning-900 mb-2">
-                  Courses gratuites épuisées
-                </h3>
-                <p className="text-warning-800 mb-4">
-                  Vous avez accepté vos 2 courses gratuites. Vous ne pouvez plus accepter de nouvelles courses.
-                </p>
-                <p className="text-warning-900 font-semibold mb-4">
-                  Passez à l'abonnement Pro pour continuer à recevoir des courses !
-                </p>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => setActiveTab('subscription')}
-                    className="bg-black hover:bg-gray-800 text-white font-semibold"
-                  >
-                    Voir l'abonnement Pro
-                  </Button>
-                </div>
-              </div>
+          <Alert tone="warning" className="mb-6 sm:mb-8" title="Accès aux nouvelles courses suspendu">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                Votre relevé de commission est en retard. Réglez-le et déclarez votre paiement pour reprendre les
+                courses : vous restez actif dès que le paiement est déclaré.
+              </p>
+              <Button
+                size="sm"
+                onClick={() => setActiveTab('subscription')}
+                className="flex-shrink-0 bg-black hover:bg-gray-800 text-white"
+              >
+                Voir ma commission
+              </Button>
             </div>
-          </div>
+          </Alert>
         )}
-        
-        {/* Abonnement qui arrive à échéance : rappel visible dès 7 jours, avant l'email et le blocage */}
-        {driver && subscriptionStatus?.hasActiveSubscription && (() => {
-          const daysLeft = daysUntilSubscriptionEnd(subscriptionStatus.subscriptionEndDate);
-          if (daysLeft === null || daysLeft < 0 || daysLeft > 7) return null;
-          const when = daysLeft === 0 ? "aujourd'hui" : daysLeft === 1 ? 'demain' : `dans ${daysLeft} jours`;
-          return (
-            <Alert
-              tone="warning"
-              className="mb-6 sm:mb-8"
-              title={`Votre abonnement expire ${when}`}
-            >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p>
-                  Renouvelez-le dès maintenant : la nouvelle période démarre à la fin de l'actuelle, vous ne perdez
-                  aucun jour. Sans abonnement actif, l'acceptation de nouvelles courses sera limitée.
-                </p>
-                <Button
-                  size="sm"
-                  onClick={() => setActiveTab('subscription')}
-                  className="flex-shrink-0 bg-black hover:bg-gray-800 text-white"
-                >
-                  Renouveler
-                </Button>
-              </div>
-            </Alert>
-          );
-        })()}
 
         {/* Profile Completion Alert */}
         {needsProfileCompletion && !showProfileForm && activeTab === 'dashboard' && (
@@ -1065,43 +950,6 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
         {/* Contenu conditionnel basé sur l'onglet actif */}
         {!showProfileForm && activeTab === 'dashboard' && (
           <>
-            {showExpiredSubscriptionModal && (
-              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-                <div className="bg-white rounded-2xl shadow-overlay max-w-lg w-full p-6 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="w-6 h-6 text-danger-600" />
-                    <h3 className="text-xl font-semibold text-gray-900">Abonnement expiré</h3>
-                  </div>
-                  <p className="text-gray-700">{subscriptionModalMessage}</p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      className="flex-1 bg-black hover:bg-gray-800 text-white"
-                      onClick={() => {
-                        if (typeof window !== 'undefined' && driver) {
-                          window.sessionStorage.setItem(`td_driver_subscription_modal_${driver.id}`, 'dismissed');
-                        }
-                        setShowExpiredSubscriptionModal(false);
-                        setActiveTab('subscription');
-                      }}
-                    >
-                      Voir l'abonnement
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => {
-                        if (typeof window !== 'undefined' && driver) {
-                          window.sessionStorage.setItem(`td_driver_subscription_modal_${driver.id}`, 'dismissed');
-                        }
-                        setShowExpiredSubscriptionModal(false);
-                      }}
-                    >
-                      Plus tard
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
             {/* Welcome Section */}
             <div className="bg-white rounded-xl shadow-sm p-4 sm:p-4 sm:p-6 mb-6 sm:mb-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -1374,19 +1222,18 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           </div>
         )}
 
-        {/* Onglet Abonnement */}
+        {/* Onglet Commission */}
         {!showProfileForm && activeTab === 'subscription' && driver && (
           <div className="w-full">
             <div className="mb-6">
               <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">
-                Gestion de l'abonnement
+                Ma commission
               </h2>
               <p className="text-gray-600">
-                Gérez votre abonnement et suivez votre quota mensuel de courses
+                Suivez vos relevés mensuels et déclarez vos virements
               </p>
             </div>
             <DriverCommission driverId={driver.id} />
-            <DriverSubscription driverId={driver.id} />
           </div>
         )}
 
@@ -1404,11 +1251,11 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
             {subscriptionStatus && !subscriptionStatus.canAcceptMoreBookings && (
               <div className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <p className="text-sm text-warning-900">
-                  Vous avez utilisé vos courses gratuites. Un abonnement Pro est nécessaire pour
+                  Votre accès est suspendu : votre relevé de commission est en retard. Réglez-le pour
                   envoyer de nouvelles propositions (courses et colis).
                 </p>
                 <Button size="sm" onClick={() => setActiveTab('subscription')}>
-                  Voir l'abonnement
+                  Voir ma commission
                 </Button>
               </div>
             )}
@@ -1961,7 +1808,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
           },
           { id: 'availability', label: 'Dispos', icon: CalendarDays, hidden: hidesAvailability },
           { id: 'vehicles', label: 'Véhicules', icon: Car },
-          { id: 'subscription', label: 'Abonnement', icon: CreditCard },
+          { id: 'subscription', label: 'Commission', icon: CreditCard },
         ]}
       />
     </div>

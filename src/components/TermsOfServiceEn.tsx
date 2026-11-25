@@ -116,7 +116,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">For drivers and carriers, signup may be subject to a subscription fee or to specific conditions (stated at registration).</span>
+                  <span className="text-gray-700">For drivers and carriers, signup is free; a commission on completed rides is due under the conditions of section 5 (“Fares and payment”).</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
@@ -242,7 +242,11 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
-                  <span className="text-gray-700">Each new driver or carrier gets 2 free rides in total, once only, passenger rides and accepted parcel requests combined. After that, a “Pro” subscription (monthly or yearly) is required to accept new rides or send new quotes.</span>
+                  <span className="text-gray-700">Each new driver or carrier gets their first 2 completed rides free, once only (passenger rides and parcels combined). After that, TuniDrive charges a 10% commission, excluding tax, on the amount of the rides completed (not cancelled) during the month, plus the applicable VAT (19%). There is no subscription: a month without any ride means no commission.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
+                  <span className="text-gray-700">A commission statement is issued on the 1st of each month for the previous month and sent to the driver, who pays it by bank transfer before 11:59 pm (Tunisia time) on the 7th, then declares the payment from their account. The driver stays active as long as the declared payment has not been rejected; if the statement is not paid by the due date, access to new rides is suspended until payment.</span>
                 </li>
               </ul>
             </div>
