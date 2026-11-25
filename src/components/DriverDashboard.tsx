@@ -22,6 +22,7 @@ import { pushNotificationService } from '../utils/pushNotifications';
 import { VehicleImageUpload } from './ui/VehicleImageUpload';
 import { DriverVehicles } from './DriverVehicles';
 import { DriverSubscription } from './DriverSubscription';
+import { DriverCommission } from './DriverCommission';
 import { uploadVehicleImage, deleteVehicleImage } from '../utils/imageUpload';
 import { supabase } from '../lib/supabase';
 import { analytics } from '../utils/analytics';
@@ -1384,6 +1385,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onLogout }) =>
                 Gérez votre abonnement et suivez votre quota mensuel de courses
               </p>
             </div>
+            <DriverCommission driverId={driver.id} />
             <DriverSubscription driverId={driver.id} />
           </div>
         )}
