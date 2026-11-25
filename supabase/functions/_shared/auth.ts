@@ -36,7 +36,29 @@ export async function getCaller(req: Request): Promise<Caller | null> {
     .eq('id', data.user.id)
     .maybeSingle();
 
-  return { user: data.user, isAdmin: !!adminRow };
+  if (!adminRow) return { user: data.user, isAdmin: false };
+
+  // Double authentification : quand elle est exigée (admin_security_settings.mfa_required), un administrateur
+  // dont la session n'est pas en « aal2 » (mot de passe + code TOTP) n'est pas reconnu comme tel.
+  // Le jeton vient d'être validé par getUser : on peut lire son claim « aal » sans revérifier la signature.
+  const { data: settings } = await adminClient()
+    .from('admin_security_settings')
+    .select('mfa_required')
+    .eq('id', true)
+    .maybeSingle();
+  if (settings?.mfa_required && tokenAal(token) !== 'aal2') {
+    return { user: data.user, isAdmin: false };
+  }
+  return { user: data.user, isAdmin: true };
+}
+
+function tokenAal(token: string): string {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(payload)).aal ?? 'aal1';
+  } catch {
+    return 'aal1';
+  }
 }
 
 export function jsonResponse(

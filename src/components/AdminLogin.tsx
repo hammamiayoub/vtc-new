@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield, KeyRound } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 
@@ -15,6 +15,82 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  // Double authentification : 'password' -> 'verify' (code TOTP) ou 'enroll' (premier réglage, QR code)
+  const [step, setStep] = useState<'password' | 'verify' | 'enroll'>('password');
+  const [code, setCode] = useState('');
+  const [factorId, setFactorId] = useState('');
+  const [qrCode, setQrCode] = useState('');
+  const [secret, setSecret] = useState('');
+  const [mfaRequired, setMfaRequired] = useState(false);
+
+  const finishLogin = async (userId: string) => {
+    const { data: adminData, error: adminError } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (adminError || !adminData) {
+      setError('Erreur lors de la vérification du compte administrateur');
+      await supabase.auth.signOut();
+      setStep('password');
+      return;
+    }
+    onLoginSuccess();
+  };
+
+  const startEnrollment = async () => {
+    // Un facteur commencé mais jamais confirmé bloquerait un nouvel enrôlement : on le supprime.
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    for (const f of factors?.all ?? []) {
+      if (f.factor_type === 'totp' && f.status === 'unverified') {
+        await supabase.auth.mfa.unenroll({ factorId: f.id });
+      }
+    }
+    const { data, error: enrollError } = await supabase.auth.mfa.enroll({
+      factorType: 'totp',
+      friendlyName: `TuniDrive admin ${new Date().toISOString().slice(0, 10)}`,
+    });
+    if (enrollError || !data) {
+      setError("Impossible de démarrer l'authentification à deux facteurs : " + (enrollError?.message ?? ''));
+      await supabase.auth.signOut();
+      setStep('password');
+      return;
+    }
+    setFactorId(data.id);
+    setQrCode(data.totp.qr_code);
+    setSecret(data.totp.secret);
+    setStep('enroll');
+  };
+
+  const handleCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+    try {
+      const { error: mfaError } = await supabase.auth.mfa.challengeAndVerify({
+        factorId,
+        code: code.replace(/\s/g, ''),
+      });
+      if (mfaError) {
+        setError('Code incorrect ou expiré. Réessayez avec le code affiché dans votre application.');
+        setCode('');
+        return;
+      }
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        setError('Session introuvable, reconnectez-vous.');
+        setStep('password');
+        return;
+      }
+      await finishLogin(userData.user.id);
+    } catch (err) {
+      console.error('Erreur MFA admin:', err);
+      setError('Une erreur est survenue lors de la vérification du code');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,26 +121,39 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
           });
         }
 
-        const { data: adminData, error: adminError } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('id', data.user.id)
-          .maybeSingle();
-
-        if (adminError) {
-          console.error('Erreur lors de la vérification admin:', adminError);
+        // Le statut est lu par une fonction dédiée : la table admin_users est masquée tant que la session
+        // n'est pas validée par le code TOTP (aal2).
+        const { data: status, error: statusError } = await supabase.rpc('admin_account_status');
+        if (statusError) {
+          console.error('Erreur lors de la vérification admin:', statusError);
           setError('Erreur lors de la vérification du compte administrateur');
           await supabase.auth.signOut();
           return;
         }
-
-        if (!adminData) {
+        if (!status?.is_admin) {
           setError("Identifiants incorrects. Ce compte n'a pas les droits administrateur. Accès refusé.");
           await supabase.auth.signOut();
           return;
         }
+        setMfaRequired(!!status.mfa_required);
 
-        onLoginSuccess();
+        const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aal?.currentLevel === 'aal2') {
+          await finishLogin(data.user.id);
+          return;
+        }
+        if (aal?.nextLevel === 'aal2') {
+          const { data: factors } = await supabase.auth.mfa.listFactors();
+          const totp = factors?.totp?.[0];
+          if (totp) {
+            setFactorId(totp.id);
+            setCode('');
+            setStep('verify');
+            return;
+          }
+        }
+        // Aucun facteur configuré : enrôlement (obligatoire dès que l'exigence est activée)
+        await startEnrollment();
       }
     } catch (err) {
       console.error('Erreur lors de la connexion admin:', err);
@@ -100,7 +189,96 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onBack, onLoginSuccess }
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {step !== 'password' && (
+            <form onSubmit={handleCodeSubmit} className="space-y-6">
+              {step === 'enroll' ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-700">
+                    Activez la double authentification : scannez ce QR code avec une application
+                    d&apos;authentification (Google Authenticator, Authy, 1Password…), puis saisissez le code à 6
+                    chiffres affiché.
+                  </p>
+                  {qrCode && (
+                    <img src={qrCode} alt="QR code d'authentification" className="mx-auto w-44 h-44" />
+                  )}
+                  {secret && (
+                    <p className="text-xs text-gray-500 text-center break-all">
+                      Saisie manuelle : <span className="font-mono">{secret}</span>
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Conseil : enregistrez aussi ce code secret dans un endroit sûr. En cas de perte du téléphone,
+                    il n&apos;existe pas de code de secours.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-700">
+                  Saisissez le code à 6 chiffres affiché dans votre application d&apos;authentification.
+                </p>
+              )}
+
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <KeyRound className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={7}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="Code à 6 chiffres"
+                  className="block w-full pl-10 pr-3 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-base tracking-widest"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg">
+                  <p className="text-sm text-danger-600">{error}</p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                className="w-full py-4 bg-brand hover:bg-brand-hover text-lg font-medium"
+              >
+                {step === 'enroll' ? 'Activer et se connecter' : 'Valider le code'}
+              </Button>
+
+              {step === 'enroll' && !mfaRequired && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    // Exigence pas encore activée : on abandonne l'enrôlement et on continue sans code.
+                    if (factorId) await supabase.auth.mfa.unenroll({ factorId });
+                    const { data: userData } = await supabase.auth.getUser();
+                    if (userData.user) await finishLogin(userData.user.id);
+                  }}
+                  className="w-full text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Plus tard
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  setStep('password');
+                  setError('');
+                  setCode('');
+                }}
+                className="w-full text-sm text-gray-500 hover:text-gray-700"
+              >
+                Annuler
+              </button>
+            </form>
+          )}
+
+          <form onSubmit={handleSubmit} className={step === 'password' ? 'space-y-6' : 'hidden'}>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
