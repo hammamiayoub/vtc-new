@@ -5,7 +5,7 @@ import { localParcelFaqItems, localParcelFaqItemsEn } from '../data/localParcelF
 import { alternateUrls, type Locale } from '../i18n/locale';
 
 export const SITE_URL = 'https://tunidrive.net';
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/tunidrive-logo.png?v=3`;
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/tunidrive-logo.png?v=5`;
 
 export interface SEOData {
   title: string;

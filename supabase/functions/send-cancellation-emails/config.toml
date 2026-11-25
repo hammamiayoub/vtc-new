@@ -1,2 +1,3 @@
-name = "send-cancellation-emails"
-entrypoint = "index.ts"
+[send-cancellation-emails]
+verify_jwt = true
+allow_net = ["<all>"]
