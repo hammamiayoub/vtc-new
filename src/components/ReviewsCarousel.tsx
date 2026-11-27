@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Quote, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { fetchPublicReviews, type PublicReview } from '../utils/publicReviews';
 import { useLocale } from '../i18n/locale';
 import { RevealSection } from './ui/RevealSection';
@@ -26,7 +26,7 @@ function StarRating({ rating, en }: { rating: number; en: boolean }) {
         <Star
           key={star}
           size={16}
-          className={star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}
+          className={star <= rating ? 'text-gray-900 fill-current' : 'text-gray-300'}
           aria-hidden="true"
         />
       ))}
@@ -83,7 +83,7 @@ export const ReviewsCarousel: React.FC = () => {
 
   return (
     <RevealSection
-      className="py-16 bg-white"
+      className="py-20 md:py-24"
       aria-labelledby="reviews-carousel-heading"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -103,18 +103,18 @@ export const ReviewsCarousel: React.FC = () => {
               <button
                 type="button"
                 onClick={goPrev}
-                className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-control border border-surface-border bg-white text-gray-700 hover:border-gray-300 transition-colors"
                 aria-label={en ? 'Previous review' : 'Avis précédent'}
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={18} strokeWidth={1.5} />
               </button>
               <button
                 type="button"
                 onClick={goNext}
-                className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-control border border-surface-border bg-white text-gray-700 hover:border-gray-300 transition-colors"
                 aria-label={en ? 'Next review' : 'Avis suivant'}
               >
-                <ChevronRight size={20} />
+                <ChevronRight size={18} strokeWidth={1.5} />
               </button>
             </div>
           )}
@@ -124,15 +124,12 @@ export const ReviewsCarousel: React.FC = () => {
           {visible.map((review, i) => (
             <article
               key={`${review.clientInitial}-${review.createdAt}-${i}`}
-              className={`uber-card p-6 flex flex-col h-full transition-opacity duration-300 ${
-                i === 0 ? 'opacity-100' : 'opacity-90'
-              }`}
+              className="uber-card p-6 flex flex-col h-full"
             >
-              <Quote size={22} className="text-gray-300 mb-4 flex-shrink-0" aria-hidden="true" />
-              <p className="text-sm sm:text-base text-gray-700 leading-relaxed flex-1 mb-5">
+              <p className="text-base leading-relaxed text-gray-900 flex-1 mb-6">
                 &ldquo;{review.comment}&rdquo;
               </p>
-              <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between gap-3 pt-4 border-t border-surface-border">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{review.clientInitial}</p>
                   <p className="text-xs text-gray-500">{review.city}</p>
@@ -140,7 +137,7 @@ export const ReviewsCarousel: React.FC = () => {
                 <div className="text-right">
                   <StarRating rating={review.rating} en={en} />
                   {formatReviewDate(review.createdAt, locale) && (
-                    <p className="text-xs text-gray-400 mt-1">{formatReviewDate(review.createdAt, locale)}</p>
+                    <p className="text-xs text-gray-500 mt-1">{formatReviewDate(review.createdAt, locale)}</p>
                   )}
                 </div>
               </div>
@@ -156,7 +153,7 @@ export const ReviewsCarousel: React.FC = () => {
                 type="button"
                 onClick={() => goTo(index)}
                 className={`h-2 rounded-full transition-[width,background-color] ${
-                  index === activeIndex ? 'w-6 bg-gray-900' : 'w-2 bg-gray-300 hover:bg-gray-400'
+                  index === activeIndex ? 'w-6 bg-brand' : 'w-2 bg-gray-300 hover:bg-gray-400'
                 }`}
                 aria-label={en ? `Go to review ${index + 1}` : `Aller à l'avis ${index + 1}`}
                 aria-current={index === activeIndex ? 'true' : undefined}
