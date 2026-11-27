@@ -1,3 +1,4 @@
+import { trackTikTok } from '../utils/analytics';
 import { checkEmailAvailable } from '../utils/emailAvailability';
 import { authBearer } from '../utils/edgeAuth';
 import React, { useState, useEffect, useRef } from 'react';
@@ -167,6 +168,8 @@ export const DriverSignup: React.FC<DriverSignupProps> = ({ onBack }) => {
         }
         
         console.log('✅ Profil chauffeur créé avec succès');
+
+        trackTikTok('CompleteRegistration', { content_name: 'driver' });
 
         // Déclencher la conversion Google Ads
         try {

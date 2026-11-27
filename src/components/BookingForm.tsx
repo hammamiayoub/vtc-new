@@ -40,7 +40,7 @@ import {
   PriceSurcharges
 } from '../utils/geolocation';
 import { pushNotificationService } from '../utils/pushNotifications';
-import { analytics } from '../utils/analytics';
+import { analytics, trackTikTok } from '../utils/analytics';
 import { computeLongRangeApproachSurchargeTnd } from '../utils/ridePricing';
 import { searchRadiusKmForVehicleType } from '../utils/driverSearchDistance';
 import { MAX_DRIVERS_TO_SHOW } from '../utils/booking/bookingSearchConstants';
@@ -576,6 +576,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       // Tracker la conversion Google Ads
       console.log('📊 Tracking conversion Google Ads...');
       analytics.trackBookingCreated(clientId, estimatedPrice);
+      trackTikTok('PlaceAnOrder', { value: estimatedPrice, currency: 'TND', content_type: 'product', content_name: 'booking' });
       
       // Tracker la conversion spécifique itinéraire
       console.log('🗺️ Tracking conversion itinéraire...');

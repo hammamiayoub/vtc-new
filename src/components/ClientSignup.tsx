@@ -1,3 +1,4 @@
+import { trackTikTok } from '../utils/analytics';
 import { checkEmailAvailable } from '../utils/emailAvailability';
 import { authBearer } from '../utils/edgeAuth';
 import React, { useState, useEffect, useRef } from 'react';
@@ -134,6 +135,8 @@ export const ClientSignup: React.FC<ClientSignupProps> = ({ onBack }) => {
           setIsSubmitting(false);
           return;
         }
+
+        trackTikTok('CompleteRegistration', { content_name: 'client' });
 
         // Déclencher la conversion Google Ads
         try {
