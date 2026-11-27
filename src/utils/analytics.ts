@@ -38,6 +38,13 @@ export const trackConversion = (conversion: GoogleAdsConversion) => {
   }
 };
 
+// Événements TikTok Pixel. Sans effet tant que le pixel n'est pas chargé (cookies non acceptés).
+export const trackTikTok = (event: string, params?: Record<string, unknown>) => {
+  if (typeof window !== 'undefined') {
+    window.ttq?.track(event, params);
+  }
+};
+
 // Événements spécifiques à TuniDrive
 export const analytics = {
   // Événements d'inscription
