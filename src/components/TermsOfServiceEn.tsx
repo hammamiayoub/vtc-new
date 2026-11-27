@@ -1,3 +1,4 @@
+import { LEGAL_UPDATED_AT, formatLegalDate } from '../data/legalDates';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield, Users, FileText, Mail, Calendar, Car, CreditCard, AlertTriangle, Scale, Package } from 'lucide-react';
@@ -41,7 +42,7 @@ export const TermsOfServiceEn: React.FC<TermsOfServiceEnProps> = ({ onBack }) =>
               TuniDrive.net
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              Last updated: {new Date().toLocaleDateString('en-GB')}
+              Last updated: {formatLegalDate(LEGAL_UPDATED_AT.terms, 'en')}
             </p>
           </div>
 
