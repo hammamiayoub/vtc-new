@@ -1,3 +1,4 @@
+import { LEGAL_UPDATED_AT, formatLegalDate } from '../data/legalDates';
 import React from 'react';
 import { ArrowLeft, Shield, Eye, Lock, Users, FileText, Mail, Calendar, Package } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -38,7 +39,7 @@ export const PrivacyPolicyEn: React.FC<PrivacyPolicyEnProps> = ({ onBack }) => {
               TuniDrive.net
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              Last updated: {new Date().toLocaleDateString('en-GB')}
+              Last updated: {formatLegalDate(LEGAL_UPDATED_AT.privacy, 'en')}
             </p>
           </div>
 

@@ -269,6 +269,38 @@ function aggregateFromLightRows(
   return { byDriver, byClient, totals };
 }
 
+/** Début du jour (heure de Tunis, UTC+1 toute l'année) sous forme d'instant ISO, décalé de `daysBack` jours. */
+function tunisDayStartIso(daysBack = 0): string {
+  const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Tunis' }).format(new Date());
+  const start = new Date(`${ymd}T00:00:00+01:00`);
+  start.setUTCDate(start.getUTCDate() - daysBack);
+  return start.toISOString();
+}
+
+export interface ImmediateDepartureCounts {
+  today: number;
+  last7Days: number;
+}
+
+/** Nombre de réservations en « départ immédiat » aujourd'hui et sur les 7 derniers jours (annulées exclues). */
+export async function fetchImmediateDepartureCounts(): Promise<ImmediateDepartureCounts> {
+  const countSince = async (sinceIso: string): Promise<number> => {
+    const { count, error } = await supabase
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_immediate', true)
+      .neq('status', 'cancelled')
+      .gte('created_at', sinceIso);
+    if (error) throw error;
+    return count ?? 0;
+  };
+  const [today, last7Days] = await Promise.all([
+    countSince(tunisDayStartIso(0)),
+    countSince(tunisDayStartIso(6)),
+  ]);
+  return { today, last7Days };
+}
+
 export async function fetchAdminBookingStats(): Promise<AdminBookingStats> {
   const { data, error } = await supabase.rpc('get_admin_booking_stats');
 

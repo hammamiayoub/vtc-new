@@ -28,6 +28,7 @@ import {
   Flag,
   ShieldCheck,
   ShieldOff,
+  Zap,
 } from 'lucide-react';
 import { AdminParcelQuotes } from './AdminParcelQuotes';
 import { AdminCommissionStatements } from './AdminCommissionStatements';
@@ -57,6 +58,8 @@ import {
   fetchAdminSubscriptionRows,
   fetchAdminVehicleRows,
   fetchClientBookingHistory,
+  fetchImmediateDepartureCounts,
+  type ImmediateDepartureCounts,
   fetchUpcomingAvailabilities,
   mapClientHistoryBookings,
   type AdminSubscriptionRow,
@@ -241,6 +244,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     completed: 0,
     revenue: 0,
   });
+  const [immediateCounts, setImmediateCounts] = useState<ImmediateDepartureCounts | null>(null);
   const [clientBookingsLoading, setClientBookingsLoading] = useState(false);
   const refreshInFlight = useRef(false);
   const bookingsInFlight = useRef(false);
@@ -1808,6 +1812,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     return c.status !== 'suspended';
   });
 
+  // Compteur de départs immédiats : rechargé à l'ouverture de l'onglet Réservations, puis chaque minute.
+  useEffect(() => {
+    if (activeTab !== 'bookings') return;
+    let cancelled = false;
+    const load = () => {
+      fetchImmediateDepartureCounts()
+        .then((counts) => { if (!cancelled) setImmediateCounts(counts); })
+        .catch((error) => console.error('Erreur compteur départs immédiats:', error));
+    };
+    load();
+    const timer = window.setInterval(load, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [activeTab]);
+
   // Statistiques des clients
   const totalClients = clients.length;
   const totalBookings = clients.reduce((sum, client) => sum + client.totalBookings, 0);
@@ -2059,7 +2080,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         {/* Stats Cards */}
 
         {activeTab !== 'blog' && activeTab !== 'pricing' && activeTab !== 'reports' && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
+        <div className={`grid grid-cols-2 ${activeTab === 'bookings' ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-3 sm:gap-6 mb-4 sm:mb-8`}>
           {activeTab === 'bookings' ? (
             <>
               <button
@@ -2125,6 +2146,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   </div>
                 </div>
               </button>
+
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Zap size={20} className="sm:w-6 sm:h-6 text-gray-700" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm truncate">Départs immédiats</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 tabular-nums">{immediateCounts?.today ?? '–'}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      aujourd’hui · {immediateCounts?.last7Days ?? '–'} sur 7 jours
+                    </p>
+                  </div>
+                </div>
+              </div>
             </>
           ) : activeTab === 'subscriptions' ? (
             <></>
