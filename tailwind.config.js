@@ -6,7 +6,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['"Instrument Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       colors: {
         brand: {
@@ -14,17 +14,34 @@ export default {
           hover: '#004d4d',
           muted: '#e6f0f0',
         },
+        // Neutres teintés sable (très faible saturation) : lumière méditerranéenne, murs chaux.
+        gray: {
+          50: '#faf8f5',
+          100: '#f4f1ec',
+          200: '#e9e5de',
+          300: '#d6d1c8',
+          400: '#a8a298',
+          500: '#7b7468',
+          600: '#5e574c',
+          700: '#4a443a',
+          800: '#2f2b25',
+          900: '#1c1a16',
+          950: '#12110e',
+        },
         surface: {
           DEFAULT: '#ffffff',
-          muted: '#f6f6f6',
-          border: '#e8e8e8',
+          page: '#faf8f4',
+          // Bande de section plus sombre, en alternance avec le fond de page.
+          band: '#eee8dd',
+          muted: '#f3efe8',
+          border: '#e7e2d9',
         },
-        // Ink = couleur d'action principale (boutons, titres), comme uber.com
+        // Ink = texte principal : trois rôles (principal, secondaire, discret).
         ink: {
-          DEFAULT: '#000000',
-          soft: '#1f1f1f',
-          muted: '#545454',
-          subtle: '#757575',
+          DEFAULT: '#1c1a16',
+          soft: '#2f2b25',
+          muted: '#5e574c',
+          subtle: '#7b7468',
         },
         // Couleurs sémantiques : à utiliser pour les statuts plutôt que green/red/orange en dur.
         // Échelles complètes (50-950) alignées sur Tailwind pour que le renommage soit sans effet visuel.
@@ -35,12 +52,12 @@ export default {
       },
       fontSize: {
         // [taille, { hauteur de ligne, espacement des lettres, graisse }]
-        'display-xl': ['4rem', { lineHeight: '1.05', letterSpacing: '-0.03em', fontWeight: '600' }],
-        'display-lg': ['3rem', { lineHeight: '1.1', letterSpacing: '-0.025em', fontWeight: '600' }],
-        'display-md': ['2.25rem', { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '600' }],
-        'heading-lg': ['1.75rem', { lineHeight: '1.25', letterSpacing: '-0.015em', fontWeight: '600' }],
-        'heading-md': ['1.375rem', { lineHeight: '1.3', letterSpacing: '-0.01em', fontWeight: '600' }],
-        'heading-sm': ['1.125rem', { lineHeight: '1.4', fontWeight: '600' }],
+        'display-xl': ['4.25rem', { lineHeight: '1.02', letterSpacing: '-0.025em', fontWeight: '400' }],
+        'display-lg': ['3.25rem', { lineHeight: '1.05', letterSpacing: '-0.02em', fontWeight: '400' }],
+        'display-md': ['2.5rem', { lineHeight: '1.1', letterSpacing: '-0.015em', fontWeight: '400' }],
+        'heading-lg': ['1.75rem', { lineHeight: '1.25', letterSpacing: '0', fontWeight: '500' }],
+        'heading-md': ['1.375rem', { lineHeight: '1.3', letterSpacing: '0', fontWeight: '500' }],
+        'heading-sm': ['1.125rem', { lineHeight: '1.4', fontWeight: '500' }],
         'body-lg': ['1.125rem', { lineHeight: '1.6' }],
         'body-md': ['1rem', { lineHeight: '1.6' }],
         'body-sm': ['0.875rem', { lineHeight: '1.5' }],

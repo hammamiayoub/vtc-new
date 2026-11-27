@@ -87,7 +87,7 @@ export const TrustSignals: React.FC<TrustSignalsProps> = ({
       >
         {items.slice(0, 4).map(({ icon: Icon, label }) => (
           <span key={label} className="inline-flex items-center gap-1.5">
-            <Icon size={14} className="text-gray-900 flex-shrink-0" aria-hidden="true" />
+            <Icon size={14} strokeWidth={1.5} className="text-gray-500 flex-shrink-0" aria-hidden="true" />
             {label}
           </span>
         ))}
@@ -100,7 +100,7 @@ export const TrustSignals: React.FC<TrustSignalsProps> = ({
       <ul className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${className}`}>
         {items.slice(0, limit).map(({ icon: Icon, label }) => (
           <li key={label} className="flex items-start gap-2 text-sm text-gray-700">
-            <Icon size={16} className="text-gray-900 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <Icon size={16} strokeWidth={1.5} className="text-gray-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <span>{label}</span>
           </li>
         ))}
@@ -112,7 +112,7 @@ export const TrustSignals: React.FC<TrustSignalsProps> = ({
     <ul className={`space-y-2 ${className}`}>
       {items.slice(0, 3).map(({ icon: Icon, label }) => (
         <li key={label} className="flex items-center gap-2 text-sm text-gray-600">
-          <Icon size={15} className="text-gray-900 flex-shrink-0" aria-hidden="true" />
+          <Icon size={16} strokeWidth={1.5} className="text-gray-500 flex-shrink-0" aria-hidden="true" />
           <span>{label}</span>
         </li>
       ))}

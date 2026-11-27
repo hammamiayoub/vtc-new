@@ -22,7 +22,9 @@
   }
 
   .page-heading {
-    @apply text-3xl sm:text-4xl font-semibold tracking-tight text-gray-900;
+    @apply text-3xl sm:text-4xl font-medium text-gray-900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
   }
 
   .page-subheading {
@@ -30,11 +32,13 @@
   }
 
   .uber-card {
-    @apply bg-white rounded-xl border border-surface-border;
-    transition:
-      box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 200ms ease;
+    @apply bg-white rounded-card border border-surface-border;
+    transition: border-color 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  a.uber-card:hover,
+  button.uber-card:hover {
+    @apply border-gray-300;
   }
 
   /* Anneau de focus uniforme, visible au clavier uniquement */
@@ -100,15 +104,6 @@
     animation: menu-pop 200ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .uber-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
-  }
-
-  .uber-card:active {
-    transform: translateY(0);
-  }
-
   button:not(:disabled) {
     transition-property: color, background-color, border-color, box-shadow, transform, opacity;
     transition-duration: 180ms;
@@ -135,52 +130,16 @@
   }
 }
 
-/* Fil de trajet discret (page d'accueil) */
-.route-line {
-  position: relative;
-  height: 1px;
-  background: #e8e8e8;
-  overflow: visible;
-}
-
-.route-line__dot,
-.route-line__pin {
+/* Fil de trajet : départ (point) -> arrivée (repère carré). Statique, il ne décrit qu'un vrai trajet. */
+.route-stop {
   position: absolute;
-  top: 50%;
+  top: -4px;
   width: 9px;
   height: 9px;
-  margin-top: -4.5px;
-  background: #000;
+  background: #003333;
 }
 
-.route-line__dot { left: 0; border-radius: 9999px; }
-.route-line__pin { right: 0; border-radius: 2px; }
-
-.route-line__glide {
-  position: absolute;
-  top: -0.5px;
-  left: 0;
-  height: 2px;
-  width: 140px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, transparent, #000 60%, transparent);
-  opacity: 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes route-glide {
-    0% { transform: translateX(0); opacity: 0; }
-    10%, 85% { opacity: 1; }
-    100% { transform: translateX(calc(var(--route-w, 1000px) - 140px)); opacity: 0; }
-  }
-
-  .route-line__glide { animation: route-glide 5.5s cubic-bezier(0.45, 0, 0.25, 1) infinite; }
-
-  .vehicle-card .vehicle-art {
-    transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .vehicle-card:hover .vehicle-art {
-    transform: translateX(6px) scale(1.03);
-  }
-}
+.route-stop--start,
+.route-stop--via { border-radius: 9999px; }
+.route-stop--via { background: #fff; border: 2px solid #003333; width: 9px; height: 9px; box-sizing: border-box; }
+.route-stop--end { border-radius: 2px; }
