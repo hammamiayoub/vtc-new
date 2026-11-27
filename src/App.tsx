@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { HomePage } from './components/HomePage';
 import { PageLoader } from './components/ui/PageLoader';
 import { ScrollToTop } from './components/ScrollToTop';
+import { TikTokPageViews } from './components/TikTokPageViews';
 import { supabase } from './lib/supabase';
 import { initAnalytics } from './utils/analytics';
 import { updateSEO } from './utils/seo';
@@ -463,6 +464,7 @@ function App() {
     <Router>
       <LocaleProvider>
       <ScrollToTop />
+      <TikTokPageViews />
       {cookieConsent === null && (
         <CookieConsentBanner onConsentChange={setCookieConsent} />
       )}

@@ -7,6 +7,7 @@ declare global {
   interface Window {
     loadThirdPartyScripts?: () => void;
     __tdThirdPartyLoaded?: boolean;
+    ttq?: { page: () => void; track: (event: string, params?: Record<string, unknown>) => void };
   }
 }
 
