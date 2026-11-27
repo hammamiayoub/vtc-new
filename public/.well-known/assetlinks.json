@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.tunidrive.mobile",
+      "sha256_cert_fingerprints": [
+        "0E:65:DB:30:59:B4:07:CC:52:E7:D2:D5:AD:66:6C:84:43:6A:C2:95:82:C1:1B:FA:AF:6F:06:E0:E7:94:DE:50"
+      ]
+    }
+  }
+]

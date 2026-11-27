@@ -130,7 +130,17 @@ export const BlogPage: React.FC = () => {
                 <ArrowLeft size={16} />
                 {en ? 'Back to the blog' : 'Retour au blog'}
               </Link>
-              {article.image_url && (
+              {article.video_url && (
+                <video
+                  src={article.video_url}
+                  poster={article.image_url ?? undefined}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="w-full max-h-[520px] rounded-2xl mb-6 bg-black"
+                />
+              )}
+              {!article.video_url && article.image_url && (
                 <img
                   src={article.image_url}
                   alt=""

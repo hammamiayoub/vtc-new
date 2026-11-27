@@ -1,15 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Badge } from './ui/Badge';
-import { FileText, ImagePlus, Pencil, Trash2 } from 'lucide-react';
+import { FileText, ImagePlus, Pencil, Trash2, Video, X } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { AdminBlogAutomation } from './AdminBlogAutomation';
 import {
+  BLOG_VIDEO_MAX_MB,
   deleteBlogImage,
+  deleteBlogVideo,
   excerptFromContent,
   fetchAdminBlogPosts,
   slugifyTitle,
   uploadBlogImage,
+  uploadBlogVideo,
   type BlogPost,
 } from '../utils/blogPosts';
 
@@ -19,6 +22,8 @@ interface ArticleForm {
   published: boolean;
   imageFile: File | null;
   imagePreview: string | null;
+  videoFile: File | null;
+  videoPreview: string | null;
 }
 
 const emptyForm = (): ArticleForm => ({
@@ -27,6 +32,8 @@ const emptyForm = (): ArticleForm => ({
   published: true,
   imageFile: null,
   imagePreview: null,
+  videoFile: null,
+  videoPreview: null,
 });
 
 export const AdminBlogPosts: React.FC = () => {
@@ -54,14 +61,19 @@ export const AdminBlogPosts: React.FC = () => {
     void loadPosts();
   }, [loadPosts]);
 
-  const resetForm = () => {
+  const revokePreviews = () => {
     if (form.imagePreview && form.imageFile) URL.revokeObjectURL(form.imagePreview);
+    if (form.videoPreview && form.videoFile) URL.revokeObjectURL(form.videoPreview);
+  };
+
+  const resetForm = () => {
+    revokePreviews();
     setForm(emptyForm());
     setEditing(null);
   };
 
   const startEdit = (post: BlogPost) => {
-    if (form.imagePreview && form.imageFile) URL.revokeObjectURL(form.imagePreview);
+    revokePreviews();
     setEditing(post);
     setForm({
       title: post.title,
@@ -69,6 +81,8 @@ export const AdminBlogPosts: React.FC = () => {
       published: post.published,
       imageFile: null,
       imagePreview: post.image_url,
+      videoFile: null,
+      videoPreview: post.video_url ?? null,
     });
     setError(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -81,6 +95,22 @@ export const AdminBlogPosts: React.FC = () => {
       imageFile: file,
       imagePreview: file ? URL.createObjectURL(file) : editing?.image_url ?? null,
     }));
+  };
+
+  const onVideoChange = (file: File | null) => {
+    if (!file) return;
+    if (file.size > BLOG_VIDEO_MAX_MB * 1024 * 1024) {
+      setError(`La vidéo ne doit pas dépasser ${BLOG_VIDEO_MAX_MB} Mo.`);
+      return;
+    }
+    setError(null);
+    if (form.videoPreview && form.videoFile) URL.revokeObjectURL(form.videoPreview);
+    setForm((current) => ({ ...current, videoFile: file, videoPreview: URL.createObjectURL(file) }));
+  };
+
+  const clearVideo = () => {
+    if (form.videoPreview && form.videoFile) URL.revokeObjectURL(form.videoPreview);
+    setForm((current) => ({ ...current, videoFile: null, videoPreview: null }));
   };
 
   const savePost = async (event: React.FormEvent) => {
@@ -107,6 +137,21 @@ export const AdminBlogPosts: React.FC = () => {
         imagePath = uploaded.path;
       }
 
+      // Vidéo : conservée, remplacée ou retirée selon l'état du formulaire.
+      let videoUrl = editing?.video_url ?? null;
+      let videoPath = editing?.video_path ?? null;
+      let oldVideoToDelete: string | null = null;
+      if (form.videoFile) {
+        const uploadedVideo = await uploadBlogVideo(form.videoFile);
+        oldVideoToDelete = editing?.video_path ?? null;
+        videoUrl = uploadedVideo.url;
+        videoPath = uploadedVideo.path;
+      } else if (!form.videoPreview) {
+        oldVideoToDelete = editing?.video_path ?? null;
+        videoUrl = null;
+        videoPath = null;
+      }
+
       const now = new Date().toISOString();
       const publishedAt = form.published
         ? editing?.published_at ?? now
@@ -120,6 +165,8 @@ export const AdminBlogPosts: React.FC = () => {
             content,
             image_url: imageUrl,
             image_path: imagePath,
+            video_url: videoUrl,
+            video_path: videoPath,
             published: form.published,
             published_at: publishedAt,
             updated_at: now,
@@ -141,12 +188,16 @@ export const AdminBlogPosts: React.FC = () => {
           content,
           image_url: imageUrl,
           image_path: imagePath,
+          video_url: videoUrl,
+          video_path: videoPath,
           published: form.published,
           published_at: publishedAt,
           updated_at: now,
         });
         if (insertError) throw insertError;
       }
+
+      if (oldVideoToDelete && oldVideoToDelete !== videoPath) await deleteBlogVideo(oldVideoToDelete);
 
       resetForm();
       await loadPosts();
@@ -165,6 +216,7 @@ export const AdminBlogPosts: React.FC = () => {
       const { error: deleteError } = await supabase.from('blog_posts').delete().eq('id', post.id);
       if (deleteError) throw deleteError;
       await deleteBlogImage(post.image_path);
+      await deleteBlogVideo(post.video_path);
       if (editing?.id === post.id) resetForm();
       await loadPosts();
     } catch (err) {
@@ -242,6 +294,52 @@ export const AdminBlogPosts: React.FC = () => {
             <p className="text-xs text-gray-500 mt-2">JPG, PNG, WEBP ou GIF, 5 Mo maximum.</p>
           </div>
 
+          <div>
+            <label htmlFor="blog-video" className="block text-sm font-medium text-gray-700 mb-1">
+              Vidéo (facultatif)
+            </label>
+            <div className="flex flex-col sm:flex-row gap-4 items-start">
+              <label
+                htmlFor="blog-video"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-800 cursor-pointer hover:bg-gray-50"
+              >
+                <Video size={16} />
+                {form.videoPreview ? 'Remplacer la vidéo' : 'Choisir une vidéo'}
+              </label>
+              <input
+                id="blog-video"
+                type="file"
+                accept="video/mp4,video/webm"
+                className="sr-only"
+                onChange={(event) => {
+                  onVideoChange(event.target.files?.[0] ?? null);
+                  event.target.value = '';
+                }}
+              />
+              {form.videoPreview && (
+                <div className="relative">
+                  <video
+                    src={form.videoPreview}
+                    controls
+                    preload="metadata"
+                    className="h-28 w-48 rounded-lg border border-gray-200 bg-black object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={clearVideo}
+                    aria-label="Retirer la vidéo"
+                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              MP4 ou WEBM, {BLOG_VIDEO_MAX_MB} Mo maximum. La vidéo s’affiche au-dessus du texte de l’article.
+            </p>
+          </div>
+
           <label className="inline-flex items-center gap-2 text-sm text-gray-800">
             <input
               type="checkbox"
@@ -305,6 +403,12 @@ export const AdminBlogPosts: React.FC = () => {
                     <Badge tone={post.published ? 'success' : 'neutral'}>
                       {post.published ? 'Publié' : 'Brouillon'}
                     </Badge>
+                    {post.video_url && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                        <Video size={12} />
+                        Vidéo
+                      </span>
+                    )}
                     {post.source === 'auto' && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
                         Auto · {post.audience === 'driver' ? 'Chauffeurs' : 'Voyageurs'}

@@ -51,3 +51,9 @@
   X-Robots-Tag: noindex, nofollow
 /en/reset-password
   X-Robots-Tag: noindex, nofollow
+
+# Liaison app Android (Digital Asset Links) : doit etre servi en JSON, sans redirection.
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600
