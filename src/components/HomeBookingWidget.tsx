@@ -285,7 +285,7 @@ export const HomeBookingWidget: React.FC<HomeBookingWidgetProps> = ({
 
   const modeButtonClass = (active: boolean) =>
     cn(
-      'focus-ring flex-1 min-h-[40px] rounded-full px-4 text-sm font-semibold transition-colors',
+      'focus-ring flex-1 min-h-[40px] rounded-full px-3 text-sm font-semibold whitespace-nowrap transition-colors',
       active ? 'bg-white text-gray-900 shadow-raised' : 'text-ink-muted hover:text-gray-900',
     );
 
