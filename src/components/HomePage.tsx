@@ -28,7 +28,6 @@ import { vtcSeoFaqItems } from '../data/vtcSeoFaq';
 import { vtcSeoFaqItemsEn } from '../data/vtcSeoFaq.en';
 import { useLocale } from '../i18n/locale';
 import { setParcelScopeHint, clearParcelScopeHint } from '../utils/parcelScopeHint';
-import { InternationalParcelIllustration } from './ui/ParcelIllustrations';
 import { HomeRideSteps } from './HomeRideSteps';
 import { RevealSection } from './ui/RevealSection';
 import { useAppDownloadPrompt } from '../hooks/useAppDownloadPrompt';
@@ -57,64 +56,6 @@ function VehicleArt({ photo, alt, Fallback }: { photo: string; alt: string; Fall
     />
   );
 }
-
-const serviceOffers = [
-  {
-    icon: Car,
-    title: 'Course VTC',
-    photo: '/vehicles/berline-noire.webp',
-    titleEn: 'Private ride',
-    description: 'Réservez un chauffeur privé en quelques clics pour vos trajets en Tunisie.',
-    descriptionEn: 'Book a private driver in a few clicks for trips across Tunisia.',
-    href: null,
-    cta: 'Voir le prix',
-    ctaEn: 'See the price',
-  },
-  {
-    icon: Plane,
-    title: 'Transfert aéroport',
-    photo: '/limousine.webp',
-    titleEn: 'Airport transfer',
-    description: 'Tunis-Carthage, Enfidha, Monastir — prise en charge à l\'heure convenue.',
-    descriptionEn: 'Tunis-Carthage, Enfidha, Monastir — pickup at the agreed time.',
-    href: '/vtc-tunisie#transfert-aeroport-tunisie',
-    cta: 'Détails',
-    ctaEn: 'Details',
-  },
-  {
-    icon: Users,
-    title: 'Groupes en séjour',
-    photo: '/van.webp',
-    titleEn: 'Groups on a stay',
-    description: 'Visiteurs venant de l\'étranger : accueil à l\'aéroport et organisation des trajets du séjour.',
-    descriptionEn: 'Visitors arriving from abroad: airport pickup and the trips of the stay, organized for the group.',
-    href: '/transport-groupes-tunisie',
-    cta: 'Découvrir',
-    ctaEn: 'Discover',
-  },
-  {
-    icon: Truck,
-    title: 'Livraison de colis en Tunisie',
-    photo: '/utilitaire.webp',
-    titleEn: 'Parcel delivery in Tunisia',
-    description: 'Faites livrer colis et marchandises partout en Tunisie : les transporteurs locaux vous proposent leur prix.',
-    descriptionEn: 'Get parcels and goods delivered across Tunisia: local carriers send you their price.',
-    href: '/livraison-colis-tunisie',
-    cta: 'Détails',
-    ctaEn: 'Details',
-  },
-  {
-    icon: Package,
-    title: 'Colis Europe ↔ Tunisie',
-    photo: null,
-    titleEn: 'Parcels Europe ↔ Tunisia',
-    description: 'Comparez les offres de transporteurs pour vos envois internationaux.',
-    descriptionEn: 'Compare carrier offers for your international shipments.',
-    href: '/transport-colis-europe-tunisie',
-    cta: 'Détails',
-    ctaEn: 'Details',
-  },
-];
 
 export const HomePage: React.FC<HomePageProps> = ({
   onGetStarted,
@@ -211,7 +152,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         {/* Transport VTC : étapes de réservation sur le fil de trajet + véhicules */}
         <RevealSection id="transport-vtc" className="py-20 md:py-28">
           <div className="page-container">
-            <div className="max-w-2xl mb-14">
+            <div className="max-w-2xl mb-10">
               <h2 className="page-heading mb-4 [text-wrap:balance]">
                 {en ? 'Passenger transport & private hire in Tunisia' : 'Transport de personnes & VTC en Tunisie'}
               </h2>
@@ -221,32 +162,6 @@ export const HomePage: React.FC<HomePageProps> = ({
                   : 'Réservez un chauffeur privé ou un VTC pour vos déplacements en Tunisie. Berline, taxi, van, minibus ou véhicule de luxe.'}
               </p>
             </div>
-
-            <ol className="grid md:grid-cols-3 mb-20">
-              {(en
-                ? [
-                    { title: 'Enter your trip', text: 'Pickup and destination: the estimated fare is shown right away, no account needed.' },
-                    { title: 'Choose your driver', text: 'Create a free account, then pick the vehicle and the verified driver that suit you.' },
-                    { title: 'Confirm', text: 'The price is confirmed before departure and your driver picks you up at the agreed time.' },
-                  ]
-                : [
-                    { title: 'Indiquez votre trajet', text: "Départ et destination : le tarif estimé s'affiche tout de suite, sans compte." },
-                    { title: 'Choisissez votre chauffeur', text: 'Créez un compte gratuit, puis choisissez le véhicule et le chauffeur vérifié qui vous conviennent.' },
-                    { title: 'Confirmez', text: "Le prix est confirmé avant le départ et votre chauffeur vient vous chercher à l'heure convenue." },
-                  ]
-              ).map(({ title, text }, index, all) => (
-                <li key={title} className="relative border-t border-gray-300 pt-8 pb-8 md:pb-0 md:pr-12">
-                  <span
-                    aria-hidden="true"
-                    className={`route-stop left-0 ${
-                      index === 0 ? 'route-stop--start' : index === all.length - 1 ? 'route-stop--end' : 'route-stop--via'
-                    }`}
-                  />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">{title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed max-w-xs">{text}</p>
-                </li>
-              ))}
-            </ol>
 
             {/* Véhicules : défilement horizontal au doigt sur mobile, grille à partir de md */}
             <div
@@ -474,7 +389,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         {/* Chauffeurs et transporteurs : le seul bloc de la page qui s'adresse aux professionnels */}
         <RevealSection id="chauffeurs" className="scroll-mt-20 py-20 md:py-24">
           <div className="page-container">
-            <div className="rounded-[20px] bg-brand p-6 sm:p-12 text-white">
+            <div className="rounded-3xl bg-brand p-6 sm:p-12 text-white">
               <div className="max-w-2xl mb-10">
                 <p className="text-sm font-medium text-white/60 mb-3">
                   {en ? 'Drivers and carriers' : 'Chauffeurs et transporteurs'}

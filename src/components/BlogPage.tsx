@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Play } from 'lucide-react';
 import { Footer } from './Footer';
 import { SkeletonList } from './ui/Skeleton';
 import { applyBlogArticleSeo, removeJsonLd } from '../utils/seo';
@@ -191,12 +191,37 @@ export const BlogPage: React.FC = () => {
                         to={href(`/blog/${post.slug}`)}
                         className="group uber-card overflow-hidden hover:shadow-md transition-shadow"
                       >
-                        {post.image_url && (
-                          <img
-                            src={post.image_url}
-                            alt=""
-                            className="w-full h-52 sm:h-64 object-cover"
-                          />
+                        {(post.image_url || post.video_url) && (
+                          <div className="relative">
+                            {post.image_url ? (
+                              <img
+                                src={post.image_url}
+                                alt=""
+                                className="w-full h-52 sm:h-64 object-cover"
+                              />
+                            ) : (
+                              // Sans image : la première image de la vidéo sert d'illustration.
+                              <video
+                                src={`${post.video_url}#t=0.1`}
+                                muted
+                                playsInline
+                                preload="metadata"
+                                aria-hidden="true"
+                                tabIndex={-1}
+                                className="w-full h-52 sm:h-64 object-cover bg-black pointer-events-none"
+                              />
+                            )}
+                            {post.video_url && (
+                              <span
+                                aria-hidden="true"
+                                className="absolute inset-0 flex items-center justify-center"
+                              >
+                                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 text-white">
+                                  <Play size={24} fill="currentColor" className="ml-0.5" />
+                                </span>
+                              </span>
+                            )}
+                          </div>
                         )}
                         <div className="p-5 sm:p-6">
                           <div className="flex flex-wrap items-center gap-2 mb-2">
