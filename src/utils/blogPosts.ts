@@ -9,6 +9,8 @@ export interface BlogPost {
   content: string;
   image_url: string | null;
   image_path: string | null;
+  video_url?: string | null;
+  video_path?: string | null;
   published: boolean;
   published_at: string | null;
   created_at: string;
@@ -27,9 +29,11 @@ export interface BlogTopic {
 }
 
 const BLOG_POST_COLUMNS =
-  'id, title, slug, content, image_url, image_path, published, published_at, created_at, updated_at, audience, source, keyword';
+  'id, title, slug, content, image_url, image_path, video_url, video_path, published, published_at, created_at, updated_at, audience, source, keyword';
 
 const BLOG_IMAGE_BUCKET = 'blog-images';
+const BLOG_VIDEO_BUCKET = 'blog-videos';
+export const BLOG_VIDEO_MAX_MB = 50;
 
 export function slugifyTitle(title: string): string {
   const base = title
@@ -105,6 +109,36 @@ export async function uploadBlogImage(file: File): Promise<{ url: string; path: 
   if (!data.publicUrl) throw new Error('Impossible d’obtenir l’adresse de l’image.');
 
   return { url: data.publicUrl, path };
+}
+
+export async function uploadBlogVideo(file: File): Promise<{ url: string; path: string }> {
+  const allowed = ['video/mp4', 'video/webm'];
+  if (!allowed.includes(file.type)) {
+    throw new Error('Formats vidéo acceptés : MP4 ou WEBM.');
+  }
+  if (file.size > BLOG_VIDEO_MAX_MB * 1024 * 1024) {
+    throw new Error(`La vidéo ne doit pas dépasser ${BLOG_VIDEO_MAX_MB} Mo.`);
+  }
+
+  const ext = file.type === 'video/webm' ? 'webm' : 'mp4';
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const { error } = await supabase.storage.from(BLOG_VIDEO_BUCKET).upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type,
+  });
+  if (error) throw new Error('Impossible d’envoyer la vidéo. Réessayez.');
+
+  const { data } = supabase.storage.from(BLOG_VIDEO_BUCKET).getPublicUrl(path);
+  if (!data.publicUrl) throw new Error('Impossible d’obtenir l’adresse de la vidéo.');
+
+  return { url: data.publicUrl, path };
+}
+
+export async function deleteBlogVideo(path: string | null | undefined): Promise<void> {
+  if (!path) return;
+  await supabase.storage.from(BLOG_VIDEO_BUCKET).remove([path]);
 }
 
 export async function fetchBlogTopics(): Promise<BlogTopic[]> {

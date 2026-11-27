@@ -293,7 +293,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-3">
-                  {en ? 'From abroad' : "Depuis l'étranger"}
+                  {en ? 'From abroad' : "En Tunisie ou depuis l'étranger"}
                 </p>
                 <h2 className="page-heading mb-5 [text-wrap:balance]">{en ? 'Transport for groups' : 'Transport de groupes'}</h2>
                 <p className="page-subheading mb-8 max-w-xl">
